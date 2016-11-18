@@ -408,7 +408,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
   {
   case 0: // Write CR - could be blocked, can't record here :(
   {
-#if defined(SSE_DMA_TRACK_TRANSFER2) // we reset it here so it works for CAPS too
+#if defined(SSE_DMA_TRACK_TRANSFER) // we reset it here so it works for CAPS too
     Dma.Datachunk=0;
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE_OBJECT) 
@@ -979,6 +979,7 @@ void TWD1772Dpll::SetClock(const int &period)
     delays[i] = period*(i+1);
 }
 
+#endif//bit-level
 
 ///////////////////////////////////// AM //////////////////////////////////////
 // 3rd party-inspired; see note for function WD1772.ShiftBit()
@@ -987,20 +988,24 @@ void TWD1772Dpll::SetClock(const int &period)
 void TWD1772AmDetector::Enable() {
   Enabled=true;
   nA1=0;
+#if defined(SSE_WD1772_BIT_LEVEL)
   aminfo|=CAPSFDC_AI_AMDETENABLE|CAPSFDC_AI_CRCENABLE;
   aminfo&=~(CAPSFDC_AI_CRCACTIVE|CAPSFDC_AI_AMACTIVE);
   amisigmask=CAPSFDC_AI_DSRAM;
+#endif
 }
 
 void TWD1772AmDetector::Reset() {
+#if defined(SSE_WD1772_BIT_LEVEL)
   amdatadelay=2;
   ammarkdist=ammarktype=amdataskip=0; 
   amdecode=aminfo=amisigmask=dsr=0; // dword
   dsrcnt=0; // int
+#endif
   Enable();
 }
 
-#endif//bit-level
+
 
 
 
@@ -1040,10 +1045,10 @@ bool TWD1772::Drq(bool state) {
 
 void TWD1772::Irq(bool state) {
 
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
   Amd.Reset();
   Amd.Enabled=false;//??
-#endif
+//#endif
 
   if(state && !Lines.irq) // so not on "force interrupt"
   {
@@ -1266,14 +1271,11 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
 
 #ifdef SSE_DEBUG
   if(prg_phase!=WD_READY)
-#if defined(SSE_DRIVE_INDEX_PULSE2)
+  {
   TRACE_LOG("%c: IP #%d (%s) (%s) CR %X TR %d SR %d DR %d STR %X ACT %d\n",
     'A'+id,IndexCounter,wd_phase_name[prg_phase],image_triggered?"triggered":"event",
     CR,TR,SR,DR,STR,ACT);
-#else
-  TRACE_LOG("%c: IP #%d (%s) CR %X TR %d SR %d DR %d\n",
-    'A'+id,IndexCounter,wd_phase_name[prg_phase], CR,TR,SR,DR);
-#endif
+  }
 #endif
 
   if(!IndexCounter)
@@ -1317,9 +1319,9 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
         //TRACE_LOG("Start reading track\n");
         TRACE_LOG("Read track %c:S%d F%d  (DMA %d sectors)\n",'A'+DRIVE,CURRENT_SIDE,CURRENT_TRACK,Dma.Counter);
         prg_phase=WD_TYPEIII_READ_DATA;
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
         Amd.Reset();
-#endif
+//#endif
         Read();
       }
       break;
@@ -1329,8 +1331,11 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
     case WD_TYPEIII_READ_DATA:
       // stop R/W, but not for type II: Realm of the Trolls
       SF314[DRIVE].State.reading=SF314[DRIVE].State.writing=0; 
-#ifdef SSE_DEBUG
-      if(WritingToDisk()) TRACE_LOG("%d bytes transferred\n",Dma.Datachunk*16);
+#if defined(SSE_DEBUG) 
+#if defined(SSE_DMA_TRACK_TRANSFER)
+      if(WritingToDisk())
+        TRACE_LOG("%d bytes transferred\n",Dma.Datachunk*16);
+#endif
       TRACE_LOG("\n");//stop list of sector nums
 #endif
       Irq(true);
@@ -1354,9 +1359,7 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
       break;
 
     default: // drive is spinning, WD isn't counting
-#if defined(SSE_DRIVE_INDEX_PULSE2)
       if(!image_triggered)
-#endif
         OnUpdate();//just in case... ???
       break; 
     }//sw
@@ -1365,9 +1368,7 @@ void TWD1772::OnIndexPulse(int id,bool image_triggered) {
   else
   {
     n_format_bytes=0; //?
-#if defined(SSE_DRIVE_INDEX_PULSE2)
     if(!image_triggered)
-#endif
       OnUpdate(); // to trigger Read() or Write() if needed: Delirious 3
   }
 
@@ -1539,9 +1540,9 @@ r1       r0            1772
   case WD_TYPEI_HEAD_SETTLE:
     // flow chart is missing head settling
     prg_phase=WD_TYPEI_FIND_ID;
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
-#endif
+//#endif
     n_format_bytes=0;
     Read(); // drive will send word (clock, byte) and set event
     IndexCounter=6; 
@@ -1573,9 +1574,9 @@ r1       r0            1772
       Amd.nA1=3;
       CrcLogic.Reset(); 
 
-#if defined(SSE_WD1772_BIT_LEVEL) 
+////#if defined(SSE_WD1772_BIT_LEVEL) 
       Amd.Enabled=false; // read IDs OK
-#endif
+////#endif
 
     }
     else
@@ -1587,37 +1588,36 @@ r1       r0            1772
 #endif
       )
     {
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.nA1++;
-#else
+//#else
       n_format_bytes++;
-#endif
+//#endif
       CrcLogic.Reset(); // only special $A1 resets the CRC logic
 #if defined(SSE_WD1772_BIT_LEVEL)
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
     }
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     else if( (DSR&0xFF)>=0xFC && Amd.nA1==3) // CAPS: $FC->$FF
-#else
-    else if( (DSR&0xFF)>=0xFC && n_format_bytes==3) // CAPS: $FC->$FF
-#endif
-    //else if( (DSR&0xFE)==0xFE) && n_format_bytes==3) // doc: $FE(+$FF)
+//#else
+  //  else if( (DSR&0xFF)>=0xFC && n_format_bytes==3) // CAPS: $FC->$FF
+//#endif
     {
       TRACE_LOG("%X found at %d\n",DSR,SF314[DRIVE].BytePosition());
       n_format_bytes=0;//reset
       prg_phase++; // in type I or type II or III
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=false; // read IDs OK
-#endif
+//#endif
     }
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1)
       Amd.Reset();
-#else
-    else if(n_format_bytes)
-      n_format_bytes=0;
-#endif
+//#else
+//    else if(n_format_bytes)
+//      n_format_bytes=0;
+//#endif
 
 #if defined(SSE_DISK_SCP2B)
     // switch back to rev1 if we're on rev2
@@ -1675,9 +1675,9 @@ r1       r0            1772
         STR|=STR_CRC; // set CRC error if track field was OK
       }
       CrcLogic.Add(DSR); //unimportant
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=true; 
-#endif
+//#endif
       Read(); // this sets up next event
     }
     break;
@@ -1709,9 +1709,9 @@ r1       r0            1772
       IndexCounter=5; 
       //TRACE_LOG("%d IP to find ID %d\n",IndexCounter,SR);
       prg_phase=WD_TYPEII_FIND_ID; // goto '1'
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Reset();
-#endif
+//#endif
       n_format_bytes=0;
       Read();
     }
@@ -1742,9 +1742,9 @@ r1       r0            1772
     }
     else // it's no error (yet), the WD1772 must browse the IDs
       prg_phase=WD_TYPEII_FIND_ID;
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
-#endif
+//#endif
     Read();
     break;
 
@@ -1752,28 +1752,30 @@ r1       r0            1772
     CrcLogic.Add(DSR);//before eventual reset
     n_format_bytes++;
     //TRACE_LOG("%d ",n_format_bytes);
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     if(n_format_bytes<27)
       ; // CAPS: first bytes aren't even read
     else if(n_format_bytes==27)
     {
       TRACE_MFM("Enable AMD\n");
       Amd.Enable();
+#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.amisigmask=CAPSFDC_AI_DSRREADY|CAPSFDC_AI_DSRMA1;
-    }
-#else
-    if(n_format_bytes<28)
-      ; // CAPS: first bytes aren't even read
 #endif
+    }
+//#else
+//    if(n_format_bytes<28)
+//      ; // CAPS: first bytes aren't even read
+//#endif
 
     else if(n_format_bytes==44) //timed out
     {
       TRACE_LOG("DAM time out %d in\n",n_format_bytes);
       n_format_bytes=0;
       prg_phase=WD_TYPEII_FIND_ID;
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enable();
-#endif
+//#endif
     }
 #if defined(SSE_WD1772_BIT_LEVEL)
     //if not A1 mark, restart
@@ -1804,32 +1806,32 @@ r1       r0            1772
     {
       TRACE_LOG("%X found at byte %d, reset CRC\n",DSR,Disk[DRIVE].current_byte);
       CrcLogic.Reset();
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.nA1++; 
-#endif
+//#endif
     }
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1==3 && ((DSR&0xFE)==0xF8||(DSR&0xFE)==0xFA)) // DAM found
-#else
-    else if( (DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA ) // DAM found
-#endif
+//#else
+//    else if( (DSR&0xFE)==0xF8 ||  (DSR&0xFE)==0xFA ) // DAM found
+//#endif
     {
       TRACE_LOG("TR%d SR%d %X found at byte %d (%d after ID)\n",TR,SR,DSR,Disk[DRIVE].current_byte,n_format_bytes);
       n_format_bytes=0; // for CRC later
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
       Amd.Enabled=false;
-#endif
+//#endif
       prg_phase=WD_TYPEII_READ_DATA;
       if((DSR&0xFE)==0xF8)
         STR|=STR_RT; // "record type" set when "deleted data" DAM
     }
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     else if(Amd.nA1==3) // address mark but then no FB...
     {
       TRACE_LOG("%x found after AM: keep looking\n",DSR);
       Amd.Enable();
     }
-#endif
+//#endif
     Read();    
     break;
 
@@ -1960,8 +1962,9 @@ r1       r0            1772
 
   case WD_TYPEIII_HEAD_SETTLE: // we come directly or after 15ms delay
 
-#if defined(SSE_WD1772_BIT_LEVEL)
+//#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.Reset();
+#if defined(SSE_WD1772_BIT_LEVEL)
     Amd.aminfo&=~CAPSFDC_AI_CRCENABLE;
     Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
@@ -2235,9 +2238,6 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     || (io_src_b&0xF0)==0xD0 )
   {
     agenda_delete(agenda_fdc_motor_flag_off); // and others?
-#if defined(SSE_DMA_TRACK_TRANSFER) && !defined(SSE_DMA_TRACK_TRANSFER2)
-    Dma.Datachunk=0;
-#endif
     NewCommand(io_src_b); // one more function, more readable
   }
   else

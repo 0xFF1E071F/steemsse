@@ -483,10 +483,6 @@ void fdc_execute()
   }
 #endif
 
-#if defined(SSE_DMA_TRACK_TRANSFER) && !defined(SSE_DMA_TRACK_TRANSFER2)
-  Dma.Datachunk=0; // reset at new command
-#endif
-
 /*
 The 177x accepts 11 commands.  Western Digital divides these commands
 into four categories, labeled I,II, III, and IV.
@@ -1889,8 +1885,13 @@ void agenda_floppy_read_address(int idx)
 void agenda_floppy_read_track(int part)
 {
   ASSERT((fdc_cr&0xF0)==0xE0); //we see $E0, $E4, $E8
+#if defined(SSE_VAR_RESIZE_383)
+  static short BytesRead;
+#define CRC WD1772.CrcLogic.crc
+#else
   static int BytesRead;
   static WORD CRC;
+#endif
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   bool Error=0;
@@ -1967,16 +1968,18 @@ void agenda_floppy_read_track(int part)
       if (TrackBytes>DDBytes){
         TrackBytes=DDBytes*2;
       }else{
-#if defined(SSE_FDC_383A) // forgot this before, it was > 6256
+#if defined(SSE_FDC_383A__) // forgot this before, it was > 6256 //don't work with 11
         if(ADAT)
           TrackBytes=Disk[DRIVE].TrackBytes; // should be 6256
         else
 #endif
         TrackBytes=DDBytes;
       }
-
+#if defined(SSE_FDC_383A)
+      if(ADAT) // should be 6256 up to 11 secs, beyond, it's not ADAT
+        TrackBytes=Disk[floppyno].TrackBytes; 
+#endif
       if (part/154<nSects){
-        //TRACE("part %d /154 %d nSects %d TrackBytes %d\n",part,part/154,nSects,TrackBytes);
 #if defined(SSE_DMA_TRACK_TRANSFER)
         Dma.Datachunk++;
 #endif
@@ -1985,7 +1988,13 @@ void agenda_floppy_read_track(int part)
         int SectorBytes=(128 << IDList[IDListIdx].SectorLen);
         BYTE pre_sect[200];
         int i=0;
+#if defined(SSE_DRIVE_READ_TRACK_11_383)
+        for (int n=0;n<(ADAT?nSects<Disk[floppyno].PostIndexGap():22);n++) 
+          pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
+#else
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
+#endif
+
 #if defined(SSE_DRIVE_READ_TRACK_11)
 /*
 Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
@@ -2009,7 +2018,6 @@ Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
 Data Address Mark                  1           1           1      FB
 */
         pre_sect[i++]=0xfb;                        // Start of data
-
         int num_bytes_to_write=16;
         int byte_idx=(part % 154)*16;
 
@@ -2101,7 +2109,6 @@ CRC                                2           2           2
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
-        //ASSERT(nSects<11);
         BYTE gap4bytes=(nSects>=11?1:24);
         if (num_bytes_to_write>0 && byte_idx>=0 && byte_idx<gap4bytes){
           while (num_bytes_to_write>0){
@@ -2140,7 +2147,7 @@ Gap 4 Post Data                   40          40           1      4E
         // isn't it a bug anyway? More gap with 11 than 9-10 ???
 #else
         //BYTE gap5bytes=(nSects>=11?20:16); //tmp, break nothing
-        BYTE gap5bytes=SF314[DRIVE].PreIndexGap();
+        BYTE gap5bytes=Disk[DRIVE].PreIndexGap();
 #endif
         write_to_dma(0x4e,gap5bytes);
         BytesRead+=gap5bytes;
@@ -2177,7 +2184,7 @@ Gap 4 Post Data                   40          40           1      4E
 #endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
 #if defined(SSE_FDC_383_HBL_DRIFT) 
-/*  Correct drift for Read Track.
+/*  Correct HBL drift for Read Track.
     Timing is important for ProCopy Analyze.
 */
     WORD current_byte=SF314[DRIVE].BytePosition();
@@ -2255,13 +2262,16 @@ The 177x does not require an Index Address Mark.
 
 void agenda_floppy_write_track(int part)
 {
-  ASSERT( fdc_cr==0xF0 );
+  ASSERT((fdc_cr&0xF0)==0xF0);
   static int SectorLen,nSector=-1;
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   BYTE Data;
   int TrackBytes=6448; // Double density format only
-
+#if defined(SSE_FDC_383A)
+  if(ADAT)
+     TrackBytes=Disk[floppyno].TrackBytes; 
+#endif
   if (floppy->ReadOnly || floppy->STT_File){ //SS STT is no solution for Format
     fdc_str=FDC_STR_MOTOR_ON | FDC_STR_WRITE_PROTECT;
     agenda_fdc_finished(0);

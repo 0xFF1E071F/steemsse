@@ -89,19 +89,22 @@ struct TWD1772Dpll {
 
 };
 
+#endif//bit-level
 
 struct TWD1772AmDetector {
+#if defined(SSE_WD1772_BIT_LEVEL)
   DWORD amdecode,aminfo,amisigmask;
   // we keep those here because it's 32bit and integrated in the logic:
   int dsr,dsrcnt; 
   BYTE amdatadelay,ammarkdist,ammarktype,amdataskip;
+#endif
   BYTE nA1; // counter
   void Enable();
   bool Enabled;
   void Reset();
 };
 
-#endif//bit-level
+
 //#endif//#if defined(SSE_WD1772_EMU) 
 
 //#if defined(SSE_WD1772_EMU) //temp
@@ -189,8 +192,9 @@ struct TWD1772 {
 //#endif
 #if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772Dpll Dpll;
-  TWD1772AmDetector Amd; // not the processor
 #endif
+  TWD1772AmDetector Amd; // not the processor
+//#endif
 //#if defined(SSE_WD1772_MFM)
   TWD1772MFM Mfm;
 //#endif

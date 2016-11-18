@@ -298,7 +298,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     SidesIdx=(WORD)pCSF->GetInt("Disks","SidesIdx",SidesIdx);
 
     HideBroken=pCSF->GetInt("Disks","HideBroken",HideBroken);
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
     HideExtension=pCSF->GetInt("Disks","HideExtension",HideExtension);
 #endif
 
@@ -327,7 +327,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     UPDATE;
   }
 
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_LS)
   AutoInsert2=pCSF->GetInt("Disks","AutoInsert2",AutoInsert2);
 #endif
 
@@ -435,7 +435,7 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 
   pCSF->SetStr("Disks","HideBroken",LPSTR(HideBroken ? "1":"0"));
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
   pCSF->SetStr("Disks","HideExtension",LPSTR(HideExtension ? "1":"0"));
 #endif
   pCSF->SetStr("Disks","EjectDisksWhenQuit",LPSTR(EjectDisksWhenQuit ? "1":"0"));
@@ -449,7 +449,7 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
   pCSF->SetInt("Disks","FloppyArchiveIsReadWrite",FloppyArchiveIsReadWrite);
 
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_LS)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_LS)
   pCSF->SetInt("Disks","AutoInsert2",AutoInsert2);
 #endif
 
@@ -482,8 +482,8 @@ bool THardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *S
     stemdos_boot_drive=pCSF->GetInt("HardDrives","BootDrive",stemdos_boot_drive);
 #endif
     DisableHardDrives=pCSF->GetInt("HardDrives","DisableHardDrives",DisableHardDrives);
-//#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
-#if defined(SSE_GUI_DISK_MANAGER_HD_SELECTED) && defined(WIN32)//ux382
+//#ifdef SSE_GUI_DM_HD_SELECTED
+#if defined(SSE_GUI_DM_HD_SELECTED) && defined(WIN32)//ux382
     SendMessage(GetDlgItem(DiskMan.Handle,10),BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
 #endif
     update_mount();
@@ -537,7 +537,7 @@ bool TAcsiHardDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,boo
       }
     }
     UPDATE;//what is this?
-#ifdef SSE_GUI_DISK_MANAGER_HD_SELECTED
+#ifdef SSE_GUI_DM_HD_SELECTED
     SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEConfig.AcsiImg,0);
 #endif
   }

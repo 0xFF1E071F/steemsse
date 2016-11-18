@@ -1187,12 +1187,12 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
 #if defined(SSE_DRIVE_11_SECTORS)
 /*  11 sectors interleave '6': 1 7 2 8 3 9 4 10 5 11 6
     -Load faster in ADAT mode (Overscan Demos)
-    -ACopy 1.30 & Flofor report interleave = DRIVE_11SEC_INTERLEAVE (6), yeah!
-    -ProCopy Analyse 1.50 'unformated', 2.02 finds IDs.
+    -ACopy 1.30 & Flofor report interleave = 6, yeah!
+    -ProCopy Analyse finds IDs.
     -Write (format) 11 sectors tracks on ST/MSA: forget it
+    Note that on the image, there's no interleave.
 */
-//      if(SectorsPerTrack>=11)
-      if(SectorsPerTrack==11) // bugfix v3.6.1, HD floppies in ADAT mode
+      if(ADAT&&SectorsPerTrack==11) // not >= (superdisks)
         IDList[n].SectorNum=1+(n*DRIVE_11SEC_INTERLEAVE)%SectorsPerTrack;
       else
 #endif
@@ -1265,19 +1265,18 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     return;
 #endif
 
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
-  if((this==&FloppyDrive[0]) && DiskMan.AutoInsert2&2)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
+  if((this==&FloppyDrive[0]) && (DiskMan.AutoInsert2&2))
     DiskMan.EjectDisk(1); // v3.7.2 don't keep former disk B
   DiskMan.AutoInsert2&=~2; //TODO def
 #endif
 
   static bool Removing=0;
-  ASSERT(!Removing);//there must be a reason
+  ASSERT(!Removing);//there must be a reason (doesn't assert)
   if (Removing) return;
   Removing=true;
 
-#if defined(SSE_DISK_CAPS) \
-|| defined(SSE_UNIX)
+#if defined(SSE_DISK_CAPS) || defined(SSE_UNIX)
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;

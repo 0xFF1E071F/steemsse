@@ -214,7 +214,7 @@ public:
 	void RefreshDiskView(Str="");
 #endif
 	bool HideBroken,CloseAfterIRR;
-#if defined(SSE_GUI_DISK_MANAGER_SHOW_EXT)
+#if defined(SSE_GUI_DM_SHOW_EXT)
   bool HideExtension;
 #endif
   int SaveScroll;
@@ -234,7 +234,7 @@ public:
 
   DiskManFileInfo PropInf;
   BPBINFO bpbi,file_bpbi,final_bpbi;
-#if defined(SSE_GUI_DISK_MANAGER_INSERT_DISKB_REMOVE)
+#if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
   BYTE SmallIcons,AutoInsert2;
 #else
   bool SmallIcons,AutoInsert2;

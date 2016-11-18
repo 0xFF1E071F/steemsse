@@ -2038,7 +2038,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_DISK_GHOST)  && !defined(SSE_GUI_DISK_MANAGER_GHOST)
+#if defined(SSE_DISK_GHOST)  && !defined(SSE_GUI_DM_GHOST)
         case 7313: // option Ghost disk 
           if (HIWORD(wPar)==BN_CLICKED){
             SSE_GHOST_DISK=!SSE_GHOST_DISK;

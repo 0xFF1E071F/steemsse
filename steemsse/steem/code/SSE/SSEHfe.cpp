@@ -62,7 +62,7 @@ void TImageHFE::Close() {
   Init();  
 }
 
-#if defined(SSE_GUI_DISK_MANAGER_HFE)
+#if defined(SSE_GUI_DM_HFE)
 
 bool TImageHFE::Create(char *path) {
   // utility called by Disk manager

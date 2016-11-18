@@ -17,6 +17,13 @@ of the various unarchiving libraries it can use.
 // global for conversion from unicode, reused in other parts
 char ansi_string[MAX_PATH]; 
 
+int (_stdcall *GetFirstInZip)(char*,PackStruct*); //find out what files are in the ZIP file (first file)
+int (_stdcall *GetNextInZip)(PackStruct*);        //get next file in ZIP
+void (_stdcall *CloseZipFile)(PackStruct*);       //free buffers and close ZIP after GetFirstInZip()
+BYTE (_stdcall *isZip)(char*);                    //determine if a file is a ZIP file
+int (_stdcall *UnzipFile)(char*,char*,WORD,long,void*,long);        //unzipping
+
+
 zipclass zippy; 
 
 #if defined(WIN32)

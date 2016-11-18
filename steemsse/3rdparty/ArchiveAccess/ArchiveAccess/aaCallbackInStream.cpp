@@ -19,11 +19,19 @@ using namespace std;
 AACallbackInStream::AACallbackInStream (ReadCallback readFunction, 
     aaHandle ReadStreamID, INT64 FileSize, bool CloseStreamAfterDestruction)
 {
+  //OutputDebugString(L"AACallbackInStream\n");
+  //if(!CloseStreamAfterDestruction)
+    //OutputDebugString(L"No need to close!\n");
 	m_read = readFunction;
 	m_StreamID = ReadStreamID;
 	m_offset = 0;
 	m_FileSize = FileSize;
+#if 0 //SS - but then it doesn't work...
+  OutputDebugString(L"Force m_CloseWindowsHandle!\n");
+  m_CloseWindowsHandle = true;
+#else
 	m_CloseWindowsHandle = CloseStreamAfterDestruction;
+#endif
 }
 
 
@@ -32,7 +40,13 @@ AACallbackInStream::AACallbackInStream (ReadCallback readFunction,
 
 AACallbackInStream::~AACallbackInStream ()
 {
+  //OutputDebugString(L"~AACallbackInStream\n");
+#if 0 //SS - but then it doesn't work...
+  // the Handle is better closed by the calling program (Steem)
+  if (true) {
+#else
 	if (m_CloseWindowsHandle) {
+#endif
 		CloseHandle (reinterpret_cast <HANDLE> (m_StreamID));
 	}
 }
@@ -43,6 +57,7 @@ AACallbackInStream::~AACallbackInStream ()
 STDMETHODIMP AACallbackInStream::Read (void *data, UINT32 size, 
 									 UINT32 *pProcessedSize)
 {
+  //OutputDebugString(L"Read\n");
    UINT32 processedSize;
    HRESULT result = m_read (m_StreamID, m_offset, size, data, &processedSize); 
    m_offset += processedSize;

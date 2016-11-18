@@ -13,7 +13,7 @@ struct TYM2149 {
   WORD *p_fixed_vol_3voices;
 #endif
 #if defined(SSE_YM2149A)
-  BYTE SelectedDrive; //0/1 (use Drive() to check validity
+  BYTE SelectedDrive; //0/1 (use Drive() to check validity)
   BYTE SelectedSide;  //0/1
 #endif
   // FUNCTIONS

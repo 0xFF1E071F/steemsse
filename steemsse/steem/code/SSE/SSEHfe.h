@@ -13,7 +13,7 @@ struct  TImageHFE {
   // interface (the same as for STW disk images)
   bool Open(char *path);
   void Close();
-#if defined(SSE_GUI_DISK_MANAGER_HFE)
+#if defined(SSE_GUI_DM_HFE)
   bool Create(char *path);
 #endif
   bool LoadTrack(BYTE side,BYTE track);

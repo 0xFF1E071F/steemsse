@@ -25,6 +25,9 @@
 
 #include "../ArchiveAccess/ArchiveAccessDynamic.h"
 
+
+#include <archive.decla.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 // Dynamically loaded library
 
@@ -122,7 +125,12 @@ aaHandle ArchiveHandle=0;
 
 void ArchiveAccess_Close() {
   if(ArchiveHandle) // or big crash...
+  {
     aaCloseArchive (ArchiveHandle);
+#if defined(SSE_VAR_ARCHIVEACCESS_383)
+    CloseHandle(zippy.hArcData); // fixes handle leak + impossible to move file
+#endif
+  }
   ArchiveHandle=0;
 }
 
@@ -161,10 +169,13 @@ bool ArchiveAccess_Open(TCHAR* ArchiveFileName) {
       aaDetermineArchiveType (readCallback, iStreamID, FileSize, &flags);
     ArchiveHandle = aaOpenArchive(readCallback, iStreamID, FileSize,
       ArchiveType, &OpenArchiveError, password);
+#if defined(SSE_VAR_ARCHIVEACCESS_383)
+    zippy.hArcData=FileHandle; // memorise this
+#endif
 #ifdef SSE_DEBUG
-    TRACE_LOG("ArchiveAccess open %s Type %c%c%c%c flags %X: ERR %d\n",
+    TRACE_LOG("ArchiveAccess open %s Type %c%c%c%c flags %X: ERR %d handle:%d\n",
       ArchiveFileName,(ArchiveType>>(3*8))&0xFF,(ArchiveType>>(2*8))&0xFF,
-      (ArchiveType>>8)&0xFF,ArchiveType&0xFF,flags,OpenArchiveError);
+      (ArchiveType>>8)&0xFF,ArchiveType&0xFF,flags,OpenArchiveError,iStreamID);
 #endif
     if (OpenArchiveError == 0) { //OK
       current_archived_file=0; // first file
