@@ -1908,7 +1908,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383E1A4 //cancel reload
 #define SSE_GLUE_383E1B //assert
 #define SSE_GLUE_383E2 //remove 'scanline'
-#define SSE_GLUE_383EC // update idx
+//#define SSE_GLUE_383EC // update idx
+#define SSE_GLUE_383ED //can't count on shifter_freq_idx TODO
 #endif
 #define SSE_TOS_CHECKSUM
 #define SSE_VAR_RESIZE_383B

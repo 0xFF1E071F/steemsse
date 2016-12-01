@@ -1834,6 +1834,14 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 #if defined(SSE_GLUE_383E1B)
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
 #endif
+#if defined(SSE_GLUE_383ED) // can't count on shifter_freq_idx TODO
+  if(Glue.m_ShiftMode&2) // 72hz (monochrome)
+    Glue.VCount=501; // not 500
+  else if (Glue.m_SyncMode&2) // 50hz
+    Glue.VCount=313;
+  else // 60hz
+    Glue.VCount=263;
+#else
   switch(shifter_freq_idx)
   {
   case 0: // 50hz
@@ -1848,6 +1856,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   default:
     ASSERT(0);
   }
+#endif
   //TRACE("%d\n",Glue.VCount);
 #endif
 }
