@@ -25,7 +25,8 @@ struct TOption {
   unsigned int Microwire:1;
   unsigned int PSGFilter:1;
   unsigned int CaptureMouse:1;
-  unsigned int StealthMode:1;
+  //unsigned int StealthMode:1;
+  unsigned int EmuDetect:1;
   unsigned int OutputTraceToFile:1; 
   unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB 
   unsigned int UseSDL:1;
@@ -86,7 +87,8 @@ extern struct TOption SSEOption;
 #define BORDER_40 (SSEOption.DisplaySize==1)
 #endif
 #define DISPLAY_SIZE (SSEOption.DisplaySize)
-#define STEALTH_MODE SSEOption.StealthMode
+//#define STEALTH_MODE SSEOption.StealthMode
+#define OPTION_EMU_DETECT SSEOption.EmuDetect
 #define USE_TRACE_FILE (SSEOption.OutputTraceToFile)
 #define TRACE_FILE_REWIND (SSEOption.TraceFileLimit)
 #define OPTION_WS (SSEOption.WakeUpState)

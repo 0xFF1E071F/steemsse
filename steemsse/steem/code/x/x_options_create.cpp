@@ -53,7 +53,7 @@ void TOptionBox::CreateMachinePage()
   st_type_dd.create(XD,page_p,page_l+5+Wid,y,180-(15+Wid+10),350,
     dd_notify_proc,this);
 
-#if defined(SSE_MMU_WAKE_UP) && defined(SSE_GUI_OPTIONS_WU)
+#if defined(SSE_MMU_WU) && defined(SSE_GUI_OPTIONS_WU)
   Wid=hxc::get_text_width(XD,T("Wake-up state"));
   wake_up_label.create(XD,page_p,page_l+160,y,Wid,25,NULL,this,BT_STATIC 
     | BT_TEXT,T("Wake-up state"),0,BkCol);
@@ -1341,10 +1341,11 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VAR_STEALTH) 
+#if defined(SSE_EMU_DETECT) 
   stealth_mode_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Emu detect"),4004,BkCol);
-  stealth_mode_but.set_check(!STEALTH_MODE);
+  //stealth_mode_but.set_check(!STEALTH_MODE);
+  stealth_mode_but.set_check(OPTION_EMU_DETECT);
   hints.add(stealth_mode_but.handle,
   T("Enable easy detection of Steem by ST programs."),page_p);
   y+=LineHeight;

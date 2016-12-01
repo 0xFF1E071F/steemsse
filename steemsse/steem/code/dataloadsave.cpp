@@ -83,9 +83,6 @@ void LoadAllDialogData(bool FirstLoad,Str INIFile,bool *SecDisabled,GoodConfigSt
   DiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
   JoyConfig.LoadData(FirstLoad,pCSF,SecDisabled);
   OptionBox.LoadData(FirstLoad,pCSF,SecDisabled);
-#if defined(SSE_VAR_HIDE_OPTIONS_AT_START)
-  OptionBox.Hide();
-#endif
   InfoBox.LoadData(FirstLoad,pCSF,SecDisabled);
   ShortcutBox.LoadData(FirstLoad,pCSF,SecDisabled);
   PatchesBox.LoadData(FirstLoad,pCSF,SecDisabled);
@@ -745,7 +742,7 @@ bool TJoystickConfig::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisabled)
 {
   SEC(PSEC_MACHINETOS){
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_4GHZ)
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),4096000000),(int)CpuNormalHz);
 #elif defined(SSE_CPU_3GHZ)
@@ -835,7 +832,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     SwitchSTType(ST_TYPE); // settings for STF or STE
 #endif
 #endif
-#if defined(SSE_INT_MFP_RATIO_OPTION2)
+#if defined(SSE_CPU_MFP_RATIO_OPTION2)
     OPTION_CPU_CLOCK=pCSF->GetInt("Options","FinetuneCPUclock",OPTION_CPU_CLOCK);
     CpuCustomHz=pCSF->GetInt("Machine","CpuCustomHz",CpuCustomHz);
 #endif
@@ -875,8 +872,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       OPTION_C1=1;
 #endif
 #endif
-#if defined(SSE_VAR_STEALTH) 
-    STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
+#if defined(SSE_EMU_DETECT) 
+    //STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
+    OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
 #endif
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
@@ -1439,8 +1437,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_IKBD_6301)
   pCSF->SetStr("Options","Chipset1",EasyStr(OPTION_C1));
 #endif
-#if defined(SSE_VAR_STEALTH) 
-  pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
+#if defined(SSE_EMU_DETECT) 
+  //pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
+  pCSF->SetStr("Options","EmuDetect",EasyStr(OPTION_EMU_DETECT));
 #endif
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
@@ -1689,7 +1688,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_STF)
   pCSF->SetStr("Machine","STType",EasyStr(ST_TYPE));
 #endif
-#if defined(SSE_INT_MFP_RATIO_OPTION2)
+#if defined(SSE_CPU_MFP_RATIO_OPTION2)
   pCSF->SetStr("Options","FinetuneCPUclock",EasyStr(OPTION_CPU_CLOCK));
   pCSF->SetStr("Machine","CpuCustomHz",EasyStr(CpuCustomHz));
 #endif

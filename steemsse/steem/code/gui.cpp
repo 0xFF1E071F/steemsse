@@ -618,7 +618,7 @@ void GUIRefreshStatusBar() {
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif
 
-#if defined(SSE_GUI_STATUS_BAR_HISPEED) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_GUI_STATUS_BAR_HISPEED) && defined(SSE_CPU_MFP_RATIO)
       if(n_cpu_cycles_per_second>CpuNormalHz)
       {
         char sb_clock[10];
@@ -742,7 +742,7 @@ void GUIRefreshStatusBar() {
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
 
-#if defined(SSE_DISK_EXT)
+#if defined(SSE_DISK_EXT) && defined(SSE_DISK)
 /*  If the game in A: isn't displayed on status bar, then we
     show what kind of file is in A: and B:. v3.7.2
 */

@@ -5,10 +5,10 @@
 #include "SSESTF.h"
 #include "SSEGlue.h"
 
-#if defined(SSE_INT_MFP_RATIO) 
+#if defined(SSE_CPU_MFP_RATIO) 
 extern double CpuMfpRatio;
 extern DWORD CpuNormalHz;
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
 extern DWORD CpuCustomHz;
 #endif
 #endif

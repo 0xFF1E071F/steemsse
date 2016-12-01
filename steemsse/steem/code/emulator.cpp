@@ -53,8 +53,13 @@ EXT int shifter_pixel;
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 extern "C" 
 #endif
+#if defined(SSE_VAR_RESIZE_383B)
+EXT BYTE shifter_freq INIT(60);
+EXT BYTE shifter_freq_idx INIT(1);
+#else
 EXT int shifter_freq INIT(60);
 EXT int shifter_freq_idx INIT(1);
+#endif
 EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
@@ -183,7 +188,7 @@ void init_timings()
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
 
 #if !defined(SSE_GLUE_FRAME_TIMINGS)
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
   if (n_cpu_cycles_per_second>8000000){
@@ -266,7 +271,7 @@ void init_timings()
   dma_sound_channel_buf_last_write_t=0;
 
 #if USE_PASTI
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
   pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
   pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -400,8 +405,9 @@ void intercept_xbios()
     log_os_call(14);
   }
 #endif
-#if defined(SSE_VAR_STEALTH)
-  if (!STEALTH_MODE 
+#if defined(SSE_EMU_DETECT)
+  //if (!STEALTH_MODE 
+  if(OPTION_EMU_DETECT
     && m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
 #else
   if (m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
@@ -729,11 +735,10 @@ void agenda_acia_tx_delay_MIDI(int)
 }
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused
-#if !(defined(SSE_MMU_NO_CONFUSION))
-//#define LOGSECTION LOGSECTION_IO//SS
-#define LOGSECTION LOGSECTION_MMU
 
 #if defined(SSE_MMU_RAM_TEST1)
+
+#define LOGSECTION LOGSECTION_MMU
 /* see memdetect.txt in 3rdparty/doc
 
 R=row, C=column
@@ -772,7 +777,6 @@ C R C R C R C R C R C R C R C R C R X
 
 MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 {
-//#if defined(SSE_BOILER_TRACE_CONTROL)
 #ifdef SSE_DEBUG
   MEM_ADDRESS ad1=ad; // save for trace
 #endif
@@ -824,12 +828,10 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 
   if (bank==1 && ad<FOUR_MEGS) 
     ad+=bank_length[0];
-//#if defined(SSE_BOILER_TRACE_CONTROL)
 #ifdef SSE_DEBUG
   if((ad1!=ad)) //&& (TRACE_MASK_IO & TRACE_CONTROL_IO_MMU))
     TRACE_LOG("MMU confused ad %X -> %X\n",ad1,ad);
 #endif
-//#endif
   return ad;
 }
 
@@ -915,7 +917,7 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
     ad=0xfffffe; //gap
   }
   if (bank==1 && ad<FOUR_MEGS) ad+=bank_length[0];
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG___)
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if (((1<<13)&d2_dpeek(FAKE_IO_START+24)))
 #endif
@@ -979,9 +981,8 @@ void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception)
     m68k_dest=&iobuffer;  //throw away result
   }
 }
-#undef LOGSECTION
-#endif//#if !defined(SSE_MMU_NO_CONFUSION)
 
+#undef LOGSECTION
 
 #ifndef NO_CRAZY_MONITOR
 

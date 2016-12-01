@@ -2459,23 +2459,15 @@ rasterline to allow horizontal fine-scrolling.
           mmu_memory_configuration=io_src_b;
           mmu_bank_length[0]=mmu_bank_length_from_config[(mmu_memory_configuration & b1100) >> 2];
           mmu_bank_length[1]=mmu_bank_length_from_config[(mmu_memory_configuration & b0011)];
-//#if defined(SSE_BOILER_TRACE_CONTROL)
-  //        if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
-    //        TRACE_LOG("PC %X write %X to MMU (bank 0: %d bank 1: %d)\n",pc,io_src_b,
           TRACE_LOG("PC %X write %X to MMU (bank 0: %d bank 1: %d)\n",pc,io_src_b,
               mmu_bank_length[0]/1024, mmu_bank_length[1]/1024);
-//#endif
-#if !defined(SSE_MMU_NO_CONFUSION)
           mmu_confused=false;
           if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
           if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
 #if defined(SSE_MMU_WRITE_MEM_CONF) && !defined(SSE_MMU_RAM_TEST2)
           if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
           {
-//#if defined(SSE_BOILER_TRACE_CONTROL)
-  //          if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
-              TRACE_LOG("Cancel MMU testing\n");
-//#endif
+            TRACE_LOG("Cancel MMU testing\n");
             mmu_confused=false; // fixes Super Neo Demo Show (1MB) (hack)
           }
 #endif
@@ -2484,15 +2476,7 @@ rasterline to allow horizontal fine-scrolling.
 #else
           himem=(MEM_ADDRESS)mem_len;
 #endif
-#else//?SSE_MMU_NO_CONFUSION
-          himem=(MEM_ADDRESS)mem_len;
-          int mmu_confused=0;//dbg
-#endif
-//#if defined(SSE_BOILER_TRACE_CONTROL)
-  //        if(TRACE_MASK_IO & TRACE_CONTROL_IO_MMU)
-    //        TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d confused %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
           TRACE_LOG("MMU PC %X Byte %X RAM %dK Bank 0 %d Bank 1 %d confused %d\n",old_pc,io_src_b,mem_len/1024,bank_length[0]/1024,bank_length[1]/1024,mmu_confused);
-//#endif
         }
       }else if (addr>0xff800f){
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);

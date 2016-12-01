@@ -18,7 +18,7 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-#if defined(SSE_DRIVE_IPF1)
+#if defined(SSE_DRIVE_IPF1_)
 #include <stemdialogs.decla.h>//temp...
 #include <diskman.decla.h>
 #endif
@@ -315,24 +315,31 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
-
+#if defined(SSE_DISK_CAPS_383B)
+  // function called to clear IRQ, can mess with sound (Jupiter's Masterdrive)
+  if(lineout) {
+#endif
 #if defined(SSE_DEBUG)
-  if(TRACE_ENABLED(LOGSECTION_FDC)) 
-    Dma.UpdateRegs(true);
-  else
+    if(TRACE_ENABLED(LOGSECTION_FDC)) 
+      Dma.UpdateRegs(true);
+    else
 #endif
-    Dma.UpdateRegs(); // why it only worked in boiler, log on...
-  
+      Dma.UpdateRegs(); // why it only worked in boiler, log on...
+
 #if defined(SSE_DRIVE_SOUND)
-  if(SSEOption.DriveSound)
-  {
+    if(SSEOption.DriveSound)
+    {
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
-    ::SF314[DRIVE].Sound_CheckIrq();
+      ::SF314[DRIVE].Sound_CheckIrq();
 #else
-    ::SF314[0].Sound_CheckIrq();
+      ::SF314[0].Sound_CheckIrq();
 #endif
+    }
+#endif
+#if defined(SSE_DISK_CAPS_383B)
   }
 #endif
+
 //  TRACE_FDC("ipf MFP_GPIP_FDC_BIT: %d\n",!(lineout&CAPSFDC_LO_INTRQ));
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
 #if !defined(SSE_OSD_DRIVE_LED3)

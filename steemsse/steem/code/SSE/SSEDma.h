@@ -3,6 +3,7 @@
 #define SSEDMA_H
 
 #include "SSE.h"
+
 #if defined(SSE_DMA_OBJECT)
 
 //   Steem original variables are defined as the new ones.
@@ -65,7 +66,6 @@ TODO: maybe use the feature and remove #define to make code more readable?
     +4 // see fdc.h, replaces fdc_read_address_buffer[20]
 #endif
     ];
-#endif
 #endif//FIFO
   WORD MCR; // mode control register
   WORD Counter; // Counter register
@@ -100,7 +100,7 @@ TODO: maybe use the feature and remove #define to make code more readable?
 #endif
 #if defined(SSE_DMA_FIFO)
   void AddToFifo(BYTE data);
-#if defined(SSE_DMA_DRQ)
+#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772_EMU)
   bool Drq(); // void?
 #endif
   BYTE GetFifoByte();
@@ -114,10 +114,10 @@ TODO: maybe use the feature and remove #define to make code more readable?
 */
   void RequestTransfer();
   void TransferBytes();
+#endif//fifo
 };
 
 #pragma pack(pop)
 
 #endif//dma object
-
 #endif//SSEDMA_H

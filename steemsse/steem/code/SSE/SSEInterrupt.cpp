@@ -7,9 +7,9 @@
 
 #endif
 
-#if defined(SSE_INT_MFP_RATIO) // need no SSE_STF
+#if defined(SSE_CPU_MFP_RATIO) // need no SSE_STF
 DWORD CpuNormalHz=CPU_STF_PAL;
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
 DWORD CpuCustomHz=CPU_STF_PAL;
 #endif
 double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLK_TH_EXACT;
@@ -87,6 +87,9 @@ void ASMCALL check_for_interrupts_pending() {
     {
       BYTE iack_latency=MFP_IACK_LATENCY; //28
       MC68901.IackTiming=ACT; // record start of IACK cycle
+#if defined(SSE_OSD_CONTROL) && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
+      int detect_iack_subst=0;
+#endif
       if(OPTION_C2) // if not, "old" Steem test
       {
 #if defined(SSE_INT_MFP_SPURIOUS)
@@ -97,7 +100,7 @@ void ASMCALL check_for_interrupts_pending() {
         if(MC68901.Irq) 
         {
           ASSERT(MFP_IRQ);
-          TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
+//          TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
 #if defined(SSE_INT_MFP_SPURIOUS) 
 #if defined(SSE_CPU) && !defined(SSE_VAR_OPT_383D)
           ASSERT(!M68000.IackCycle);
@@ -114,14 +117,11 @@ void ASMCALL check_for_interrupts_pending() {
     Extreme Rage guest screen
     Final Conflict
     Froggies/OVR
-    Fuzion 77, 78, 84, 146...
+    Fuzion 77, 78, 84 (STF), 146...
     There are many other cases where it happens but emulation seems
     fine without the feature.
 */
           WORD oldsr=sr;
-#if defined(SSE_BOILER) && defined(SSE_OSD_CONTROL)
-          char dbg_iack_subst=0;
-#endif
           sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // already forbid other interrupts
           while(cpu_cycles&&cpu_cycles<=iack_latency) // can be negative! (Froggies/OVR)
           {
@@ -132,7 +132,16 @@ void ASMCALL check_for_interrupts_pending() {
             if(TRACE_ENABLED(LOGSECTION_MFP))
               TRACE_EVENT(screen_event_vector);
 #endif
-            screen_event_vector();  // trigger event //big possible bug:twice??
+#if defined(SSE_OSD_CONTROL) && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
+            // not super-smart
+            if(screen_event_vector==event_timer_a_timeout
+              || screen_event_vector==event_timer_b_timeout
+              || screen_event_vector==event_timer_c_timeout
+              || screen_event_vector==event_timer_d_timeout
+              || screen_event_vector==event_timer_b)
+              detect_iack_subst=MC68901.NextIrq;//maybe
+#endif
+            screen_event_vector();  // trigger event
 #if defined(SSE_INT_MFP_SPURIOUS)
 /*  As soon as an event clears IRQ during IACK, we go in panic mode. 
     This should trigger spurious interrupt.
@@ -184,10 +193,9 @@ void ASMCALL check_for_interrupts_pending() {
                       continue; // examine lower irqs too
                   }
 #endif    
-#if defined(SSE_BOILER) && defined(SSE_OSD_CONTROL) \
-  && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
-                  if(dbg_iack_subst && (OSD_MASK1 & OSD_CONTROL_IACK))
-                    TRACE_OSD("IACK %d %d -> %d",iack_latency,MC68901.NextIrq,irq);
+#if defined(SSE_OSD_CONTROL) && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
+                  if((OSD_MASK1 & OSD_CONTROL_IACK) && detect_iack_subst)
+                    TRACE_OSD("IACK %d %d -> %d",iack_latency,detect_iack_subst,irq);
 #endif
                   mfp_interrupt(irq); //then cause interrupt
                   break;        //lower priority interrupts not allowed now.
@@ -204,7 +212,11 @@ void ASMCALL check_for_interrupts_pending() {
     Pacemaker STE! Spurious interrupt has a handler (RTE)
     Zikdisk2        ditto
 */
+#if defined(SSE_INT_MFP_SPURIOUS_383)
+          if(irq==-1 && !no_real_irq) // couldn't find one and there was no break
+#else
           if(irq==-1 && iack_latency <=20 && !no_real_irq) // couldn't find one and there was no break
+#endif
           {
             TRACE_OSD("Spurious! %d",iack_latency);
             //TRACE_OSD2("Spurious"); // but maybe it annoys player

@@ -33,9 +33,7 @@ EXT MEM_ADDRESS rom_addr;     //128
 EXT unsigned long tos_len;    //132
 EXT unsigned long mem_len;    //136
 EXT bool tos_high;            //140
-#if !defined(SSE_MMU_NO_CONFUSION)
 EXT bool mmu_confused;        //144 
-#endif
 EXT unsigned long hbl_count INIT(0);
 
 #if defined(SSE_IKBD_6301)

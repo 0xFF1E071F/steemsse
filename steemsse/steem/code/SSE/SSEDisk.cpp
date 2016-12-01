@@ -1,16 +1,6 @@
 #include "SSE.h"
 
-#if defined(SSE_DISK)
-
 #include "../pch.h"
-
-#include <fdc.decla.h>
-#include <floppy_drive.decla.h>
-
-#include "SSEDebug.h"
-#include "SSEDisk.h"
-#include "SSEDrive.h"
-#include "SSEFloppy.h"
 
 #if defined(SSE_DISK_EXT) // available for all SSE versions
 char *extension_list[]={ "","ST","MSA","DIM","STT","STX","IPF",
@@ -24,6 +14,18 @@ char *dot_ext(int i) { // is it ridiculous? do we reduce or add overhead?
 }
 
 #endif
+
+#if defined(SSE_DISK)
+
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+
+#include "SSEDebug.h"
+#include "SSEDisk.h"
+#include "SSEDrive.h"
+#include "SSEFloppy.h"
+
+
 
 #if defined(SSE_DISK1)
 
@@ -88,7 +90,7 @@ WORD TDisk::BytesToID(BYTE &num) {
 }
 
 
-#elif defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+#elif defined(SSE_DISK_RW_SECTOR_TIMING3)
 
 WORD TDisk::BytesToID(BYTE &num,WORD &nHbls) {
 /*  Compute distance in bytes between current byte and desired ID
@@ -138,7 +140,7 @@ WORD TDisk::BytesToID(BYTE &num,WORD &nHbls) {
   return bytes_to_id;
 }
 
-#endif//#if defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+#endif//#if defined(SSE_DISK_RW_SECTOR_TIMING3)
 
 WORD TDisk::HblsPerSector() {
   return nSectors()?(SF314[Id].HblsPerRotation()-SF314[Id].BytesToHbls(TrackGap()))/nSectors() : 0;

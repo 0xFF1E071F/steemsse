@@ -123,7 +123,7 @@ void RS232_CalculateBaud(bool Div16,BYTE cr,bool SetBaudNow)
       UpdateBaud=0;
     }
   }else{
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
     rs232_hbls_per_word=CpuNormalHz;
 #else
     rs232_hbls_per_word=80000000;

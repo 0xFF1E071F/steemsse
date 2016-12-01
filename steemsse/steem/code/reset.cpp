@@ -291,16 +291,9 @@ void reset_peripherals(bool Cold)
 #endif
 
   if (COLOUR_MONITOR){
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
-    BYTE old_screen_res=screen_res;
-#endif
     screen_res=0;
     shifter_freq=60; // SS notice reset freq=60hz
     shifter_freq_idx=1;
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
-    if(old_screen_res==2)
-      init_screen(); // or some bad crashes
-#endif
   }else{
     screen_res=2;
     shifter_freq=MONO_HZ;

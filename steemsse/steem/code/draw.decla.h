@@ -82,8 +82,7 @@ EXT RECT draw_blit_source_rect;
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
- && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
 #define DWM_STRETCH_SCANLINES 3
 #endif
 
@@ -334,12 +333,14 @@ EXT bool draw_med_low_double_height;
 
 EXT bool draw_line_off;
 
+#if !defined(SSE_SHIFTER_TRICKS)
 #define ADD_SHIFTER_FREQ_CHANGE(f) \
   {shifter_freq_change_idx++;shifter_freq_change_idx&=31; \
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME; \
   shifter_freq_change[shifter_freq_change_idx]=(f);                    \
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Change to freq ")+(f)+      \
             " at time "+ABSOLUTE_CPU_TIME);}
+#endif
 
 EXT bool freq_change_this_scanline;
 

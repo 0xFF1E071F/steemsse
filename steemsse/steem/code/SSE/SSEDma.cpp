@@ -81,7 +81,7 @@ void TDma::AddToFifo(BYTE data) {
 #endif
 
 
-#if defined(SSE_DMA_DRQ)//3.7.0 
+#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772_EMU)
 
 /*  This just transfers one byte between controller's DR and Fifo at request.
     Direction depends on control register, function checks it itself.

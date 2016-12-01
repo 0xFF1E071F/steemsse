@@ -17,7 +17,8 @@ struct TScanline {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
 
 struct TGlueStatusBYTE { 
-  // used to avoid doing tasks twice on repeat calls, a little cheat maybe
+  // necessary because GetNextScreenEvent() can be called an arbitrary
+  // number of times at the same timing
   unsigned int scanline_done:1;
   unsigned int sdp_reload_done:1;
   unsigned int vbl_done:1;
@@ -44,10 +45,15 @@ struct TGlue {
   int TrickExecuted; //make sure that each trick will only be applied once
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct screen_event;
-  WORD scanline; 
 #endif
 #if defined(SSE_GLUE_383B2) //just in case
   TScanline PreviousScanline, CurrentScanline, NextScanline;
+#endif
+#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_383E2)
+  WORD scanline; 
+#endif
+#if defined(SSE_GLUE_383E) 
+  short VCount;
 #endif
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
@@ -71,8 +77,7 @@ struct TGlue {
   // FUNCTIONS
   TGlue();
   void AdaptScanlineValues(int CyclesIn); // on set sync of shift mode
-  void AddFreqChange(int f);
-  void AddShiftModeChange(int r);
+
   void CheckSideOverscan(); // left & right border effects
   void CheckVerticalOverscan(); // top & bottom borders
   void EndHBL();
@@ -89,6 +94,9 @@ struct TGlue {
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
 #endif
+#if defined(SSE_SHIFTER_TRICKS)
+  void AddFreqChange(int f);
+  void AddShiftModeChange(int r);  
   int FreqChangeAtCycle(int cycle);
   int FreqAtCycle(int cycle);
   int ShiftModeAtCycle(int cycle);
@@ -107,6 +115,8 @@ struct TGlue {
   int NextShiftModeChangeIdx(int cycle);
   int PreviousShiftModeChange(int cycle);
   int CycleOfLastChangeToShiftMode(int value);
+#endif
+
 };
 
 #pragma pack(pop)

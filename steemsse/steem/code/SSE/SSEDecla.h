@@ -122,10 +122,13 @@ int SS_signal; // "handy" global mask (future coding horror case)
 // INTERRUPT //
 ///////////////
 
-#if defined(SSE_INT_MFP_RATIO) 
+#if defined(SSE_CPU_MFP_RATIO) 
 #define CPU_CYCLES_PER_MFP_CLK CpuMfpRatio
 #endif
 
+#if !defined(SSE_INTERRUPT) 
+#define INSTRUCTION_TIME_ROUND
+#endif
 
 /////////
 // IPF //

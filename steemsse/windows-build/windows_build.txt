@@ -8,5 +8,5 @@ build_user.bat
 
 
 NOTE (SS): this library seems rather useless, unable to open current
-RAR files, so it's dropped, the plan being to use unrar.dll instead.
+RAR files, so it's dropped, Steem SSE uses unrar.dll instead.
 

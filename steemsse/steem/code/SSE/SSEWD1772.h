@@ -22,7 +22,6 @@ The structure is used by SSEWD1772.cpp, but also by SSEGhostDisk.cpp.
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)//TODO
 
-//#if defined(SSE_WD1772_EMU)
 #if defined(SSE_WD1772_IDFIELD)
 
 struct TWD1772IDField {
@@ -105,10 +104,6 @@ struct TWD1772AmDetector {
 };
 
 
-//#endif//#if defined(SSE_WD1772_EMU) 
-
-//#if defined(SSE_WD1772_EMU) //temp
-
 struct TWD1772 {
 
   // ENUM
@@ -181,42 +176,36 @@ struct TWD1772 {
   // DATA
 #if defined(SSE_WD1772_EMU)
   int prg_phase;
-//#if defined(SSE_FLOPPY_EVENT)
   int update_time; // when do we need to come back?
-//#endif
   WORD ByteCount; // guessed
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields
-//#if defined(SSE_WD1772_CRC)
   TWD1772Crc CrcLogic;
-//#endif
 #if defined(SSE_WD1772_BIT_LEVEL)
   TWD1772Dpll Dpll;
 #endif
   TWD1772AmDetector Amd; // not the processor
-//#endif
-//#if defined(SSE_WD1772_MFM)
   TWD1772MFM Mfm;
-//#endif
-
+#endif
+#if defined(SSE_WD1772_REGS)
   BYTE CR;  // command
   BYTE STR; // status
   BYTE TR;  // track
   BYTE SR;  // sector
   BYTE DR;  // data
   BYTE DSR; // shift register - official
-
+#endif
+#if defined(SSE_WD1772_EMU)
 #if defined(SSE_WD1772_F7_ESCAPE) //keep a switch because I'm not sure of this
   bool F7_escaping;
 #endif
-
   BYTE n_format_bytes; // to examine sequences before ID
-#endif//#if defined(SSE_WD1772_EMU)
-
+#endif
+#if defined(SSE_WD1772_REGS)
   BYTE StatusType; // guessed
   BYTE InterruptCondition; // guessed
   BYTE IndexCounter; // guessed
-
+#endif
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
@@ -280,9 +269,7 @@ struct TWD1772 {
   int MsToCycles(int ms);
   void Write(); // sends order to drive
   void WriteCR(BYTE io_src_b); //horrible TODO
-//#if defined(SSE_FLOPPY_EVENT)
   void OnUpdate();
-//#endif
   // called by drive or by image
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
   void OnIndexPulse(bool image_triggered); 

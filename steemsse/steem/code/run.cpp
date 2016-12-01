@@ -166,7 +166,7 @@ void run()
 
   Sound_Start();
 
-#if defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_GLUE) && defined(SSE_SHIFTER_TRICKS)
   Glue.AddFreqChange(shifter_freq);
 #else
   ADD_SHIFTER_FREQ_CHANGE(shifter_freq);
@@ -416,7 +416,7 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
@@ -469,7 +469,7 @@ void inline prepare_next_event() //SS check this "inline" thing
       
     PREPARE_EVENT_CHECK_FOR_PASTI;
 
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
@@ -530,7 +530,7 @@ inline void handle_timeout(int tn) {
 
   if(OPTION_C2)
   {
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
   mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
   // this guarantees that we're always at the right cycle, despite
   // the inconvenience of a ratio
@@ -739,7 +739,8 @@ void event_scanline_sub() {
 #define LOGSECTION LOGSECTION_IKBD
       TRACE_LOG("6301 emu is hopelessly crashed!\n");
 #undef LOGSECTION
-      TRACE2("6301 emu crash\n");
+      //TRACE2("6301 emu crash\n");
+      TRACE2("6301 CRASH\n"); // more dramatic
       HD6301.Crashed=1; 
     }
   }
@@ -1094,16 +1095,18 @@ void event_scanline()
 void event_start_vbl()
 {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
+  Glue.Status.sdp_reload_done=true; // checked this line
+#if !defined(SSE_GLUE_383E1A4)
 /*  This emulates several "reloads" just in case, but we use # line cycles to
     avoid spurious "reloads", because we don't even know the exact timing,
     nor how the GLU decides (Closure multi-scroll triggered reload if checking
     shifter_freq)
 */
-  Glue.Status.sdp_reload_done=true; // checked this line
   if(Glue.scanline==310&&Glue.CurrentScanline.Cycles!=512
     ||Glue.scanline==260&&Glue.CurrentScanline.Cycles!=508
     ||Glue.scanline==494&&Glue.CurrentScanline.Cycles!=224)
     return;
+#endif
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
@@ -1170,6 +1173,13 @@ void event_vbl_interrupt() //SS misleading name?
 */
   event_scanline_sub(); 
 #endif
+#if defined(SSE_GLUE_383E)
+#if defined(SSE_GLUE_383E1B)
+  ASSERT(Glue.VCount);
+#endif
+  //if(Glue.VCount)
+  Glue.VCount--; //? points to some problem...
+#endif
 #if defined(SSE_VID_VSYNC_WINDOW)
   bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
     && fast_forward==0 && slow_motion==0);
@@ -1188,7 +1198,11 @@ void event_vbl_interrupt() //SS misleading name?
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
+#if defined(SSE_GLUE_383E) //it's just to fill up the window
+      scan_y++;
+#else
       Glue.IncScanline();
+#endif
 #else
       if (bad_drawing==0) draw_scanline_to_end();
       scanline_drawn_so_far=0;
@@ -1221,7 +1235,6 @@ void event_vbl_interrupt() //SS misleading name?
   }else if (bad_drawing & 2){
     // bad_drawing bits: & 1 - bad drawing option selected  & 2 - bad-draw next screen
     //                   & 4 - temporary bad drawing because of extended monitor.
-    //TRACE("bad drawing\n");
     draw(0);
     bad_drawing&=(~2);
   }
@@ -1603,7 +1616,7 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_last_draw_line=320;
     overscan=OVERSCAN_MAX_COUNTDOWN;
   }
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
   if((Glue.m_ShiftMode&2)&&screen_res<2)
     shifter_last_draw_line*=2; //400 fetching lines
 #endif
@@ -1615,32 +1628,6 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Vbl();
 #endif
-
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)//no
-/*  v3.7
-    The ST could be set on high resolution for a long time
-    on a colour screen.
-    Without damaging the screen?
-    In that case we must adapt Steem timings as if we had a
-    monochrome monitor. Display will be off.
-    The test is so so, curious to see what it will break :)
-    Fixes My Socks are Weapons.
-    The protection of this demo is rather vicious. It sets the
-    ST in highres, then uses the video counter in the middle of
-    its trace decoding routine.
-    Update v3.8.2: other way (SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
-*/
-
-  if( screen_res<2 && (Shifter.m_ShiftMode&2) && COLOUR_MONITOR
-    && Glue.CurrentScanline.Cycles==224) 
-  {
-    TRACE_OSD("RES2");
-    screen_res=2;
-    shifter_freq=MONO_HZ;
-    shifter_freq_idx=2;
-    init_screen(); //radical but spares much code
-  }
-#endif//SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370
 
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
@@ -1658,7 +1645,7 @@ void event_vbl_interrupt() //SS misleading name?
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -1770,7 +1757,7 @@ void event_pasti_update()
 #endif
 #endif
     ){
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else
     pasti_update_time=ABSOLUTE_CPU_TIME+8000000;
@@ -1832,11 +1819,42 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.vbi_done=true;
 #endif
+#if defined(SSE_GLUE_383E)
+/*  Our hypothesis: the GLUE reloads a counter with a value depending on 
+    frequency each time it runs out, then updates it each scanline.
+    Not sure it's right, but it could be, and it makes emulation more simple
+    and robust compared with v382 (though there was no problem).
+    In our implementation, the counter is loaded with the # scanlines, then
+    decremented until 0.
+    This means that once a frame is started, it won't change # scanlines even
+    if the program changes frequency.
+    We do it when VBI is enabled, by convenience.
+*/
+  //TRACE("Freq %d (%d) VCount %d ->",shifter_freq,shifter_freq_idx,Glue.VCount);
+#if defined(SSE_GLUE_383E1B)
+  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
+#endif
+  switch(shifter_freq_idx)
+  {
+  case 0: // 50hz
+    Glue.VCount=313;
+    break;
+  case 1: // 60hz
+    Glue.VCount=263;
+    break;
+  case 2: // 72hz (monochrome)
+    Glue.VCount=501; // not 500
+    break;
+  default:
+    ASSERT(0);
+  }
+  //TRACE("%d\n",Glue.VCount);
+#endif
 }
 #endif
 
 
-#if defined(SSE_FLOPPY_EVENT) 
+#if defined(SSE_WD1772_EMU) 
 /*  There's an event for floppy now because we want to handle DRQ for each
     byte, and the resolution of HBL is too gross for that:
 
@@ -1865,7 +1883,8 @@ void event_driveA_ip() {
 void event_driveB_ip() {
   SF314[1].IndexPulse();
 }
-#endif//flp
+
+#endif//wd
 
 #if defined(SSE_ACIA_383)
 //  ACIA events to handle IO with both 6301 and MIDI

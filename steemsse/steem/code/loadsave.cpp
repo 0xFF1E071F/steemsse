@@ -349,7 +349,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
         //TRACE("Memory snapshot %s loaded\n",FilNam);
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_383E1)
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;
@@ -517,7 +517,9 @@ bool load_TOS(char *File)
     fclose(f);
     return true;
   }
-
+#if defined(SSE_TOS_CHECKSUM)
+  DWORD checksum=0;
+#endif
   rom_addr=new_rom_addr;
   Rom_End=Rom+tos_len;
   Rom_End_minus_1=Rom_End-1;
@@ -530,9 +532,14 @@ bool load_TOS(char *File)
   if (Len>tos_len) Len=tos_len;
   for (DWORD m=0;m<Len;m++){
     ROM_PEEK(m)=(BYTE)fgetc(f);
+#if defined(SSE_TOS_CHECKSUM)
+    checksum+=ROM_PEEK(m);
+#endif
   }
   fclose(f);
-
+#if defined(SSE_TOS_CHECKSUM)
+  TRACE2("%s %X\n",File,checksum);
+#endif
   tos_version=ROM_DPEEK(2);
 
 #if defined(SSE_TOS_STE_FAST_BOOT) //from hatari
@@ -575,7 +582,7 @@ bool load_TOS(char *)
     of the cartridge.
     SSE: we accept files  where there are no extra null bytes
     We also accept 64KB cartridges.
-    We recognise the MV16 sound cartridge (our custom, fake dump).
+    We recognise the MV16 and RP16 sound cartridges (our custom, fake dumps).
 */
 
 bool load_cart(char *filename) {

@@ -75,6 +75,17 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
+#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(MINGW_BUILD) || defined(SSE_UNIX)
+extern "C"{ EXT BYTE shifter_freq INIT(60); }
+#else
+extern "C" EXT BYTE shifter_freq INIT(60);
+#endif
+#else
+EXT BYTE shifter_freq INIT(60);
+#endif
+#else
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 #if defined(MINGW_BUILD) || defined(SSE_UNIX)
 extern "C"{ EXT int shifter_freq INIT(60); }
@@ -84,7 +95,13 @@ extern "C" EXT int shifter_freq INIT(60);
 #else
 EXT int shifter_freq INIT(60);
 #endif
+#endif
+
+#if defined(SSE_VAR_RESIZE_383B)
+EXT BYTE shifter_freq_idx INIT(1); //1 for 60hz
+#else
 EXT int shifter_freq_idx INIT(1);
+#endif
 EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
@@ -127,7 +144,6 @@ EXT int scan_y;
 #define KB512 (512*1024)
 #define KB128 (128*1024)
 
-#if !defined(SSE_MMU_NO_CONFUSION)
 EXT MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad);
 extern "C"{
 BYTE ASMCALL mmu_confused_peek(MEM_ADDRESS ad,bool cause_exception);
@@ -135,7 +151,6 @@ WORD ASMCALL mmu_confused_dpeek(MEM_ADDRESS ad,bool cause_exception);
 LONG ASMCALL mmu_confused_lpeek(MEM_ADDRESS ad,bool cause_exception);
 void ASMCALL mmu_confused_set_dest_to_addr(int bytes,bool cause_exception);
 }
-#endif
 
 EXT BYTE mmu_memory_configuration;
 

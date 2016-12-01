@@ -24,9 +24,9 @@ void TOption::Init() {
 
 #if defined(SSE_VAR_OPT_383)
 #ifdef WIN32
-  ZeroMemory(this,sizeof(TConfig));
+  ZeroMemory(this,sizeof(TOption));
 #else
-  memset(this,0,sizeof(TConfig));
+  memset(this,0,sizeof(TOption));
 #endif
 #if defined(SSE_HACKS)
   Hacks=true;
@@ -59,7 +59,8 @@ void TOption::Init() {
   STModel=0;//STE;
   CaptureMouse=1;
   DisplaySize=0; // original Steem 3.2
-  StealthMode=0;
+  //StealthMode=0;
+  EmuDetect=1;
 #if defined(DEBUG_BUILD)  
   OutputTraceToFile=1;
 #else
@@ -127,10 +128,8 @@ int TConfig::SwitchSTType(int new_type) {
 #if defined(SSE_INT_VBL_STF)//no
     HblTiming=HBL_FOR_STF; 
 #endif
-#if defined(SSE_INT_MFP_RATIO)
-
-#if defined(SSE_INT_MFP_RATIO_STF) 
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else
@@ -139,13 +138,7 @@ int TConfig::SwitchSTType(int new_type) {
       CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
       CpuNormalHz=CPU_STF_PAL;
     }
-
-#else
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
 #endif
-#endif
-
   }
   else //STE
   {
@@ -153,36 +146,23 @@ int TConfig::SwitchSTType(int new_type) {
 #if defined(SSE_INT_VBL_STF)
     HblTiming=HBL_FOR_STE;
 #endif
-
-#if defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else
 #endif
     {
-#if defined(SSE_INT_MFP_RATIO_STE_AS_STF)
-#if defined(SSE_INT_MFP_RATIO_STE2)
     CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLK_TH_EXACT;
-#else
-    CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
-#endif
     CpuNormalHz=CPU_STE_PAL; 
-#elif defined(SSE_INT_MFP_RATIO_STE)
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
-#else
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
-#endif
     }
-    TRACE_INIT("CPU~%d hz\n",CpuNormalHz);
 #endif
 
   }
   
-#if defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_INT_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
+#if defined(SSE_CPU_MFP_RATIO)
+  TRACE_INIT("CPU~%d hz\n",CpuNormalHz);
+#if defined(SSE_CPU_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
   if(n_cpu_cycles_per_second<10000000) // avoid interference with ST CPU Speed option
 #endif
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)

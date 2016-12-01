@@ -1,3 +1,6 @@
+A Unix (gcc) version of Steem SSE was also maintained, with fewer features
+than the Windows versions, last version released was v3.7.2.
+
 Steem SSE uses makefiles with txt extension, because of the way some
 backup tools work.
 
@@ -5,6 +8,9 @@ Main build is made using "Makefile.txt"
 To build XSteem SSE, enter this in the terminal:
  make -B -fMakefile.txt 3rdparty
  make -B -fMakefile.txt
+
+
+***
 
 Other builds
 Makefile_dbg.txt: a debug build that may output some TRACE and info

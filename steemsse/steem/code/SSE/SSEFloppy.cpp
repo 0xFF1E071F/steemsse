@@ -19,7 +19,7 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-#if defined(SSE_DRIVE_IPF1)
+#if defined(SSE_DRIVE_IPF1_)
 #include <stemdialogs.decla.h>//temp...
 #include <diskman.decla.h>
 #endif

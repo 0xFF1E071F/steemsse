@@ -133,7 +133,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(on_rte);          //4
   ReadWrite(on_rte_interrupt_depth); //4
   ReadWrite(shifter_draw_pointer); //4
+#if defined(SSE_VAR_RESIZE_383B)
+  int shifter_freq_int=shifter_freq;
+  ReadWrite(shifter_freq_int);         //4
+  shifter_freq=shifter_freq_int;
+#else
   ReadWrite(shifter_freq);         //4
+#endif
   if (shifter_freq>65) shifter_freq=MONO_HZ;
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
@@ -973,7 +979,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWriteStruct(Dma);
 #endif
   }
-#if defined(SSE_VIDEO_CHIPSET)//don't trust content of snapshot
+#if defined(SSE_VIDEO_CHIPSET)
   Glue.m_ShiftMode=Shifter.m_ShiftMode=(BYTE)screen_res;
   Glue.m_SyncMode= (BYTE)((shifter_freq==50)?2:0);
 #endif
@@ -1053,7 +1059,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=354
   if(Version>=46) // 3.5.4
   {
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
     ReadWrite(OPTION_WS); // and not struct MMU
 #if defined(SSE_GUI_STATUS_BAR)
     GUIRefreshStatusBar();//overkill
@@ -1146,13 +1152,11 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #ifdef SSE_WD1772
     ReadWriteStruct(WD1772); //yep, was missing before... explains a lot!
     //TRACE("phase %d\n",WD1772.prg_phase);
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
     if(LoadOrSave==LS_LOAD && WD1772.prg_phase>TWD1772::WD_READY)
     {
       WD1772.update_time=ACT+256; // yeah, but it will work with some prgs
-#if defined(SSE_FLOPPY_EVENT) //moved 383
-    SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
-#endif
+      SF314[0].time_of_next_ip=SF314[1].time_of_next_ip=ACT+n_cpu_cycles_per_second;
     }
 #endif
 #endif
@@ -1168,7 +1172,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=380
   if(Version>=52) 
   {
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_383E2)
     Glue.scanline=0; // Steem is always stopped at the start of a frame
 #endif
 #if defined(SSE_IKBD_6301_380) 
@@ -1216,6 +1220,12 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     ReadWrite(NewROMCountry);
 #endif
   }
+#if defined(SSE_GLUE_383E)
+  //TRACE("in load snapshot\n");
+  Glue.VCount=0;  
+//  CALC_SHIFTER_FREQ_IDX//?
+//  Glue.Vbl();
+#endif
 #endif
 
 #endif//sse_build

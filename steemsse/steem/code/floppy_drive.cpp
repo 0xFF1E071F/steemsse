@@ -835,12 +835,12 @@ Header:
       }
 
       fseek(nf,HeaderLen,SEEK_SET);
-#if defined(SSE_OSD_DRIVE_INFO_EXT)
+#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK)
       //this is pretty annoying, this RemoveDisk
       TImageType save_type=SF314[drive].ImageType;
 #endif
       RemoveDisk();
-#if defined(SSE_OSD_DRIVE_INFO_EXT)
+#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK)
       //this is pretty annoying, this RemoveDisk
       SF314[drive].ImageType=save_type;
 #endif
@@ -931,7 +931,9 @@ bool TFloppyImage::ReinsertDisk()
 #ifdef SSE_DISK_CAPS_CTRAW
     || CTRDisk
 #endif
-
+#endif
+#if defined(SSE_DISK_STW) //383
+    || STWDisk //
 #endif
 #if defined(SSE_DISK_SCP)
     || SCPDisk //not right, but we're starting...
@@ -1184,7 +1186,7 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
     for (int n=0;n<int(Format ? FormatMostSectors:SectorsPerTrack);n++){
       IDList[n].Track=BYTE(Track);
       IDList[n].Side=BYTE(Side);
-#if defined(SSE_DRIVE_11_SECTORS)
+#if defined(SSE_DISK_11_SECTORS)
 /*  11 sectors interleave '6': 1 7 2 8 3 9 4 10 5 11 6
     -Load faster in ADAT mode (Overscan Demos)
     -ACopy 1.30 & Flofor report interleave = 6, yeah!
@@ -1276,7 +1278,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Removing) return;
   Removing=true;
 
-#if defined(SSE_DISK_CAPS) || defined(SSE_UNIX)
+//#if defined(SSE_DISK_CAPS) || defined(SSE_UNIX)
+
+#if defined(SSE_DISK_IMAGETYPE) 
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;

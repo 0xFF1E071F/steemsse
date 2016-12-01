@@ -434,7 +434,6 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
 
 #if defined(SSE_STF_MATCH_TOS)
-#if defined(SSE_STF_MATCH_TOS2) // 1.62 instead of 1.06
           // remember paths of default TOS for STF and STE
 
 #if defined(SSE_STF_MATCH_TOS3) 
@@ -442,7 +441,6 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
             &&(KnownSTETosPath.Empty()||Country==Tos.DefaultCountry))
 #else
           if(Ver==DEFAULT_TOS_STF
-
 #if !defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // check each time, HD may be on/off
             && KnownSTFTosPath.Empty()
 #endif
@@ -462,20 +460,6 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
             KnownSTETosPath=Path;
           }
-
-#else
-          // remember paths of TOS102 (STF) & TOS106 (STE)
-          if(Ver==0x102 && KnownSTFTosPath.Empty())
-          {
-            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
-            KnownSTFTosPath=Path;
-          }
-          else if(Ver==0x106 && KnownSTETosPath.Empty())
-          {
-            //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
-            KnownSTETosPath=Path;
-          }
-#endif
 #endif
 #if defined(SSE_IKBD_6301)
           if(Ver!=0x81AA) // 6301 ST Rom mustn't be listed
@@ -1100,8 +1084,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
-  && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
             if(new_mode!=DFSM_STRETCHBLIT 
               && draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
               draw_win_mode[screen_res]--;
@@ -1289,7 +1272,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 	  break;
 #endif
-#if defined(SSE_MMU_WAKE_UP)
+
+#if defined(SSE_GUI_OPTIONS_WU)
         case 212:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
@@ -1363,8 +1347,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw_win_mode[Res]=HIWORD(dat);
                 redraw=true;
               }
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
- && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
               if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
                 draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
 #endif
@@ -1449,16 +1432,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_VAR_STEALTH) // Option Stealth Mode
+#if defined(SSE_EMU_DETECT) // Option Emu detect
         case 1031:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            STEALTH_MODE=!STEALTH_MODE;
-            TRACE_LOG("Option Stealth: %d\n",STEALTH_MODE);
-            SendMessage(HWND(lPar),BM_SETCHECK,!STEALTH_MODE,0);
-#if defined(SSE_VAR_STEALTH2)
+            //STEALTH_MODE=!STEALTH_MODE;
+            OPTION_EMU_DETECT=!OPTION_EMU_DETECT;
+            TRACE_LOG("Emu detect: %d\n",OPTION_EMU_DETECT);
+            //SendMessage(HWND(lPar),BM_SETCHECK,!STEALTH_MODE,0);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_EMU_DETECT,0);
             emudetect_reset();
-#endif
           }
           break;
 #endif
@@ -2005,16 +1988,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_OSD_DRIVE_INFO_SSE_PAGE)
-        case 7308: // drive track info  
-          if (HIWORD(wPar)==BN_CLICKED){
-            OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
-            SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
-            TRACE_LOG("Option drive track info %d\n",OSD_DRIVE_INFO);
-          }
-          break;
-#endif
-
 #if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
         case 7309: //  status bar game name
           if (HIWORD(wPar)==BN_CLICKED){
@@ -2166,7 +2139,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune clock
+#if defined(SSE_CPU_MFP_RATIO_OPTION) // user can fine tune clock
         case 7322:
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_CPU_CLOCK=!OPTION_CPU_CLOCK;
@@ -2840,7 +2813,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             osd_show_disk_light=!osd_show_disk_light;
             SendMessage(HWND(lPar),BM_SETCHECK,osd_show_disk_light,0);
           }
-#if defined(SSE_OSD_DRIVE_INFO_OSD_PAGE)
+#if defined(SSE_GUI_OPTIONS_DRIVE_INFO)
         }else if(i==1) {
           if (HIWORD(wPar)==BN_CLICKED){
             OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
@@ -3033,7 +3006,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 
 
-#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune clock
+#if defined(SSE_CPU_MFP_RATIO_OPTION) // user can fine tune clock
         case 7320:
         {
           CpuCustomHz=SendDlgItemMessage(Win,7320,TBM_GETPOS,0,0)*10+8000000;

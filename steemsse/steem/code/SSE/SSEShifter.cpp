@@ -146,7 +146,7 @@ void TShifter::DrawScanlineToEnd()  {
   {
     if(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line)
     {
-#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+#if defined(SSE_GLUE_HIRES_OVERSCAN)
       if(freq_change_this_scanline)
       {
         Glue.CheckSideOverscan();
@@ -210,10 +210,7 @@ void TShifter::DrawScanlineToEnd()  {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
-        if(!COLOUR_MONITOR) 
-#endif
-        {
+
         ASSERT(screen_res==2);
 #if defined(SSE_SHIFTER_383)
         if(nsdp<=mem_len)
@@ -222,7 +219,7 @@ void TShifter::DrawScanlineToEnd()  {
 #endif
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
-#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+#if defined(SSE_GLUE_HIRES_OVERSCAN)
 // experimental, right off, left off?
           if(Glue.CurrentScanline.Tricks&2)
 #if defined(SSE_SHIFTER_382)
@@ -237,13 +234,12 @@ void TShifter::DrawScanlineToEnd()  {
         else
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline(0,640/16,0,0);
-        }
         draw_dest_ad=draw_dest_next_scanline;
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
 #if defined(SSE_SHIFTER_STE_HI_HSCROLL) 
       if(
-#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+#if defined(SSE_GLUE_HIRES_OVERSCAN)
         draw_line_off ||
 #endif        
 #ifdef SSE_SHIFTER_HIRES_RASTER
@@ -269,19 +265,13 @@ void TShifter::DrawScanlineToEnd()  {
     {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
-
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
-        if(!COLOUR_MONITOR)
-#endif
-        {
-        ASSERT(screen_res==2);
+        ASSERT(screen_res==2); //>?
         if(border & 1)
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline((BORDER_SIDE*2+640+BORDER_SIDE*2)/16,0,0,0); // rasters!
         else
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline(640/16,0,0,0);
-        }
         draw_dest_ad=draw_dest_next_scanline;
         draw_dest_next_scanline+=draw_dest_increase_y;
       }
@@ -325,7 +315,7 @@ void TShifter::IncScanline() {
 
 void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   // this is based on Steem's 'draw_scanline_to'
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
   if(screen_res>=2 || scan_y>247) // bugfix stf1pix_512k
 #else
   if(screen_res>=2) 
@@ -494,7 +484,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         nsdp-=(old_shifter_pixel/16)*8;
         nsdp+=(shifter_pixel/16)*8; // is sdp forward at end of line?
         
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_SHIFTER_4BIT_SCROLL)
+#if defined(SSE_SHIFTER_4BIT_SCROLL)
 /*  This is where we do the actual shift for those rare programs using the
     4bit hardscroll trick (PYM/ST-CNX,D4/Nightmare,D4/NGC).
     Notice it is quite simple, and also very efficient because it uses 

@@ -181,6 +181,7 @@ const //const must be removed for linker
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
 
+#if defined(SSE_SOUND_383)
 inline bool playing_samples() {
 #if defined(SSE_SOUND_FILTER_STF3)
 /*  This test is more complicated but will work with
@@ -206,8 +207,9 @@ inline bool playing_samples() {
   return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
 #endif
 }
+#endif//#if defined(SSE_SOUND_383)
 
-#endif
+#endif//SSE_YM2149_FIXED_VOL_TABLE
 
 
 const int psg_envelope_level[8][64]={
@@ -2595,8 +2597,12 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     When user tries to mute PSG channels, we give up this rendering system
     because it's all or nothing.
 */
-     // if(SSEOption.PSGFixedVolume && playing_samples() //383 uh oh?
+#if defined(SSE_SOUND_383)
       if(OPTION_SAMPLED_YM
+#else
+      if(SSEOption.PSGFixedVolume && playing_samples()
+#endif
+      
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         &&! ((d2_dpeek(FAKE_IO_START+20)>>12)&7)
 #endif

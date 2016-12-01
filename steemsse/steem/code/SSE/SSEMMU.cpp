@@ -143,7 +143,7 @@ MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn) {
       bytes_to_count+=SHIFTER_RASTER; // raster size depends on shift mode
     }
 
-#if defined(SSE_SHIFTER_HIRES_OVERSCAN)
+#if defined(SSE_GLUE_HIRES_OVERSCAN)
     bool hires=!left_border||screen_res==2;
 #else
     bool hires=!left_border;

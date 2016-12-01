@@ -115,8 +115,8 @@ void  TImageSCP::ComputePosition(WORD position) {
 
   Disk[DRIVE].current_byte=(ACT-SF314[DRIVE].time_of_last_ip)/SF314[DRIVE].CyclesPerByte();
 
-  TRACE_LOG("Compute new position IP %d ACT %d cycles in %d units %d Position %d units %d byte %d\n",
-    SF314[DRIVE].time_of_last_ip,ACT,ACT-SF314[DRIVE].time_of_last_ip,units,Position,TimeFromIndexPulse[Position],Disk[DRIVE].current_byte);
+//  TRACE_LOG("Compute new position IP %d ACT %d cycles in %d units %d Position %d units %d byte %d\n",
+  //  SF314[DRIVE].time_of_last_ip,ACT,ACT-SF314[DRIVE].time_of_last_ip,units,Position,TimeFromIndexPulse[Position],Disk[DRIVE].current_byte);
 }
 
 #if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
