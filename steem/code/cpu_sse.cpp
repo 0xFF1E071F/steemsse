@@ -3741,19 +3741,22 @@ void                              m68k_jsr()
 #if defined(SSE_MMU_ROUNDING_BUS0A)
   MMU.Rounded=false;
 #endif
-  m68k_PUSH_L(PC32); 
 #if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
   abus=effective_address;
-  m68k_READ_W(abus);
+  // The sequence is 'np nS ns np'
+  // First np could cause bus/address error, before stacking - Blood Money STX
+  // It's different for BSR
+  m68k_READ_W(abus); // Check for bus/address errors
 #else
-  m68k_READ_W(effective_address); // Check for bus/address errors
+  m68k_READ_W(effective_address);
 #endif
+  m68k_PUSH_L(PC32);
   // 8 cycles more than JMP because we push PC
   CPU_ABUS_ACCESS_WRITE_PUSH_L; //nS ns
 #if defined(SSE_BOILER_PSEUDO_STACK)
   Debug.PseudoStackPush(PC32);
 #endif
-  SET_PC(effective_address); //SS where prefetch happens
+  SET_PC(effective_address);
   CPU_ABUS_ACCESS_READ_FETCH; //np
   intercept_os();
 }

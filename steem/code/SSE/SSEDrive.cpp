@@ -217,7 +217,7 @@ WORD TSF314::HblsToBytes(int hbls) {
 */
 
 int TSF314::CyclesPerByte() { // normally 256
-#if defined(SSE_INT_MFP_RATIO) 
+#if defined(SSE_CPU_MFP_RATIO) 
   int cycles=CpuNormalHz; // per second  
 #else
   int cycles=8000000; // per second  
@@ -263,7 +263,7 @@ void TSF314::IndexPulse(bool image_triggered) {
 
   // Program next event, at next IP or in 1 sec (more?)
   ASSERT(State.motor);
-
+#if defined(SSE_DISK_SCP)
   /*  We set up a timing for next IP, but if the drive is reading there are 
   chances the SCP object will trigger IP itself at the end of the track.
   This is a place where we could have bug reports.
@@ -278,6 +278,7 @@ void TSF314::IndexPulse(bool image_triggered) {
     //TRACE_LOG("SCP pos %d/%d next IP in %d cycles\n",ImageSCP[DRIVE].Position,ImageSCP[DRIVE].nBits-1,ImageSCP[DRIVE].track_header.TDH_TABLESTART[ImageSCP[DRIVE].rev].TDH_DURATION/5);
   }
   else
+#endif
   {
     //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
 #if defined(SSE_DISK_STW_FAST)
@@ -293,13 +294,14 @@ void TSF314::IndexPulse(bool image_triggered) {
   ASSERT(time_of_next_ip-time_of_last_ip>0);
 
   //TRACE("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
-
+#if defined(SSE_WD1772_EMU)
   // send pulse to WD1772
   if(DRIVE==Id)
 #if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
     WD1772.OnIndexPulse(image_triggered); // transmitting image_triggered
 #else
     WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered
+#endif
 #endif
 }
 
@@ -397,8 +399,10 @@ void TSF314::Read() {
   }
   else // get next byte regardless of timing
     Disk[Id].current_byte++;
+#if defined(SSE_DISK_STW)
   if(IMAGE_STW)
     WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
+#endif
 #if defined(SSE_DISK_HFE)
   else if(IMAGE_HFE)
     WD1772.Mfm.encoded=ImageHFE[Id].GetMfmData(
@@ -410,7 +414,7 @@ void TSF314::Read() {
       new_position?Disk[Id].current_byte:0xffff);
 #endif
 
-#if defined(SSE_DRIVE_SINGLE_SIDE_RND)
+#if defined(SSE_DRIVE_SINGLE_SIDE_RND) && defined(SSE_WD1772_EMU)
   ASSERT(!(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1));
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
     WD1772.Mfm.encoded=rand()%0xFFFF;
@@ -422,12 +426,14 @@ void TSF314::Read() {
     ; // it is done by SCP
   else
 #endif
+#if defined(SSE_WD1772_EMU)
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
   {
     WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
     if(WD1772.update_time-ACT<0)
       WD1772.update_time=ACT+cycles_per_byte;
   }
+#endif
 }
 
 
@@ -450,9 +456,13 @@ void TSF314::Step(int direction) {
   {
     floppy_head_track[Id]--;
   }
+#if defined(SSE_WD1772_LINES)
   WD1772.Lines.track0=(floppy_head_track[Id]==0);
+#if defined(SSE_WD1772_EMU)
   if(WD1772.Lines.track0)
     WD1772.STR|=TWD1772::STR_T00; // doing it here?
+#endif
+#endif
   CyclesPerByte();  // compute - should be the same every track but...
   //TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
 }
@@ -482,13 +492,15 @@ void TSF314::Write() {
   }
   else
     Disk[Id].current_byte++;
-#if defined(SSE_DRIVE_SINGLE_SIDE_RND)
+#if defined(SSE_DRIVE_SINGLE_SIDE_RND) && defined(SSE_WD1772_EMU)
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
     ; 
   else
 #endif
+#if defined(SSE_DISK_STW)
   if(IMAGE_STW)
     ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
+#endif
 #if defined(SSE_DISK_HFE)
   else if(IMAGE_HFE)
     ImageHFE[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
@@ -499,12 +511,13 @@ void TSF314::Write() {
     ImageSCP[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
       WD1772.Mfm.encoded);
 #endif
-
+#if defined(SSE_WD1772_EMU)
   // set up next byte event
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)
     WD1772.update_time=time_of_last_ip+cycles_per_byte*(Disk[Id].current_byte+1);
   if(WD1772.update_time-ACT<0)
     WD1772.update_time=ACT+cycles_per_byte;
+#endif
 }
 
 #endif//WD1772
@@ -616,23 +629,25 @@ void TSF314::Sound_CheckIrq() {
     We don't come here if ADAT and SSE_DRIVE_SOUND_SEEK2.
 */
   if(Sound_Buffer[SEEK])
-    Sound_Buffer[SEEK]->Stop();
-
-#if defined(SSE_WD1772) 
-  if(WD1772.CommandType()==1 && TrackAtCommand!=Track() && Sound_Buffer[STEP]
-#if defined(SSE_DRIVE_SOUND_SEEK3)    
-    && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
-#endif
-    )
   {
-    DWORD dwStatus ;
-    Sound_Buffer[STEP]->GetStatus(&dwStatus);
-    if( (dwStatus&DSBSTATUS_PLAYING) )
-      Sound_Buffer[STEP]->Stop();
-    Sound_Buffer[STEP]->SetCurrentPosition(0);
-    Sound_Buffer[STEP]->Play(0,0,0);
-  }
+    Sound_Buffer[SEEK]->Stop();
+#if defined(SSE_WD1772) 
+    //TRACE("CT %d TC %d TR %d\n",WD1772.CommandType(),TrackAtCommand,Track());
+    if(WD1772.CommandType()==1 && TrackAtCommand!=Track() //&& Sound_Buffer[STEP]
+#if defined(SSE_DRIVE_SOUND_SEEK3)    
+      && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
 #endif
+      )
+    {
+      DWORD dwStatus ;
+      Sound_Buffer[STEP]->GetStatus(&dwStatus);
+      if( (dwStatus&DSBSTATUS_PLAYING) )
+        Sound_Buffer[STEP]->Stop();
+      Sound_Buffer[STEP]->SetCurrentPosition(0);
+      Sound_Buffer[STEP]->Play(0,0,0);
+    }
+#endif
+  }
 }
 
 

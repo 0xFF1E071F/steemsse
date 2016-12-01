@@ -1273,11 +1273,6 @@ FF8240 - FF827F   palette, res
       if(addr==0xffc123) return (BYTE)runstate;
 #endif
       if(emudetect_called){
-#if !defined(SSE_VAR_STEALTH2) 
-        if (addr<0xffc120) // extremely stupid bug
-          ior_byte= 0;
-        else 
-#endif
         switch (addr){
 #ifdef SSE_UNIX
         case 0xffc100: ior_byte=(BYTE)(stem_version_text[0]-'0'); break;
@@ -1340,7 +1335,7 @@ FF8240 - FF827F   palette, res
         case 0xffc11b: ior_byte= emudetect_falcon_mode; break;
         case 0xffc11c: ior_byte= BYTE((emudetect_falcon_mode_size-1) + (emudetect_falcon_extra_height ? 2:0)); break;
         case 0xffc11d: ior_byte= emudetect_overscans_fixed; break;
-#if defined(SSE_VAR_STEALTH2) 
+#if defined(SSE_EMU_DETECT) 
         default: ior_byte= 0;
 #endif
         }//sw
@@ -2083,36 +2078,21 @@ Done one cycle of all palettes
    It's not bad to target ir, as data bus would depend on those. 
    
 */
-
     WORD palette=STpal[n];
-
-#if defined(SSE_STF)
-    if(ST_TYPE!=STE)
+    if(ST_TYPE!=STE && OPTION_HACKS)
     {
-      if(OPTION_HACKS)
-#if defined(SSE_SHIFTER_PALETTE_NOISE2)
-        if(ir==0x3850)
-          palette|=(0xF888)&(rand()); // UMD8730
+      if(ir==0x3850)
+        palette|=(0xF888)&(rand()); // UMD8730
 #if defined(SSE_CPU_DATABUS)
-        else if(ir==0x5279 || ir==0x5379)
-          palette|=0xF888&dbus; // Awesome 04
-#endif
-#elif defined(SSE_CPU_DATABUS)
-        palette|=0xF888&dbus;
-#else
-        palette|=(0x888)&(rand());
+      else if(ir==0x5279 || ir==0x5379)
+        palette|=0xF888&dbus; // Awesome 04
 #endif
     }
-#endif//STF
-#if defined(SSE_DEBUG_TRACE_IO)
 #if defined(SSE_BOILER_TRACE_CONTROL) // double condition, IO + Video
     if ( ((1<<14)&d2_dpeek(FAKE_IO_START+24))
       && (logsection_enabled[LOGSECTION_VIDEO]) )
+      TRACE_LOG("PC %X read PAL %X %X\n",old_pc,n,palette);
 #endif
-    TRACE_LOG("PC %X read PAL %X %X\n",old_pc,n,palette);
-#endif
-//    TRACE("PC %X R PAL %X %X\n",old_pc,n,palette);
-
     return palette;
 #else
     return STpal[n];

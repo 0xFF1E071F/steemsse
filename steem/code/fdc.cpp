@@ -53,7 +53,7 @@ EXT WORD pasti_store_byte_access;
 EXT bool pasti_active INIT(0);
 #endif
 
-#if !defined(SSE_WD1772)
+#if !defined(SSE_WD1772_REGS)
 BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
 #endif
 #if !defined(SSE_WD1772_LINES)
@@ -67,8 +67,7 @@ BYTE floppy_access_ff_counter=0;
 BYTE floppy_irq_flag=0;
 BYTE fdc_step_time_to_hbls[4]={94,188,32,47};
 #if !defined(SSE_DMA_OBJECT)
-WORD dma_sector_count;
-WORD dma_bytes_written_for_sector_count=0; 
+
 #if !defined(SSE_DMA_FIFO_READ_ADDRESS)
 BYTE fdc_read_address_buffer_len=0;
 #endif
@@ -359,7 +358,7 @@ void floppy_fdc_command(BYTE cm)
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
   WD1772.InterruptCondition=0;
 #else 
-    mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+  mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
 #endif
 
   agenda_delete(agenda_fdc_finished);
@@ -848,7 +847,7 @@ CRC.
               }
             }
           }
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING)
+#if defined(SSE_DISK_RW_SECTOR_TIMING)
 /*  Compute more precisely at which byte/HBL the sector R/W operation should
     start. Important for Microprose Golf 
 */
@@ -868,7 +867,7 @@ CRC.
               HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);//?
             //TRACE_FDC("hbl now %d then %d, diff %d\n",hbl_count,HBLOfSectorStart,HBLOfSectorStart-hbl_count);
             HBLOfSectorStart-=2;//see below, Steem's way
-#elif defined(SSE_DRIVE_RW_SECTOR_TIMING3)
+#elif defined(SSE_DISK_RW_SECTOR_TIMING3)
             //trying with IDs... 
             WORD dummy;
             BYTE num=fdc_sr;
@@ -879,7 +878,7 @@ CRC.
             if(WD1772.CR&BIT_2)
               HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);//?
 #endif
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING4)
+#if defined(SSE_DISK_RW_SECTOR_TIMING4)
 /*  Gap between ID and data.
     There's already gap as 1st stage of the agenda function, 16bytes.
     We don't need to count pre-ID gap.
@@ -889,7 +888,7 @@ CRC.
             HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(pre_data_gap-16);
 #endif
             HBLOfSectorStart-=2;//see below, Steem's way
-#else//SSE_DRIVE_RW_SECTOR_TIMING3
+#else//SSE_DISK_RW_SECTOR_TIMING3
             WORD SectorStartingByte= SF314[DRIVE].PostIndexGap()
               +SectorIdx*SF314[DRIVE].RecordLength()
               +SF314[DRIVE].PreDataGap();
@@ -905,7 +904,7 @@ CRC.
 
           if (HBLOfSectorStart<hbl_count) 
             HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
-#endif//SSE_DRIVE_RW_SECTOR_TIMING3
+#endif//SSE_DISK_RW_SECTOR_TIMING3
 #else //Steem 3.2
           if (SectorIdx>-1){
             // Break up the readable track into nSects sections,
@@ -1013,10 +1012,10 @@ sets the CRC Error bit in the status register if the CRC is invalid.
             &&!(SSEOption.SingleSideDriveMap&(DRIVE+1)&&CURRENT_SIDE==1)
 #endif
             ){
-#if !(defined(SSE_VS2008_WARNING_383) && defined(SSE_DRIVE_READ_ADDRESS_TIMING))
+#if !(defined(SSE_VS2008_WARNING_383) && defined(SSE_DISK_READ_ADDRESS_TIMING))
             DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
 #endif
-#if defined(SSE_DRIVE_READ_ADDRESS_TIMING)
+#if defined(SSE_DISK_READ_ADDRESS_TIMING)
 /*  Using a more precise routine for timings, this fixes ProCopy 'Analyze'
 */
             WORD HBLsToNextSector=0;
@@ -1746,14 +1745,14 @@ instant_sector_access_loop:
 
 #if defined(SSE_DRIVE_REM_HACKS)
 /*  v3.7
-    If SSE_DRIVE_RW_SECTOR_TIMING4 isn't defined this is still a hack,
+    If SSE_DISK_RW_SECTOR_TIMING4 isn't defined this is still a hack,
     we're compensating for the imprecision of the agenda system at 
     the end of the sector.
     At least the disk now has 6256 bytes, not 6270 like in the previous hack.
     This also reduces code.
     Value adjusted for for MPS Golf; Ultimate 3D Dots
     26-28 OK
-    If SSE_DRIVE_RW_SECTOR_TIMING4 is defined, this is a fix: agenda in 16 
+    If SSE_DISK_RW_SECTOR_TIMING4 is defined, this is a fix: agenda in 16 
     bytes except for the latest part, CRC + $FF included, 19 bytes.
 */
   ASSERT(Part!=64); // 32 -> 65
@@ -1780,7 +1779,7 @@ instant_sector_access_loop:
   agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls(bytes),MAKELONG(Part,start)); 
 #else
   agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls( (Part==65)? 
-#if !defined(SSE_DRIVE_RW_SECTOR_TIMING4) // no hack!
+#if !defined(SSE_DISK_RW_SECTOR_TIMING4) // no hack!
      OPTION_HACKS?27:
 #endif
   19
@@ -1789,7 +1788,7 @@ instant_sector_access_loop:
 
 
 #else
-#if defined(SSE_DRIVE_BYTES_PER_ROTATION)
+#if defined(SSE_DISK_BYTES_PER_ROTATION)
     int bytes_per_second=TSF314::TRACK_BYTES*5;
 #else
     // 8000 bytes per revolution * 5 revolutions per second
@@ -1885,7 +1884,7 @@ void agenda_floppy_read_address(int idx)
 void agenda_floppy_read_track(int part)
 {
   ASSERT((fdc_cr&0xF0)==0xE0); //we see $E0, $E4, $E8
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_383) && defined(SSE_WD1772_EMU)
   static short BytesRead;
 #define CRC WD1772.CrcLogic.crc
 #else
@@ -1988,14 +1987,14 @@ void agenda_floppy_read_track(int part)
         int SectorBytes=(128 << IDList[IDListIdx].SectorLen);
         BYTE pre_sect[200];
         int i=0;
-#if defined(SSE_DRIVE_READ_TRACK_11_383)
+#if defined(SSE_DISK_READ_TRACK_11_383)
         for (int n=0;n<(ADAT?nSects<Disk[floppyno].PostIndexGap():22);n++) 
           pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
 #else
         for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
 #endif
 
-#if defined(SSE_DRIVE_READ_TRACK_11)
+#if defined(SSE_DISK_READ_TRACK_11)
 /*
 Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
 */
@@ -2105,7 +2104,7 @@ CRC                                2           2           2
         byte_idx-=2;
 
         // Write Gap 4
-#if defined(SSE_DRIVE_READ_TRACK_11B)
+#if defined(SSE_DISK_READ_TRACK_11B)
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
@@ -2140,9 +2139,9 @@ Gap 4 Post Data                   40          40           1      4E
 #endif
       }else{
         // End of track, read in 0x4e
-#if defined(SSE_DRIVE_READ_TRACK_11C)
+#if defined(SSE_DISK_READ_TRACK_11C)
         //ASSERT(nSects<11);
-#if defined(SSE_DRIVE_READ_TRACK_11C2)
+#if defined(SSE_DISK_READ_TRACK_11C2)
         BYTE gap5bytes=(nSects>=11?20:16); //ProCopy 1.5 Analyze
         // isn't it a bug anyway? More gap with 11 than 9-10 ???
 #else
@@ -2166,7 +2165,7 @@ Gap 4 Post Data                   40          40           1      4E
     agenda_fdc_finished(0);
     dbg_log(Str("FDC: Read track finished, t=")+hbl_count);
   }else if (Error==0){   //read more of the track
-#if defined(SSE_DRIVE_BYTES_PER_ROTATION)
+#if defined(SSE_DISK_BYTES_PER_ROTATION)
 #if defined(SSE_FDC_383B)
     int bytes_per_second=Disk[DRIVE].TrackBytes*5;
 #else
@@ -2401,7 +2400,7 @@ void agenda_floppy_write_track(int part)
     int bytes_per_second=(ADAT)? Disk[DRIVE].TrackBytes*5 : 8000*5;
     int hbls_per_second=(ADAT)? HBL_PER_SECOND : 
       ((shifter_freq==MONO_HZ)?int(HBLS_PER_SECOND_MONO) : HBLS_PER_SECOND_AVE);
-#elif defined(SSE_DRIVE_BYTES_PER_ROTATION)
+#elif defined(SSE_DISK_BYTES_PER_ROTATION)
     int bytes_per_second=TDisk::TRACK_BYTES*5;
 #else
     // 8000 bytes per revolution * 5 revolutions per second

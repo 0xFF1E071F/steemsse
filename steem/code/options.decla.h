@@ -181,7 +181,7 @@ public:
 #if defined(SSE_STF)
   HWND STTypeOption;
 #endif
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
   HWND MMUWakeUpOption;
 #endif
 #if defined(SSE_VID_BORDERS)
@@ -207,7 +207,7 @@ public:
   hxc_button specific_hacks_but;
 #endif
 
-#if defined(SSE_VAR_STEALTH) 
+#if defined(SSE_EMU_DETECT) 
   hxc_button stealth_mode_but;
 #endif
 
@@ -216,7 +216,7 @@ public:
   hxc_dropdown st_type_dd;
 #endif
 
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
   hxc_button wake_up_label; 
   hxc_dropdown wake_up_dd;
 #endif

@@ -80,8 +80,7 @@ compatible only with the STF"));
 #endif
 #endif
 
-#if defined(SSE_GUI_OPTIONS_WU)
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_GUI_OPTIONS_WU) && defined(SSE_MMU_WU)
   long Offset=Wid+40-20;
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
@@ -90,26 +89,16 @@ compatible only with the STF"));
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
 #if defined(SSE_X64_383)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("Ignore"));
-#if defined(SSE_MMU_WU)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL4 WU2 WS4"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL5 WU1 WS3"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL6 WU1 WS1"));
-#else
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("Wake-up state 1"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("Wake-up state 2"));
-#endif
 #else//x64
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
-#if defined(SSE_MMU_WU)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL4 WU2 WS4"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL5 WU1 WS3"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL6 WU1 WS1"));
-#else
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 1"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Wake-up state 2"));
-#endif
 #endif//x64
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
 #if defined(SSE_GUI_383)
@@ -120,7 +109,6 @@ compatible only with the STF"));
     T("Advanced - Some rare demos will display correctly only in one of those states."));
 #endif
   y+=30;
-#endif
 #elif defined(SSE_STF) && defined(SSE_GUI_OPTIONS_STF)
   y+=30;
 #endif
@@ -319,7 +307,7 @@ void TOptionBox::MachineUpdateIfVisible()
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
 #endif
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
@@ -647,7 +635,8 @@ void TOptionBox::CreatePortsPage()
       CBAddString(Win,T("Music Master dongle"),TDongle::MUSIC_MASTER);
 #endif
 #if defined(SSE_DONGLE_PROSOUND)
-      CBAddString(Win,T("Pro Sound card (WOD/LXS)"),TDongle::PROSOUND);
+      //CBAddString(Win,T("Pro Sound card (WOD/LXS)"),TDongle::PROSOUND);
+      CBAddString(Win,T("Pro Sound Designer"),TDongle::PROSOUND);
 #endif
 #if defined(SSE_DONGLE_MULTIFACE)
       CBAddString(Win,T("Multiface Cartridge switch"),TDongle::MULTIFACE);
@@ -1349,8 +1338,7 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) \
-  && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
 #else
@@ -1531,7 +1519,7 @@ void TOptionBox::CreateOSDPage()
 
   SendMessage(Win,BM_SETCHECK,osd_show_disk_light,0);
 
-#if defined(SSE_OSD_DRIVE_INFO_OSD_PAGE)
+#if defined(SSE_GUI_OPTIONS_DRIVE_INFO)
   const int HorizontalSeparation=10;
   long Wid2=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Disk drive track info")).Width;
@@ -1589,7 +1577,7 @@ void TOptionBox::CreateOSDPage()
                           page_l,y,Wid,23,Handle,(HMENU)12020,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,osd_show_scrollers,0);
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
-#if !defined(SSE_OSD_DRIVE_INFO_OSD_PAGE)  
+#if !defined(SSE_GUI_OPTIONS_DRIVE_INFO)  
   const int HorizontalSeparation=10;
   long 
 #endif
@@ -3037,12 +3025,13 @@ void TOptionBox::CreateSSEPage() {
   ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
 #endif
 
-#if defined(SSE_VAR_STEALTH) 
+#if defined(SSE_EMU_DETECT) 
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
   Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
+  //SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_EMU_DETECT,0);
   ToolAddWindow(ToolTip,Win,T("Enable easy detection of Steem by ST programs."));
   y+=LineHeight;
 #endif  
@@ -3219,7 +3208,7 @@ Windows 2000	5.0
     T("BETA TESTS - BUGGY"));
   y+=LineHeight;
 #endif
-#if defined(SSE_INT_MFP_RATIO_OPTION) // user can fine tune CPU clock
+#if defined(SSE_CPU_MFP_RATIO_OPTION) // user can fine tune CPU clock
   Wid=GetCheckBoxSize(Font,T("Fine tune CPU clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Fine tune CPU clock"),mask,
@@ -3291,7 +3280,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   if(Win!=NULL) 
     SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
 #endif
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);

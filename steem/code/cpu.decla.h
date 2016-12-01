@@ -276,7 +276,7 @@ SR_TRACE_BIT=0xf};
 #define IOACCESS_NUMBER_MASK 0x0000003F
 
 #define IOACCESS_FLAG_FOR_CHECK_INTRS BIT_6
-#if !defined(SSE_YM2149_BUS_JAM_383)
+#if !defined(SSE_YM2149_BUS_JAM_383) || !defined(SSE_CPU)
 #define IOACCESS_FLAG_PSG_BUS_JAM_R BIT_7
 #define IOACCESS_FLAG_PSG_BUS_JAM_W BIT_8
 #endif
@@ -445,12 +445,10 @@ inline void m68k_poke_abus(BYTE x){
 #else
   }else if(abus>=himem) {
 #endif
-#if !defined(SSE_MMU_NO_CONFUSION)
     if (mmu_confused){
       mmu_confused_set_dest_to_addr(1,true);
       m68k_DEST_B=x;
     }else 
-#endif      
     if (abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
@@ -498,13 +496,10 @@ inline void m68k_dpoke_abus(WORD x){
 #else
   }else if(abus>=himem) {
 #endif
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
+    }else if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -542,13 +537,10 @@ inline void m68k_lpoke_abus(LONG x){
 #else
   }else if(abus>=himem) {
 #endif
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){
+    }else if(abus>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -711,12 +703,9 @@ inline void SetDestBToAddr() {
 #else
   }else if(abus>=himem) {
 #endif                            
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(1,true);           
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){                                                
+    }else if(abus>=FOUR_MEGS){                                                
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             
@@ -753,12 +742,9 @@ inline void SetDestWToAddr() {
 #else
   }else if(abus>=himem) {
 #endif
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(2,true);           
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){                                                
+    }else if(abus>=FOUR_MEGS){                                                
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             
@@ -796,12 +782,9 @@ inline void SetDestLToAddr() {
 #else
   }else if(abus>=himem) {
 #endif 
-#if !defined(SSE_MMU_NO_CONFUSION)
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(4,true);           
-    }else 
-#endif
-    if(abus>=FOUR_MEGS){                                                
+    }else if(abus>=FOUR_MEGS){                                                
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             

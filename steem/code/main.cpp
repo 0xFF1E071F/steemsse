@@ -806,7 +806,7 @@ bool Initialise()
   }
 #endif
 
-#if !defined(SSE_ACSI_HDMAN)
+#if defined(SSE_ACSI) && !defined(SSE_ACSI_HDMAN)
 /*  We use the existing Steem "crawler" to load whatever hard disk IMG 
     files are in Steem/ACSI, up to MAX_ACSI_DEVICES.
 */
@@ -1269,9 +1269,7 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
   himem=mem_len;
 
-#if !defined(SSE_MMU_NO_CONFUSION)
   mmu_confused=false;
-#endif
 }
 //---------------------------------------------------------------------------
 void GetCurrentMemConf(BYTE MemConf[2])

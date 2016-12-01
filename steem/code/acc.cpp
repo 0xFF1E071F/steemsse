@@ -706,7 +706,7 @@ Str scanline_cycle_log()
 }
 #endif
 
-#if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW)
+#if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW) || defined(SSE_DISK_SCP)
 WORD change_endian(WORD x) {
 #if defined(SSE_VC_INTRINSICS_383C)
   return _byteswap_ushort(x); // every little byte counts...

@@ -3563,7 +3563,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
       if (SuppressErr==0){
         switch (Err){
           case FIMAGE_WRONGFORMAT:
-#if defined(SSE_DRIVE_WRONG_IMAGE_ALERT)//3.6.1
+#if defined(SSE_GUI_DM_WRONG_IMAGE_ALERT)//3.6.1
             Alert(Path+": "+T("image not recognised!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
 #else
             Alert(Path+" "+T("is not in the correct format, it may be corrupt!"),T("Disk Image Error"),MB_ICONEXCLAMATION);
@@ -3602,6 +3602,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
     FloppyDrive[Drive].DiskName=Name;
 
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
+    //TODO sometimes wrong name
     if(OSD_IMAGE_NAME && !OPTION_STATUS_BAR_GAME_NAME)
       OsdControl.StartScroller(Name); // display image disk name
 #endif
@@ -3715,7 +3716,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 //---------------------------------------------------------------------------
 void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 {
-#if defined(SSE_VAR_WRONG_IMAGE_ALERT1)
+#if defined(SSE_GUI_DM_WRONG_IMAGE_ALERT1)
   if (Alert(Path+": "+T("Steem doesn't recognise any disk images.")+"\n\n"+
 #else
   if (Alert(Path+" "+T("doesn't contain any disk images.")+"\n\n"+

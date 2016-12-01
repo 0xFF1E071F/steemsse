@@ -505,7 +505,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 21:
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
       if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
       if (n_cpu_cycles_per_second>8000000){
@@ -516,7 +516,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       }
       break;
     case 22:
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
       n_cpu_cycles_per_second=CpuNormalHz;
 #else
       n_cpu_cycles_per_second=8000000;

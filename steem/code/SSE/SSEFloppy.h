@@ -103,11 +103,13 @@ extern TDisk Disk[2]; //
 #endif
 #if defined(SSE_WD1772)
 extern TWD1772 WD1772;
+#if defined(SSE_WD1772_REGS)
 #define fdc_cr WD1772.CR     // problem:
 #define fdc_str WD1772.STR   // not identified in VC6 debugger
 #define fdc_tr WD1772.TR
 #define fdc_sr WD1772.SR
 #define fdc_dr WD1772.DR
+#endif
 #endif //FDC
 
 #if defined(SSE_WD1772)

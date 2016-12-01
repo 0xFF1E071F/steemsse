@@ -618,9 +618,10 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4003)
       OPTION_HACKS=b->checked;
 #endif
-#if defined(SSE_VAR_STEALTH)
+#if defined(SSE_EMU_DETECT)
     else if(b->id==4004)
-      STEALTH_MODE=!b->checked;
+      //STEALTH_MODE=!b->checked;
+      OPTION_EMU_DETECT=b->checked;
 #endif
 #if defined(SSE_IKBD_6301)
     else if(b->id==4006)
@@ -820,7 +821,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
     // TODO: add TOS matching, Mega STF 4MB 
   }
 #endif
-#if defined(SSE_MMU_WAKE_UP)
+#if defined(SSE_MMU_WU)
   else if(dd->id==4006) // wake-up state
   {
     OPTION_WS=dd->sel;

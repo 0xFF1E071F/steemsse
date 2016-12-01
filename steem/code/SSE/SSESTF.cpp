@@ -43,10 +43,10 @@ int SwitchSTType(int new_type) {
 #if defined(SSE_INT_VBL_STF)//no
     HblTiming=HBL_FOR_STF; 
 #endif
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
 
-#if defined(SSE_INT_MFP_RATIO_STF) 
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO_STF) 
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else
@@ -70,21 +70,21 @@ int SwitchSTType(int new_type) {
     HblTiming=HBL_FOR_STE;
 #endif
 
-#if defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
     else
 #endif
     {
-#if defined(SSE_INT_MFP_RATIO_STE_AS_STF)
-#if defined(SSE_INT_MFP_RATIO_STE2)
+#if defined(SSE_CPU_MFP_RATIO_STE_AS_STF)
+#if defined(SSE_CPU_MFP_RATIO_STE2)
     CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLK_TH_EXACT;
 #else
     CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
 #endif
     CpuNormalHz=CPU_STE_PAL; 
-#elif defined(SSE_INT_MFP_RATIO_STE)
+#elif defined(SSE_CPU_MFP_RATIO_STE)
     CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
     CpuNormalHz=CPU_STE_TH;
 #else
@@ -97,8 +97,8 @@ int SwitchSTType(int new_type) {
 
   }
   
-#if defined(SSE_INT_MFP_RATIO)
-#if defined(SSE_INT_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
+#if defined(SSE_CPU_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO_HIGH_SPEED) //fix v3.6.1 (broken v3.5.1)
   if(n_cpu_cycles_per_second<10000000) // avoid interference with ST CPU Speed option
 #endif
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)

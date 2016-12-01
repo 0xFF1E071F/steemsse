@@ -111,7 +111,7 @@ EXT BYTE mfp_gpip_input_buffer;
 
 //#define MFP_CLK_EXACT 2450780  old version, checked inaccurately
 
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
 // it's a variable now! See SSEDecla.h !!!!!!!!!!!!
 #else
 #define CPU_CYCLES_PER_MFP_CLK (8000000.0/double(MFP_CLK_EXACT))
@@ -122,7 +122,7 @@ EXT BYTE mfp_gpip_input_buffer;
 #define MFP_S_BIT (mfp_reg[MFPR_VR] & BIT_3)
 
 
-#if defined(SSE_INT_MFP_OBJECT) 
+//#if defined(SSE_INT_MFP_OBJECT) 
 /*  We create this object for some additions, we don't transfer
     all MFP emu into it. We don't create a SSE file yet.
 */
@@ -172,7 +172,11 @@ struct TMC68901 {
 #endif
   int UpdateNextIrq(int at_time=-1);
 #if defined(SSE_INT_MFP_TIMER_B_AER)
+#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+  void CalcCyclesFromHblToTimerB();
+#else
   void CalcCyclesFromHblToTimerB(int freq);
+#endif
 #endif
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
   void AdjustTimerB();
@@ -182,13 +186,15 @@ struct TMC68901 {
 
 #pragma pack(pop)
 
-#if defined(SSE_INT_MFP_TIMER_B_AER)
+#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+#define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB()
+#elif defined(SSE_INT_MFP_TIMER_B_AER)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)
 #endif
 
 extern TMC68901 MC68901; // declaring the singleton
 
-#endif//SSE_INT_MFP_OBJECT
+//#endif//SSE_INT_MFP_OBJECT
 
 
 inline BYTE mfp_get_timer_control_register(int);
@@ -211,7 +217,7 @@ EXT int mfp_timer_counter[4];
 EXT int mfp_timer_timeout[4];
 EXT bool mfp_timer_enabled[4];
 EXT int mfp_timer_period[4];
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
 EXT int mfp_timer_period_fraction[4];
 EXT int mfp_timer_period_current_fraction[4];
 #endif
@@ -261,7 +267,7 @@ void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts();
 #endif
 
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
 // the fraction is computed anyway but is used only if option C2 is checked
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \

@@ -209,7 +209,7 @@ EXT int cpu_timer_at_start_of_hbl;
 #endif
 
 
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
 
 #define PREPARE_EVENT_CHECK_FOR_FLOPPY       \
   if ((time_of_next_event-WD1772.update_time) >= 0){                 \
@@ -302,7 +302,7 @@ EXT int cpu_timer_at_res_change;
 void event_pasti_update();
 #endif
 
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
 /*  1 event for FDC: various parts of its program
     1 event for each drive: IP
 */

@@ -262,14 +262,13 @@ void osd_draw()
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
-#if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_BORDERS_LB_DX)
+
+#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY)
   if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
 #ifdef SSE_VID_D3D_WINDOW
     x1+=16+8;
 #else
     x1+=16;
-#endif
 #endif
 #endif
 
@@ -404,7 +403,7 @@ void osd_draw()
   }
 
   if (seconds<osd_show_cpu){
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
     if (n_cpu_cycles_per_second>8000000){
@@ -412,7 +411,7 @@ void osd_draw()
       can_have_scroller=0;
       int bar_w=120, bar_x=5, cpu_y=y1-5-12+6-15;
       if (osd_old_pos) bar_w=100, bar_x=20, cpu_y=y1-18-32;
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
       int x=n_cpu_cycles_per_second/CpuNormalHz;
 #else
       int x=n_cpu_cycles_per_second/8000000;
@@ -469,8 +468,7 @@ void osd_draw()
     // TODO refactor in basic function?
     RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
     int x=0;
-#if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY)
     if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
 #ifdef SSE_VID_D3D_WINDOW
       x+=16+8;// argh! forget this, no BORDER_40 with D3D, it
@@ -479,7 +477,6 @@ void osd_draw()
       x+=16;
 #endif
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
     int start_y=0+8;
     for(unsigned int i=0;i<strlen(Debug.m_OsdMessage);i++)
     {
@@ -494,13 +491,15 @@ void osd_draw()
 #undef BUFFER_LENGTH
   }
 #endif
-  
+
+#if defined(SSE_OSD_DRIVE_LED)
+
   if(osd_show_disk_light 
 #if defined(SSE_OSD_DRIVE_INFO)
     || OSD_DRIVE_INFO
 #endif
     )
-#if defined(SSE_OSD_DRIVE_LED)
+
   // Green led for floppy disk read; red for write.
   {
     Dma.UpdateRegs();
@@ -518,16 +517,7 @@ void osd_draw()
         idx=37,w=32;
       DWORD col=(FDCWriting) 
           ? col_fd_red[(hbl_count/512) & 1] : col_fd_green[(hbl_count/512) & 1];
-#else
-  {
-    if ((psg_reg[PSGR_PORT_A] & b0110)==BIT_1 || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2 || FDCCantWriteDisplayTimer>timer){
-      if (disk_light_off_time>timer || DisableDiskLightAfter==0 || FDCCantWriteDisplayTimer>timer){
-        int idx=32,w=20;
-        if (draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM){
-          idx=37,w=32;
-        }
-    	DWORD col=col_yellow[(hbl_count/512) & 1];
-#endif
+
 #if defined(SSE_OSD_DRIVE_INFO)
       if(osd_show_disk_light && !OSD_DRIVE_INFO)
 #endif
@@ -544,7 +534,6 @@ void osd_draw()
         if (draw_grille_black<4) draw_grille_black=4;
       }
 
-#if defined(SSE_OSD_DRIVE_INFO)
 /*  Display drive, side, track, sector
     Sector for type II commands and 'Read Address'
 */
@@ -597,9 +586,8 @@ void osd_draw()
 #undef THE_RIGHT
 #undef BUFFER_LENGTH
       }
-#endif
+
     }
-#if defined(SSE_OSD_DRIVE_LED)
     // Hard disk activity
     if(HDDisplayTimer>timer)
     {
@@ -610,8 +598,31 @@ void osd_draw()
       osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,
         draw_line_length,col,8);
     }
-#endif
   }
+#else //steem 3.2
+  if (osd_show_disk_light){
+    if ((psg_reg[PSGR_PORT_A] & b0110)==BIT_1 || (psg_reg[PSGR_PORT_A] & b0110)==BIT_2 || FDCCantWriteDisplayTimer>timer){
+      if (disk_light_off_time>timer || DisableDiskLightAfter==0 || FDCCantWriteDisplayTimer>timer){
+        int idx=32,w=20;
+        if (draw_blit_source_rect.bottom>200+BORDER_TOP+BORDER_BOTTOM){
+          idx=37,w=32;
+        }
+        DWORD col=col_yellow[(hbl_count/512) & 1];
+        if (FDCCantWriteDisplayTimer>timer){
+          col=col_red;
+          osd_draw_char(osd_font+(38*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+          if (((FDCCantWriteDisplayTimer-timer) % 500)<=250){
+            osd_draw_char(osd_font+(39*64),draw_mem,(x1-w)-24,1,draw_line_length,col_red,16);
+          }
+        }
+        osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,draw_line_length,col,8);
+
+        if (draw_grille_black<4) draw_grille_black=4;
+      }
+    }
+  }
+#endif
+
 
 #if defined(SSE_OSD_SCROLLER_CONTROL)
   if(OsdControl.ScrollerPhase==TOsdControl::WANT_SCROLLER)

@@ -112,7 +112,7 @@ The ACIA master clock is 500kHz.
 //////////
 
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_INT_MFP_RATIO) && defined(SSE_DISK_CAPS_383)
+#if defined(SSE_CPU_MFP_RATIO) && defined(SSE_DISK_CAPS_383)
 #define SSE_DISK_CAPS_FREQU CpuNormalHz
 #else
 #define SSE_DISK_CAPS_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
@@ -128,6 +128,50 @@ The ACIA master clock is 500kHz.
 
 #define CPU_STOP_DELAY 8
 
+#endif
+
+#if defined(SSE_CPU_MFP_RATIO) 
+/*  There was a hack in Steem up to v3.3, where the CPU/MFP frequency ratio
+    was set different from what was measured on an STE by Steem authors, that
+    allowed Lethal Xcess to run. This hack was hiding a blitter timing problem,
+    however (the 64 NOP issue), which explains why the game wasn't sensitive
+    to the ratio in STF mode. Now that the blitter bug has been corrected,
+    we use a more precise value.
+    
+    For STF we use the precise value of the MFP quarz and the real value of
+    a typical "PAL" STF, as read on atari-forum (ijor?)
+    The STE value is a bit different to help some cases. TODO
+
+    MFP (no variation) ~ 2457600 hz
+    CPU STF ~ 8021247
+    CPU STE ~ 8021030, being pragmatic (programs must run - or not - like on
+    my STE)
+  
+*/
+/*
+The master clock crystal and derived CPU clock table is:
+Code: Select all
+PAL (all variants)       32.084988   8.021247
+NTSC (pre-STE)           32.0424     8.0106
+NTSC (STE)               32.215905   8.053976
+Peritel (STE) (as PAL)   32.084988   8.021247
+Some STFs                32.02480    8.0071
+*/
+
+#if defined(SSE_CPU_MFP_RATIO_STF2)
+#define  CPU_STF_PAL 8021247
+#else
+#define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
+#endif
+#define  CPU_STF_ALT (8007100) //ljbk's? 
+#if defined(SSE_CPU_MFP_RATIO_STE3)
+#define  CPU_STE_PAL (CPU_STF_PAL) // should be
+#elif defined(SSE_CPU_MFP_RATIO_STE2)
+#define  CPU_STE_PAL 8021030//8020992//(8021030)//8020736
+#else
+#define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
+#endif
+#define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
 
@@ -182,7 +226,7 @@ The ACIA master clock is 500kHz.
 #define DRIVE_RPM 300
 #define DRIVE_MAX_CYL 83
 
-#if defined(SSE_DRIVE_BYTES_PER_ROTATION)
+#if defined(SSE_DISK_BYTES_PER_ROTATION)
 /*  #bytes/track
     The value generally seen is 6250.
     The value for 11 sectors is 6256. It's possible if the clock is higher than
@@ -206,11 +250,6 @@ The ACIA master clock is 500kHz.
 #endif
 
 #define DRIVE_SOUND_BUZZ_THRESHOLD 7 // distance between tracks
-
-#if defined(SSE_DRIVE_RW_SECTOR_TIMING2)//no?
-#define FDC_SECTOR_GAP_BEFORE_IRQ_9_10 (3+(OPTION_HACKS?28:0)) //CRC + hack (FDCTNF by Petari)
-#define FDC_SECTOR_GAP_BEFORE_IRQ_11 (3)
-#endif
 
 #endif
 
@@ -380,110 +419,37 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 /////////
 
 #if defined(SSE_INT_MFP)
+/*  
+    MFP_IACK_LATENCY: it may seem high but it's not #IACK cycles, it's when 
+    IACK ends.
+    Final Conflict, Super Hang-On, Anomaly menu, Froggies/OVR
 
-#if defined(SSE_INT_MFP_RATIO) 
-/*  There was a hack in Steem up to v3.3, where the CPU/MFP frequency ratio
-    was set different from what was measured on an STE by Steem authors, that
-    allowed Lethal Xcess to run. This hack was hiding a blitter timing problem,
-    however (the 64 NOP issue), which explains why the game wasn't sensitive
-    to the ratio in STF mode. Now that the blitter bug has been corrected,
-    we use the measured value (when SSE_INT_MFP_RATIO_STE is defined).
-    For STF we use the precise value of the MFP quarts and the real value of
-    a typical "PAL" STF, as read on atari-forum (ijor?)
-    3.5.1: same ratio for STE, it could make DMA sound emu more precise
-    3.7.0:  DMA sound uses another clock, we now have a slightly different
-    CPU clock and MFP ratio in STE mode. It also "helps" some cases, along
-    with other parameters, it's not exact science.
+    MFP_TIMER_SET_DELAY includes latency before the timer starts +
+    time to IRQ.
+    DSOTS, Extreme rage, Schnusdie, Lethal Xcess, Panic
 
-    MFP (no variation) ~ 2457600 hz
-    CPU STF ~ 8021247
-    CPU STE ~ 8021030, being pragmatic (programs must run - or not - like on
-    my STE)
-  
-*/
-/*
-The master clock crystal and derived CPU clock table is:
+    MFP_TIMER_DATA_REGISTER_ADVANCE is the latency between timer condition
+    (as seen in data register) and IRQ.
+    Overscan Demos
 
+    MFP_WRITE_LATENCY supposes that data is copied with some delay into
+    registers, which may have unintended effects.
+    Audio Artistic (timer is stopped before IRQ so it triggers only once)
+    Spurious.tos (mask out just after IRQ triggers spurious)
 
-Code: Select all
-PAL (all variants)       32.084988   8.021247
-NTSC (pre-STE)           32.0424     8.0106
-NTSC (STE)               32.215905   8.053976
-Peritel (STE) (as PAL)   32.084988   8.021247
-Some STFs                32.02480    8.0071
+    It would seem to make sense that:
+    MFP_WRITE_LATENCY + MFP_TIMER_DATA_REGISTER_ADVANCE = MFP_TIMER_SET_DELAY
 */
 
-#define  MFP_CLK_LE 2451 // Steem 3.2
-#define  MFP_CLK_LE_EXACT 2451134 // Steem 3.2
- 
-// Between 2451168 and 2451226 cycles, as measured by Steem authors:
-
-#define  CPU_STE_TH 8000000 // Steem 3.2
-#define  MFP_CLK_STE_EXACT 2451182 // not if 'STE as STF' is defined
-
-#if defined(SSE_INT_MFP_RATIO_STF2)
-#define  CPU_STF_PAL 8021247//(8020736+512+512)// should be 8021247
-#else
-#define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
-#endif
-
-#define  CPU_STF_ALT (8007100) //ljbk's? for Panic study!
-#if defined(SSE_INT_MFP_RATIO_STE3)
-#define  CPU_STE_PAL (CPU_STF_PAL)
-#elif defined(SSE_INT_MFP_RATIO_STE2)
-#define  CPU_STE_PAL 8021030//8020992//(8021030)//8020736
-#else
-#define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
-#endif
-#define  MFP_CLK_TH 2457
-#define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
-#endif
-
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
-#define MFP_WRITE_LATENCY (8)
-#define MFP_TIMERS_WOBBLE (8)
-
-#elif defined(SSE_INT_MFP_TIMERS_WOBBLE)//yes in v3.8
-#define MFP_WRITE_LATENCY (8) // is it high?
-#define MFP_TIMERS_WOBBLE 4//2  //if there's wobble, at least 2 seems likelier
-#else
-#define MFP_WRITE_LATENCY (5) //5 (=8?) best for TEST10.TOS
-#endif
-
-#define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
-
-#if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
-#define MFP_TIMER_SET_DELAY (8)
-#elif defined(SSE_INT_MFP_TIMERS_WOBBLE) 
-#if defined(SSE_INT_MFP)
-#define MFP_TIMER_SET_DELAY (10-2) // 8 OK with wobble 4 for LXS
-#elif defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_INT_MFP_RATIO_STE3)
-#define MFP_TIMER_SET_DELAY 8//(8) //schnusdie
-#elif defined(SSE_GLUE_FRAME_TIMINGS) 
-#define MFP_TIMER_SET_DELAY (7)
-#elif defined(SSE_INT_MFP_RATIO_STE2)
-#define MFP_TIMER_SET_DELAY 8//10 // overscan/schnusdie... [8]
-#else
-#define MFP_TIMER_SET_DELAY 7 //  Schnusdie vs DSOTS (depends on clock?!)
-#endif
-#else
-// if = 12, better not define, it reduces code
-#if defined(SSE_INT_MFP_RATIO_STE3)
-#define MFP_TIMER_SET_DELAY 8//9 // DSOS main but then TEST10 gets bad...
-#else
-// 8-10 break LXS! 
-#define MFP_TIMER_SET_DELAY (8)//11 //11: OVSC6 STE (12 breaks) // 8 loSTE STE
-#endif
-#if (MFP_TIMER_SET_DELAY==12) // (12=Steem 3.2)
-#undef SSE_INT_MFP_TIMERS_STARTING_DELAY
-#endif
-#endif
-#endif//starting_delay
-// it may seem high but it's not #IACK cycles, it's when IACK ends
-// cases Final Conflict, Anomaly menu
 #define MFP_IACK_LATENCY (28) 
-#define MFP_SPURIOUS_LATENCY MFP_WRITE_LATENCY
+#define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
+#define MFP_TIMER_SET_DELAY (8)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+#define MFP_TIMERS_WOBBLE (4+1) //<
+#else
+#define MFP_TIMERS_WOBBLE (4) // &
+#endif
+#define MFP_WRITE_LATENCY (4)//(8) 
 
 #endif//mfp
 
@@ -520,7 +486,7 @@ Some STFs                32.02480    8.0071
 // TIMINGS //
 /////////////
 
-#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_SHIFTER_TRICKS) && defined(SSE_CPU_MFP_RATIO)
 #define HBL_PER_SECOND (CpuNormalHz/Glue.CurrentScanline.Cycles) //TODO assert
 //#endif
 //Frequency   50          60            72
@@ -542,7 +508,7 @@ Some STFs                32.02480    8.0071
 // DMA sound has its own clock, it's not CPU's
 // We adjust this so that we have 50065 in ljbk's test
 //TODO should be 8010613
-#if defined(SSE_INT_MFP_RATIO_STE2)
+#if defined(SSE_CPU_MFP_RATIO_STE2)
 
 #if CPU_STE_PAL==(8020736) // too slow for Overscan Demos STE...
 #define STE_DMA_CLOCK 8021000 // 50065; MOLZ OK
@@ -570,7 +536,7 @@ Some STFs                32.02480    8.0071
 #define AUTORUN_HD (2+'Z'-'C')//2=C, Z: is used for PRG support
 #endif
 
-#if defined(SSE_STF_MATCH_TOS2)
+#if defined(SSE_STF_MATCH_TOS)
 #if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) || defined(SSE_STF_MATCH_TOS_383)
 #define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
 #else

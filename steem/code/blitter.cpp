@@ -511,15 +511,6 @@ void Blitter_Draw()
     INSTRUCTION_TIME((Blit.Hog||!OPTION_HACKS)?BLITTER_START_WAIT:4);//for BLIT02A, temp hack
 #endif
     Blit.YCounter=Blit.YCount;
-
-#if defined(SSE_BLT_370) && !defined(SSE_BLT_380)//breaks a screen in Drone
-    if(OPTION_HACKS && IR==0x4E71 && Blit.YCount==1)
-#if defined(SSE_BLT_371)
-      if(LPEEK(LPEEK(0x70))==0x11fc0001)//shameful but only for v3.7.3
-#endif
-      INSTRUCTION_TIME_ROUND(4);
-#endif
-
   }
 
 //  WORD SrcDat,DestDat,Mask,NewDat;

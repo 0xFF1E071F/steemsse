@@ -96,7 +96,7 @@ EXT WORD dma_mode;
 EXT BYTE dma_status;
 #endif
 
-#if !(defined(SSE_WD1772))
+#if !defined(SSE_WD1772_REGS) // still in doubt about this... made it uselessly compicated?
 EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
 #endif
 #if !(defined(SSE_WD1772_LINES))
@@ -108,7 +108,12 @@ EXT BYTE floppy_head_track[2];
 void floppy_fdc_command(BYTE);
 void fdc_execute();
 bool floppy_track_index_pulse_active();
-
+#if !(defined(SSE_DMA_OBJECT))
+EXT int dma_bytes_written_for_sector_count;
+#endif
+#if !(defined(SSE_DMA_OBJECT))
+EXT int dma_sector_count; 
+#endif
 #if defined(SSE_VAR_RESIZE)
 enum {FLOPPY_FF_VBL_COUNT=20};
 EXT BYTE floppy_access_ff_counter;
@@ -118,17 +123,13 @@ EXT BYTE fdc_step_time_to_hbls[4];
 #if !(defined(SSE_DMA_FIFO_READ_ADDRESS))
 EXT BYTE fdc_read_address_buffer_len;
 #endif
-#if !(defined(SSE_DMA_OBJECT))
-EXT WORD dma_sector_count; 
-#endif
+
 EXT WORD floppy_write_track_bytes_done;
 EXT BYTE fdc_spinning_up;
 #if !(defined(SSE_WD1772))
 EXT BYTE floppy_type1_command_active;  // Default to type 1 status
 #endif
-#if !(defined(SSE_DMA_OBJECT))
-EXT WORD dma_bytes_written_for_sector_count;
-#endif
+
 #else
 #define FLOPPY_FF_VBL_COUNT 20
 EXT int floppy_access_ff_counter;
@@ -138,16 +139,10 @@ EXT int floppy_access_ff_counter;
 EXT int floppy_irq_flag;
 EXT int fdc_step_time_to_hbls[4];
 EXT int fdc_read_address_buffer_len;
-#if !(defined(SSE_DMA_OBJECT))
-EXT int dma_sector_count;
-#endif
 EXT int floppy_write_track_bytes_done;
 EXT int fdc_spinning_up;
 #if !(defined(SSE_WD1772))
 EXT int floppy_type1_command_active;  // Default to type 1 status
-#endif
-#if !(defined(SSE_DMA_OBJECT))
-EXT int dma_bytes_written_for_sector_count;
 #endif
 #endif//defined(SSE_VAR_RESIZE)
 

@@ -299,8 +299,13 @@ static unsigned int mouse_x_counter=MOUSE_MASK;
 static unsigned int mouse_y_counter=MOUSE_MASK;
 #endif
 
+
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_VAR_RESIZE_383B)
+extern BYTE shifter_freq;
+#else
 extern int shifter_freq;
+#endif
 #endif
 
 static dr4_getb (offs)
@@ -332,6 +337,7 @@ static dr4_getb (offs)
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
     int cycles_per_frame;
     ASSERT(shifter_freq);
+    ASSERT(shifter_freq==50||shifter_freq==60||shifter_freq==72);
     cycles_per_frame=HD6301_CLOCK/shifter_freq;   
     if(HD6301.MouseVblDeltaX) // horizontal
     { 

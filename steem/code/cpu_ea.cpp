@@ -71,10 +71,8 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       return 0xff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if (mmu_confused){
       return mmu_confused_peek(ad,true);
-#endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
@@ -154,10 +152,8 @@ WORD m68k_dpeek(MEM_ADDRESS ad){
       return 0xffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if(mmu_confused){
       return mmu_confused_dpeek(ad,true);
-#endif
     }else if(ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
@@ -223,10 +219,8 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
       return 0xffffffff;
     }else if (ad>=0xd00000 && ad<0xd80000){
       return 0xffffffff;
-#if !defined(SSE_MMU_NO_CONFUSION)
     }else if (mmu_confused){
       return mmu_confused_lpeek(ad,true);
-#endif
     }else if (ad>=FOUR_MEGS){
       exception(BOMBS_BUS_ERROR,EA_READ,ad);
     }else{
@@ -1644,10 +1638,8 @@ void m68kReadBFromAddr() {
     }
     else if (abus>=0xd00000 && abus<0xd80000)
       m68k_src_b=(BYTE)0xff;               
-#if !defined(SSE_MMU_NO_CONFUSION)
     else if(mmu_confused)
       m68k_src_b=mmu_confused_peek(abus,true);                                         
-#endif
     else if(abus>=FOUR_MEGS)
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
     else
@@ -1705,10 +1697,8 @@ void m68kReadWFromAddr() {
     }
     else if (abus>=0xd00000 && abus<0xd80000)
       m68k_src_w=(WORD)0xffff;                                          
-#if !defined(SSE_MMU_NO_CONFUSION)
     else if(mmu_confused)
       m68k_src_w=mmu_confused_dpeek(abus,true);                                         
-#endif
     else if(abus>=FOUR_MEGS)
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
     else
@@ -1766,10 +1756,8 @@ void m68kReadLFromAddr() {
     }
     else if (abus>=0xd00000 && abus<0xd80000-2)
       m68k_src_l=0xffffffff;                                          
-#if !defined(SSE_MMU_NO_CONFUSION)
     else if (mmu_confused)
       m68k_src_l=mmu_confused_lpeek(abus,true);                                         
-#endif
     else if(abus>=FOUR_MEGS)
       exception(BOMBS_BUS_ERROR,EA_READ,abus);                          
     else

@@ -89,7 +89,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
   //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
 //  logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // now free
 #endif
@@ -407,7 +407,7 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE(">>> Start Emulation <<<\n");
 #endif
     //options
-#if defined(SSE_INT_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
 #endif
@@ -428,10 +428,10 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
     if(OPTION_C2)
       TRACE("; C2");
-#if defined(SSE_INT_MFP_RATIO) 
+#if defined(SSE_CPU_MFP_RATIO) 
     if(n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("; Speed %d",n_cpu_cycles_per_second);
-#if defined(SSE_INT_MFP_RATIO_OPTION)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
       TRACE("; Clock %d",CpuCustomHz);
 #endif
@@ -757,7 +757,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_trigger_vbi)
     TRACE("event_trigger_vbi");
 #endif
-#if defined(SSE_FLOPPY_EVENT)
+#if defined(SSE_WD1772_EMU)
   else if(pointer==event_wd1772)
     TRACE("event_wd1772");
   else if(pointer==event_driveA_ip)

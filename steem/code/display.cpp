@@ -813,18 +813,6 @@ HRESULT SteemDisplay::Lock()
       draw_line_length=DDBackSurDesc.lPitch;
       draw_mem=LPBYTE(DDBackSurDesc.lpSurface);
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_370)
-      //  shift mode 2 will switch the RGB port off -> black screen
-      if(COLOUR_MONITOR && screen_res==2)
-      {
-        HDC hdc;
-        DDBackSur->GetDC(&hdc);
-        RECT r={0,0,SurfaceWidth,SurfaceHeight};
-        FillRect(hdc,&r,(HBRUSH)GetStockObject(BLACK_BRUSH));
-        DDBackSur->ReleaseDC(hdc);
-      }
-#endif
-
 
 #if defined(SSE_VID_BORDERS_LB_DX)
       // trying to make it crash-free (v3.4.1)
@@ -885,7 +873,7 @@ void SteemDisplay::Unlock()
       *OurBackSur=
       (SSE_3BUFFER && DDBackSur2 && SurfaceToggle) ? DDBackSur2:DDBackSur;
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_382)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
     // moved here because now we draw garbage after lock (note: DD-only)
       if(COLOUR_MONITOR && shifter_last_draw_line==400)
       {
@@ -1728,12 +1716,11 @@ void SteemDisplay::ChangeToFullScreen()
 
       ONEGAME_ONLY( DestroyNotifyInitWin(); )
 
-#if !(defined(SSE_VAR_FULLSCREEN_DONT_START))
 #if defined(SSE_VID_FS_GUI_OPTION)
       if(!OPTION_FULLSCREEN_GUI) 
 #endif
         PostRunMessage();
-#endif
+
     }else{ //back to windowed mode
       TRACE_LOG("Can't go fullscreen 2\n");
       ChangeToWindowedMode(true);
@@ -2112,7 +2099,11 @@ HRESULT SteemDisplay::SaveScreenShot()
   {
     if(pNeoFile)
     {
+#if defined(SSE_VID_SAVE_NEO_383)
+      pNeoFile->resolution=change_endian(screen_res);
+#else
       pNeoFile->resolution=screen_res;
+#endif
       // palette was already copied (sooner=better)
       for(int i=0;i<16000;i++)
         pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
@@ -2820,6 +2811,10 @@ bool SteemDisplay::D3DBlit() {
     M68000.ProcessingState=TM68000::BLIT_ERROR;
 #endif
     runstate=RUNSTATE_STOPPING;
+#if defined(SSE_VID_D3D_383B)
+    TRACE2("BLIT ERROR\n");
+    D3DCreateSurfaces(); //test, nothing to lose, Steem crashes when losing surface anyway
+#endif
   }
 #elif defined(SSE_DEBUG)
   if(d3derr)

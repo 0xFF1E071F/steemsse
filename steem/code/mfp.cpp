@@ -34,7 +34,7 @@ int mfp_timer_counter[4];
 int mfp_timer_timeout[4];
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
 int mfp_timer_period_fraction[4];
 int mfp_timer_period_current_fraction[4];
 #endif
@@ -270,7 +270,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
               //*8000/MFP_CLK for MFP cycles, /64 for counter resolution
           mfp_timer_enabled[timer]=mfp_interrupt_enabled[mfp_timer_irq[timer]];
 
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggest just below, and it does bring
     the timing measurements at the same level as SainT and Hatari, at least in
     HWTST001.PRG by ljbk, so it's definitely an improvement, and it isn't 
@@ -364,7 +364,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #if defined(SSE_INT_MFP)
           if(OPTION_C2) 
           {
-#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#if defined(SSE_CPU_MFP_RATIO_PRECISION)
 /*  As soon as there's a fractional part (almost all the time), that means
     that the CPU can't be interrupted before next CPU cycle after IRQ.
 */
@@ -768,8 +768,12 @@ TMC68901::TMC68901() {
 }
 
 void TMC68901::Init() {
-  // init IrqInfo structure
+#if defined(SSE_INT_MFP_INIT_383)
+  ZeroMemory(this,sizeof(TMC68901)); //struct has been changed
+#else
   ZeroMemory(&IrqInfo,sizeof(TMC68901IrqInfo)*16);
+#endif
+  // init IrqInfo structure
   IrqInfo[0].IsGpip=IrqInfo[1].IsGpip=IrqInfo[2].IsGpip=IrqInfo[3].IsGpip
     =IrqInfo[6].IsGpip=IrqInfo[7].IsGpip=IrqInfo[14].IsGpip=IrqInfo[15].IsGpip
     =true;
@@ -874,7 +878,7 @@ Start Timer to Interrupt Request Error (See Note 3) ............ - 2 tCLK to - (
     CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN, it doesn't change actual cycles.
 */
 
-void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
+void TMC68901::CalcCyclesFromHblToTimerB() {
   cpu_cycles_from_hbl_to_timer_b=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][shifter_freq_idx];
   if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
     // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
