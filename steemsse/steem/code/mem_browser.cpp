@@ -1086,7 +1086,6 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
               MessageBeep(NULL);
               break;
             }
-            //TRACE("bytes=%d\n",bytes); 
 
             FILE *f=NULL; // signal for these functions
 #define SSE_BOILER_CLIPBOARD2
@@ -1167,7 +1166,6 @@ LRESULT __stdcall mem_browser_window_WndProc(HWND Win,UINT Mess,UINT wPar,long l
           }else if (LOWORD(wPar)==6){
             debug_load_file_to_address(Win,mb->ad & 0xffffff);
           }else if (LOWORD(wPar)==9 || LOWORD(wPar)==10){
-            //TRACE("find up (9)  or down (10): %d\n",LOWORD(wPar));
             int dir=int((LOWORD(wPar)==9) ? -1:1);
             EasyStr Text;
             Text.SetLength(200);
@@ -1461,7 +1459,6 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
     Value must be a WORD in hexadecimal, without $, eg FE20.
     One comparison character (=,!,<,>) is required.
 */
-//                TRACE("clicked in monitor column\n");
                 if(Debug.MonitorValueSpecified)
                 {
                   EasyStr Text;
@@ -1590,7 +1587,6 @@ LRESULT __stdcall mem_browser_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             mb->vscroll(-1);
             break;
           case VK_DOWN:
-            //TRACE("down");
             mb->vscroll(1);
             break;
           case VK_LEFT:case VK_RIGHT:

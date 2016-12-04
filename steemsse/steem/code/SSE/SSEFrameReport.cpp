@@ -116,7 +116,6 @@ void TFrameEvents::Init() {
 
 
 int TFrameEvents::Report() {
-  //TRACE("Saving frame events...\n");
   FILE* fp;
   fp=fopen(FRAME_REPORT_FILENAME,"w"); // unique file name
   ASSERT(fp);

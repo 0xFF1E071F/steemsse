@@ -54,7 +54,6 @@ bool TSF314::CheckGhostDisk(bool write) {
 
 void TSF314::Init() {
 #if defined(SSE_DRIVE_SOUND)
-  //TRACE("null %d sound buffer pointers\n",NSOUNDS);
   for(int i=0;i<NSOUNDS;i++)
     Sound_Buffer[i]=NULL;
 #if defined(SSE_DRIVE_SOUND_VOLUME)
@@ -280,7 +279,7 @@ void TSF314::IndexPulse(bool image_triggered) {
   else
 #endif
   {
-    //TRACE("time_of_next_ip %d time_of_last_ip %d CyclesPerByte() %d Disk[Id].TrackBytes %d\n",time_of_next_ip,time_of_last_ip,CyclesPerByte(),Disk[Id].TrackBytes);
+
 #if defined(SSE_DISK_STW_FAST)
     if(!ADAT)
       // make it longer or it may come before the WD1772 event
@@ -293,7 +292,6 @@ void TSF314::IndexPulse(bool image_triggered) {
 
   ASSERT(time_of_next_ip-time_of_last_ip>0);
 
-  //TRACE("%c: IP at %d next at %d (%d cycles, %d ms)\n",Id,time_of_last_ip,time_of_next_ip,time_of_next_ip-time_of_last_ip,(time_of_next_ip-time_of_last_ip)/(n_cpu_cycles_per_second/1000));
 #if defined(SSE_WD1772_EMU)
   // send pulse to WD1772
   if(DRIVE==Id)
@@ -593,12 +591,12 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
   if( Adat() &&
 #endif
 #if defined(SSE_DRIVE_SOUND_SEEK2) && !defined(SSE_DRIVE_SOUND_SEEK3) 
-/*  Because we have no 'Step' callback, we use a loop to emulate
-    the Seek noise with Pasti or Caps in charge.
-*/
-    (ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS
+    (
+#if !defined(SSE_DRIVE_SOUND_SEEK_PASTI)
+    ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS||
+#endif
 #if defined(SSE_DRIVE_SOUND_SEEK5)
-      || DRIVE_SOUND_SEEK_SAMPLE
+       DRIVE_SOUND_SEEK_SAMPLE
 #endif
     )&&
 #endif
@@ -609,7 +607,6 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
       &&abs(Track()-fdc_dr)>DRIVE_SOUND_BUZZ_THRESHOLD  ) // SEEK
     )
   {
-    //TRACE("start seek loop from %d to %d\n",Track(),fdc_dr);
 
 #if DRIVE_SOUND_BUZZ_THRESHOLD <5
     if(FloppyDrive[DRIVE].Empty())
@@ -632,8 +629,7 @@ void TSF314::Sound_CheckIrq() {
   {
     Sound_Buffer[SEEK]->Stop();
 #if defined(SSE_WD1772) 
-    //TRACE("CT %d TC %d TR %d\n",WD1772.CommandType(),TrackAtCommand,Track());
-    if(WD1772.CommandType()==1 && TrackAtCommand!=Track() //&& Sound_Buffer[STEP]
+    if(WD1772.CommandType()==1 && TrackAtCommand!=Track()
 #if defined(SSE_DRIVE_SOUND_SEEK3)    
       && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
 #endif
@@ -671,6 +667,14 @@ void TSF314::Sound_CheckMotor() {
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
+#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
+  //TRACE_OSD("%d",fdc_tr);
+  //TRACE("at command %d now %d\n",TrackAtCommand,fdc_tr); // we don't get them all
+  if(motor_on && (fdc_str&1) && !DRIVE_SOUND_SEEK_SAMPLE 
+    &&(ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)
+    && WD1772.CommandType()==1 && TrackAtCommand!=Track())
+    Sound_Step();
+#endif
 }
 
 

@@ -27,12 +27,6 @@
     ASSERT will only work properly in the Visual Studio IDE (or equivalent).
     I went out of my way to have TRACE working just like in the rest of Steem
     SSE.
-
-    TODO: 
-    - get real timings / Froggies must still be OK
-    - mouse movement isn't satisfying yet, but it's complicated, SainT has
-    problems too. It's probably related to timings.
-    - check ram access range?
 */
 
 #include <SSE/SSE.h>

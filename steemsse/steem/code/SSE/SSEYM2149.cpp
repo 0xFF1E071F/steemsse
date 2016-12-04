@@ -43,7 +43,6 @@ void TYM2149::FreeFixedVolTable() {
 
 
 bool TYM2149::LoadFixedVolTable() {
-  //TRACE("TYM2149::LoadFixedVolTable()\n");
   bool ok=false;
   FreeFixedVolTable(); //safety
   p_fixed_vol_3voices=new WORD[16*16*16];

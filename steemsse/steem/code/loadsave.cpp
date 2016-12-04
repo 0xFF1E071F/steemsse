@@ -348,7 +348,6 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-        //TRACE("Memory snapshot %s loaded\n",FilNam);
 #if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_383E1)
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
@@ -543,7 +542,6 @@ bool load_TOS(char *File)
   tos_version=ROM_DPEEK(2);
 
 #if defined(SSE_TOS_STE_FAST_BOOT) //from hatari
-//  TRACE("tos v %x loaded\n",tos_version);
   if(OPTION_HACKS && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
     && !pasti_active 
@@ -669,7 +667,7 @@ bool load_cart(char *filename) {
         if(pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
           SET_PC(PC32);        //TODO ?
         }
-        TRACE2("Cartridge %X %X\n",FirstBytes,checksum);
+        //TRACE2("Cartridge %X %X\n",FirstBytes,checksum);
 #if defined(SSE_CARTRIDGE_DIAGNOSTIC) && !defined(SSE_CARTRIDGE_383) 
 /*  If these four bytes are found, the computer will transfer control
     to memory location $FA0004.
@@ -846,7 +844,6 @@ void LoadState(GoodConfigStoreFile *pCSF)
       SendMessage(mb->handle,WM_SETREDRAW,1,0);
     }
     MoveWindow(mb->owner,browsers[b].x,browsers[b].y,browsers[b].w,browsers[b].h,true);
-    //TRACE("name %s\n",browsers[b].name);
     SetWindowText(mb->owner,browsers[b].name);
   }
 

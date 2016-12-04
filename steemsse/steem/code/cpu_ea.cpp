@@ -38,13 +38,12 @@ BYTE m68k_peek(MEM_ADDRESS ad){
       TRACE_LOG("PC %X read.b %X = %X\n",old_pc,ad,cart?CART_PEEK(ad-MEM_EXPANSION_CARTRIDGE):0xFF);
 #if defined(SSE_CARTRIDGE_BAT)
 /*  See m68k_dpeek().
-    B.A.T I and II and Music Master use MOVE.W, but other programs may use
-    MOVE.B.
+    B.A.T I and II and Music Master use MOVE.W.
     Drumbeat for the Replay 16 cartridge uses MOVE.B.
  */
       if (cart)
       {
-        DWORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE; // DWORD, not WORD (128KB)
+        DWORD cart_addr=ad-MEM_EXPANSION_CARTRIDGE; // DWORD, not WORD (128KB), EmuTOS cartridge
         if(SSEConfig.mv16 && cart_addr>4) //not when checking for presence
           dma_mv16_fetch((WORD)cart_addr);
         return CART_PEEK(cart_addr);
@@ -907,7 +906,6 @@ void m68k_get_source_111_w(){
 #endif
     pc+=2; 
 #if defined(SSE_CPU_DATABUS)
-///    TRACE("dbus %x -> %x\n", dbus,IRC);
     dbus=IRC;
 #endif
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA) && !defined(SSE_MMU_ROUNDING_BUS2A_EA1)

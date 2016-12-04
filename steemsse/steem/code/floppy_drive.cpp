@@ -69,9 +69,12 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     return FIMAGE_FILEDOESNTEXIST;
 
   EasyStr OriginalFile=File,NewZipTemp;
-
+#if defined(SSE_DISK_CAPS_383C) // we want ReadOnly to be updated before
+#define FileIsReadOnly ReadOnly
+  FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
+#else
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
-
+#endif
   Str Ext;
   bool MSA,STT,DIM,f_PastiDisk=0;
   char *dot=strrchr(File,'.');
@@ -857,8 +860,11 @@ Header:
     ValidBPB=f_ValidBPB;
     DiskFileLen=f_DiskFileLen;
   }
-
+#if defined(SSE_DISK_CAPS_383C)
+#undef FileIsReadOnly
+#else
   ReadOnly=FileIsReadOnly;
+#endif
   ZipTempFile=NewZipTemp;
   DiskInZip=NewDiskInZip;
   ImageFile=OriginalFile;
@@ -1041,7 +1047,6 @@ bool TFloppyImage::ReopenFormatFile()
 bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
 {
   if (Format_f==NULL) Format=0;
-//  TRACE("SEEK %d/%d\n",Track,TracksPerSide-1);
   if (Empty()){
     return true;
   }else if (Side<0 || Track<0 || Side>1){

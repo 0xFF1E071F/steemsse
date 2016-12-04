@@ -467,7 +467,6 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 #if defined(SSE_STF_MATCH_TOS)
             if(Win) {
 #endif
-              //TRACE("add %s %x %x $x\n",Path.Text,Ver,Country,Date);
               eslTOS.Add(3,Str(GetFileNameFromPath(Path))+"\01"+Path,
                Ver,Country,Date);
               if (Ver==tos_version && VersionPath.Empty()) VersionPath=Path;
@@ -2981,7 +2980,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             int db =-( 10000 - 10000 * log10(position+1) / log10(101));
 #endif
             MaxVolume=db;
-            //TRACE("set MaxVolume %d db %d position %d\n",MaxVolume,db,position);
           }
 #else
           MaxVolume=SendMessage(HWND(lPar),TBM_GETPOS,0,0)-9000;
@@ -2998,7 +2996,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #else
             int db =-( 10000 - 10000 * log10(position+1) / log10(101));
 #endif
-            //TRACE("%d %d\n",position,db);
             SF314[0].Sound_Volume=db;
             SF314[0].Sound_ChangeVolume();
           }
@@ -3056,10 +3053,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         if (di->itemID < 0xffffffff){
           int idx=di->itemID;
           if (This->eslTOS_Descend) idx=This->eslTOS.NumStrings-1 - di->itemID;
-
-
-          //for(int i=0;i<15;i++)          TRACE("%d %X\n",i,(WORD)This->eslTOS[idx].Data[i]);
-
           WORD Ver=(WORD)This->eslTOS[idx].Data[0];
           WORD Lang=(WORD)This->eslTOS[idx].Data[1];
           WORD Date=(WORD)This->eslTOS[idx].Data[2];

@@ -1762,9 +1762,7 @@ void TGlue::IncScanline() {
 #if defined(SSE_GLUE_383E1B)
   ASSERT(VCount);
 #endif
-  //if(VCount)
   VCount--;
-  //else TRACE("scan_y %d VCount %d\n",scan_y,VCount);
 #endif
 
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383) // became useless?
@@ -2192,10 +2190,6 @@ void TGlue::GetNextScreenEvent() {
   else if(!Status.sdp_reload_done &&(scanline==310||scanline==260||scanline==494))
 #endif
   {
-#if defined(SSE_GLUE_383E)
-    //TRACE("program SDP reload scan_y %d scanline %d VCount %d\n",scan_y,scanline,VCount);
-    //TRACE("program SDP reload scan_y %d VCount %d\n",scan_y,VCount);
-#endif
 #if defined(SSE_GLUE_THRESHOLDS)
     screen_event.time=ScanlineTiming[RELOAD_SDP][shifter_freq_idx];
 #else
@@ -2221,9 +2215,6 @@ void TGlue::GetNextScreenEvent() {
     || scanline==500) // scanline 500: unconditional to catch oddities...
 #endif
   {
-#if defined(SSE_GLUE_383E)
-    //TRACE("program vbl_interrupt scan_y %d scanline %d VCount %d\n",scan_y,scanline,VCount);
-#endif
     screen_event.time=CurrentScanline.Cycles;
 #if defined(SSE_VAR_OPT_383)
     screen_event_vector=event_vbl_interrupt;
@@ -2473,7 +2464,6 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,CyclesIn,'S',NewSync); 
 #endif
-  //TRACE("F%d y%d c%d s%d frame %d\n",TIMING_INFO,NewSync,shifter_freq_at_start_of_vbl);//TEMP
 #endif
 
   m_SyncMode=NewSync&3; // 2bits

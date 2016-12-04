@@ -530,7 +530,6 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   SetWindowLongPtr(GetDlgItem(Handle, 98), GWLP_USERDATA,(LONG_PTR) this);
   SetWindowLongPtr(GetDlgItem(Handle, 99), GWLP_USERDATA,(LONG_PTR) this);
   Old_ListView_WndProc = (WNDPROC)GetClassLongPtr(GetDlgItem(Handle, 100), GCLP_WNDPROC);
-  //TRACE("%p\n",Old_ListView_WndProc);
   SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_USERDATA,(LONG_PTR) this);
   SetWindowLongPtr(GetDlgItem(Handle, 100), GWLP_WNDPROC, (LONG_PTR)DriveView_WndProc);
   SetWindowLongPtr(GetDlgItem(Handle, 101), GWLP_USERDATA,(LONG_PTR) this);
@@ -1303,8 +1302,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
     case WM_COMMAND:
     {
       GET_THIS;
-      //TRACE("WM_COMMAND %d\n",LOWORD(wPar));
-     // ASSERT( LOWORD(wPar)!=84 );
       switch (LOWORD(wPar)){
         case IDCANCEL: //Esc
         {
@@ -1328,7 +1325,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 /*  Right click on HD manager icon toggles HD
 */
           {
-            //TRACE("clk HD icon wpar %x lpar %x\n",wPar,lPar);//same for left & right
             HWND icon_handle=GetDlgItem(Win,10);
             if (SendMessage(icon_handle,BM_GETCLICKBUTTON,0,0)==2)
             {
@@ -1828,7 +1824,6 @@ That will toggle bit x.
         case 1048:  
         case 1049:
           SSEOption.SingleSideDriveMap^=1<< (LOWORD(wPar)-1048);
-          //TRACE("%c -> %02x\n",'A'+(LOWORD(wPar)-1048),SSEOption.SingleSideDriveMap);
           break;
 #endif
 
@@ -2682,7 +2677,13 @@ That will toggle bit x.
               if (Link){
                 Inf->LinkPath=This->DisksFol+"\\"+NewName+Extension;
               }else{
+#if defined(SSE_GUI_DM_SHOW_EXT)
+                Str NewPath=This->DisksFol+"\\"+NewName;
+                if(This->HideExtension)
+                  NewPath+=Extension;
+#else
                 Str NewPath=This->DisksFol+"\\"+NewName+Extension;
+#endif
                 if (Inf->Folder==0) This->UpdateBPBFiles(Inf->Path,NewPath,true);
                 Inf->Path=NewPath;
               }

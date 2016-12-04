@@ -777,7 +777,6 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
         BYTE*buf=new BYTE[l];
         psi.buffer=(void*)buf;
         if (pasti->SaveState(&psi)){
-          //TRACE("Saving pasti state\n");
           ReadWriteVar(buf,l,f,LS_SAVE,1,Version);
         }else{
           l=0;
@@ -1080,7 +1079,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     v3.6.2: do it only for load ...
     v3.6.3: check that Caps is loaded before ...
 */
-    //TRACE("CAPSIMG_OK%d\n",CAPSIMG_OK);
     if(LoadOrSave==LS_LOAD //3.6.2
       && CAPSIMG_OK //3.6.3
       && Caps.Active
@@ -1136,7 +1134,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
 #if defined(SSE_INT_MFP_OBJECT)
-    //TRACE("L/S MFP\n");
     ReadWriteStruct(MC68901);
 #if defined(SSE_INT_MFP)
     if(LoadOrSave==LS_LOAD)
@@ -1151,7 +1148,6 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   {
 #ifdef SSE_WD1772
     ReadWriteStruct(WD1772); //yep, was missing before... explains a lot!
-    //TRACE("phase %d\n",WD1772.prg_phase);
 #if defined(SSE_WD1772_EMU)
     if(LoadOrSave==LS_LOAD && WD1772.prg_phase>TWD1772::WD_READY)
     {
@@ -1221,10 +1217,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   }
 #if defined(SSE_GLUE_383E)
-  //TRACE("in load snapshot\n");
   Glue.VCount=0;  
-//  CALC_SHIFTER_FREQ_IDX//?
-//  Glue.Vbl();
 #endif
 #endif
 

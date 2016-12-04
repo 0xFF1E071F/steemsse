@@ -1072,9 +1072,6 @@ void stemdos_Pexec() //called from stemdos_rte, nothing done after this fn calle
           // Pexec call to just go, must write everything as the sp
           // might have been on the now cleared heap (Team STF demo)
           MEM_ADDRESS sp=get_sp_before_trap();
-          //TRACE("sp before trap when calling pexec '4': %X\n",sp);
-          //->OK same as when intercepting, so it's like the 0 had been
-          //transformed into a 4
           m68k_dpoke(sp,0x4b);  //SS PEXEC
 #if defined(SSE_TOS_GEMDOS_PEXEC6)
 /*  Later Gemdos had a new Pexec mode 6 where you don't need to delete

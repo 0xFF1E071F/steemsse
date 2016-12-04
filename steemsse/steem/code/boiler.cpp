@@ -76,20 +76,6 @@ THistoryList HistList;
 #include <SSE/SSEShifter.h>
 #endif
 
-/* SS
-  Mods in the debug build (Steem Boiler):
-  - not sure CPU mods are reckoned but it seems so (TODO)
-  - mostly no log for modified code eg video (TODO)
-  - TRACE feature preferred, much more selective
-  - TRACE to file if you're not in Visual Studio (check Options)
-  - also an option to limit this file's size
-  - Shifter tricks report on demand (new shortcut), also a file
-  - copy disassembly into clipboard instead of a file if right
-  click on the Dump button - using RAM
-  TODO:
-
-*/
-
 #ifdef DEBUG_BUILD//SS
 
 //---------------------------------------------------------------------------

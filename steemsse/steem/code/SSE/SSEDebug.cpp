@@ -227,8 +227,8 @@ void TDebug::Vbl(){
 #if defined(SSE_DEBUG_RESET) 
 
 void TDebug::Reset(bool Cold) {
-  //TRACE_INIT("%s reset\n",(Cold?"Cold":"Warm"));
-  TRACE("%s reset\n",(Cold?"Cold":"Warm"));
+  TRACE_INIT("%s reset\n",(Cold?"Cold":"Warm"));
+  //TRACE("%s reset\n",(Cold?"Cold":"Warm"));
   if(Cold)
   {
 #if defined(SSE_DEBUG_ASSERT)
@@ -304,6 +304,12 @@ void TDebug::Trace(char *fmt, ...){
   }
 #endif
 #endif
+
+#if defined(SSE_BOILER_AUTO_FLUSH_TRACE_383)
+  if(trace_file_pointer)
+    fflush(trace_file_pointer);
+#endif
+
 
 }
 
@@ -407,6 +413,8 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE(">>> Start Emulation <<<\n");
 #endif
     //options
+    if(cart)
+      TRACE("Cart %X ",CART_LPEEK(0));
 #if defined(SSE_CPU_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
@@ -585,6 +593,7 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #endif
   }
 }
+
 #endif//#if defined(SSE_DEBUG)
 
 

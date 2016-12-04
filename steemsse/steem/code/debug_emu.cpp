@@ -130,7 +130,6 @@ void update_display_after_trace()
     if (draw_blit_source_rect.left!=old_src.left || draw_blit_source_rect.top!=old_src.top ||
           draw_blit_source_rect.right!=old_src.right || draw_blit_source_rect.bottom!=old_src.bottom){
       draw_end();
-      //TRACE("in update_display_after_trace\n");
       draw(false);
       draw_begin();
     }

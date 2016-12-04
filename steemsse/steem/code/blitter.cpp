@@ -794,7 +794,6 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 //---------------------------------------------------------------------------
 void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
 {
-  //TRACE("Blitter W %X=%X\n",Adr,Val);
 
 #ifdef DISABLE_BLITTER
   exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);

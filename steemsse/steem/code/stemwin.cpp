@@ -208,9 +208,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
   switch (Mess){
     case WM_PAINT:
     {
-      //TRACE("WM_PAINT %d %x %x\n",Win,wPar,lPar);
-      //d3d we get and execute all wm_paint, but windows fails
-      //to redraw gui every twice, yet controls respond, mouse appears
       RECT dest;
 
       GetClientRect(Win,&dest);
@@ -227,7 +224,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
 
       if (FullScreen){
-        //TRACE("draw for FS... mode %d\n",draw_fs_blit_mode);
         int menu_bottom=0 NOT_ONEGAME(+MENUHEIGHT+2);
 #ifndef ONEGAME
         dest.bottom=menu_bottom;
@@ -255,7 +251,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif//#if !defined(SSE_VID_D3D_ONLY)
         HBRUSH br=(HBRUSH)GetStockObject(BLACK_BRUSH);
         RECT rc;
-        //TRACE("x_gap %d y_gap %d\n",x_gap,y_gap);
         if (x_gap){
           rc.top=menu_bottom;rc.left=0;rc.bottom=Height;rc.right=x_gap;
           FillRect(ps.hdc,&rc,br);
@@ -342,7 +337,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
 #if defined(SSE_GUI_SNAPSHOT_INI)
-          //TRACE("BootStateFile = %s\n",BootStateFile.Text);
           if(LOWORD(wPar)==209)
             fn=BootStateFile;
 #endif
@@ -400,11 +394,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (FilNam.NotEmpty()){
             LastCfgFile=FilNam;
             ConfigStoreFile CSF; //on the stack
-            // TRACE("CSF size = %d\n",sizeof(CSF)); //76
             CSF.Open(FilNam);
             // Load
             if (LOWORD(wPar)==443){
-              //TRACE("load config file %s\n",FilNam.Text);
               OPTION_WS=CSF.GetInt("Machine","WakeUpState",0);
               LoadAllDialogData(false,"",NULL,&CSF); // radical!
               ROMFile=CSF.GetStr("Machine","ROM_File",ROMFile);
@@ -423,7 +415,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             // Save
             else
             {
-              //TRACE("save config file %s\n",FilNam.Text);
               SaveAllDialogData(false,"",&CSF); // radical!
               CSF.SetStr("Machine","WakeUpState",EasyStr(OPTION_WS));
             }     
@@ -976,7 +967,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     case WM_SIZE:
     {
       int cw=LOWORD(lPar),ch=HIWORD(lPar);
-      //TRACE("WM_SIZE cw %d ch %d\n",cw,ch);
       RECT rc={0,MENUHEIGHT,cw,ch};
       InvalidateRect(Win,&rc,0);
 #ifndef ONEGAME

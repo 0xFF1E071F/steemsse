@@ -233,7 +233,6 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
  unpredictable values."
 */
 #if defined(SSE_DMA_SECTOR_COUNT2)
-//      TRACE_FDC("Read DMA sector counter\n");
       ior_byte=0xFF;
 #else
       ior_byte=(rand()&0xFF); // or FF?
@@ -241,7 +240,6 @@ BYTE TDma::IORead(MEM_ADDRESS addr) {
 #else
       ior_byte=HIBYTE(Counter); 
 #endif
-      //TRACE("read %x as %x\n",addr,ior_byte);
     }
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
@@ -272,12 +270,10 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 #else
       ior_byte=LOBYTE(Counter); 
 #endif
-      //TRACE("read %x as %x\n",addr,ior_byte);
     }
     // HD access
     else if(MCR&CR_HDC_OR_FDC) 
     {
-//      TRACE_LOG("HD");
       LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+
                   " - Reading low byte of HDC register #"+((dma_mode & BIT_1) ? 1:0)); )
 
@@ -374,7 +370,6 @@ note: this isn't clear, see Drq()
         }
     }
 #endif//
-    //if(!(dma_mode & (BIT_1+BIT_2))) TRACE("read STR pre pasti as %X\n",ior_byte);
     break;
 
   case 0xff8606:  //high byte of DMA status
@@ -382,7 +377,6 @@ note: this isn't clear, see Drq()
     break;
 
   case 0xff8607:  //low byte of DMA status
-//    TRACE_LOG("SR");
 #if defined(SSE_DMA_READ_STATUS)
 /*
 "If the DMA status word is polled during a DMA operation the transfer might
@@ -393,27 +387,20 @@ Not emulated
 #else
     ior_byte=BYTE(b11110000) | SR;
 #endif
-    //TRACE("read %x as %x\n",addr,ior_byte);
     break;
 /*
 "The DMA Address Counter register must be read in a High, Mid, Low order."
-TODO?
 */
   case 0xff8609:  // DMA Base and Counter High
-//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff0000)>>16);
     break;
 
   case 0xff860b:  // DMA Base and Counter Mid
-//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff00)>>8);
     break;
 
   case 0xff860d:  // DMA Base and Counter Low
-//    TRACE_LOG("BaseAddress");
     ior_byte=(BYTE)((BaseAddress&0xff));
-//   TRACE("read %x as %x\n",addr,ior_byte);
-//    if(addr==0xff860d) TRACE("base %x ",BaseAddress);
     break;
 
   case 0xff860e: //frequency/density control
@@ -434,10 +421,6 @@ TODO?
     break;
   }//sw
 
-
-//TRACE("pre pasti read %x as %x\n",addr,ior_byte);
-
-////#define LOGSECTION LOGSECTION_FDC//tmp
 #if USE_PASTI 
 /*  Pasti handles all Dma reads - this cancels the first value
     of ior_byte, but allows to go through TRACE and update our variables..
@@ -456,8 +439,6 @@ TODO?
 #endif
     )
   {
-//    TRACE_LOG(" Pasti");
-//    TRACE("pasti reading ");
     if(addr<0xff8608 && (addr & 1))
     {
       ior_byte=LOBYTE(pasti_store_byte_access);
@@ -483,11 +464,6 @@ TODO?
     }
   }
 #endif
-
-//  TRACE_LOG(" .B=%X\n",ior_byte);
-//  if(addr==0xff860d) TRACE("base %x ",BaseAddress);
-  //if(addr==0xff860b) TRACE("read %x as %x\n",addr,ior_byte);
-  //TRACE("post pasti read %x as %x\n",addr,ior_byte);
 
 #if defined(SSE_DRIVE_MEDIACHANGE)
 /*  Media change (changing the floppy disk) on the ST is managed in
@@ -550,7 +526,6 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
     // HD access
     if(MCR&CR_HDC_OR_FDC)
     { 
-    //  if(io_src_b) TRACE("HDC %x high: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $"+HEXSl(io_src_b,2)+"xx to HDC register #"+((dma_mode & BIT_1) ? 1:0));
       break;
     }
@@ -586,8 +561,6 @@ is ignored and when reading the 8 upper bits consistently reads 1."
     }
     // HD access
     if (MCR&CR_HDC_OR_FDC){ 
-//      TRACE_LOG("HD");
- //     TRACE("HDC %x: W %x\n",(dma_mode & BIT_1) ? 1:0,io_src_b);
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
 #if defined(SSE_ACSI)
 /*  According to defines, send byte to unique or "correct" ACSI device
@@ -766,10 +739,8 @@ is no such effect because they are read only on the ST.
     BaseAddress&=0xffff00;
     BaseAddress|=io_src_b;
 #if defined(SSE_DMA_ADDRESS_EVEN)    
-    //ASSERT(!(io_src_b&1));
     BaseAddress&=0xfffffe;//remark by Petari: bit0 ignored
 #endif
-    //TRACE("W BaseAddress %x\n",BaseAddress);
     break;
     
   case 0xff860e: //high byte of frequency/density control
@@ -813,7 +784,6 @@ is no such effect because they are read only on the ST.
       pioi.cycles=ABSOLUTE_CPU_TIME;
       //          log_to(LOGSECTION_PASTI,Str("PASTI: IO write addr=$")+HEXSl(addr,6)+" data=$"+
       //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
-//      TRACE("Pasti: %X->%X\n",data,addr);
 
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
       if(SSE_GHOST_DISK && WD1772.Lines.CommandWasIntercepted
@@ -867,8 +837,6 @@ void TDma::UpdateRegs(bool trace_them) {
 #endif
     )
   {
-   // TRACE("pasti regs ");
-
     pastiPEEKINFO ppi;
     pasti->Peek(&ppi);
     fdc_cr=ppi.commandReg;

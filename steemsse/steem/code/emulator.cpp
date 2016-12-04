@@ -295,7 +295,6 @@ void intercept_os() // SS could we do much more here?
     intercept_xbios();
     ioaccess|=IOACCESS_INTERCEPT_OS;
   }
-//TRACE("hdimg_active %d\n",hdimg_active);//0 for "img"
 #if !defined(SSE_ACSI_DISABLE_HDIMG)
   if (hdimg_active) hdimg_intercept(pc);
 #endif
@@ -648,7 +647,6 @@ void agenda_add(LPAGENDAPROC action,int pause,int param)
 #endif
   if (agenda_length>=MAX_AGENDA_LENGTH){
     log_write("AARRRGGGHH!: Agenda full, can't add!");
-    //TRACE("AARRRGGGHH!: Agenda full, can't add!\n"); // indicates a bug
     TRACE("Agenda full\n");
     ASSERT( agenda_length<MAX_AGENDA_LENGTH ); // boiler msg box -> quit
     return;
