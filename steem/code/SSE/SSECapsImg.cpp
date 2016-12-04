@@ -18,10 +18,6 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-#if defined(SSE_DRIVE_IPF1_)
-#include <stemdialogs.decla.h>//temp...
-#include <diskman.decla.h>
-#endif
 
 #if !defined(SSE_CPU)
 #include <mfp.decla.h>
@@ -138,8 +134,11 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( !drive || drive==1 );
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
-
+#if defined(SSE_DISK_CAPS_383C) //didn't work with archives
+  bool FileIsReadOnly=FloppyDrive[drive].ReadOnly;
+#else
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
+#endif
   VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the CAPS file
   VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
   ASSERT( img_info->type==ciitFDD );
@@ -157,7 +156,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
 #if defined(SSE_DISK_CAPS_CTRAW) 
       || ::SF314[drive].ImageType.Extension!=EXT_IPF// the other SF314 (confusing)
 #endif
-      || OPTION_HACKS) //MPS GOlf 'test'
+      || OPTION_HACKS) //unofficial or multiformat images
       found=true;
   }
   TRACE_LOG("Sides:%d Tracks:%d-%d\n",img_info->maxhead+1,img_info->mincylinder,
@@ -172,12 +171,13 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
+#if defined(SSE_DISK_CAPS_383C)
+  else
+    SF314[drive].diskattr|=CAPSDRIVE_DA_WP; // Jupiter's Master Drive
+#endif
 #if defined(SSE_DRIVE_SINGLE_SIDE_CAPS)
   if(SSEOption.SingleSideDriveMap&(drive+1) && Caps.Version>50)
-  {
-    //TRACE("single side!\n");
     SF314[drive].diskattr|=CAPSDRIVE_DA_SS; //tested OK on Dragonflight
-  }
 #endif
   CAPSFdcInvalidateTrack(&WD1772,drive); // Galaxy Force II
   LockedTrack[drive]=LockedSide[drive]=-1;

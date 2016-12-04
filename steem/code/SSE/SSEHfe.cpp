@@ -112,7 +112,6 @@ Bit 0-> Bit 1-> Bit 2-> Bit 3-> Bit 4-> Bit 5-> Bit 6-> Bit 7->(next byte)"
     //ASSERT(MFM_SIDE_BLOCK_SIZE);
     int block=(Position/MFM_SIDE_BLOCK_SIZE)*2+current_side;
     int index=(Position%MFM_SIDE_BLOCK_SIZE)+block*MFM_SIDE_BLOCK_SIZE;
-//TRACE("S %d T %d P %d B %d i %d\n",current_side,CURRENT_TRACK,Position,block,index);
     ASSERT( index>=0 && index< nBytes*2+128*current_side );
     return index;
 }

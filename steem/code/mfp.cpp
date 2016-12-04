@@ -494,7 +494,6 @@ is not loaded into the timer until it counts through H01.
       RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),new_control,0);
     }
   }
-  //TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
 }
 
 void mfp_init_timers() // For load state and CPU speed change
@@ -678,9 +677,6 @@ void mfp_interrupt(int irq) {
   case 14:TRACE_INT("RS-232 Ring detect\n");      break;             
   case 15:TRACE_INT("Monochrome Detect\n");       break;                     
   }//sw
-
-//TRACE("mfp_timer_period_change[3] %d\n",mfp_timer_period_change[3]);
-
 
 #if defined(SSE_BOILER_FRAME_INTERRUPTS)
   Debug.FrameInterrupts|=4;

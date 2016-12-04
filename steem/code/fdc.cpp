@@ -1453,7 +1453,6 @@ void agenda_fdc_finished(int)
 //---------------------------------------------------------------------------
 void agenda_floppy_seek(int)
 {
-  ASSERT( fdc_str&FDC_STR_BUSY );//TODO
   int floppyno=floppy_current_drive();
 #if defined(SSE_FDC_SEEK)
 /*
@@ -2150,7 +2149,6 @@ Gap 4 Post Data                   40          40           1      4E
 #endif
         write_to_dma(0x4e,gap5bytes);
         BytesRead+=gap5bytes;
-        //TRACE("end of track %d bytes\n",gap5bytes);
 #else
         write_to_dma(0x4e,16);
         BytesRead+=16;

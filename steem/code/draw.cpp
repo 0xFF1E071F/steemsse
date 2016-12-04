@@ -589,8 +589,6 @@ void draw_set_jumps_and_source()
         draw_blit_source_rect.right-=2;
 #endif
     }
-//    TRACE("big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
-    //// 16,30,784,570 for interpolated
   }else{
     draw_scanline=jump_draw_scanline[0][BytesPerPixel-1][screen_res];
     draw_scanline_lowres=jump_draw_scanline[0][BytesPerPixel-1][0];
@@ -644,16 +642,11 @@ void draw_set_jumps_and_source()
 
 //    if(overscan)draw_blit_source_rect_bottom+=OVERSCAN_HEIGHT; should this be put in???
     draw_dest_increase_y=draw_line_length;
-    //TRACE("no big source rect %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
-    //-> y = +40 in all modes
   }
-
-  //TRACE_INIT("draw %p %d %d %d %d big %d +y %d\n",draw_scanline,draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,big_draw,draw_dest_increase_y);
 
   WIN_ONLY( draw_buffer_complex_scanlines=(Disp.Method==DISPMETHOD_DD &&
                   Disp.DrawToVidMem && draw_med_low_double_height); )
-//  ASSERT(draw_buffer_complex_scanlines);
-//  WIN_ONLY( draw_buffer_complex_scanlines=0; )
+
 }
 //---------------------------------------------------------------------------
 void draw_end()

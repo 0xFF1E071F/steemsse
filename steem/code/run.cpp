@@ -340,7 +340,6 @@ void run()
 
 #ifdef DEBUG_BUILD
   if (redraw_on_stop){
-    //TRACE("redraw_on_stop\n");
     draw(0);
   }else{
     update_display_after_trace();
@@ -1115,7 +1114,7 @@ void event_start_vbl()
 
   // This happens about 60 cycles into scanline 247 (50Hz) //SS but the timing in frame event plan was different
   //TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
-  //TRACE("RELOAD SDP %X -> %X h %d y %d f %d c %d\n",shifter_draw_pointer,xbios2,Glue.scanline,scan_y,shifter_freq,LINECYCLES);
+
 
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MMU.VideoCounter=
@@ -1728,7 +1727,6 @@ void prepare_cpu_boosted_event_plans()
 #endif
     scanline_time_in_cpu_cycles[idx]=(scanline_time_in_cpu_cycles_8mhz[idx]*factor)/8;
   }
-  //TRACE("factor %d\n",factor);
   for (int n=0;n<16;n++){
 #if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)
 /*  We leave the prescale unlimited, it won't mess timings if the value is small 
@@ -1738,7 +1736,6 @@ void prepare_cpu_boosted_event_plans()
 #else
     mfp_timer_prescale[n]=min((mfp_timer_8mhz_prescale[n]*factor)/8,1000);
 #endif
-    //TRACE("mfp_timer_prescale[%d]=%d (%d) (%d)\n",n,mfp_timer_prescale[n],(mfp_timer_8mhz_prescale[n]*factor)/8,mfp_timer_8mhz_prescale[n]);
   }
 //  init_timings();
   mfp_init_timers();
@@ -1830,8 +1827,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
-  //TRACE("Freq %d (%d) VCount %d ->",shifter_freq,shifter_freq_idx,Glue.VCount);
-#if defined(SSE_GLUE_383E1B)
+  #if defined(SSE_GLUE_383E1B)
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
 #endif
 #if defined(SSE_GLUE_383ED) // can't count on shifter_freq_idx TODO
@@ -1857,7 +1853,6 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     ASSERT(0);
   }
 #endif
-  //TRACE("%d\n",Glue.VCount);
 #endif
 }
 #endif

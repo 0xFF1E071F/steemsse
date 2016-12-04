@@ -194,7 +194,6 @@ void osd_pick_scroller()
 
   osd_shown_scroller=true;
   osd_scroller_start_time=timer+100;
-  //TRACE("%d\n",osd_scroller.Length());
   osd_scroller_finish_time=osd_scroller_start_time + 20*20 + osd_scroller.Length()*4*20 + (1280/4*20);
 }
 //---------------------------------------------------------------------------

@@ -2051,7 +2051,6 @@ r1       r0            1772
     else if(DR==0xF7 && CrcLogic.crc) //Write 2 CRC Bytes
 #endif
     {
-//      TRACE("write CRC %X %d %d\n",CrcLogic.crc,HIBYTE(CrcLogic.crc),LOBYTE(CrcLogic.crc));
       Mfm.data=DSR=CrcLogic.crc>>8; // write 1st byte
       DR=CrcLogic.crc&0xFF; // save 2nd byte
       CrcLogic.Add(Mfm.data);

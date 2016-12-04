@@ -371,7 +371,6 @@ void TOptionBox::MachineUpdateIfVisible()
       memconf=3;
     }
 #if defined(SSE_MMU_256K)
-  //TRACE("mem_len %d %d\n",mem_len,mem_len/1024);
   if(mem_len>256*1024)
     memconf++;
 #endif
@@ -1179,7 +1178,6 @@ void TOptionBox::CreateDisplayPage()
   Win=BorderSizeOption=CreateWindow("Combobox","",mask,
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
 #endif
-  //TRACE("border handle %d\n",Win);
 
 #if defined(SSE_X64_383)
 
@@ -2334,7 +2332,6 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,TBM_SETPOS,1,position);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
-  //TRACE("MaxVolume %d db %d position %d\n",MaxVolume,db,position);
 #else
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,9000));
   SendMessage(Win,TBM_SETPOS,1,MaxVolume+9000);

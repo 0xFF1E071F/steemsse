@@ -81,7 +81,6 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
   {
     INSTRUCTION_TIME(-2);
     MMU.Rounded=false;
-    //TRACE("PC %X addr %X\n",old_pc,addr);
 #if defined(SSE_OSD_CONTROL)
     if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
       TRACE_OSD("W %X -2",addr);
@@ -1658,7 +1657,6 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
             if (ParallelPort.OutputByte(io_src_b)==0){
               log_write("ARRRGGHH: Lost printer character, printer not responding!!!!");
               BRK( printer char lost );
-              //TRACE("ARRRGGHH: Lost printer character, printer not responding!!!!");
             }
             UpdateCentronicsBusyBit();
           }
@@ -1835,7 +1833,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
       ASSERT( (addr&0xFFFF00)==0xff8200 );
 
 #if defined(SSE_VIDEO_IOW_TRACE)  // not LOG
-      TRACE("(%d %d/%d) Shifter write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
+      TRACE("(%d %d/%d) Video write %X=%X\n",FRAME,scan_y,LINECYCLES,addr,io_src_b);
 #endif  
 
       if ((addr>=0xff8210 && addr<0xff8240) || addr>=0xff8280){
@@ -2600,8 +2598,6 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
     DEBUG_CHECK_WRITE_IO_W(addr,io_src_w);
     int n=(addr-0xff8240) >> 1;
-
-//    TRACE("PC %X W PAL %X %X\n",old_pc,n,io_src_w);
 
 #if defined(SSE_SHIFTER)
 

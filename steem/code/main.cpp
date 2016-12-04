@@ -426,7 +426,6 @@ bool Initialise()
     }
     pchar++;
     memmove(stem_version_text,pchar,strlen(pchar)+1);
-    //TRACE("%s %d\n",stem_version_text,strlen((char*)stem_version_text));
     
     // build stem_window_title
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)

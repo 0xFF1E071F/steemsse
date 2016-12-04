@@ -762,7 +762,6 @@ void GUIRefreshStatusBar() {
 #endif
 #endif
 
-    //TRACE("status string len %d\n",strlen(status_bar));
     // change text
 #if !defined(SSE_GUI_STATUS_BAR_ICONS)
 #if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
@@ -2041,7 +2040,6 @@ void EnableAllWindows(bool Enable,HWND NoDisable)
 //---------------------------------------------------------------------------
 void ShowAllDialogs(bool Show)
 {
-  //TRACE("ShowAllDialogs(%d)\n",Show);
   if (FullScreen==0) return;
 
   static bool DiskManWasMaximized=0;

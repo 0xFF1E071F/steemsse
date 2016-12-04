@@ -166,7 +166,6 @@ BYTE joy_get_pos(int Port)
   // Don't allow both up and down or left and right to be pressed at the same time
   if ((Ret & (1 | 2))==(1 | 2)) Ret&=~(1 | 2);
   if ((Ret & (4 | 8))==(4 | 8)) Ret&=~(4 | 8);
-  //TRACE("joystick %d read %X\n",Port,Ret);
   return BYTE(Ret);
 }
 //---------------------------------------------------------------------------
@@ -1168,10 +1167,8 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
 
   TJoystickConfig *This;
   switch (Mess){
-    //TRACE("%d %d\n",Mess,LOWORD(wPar));
     case WM_COMMAND:
       GET_THIS;
-      //TRACE("%d\n",LOWORD(wPar));
       switch LOWORD(wPar){
         case 91:
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1445,7 +1442,6 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
 {
   TJoystickConfig *This;
   GET_THIS;
-  //TRACE("%d %d\n",Mess,LOWORD(wPar));
   if (Mess==WM_COMMAND){
     if (LOWORD(wPar)==98){
       if (HIWORD(wPar)==BN_CLICKED){

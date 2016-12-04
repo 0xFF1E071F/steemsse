@@ -143,7 +143,6 @@ void ASMCALL perform_crash_and_burn()
 {
 #if defined(SSE_CPU_HALT)
   TRACE("HALT\n");
-  TRACE2("HALT\n");
   runstate=RUNSTATE_STOPPING;
   M68000.ProcessingState=TM68000::HALTED;
 #if defined(SSE_GUI_STATUS_BAR)
@@ -4358,10 +4357,7 @@ void                              m68k_rte(){
     if(stemdos_command==0x4c)
     {
       if(stemdos_Pexec_list_ptr==Tos.LastPTermedProcess)
-      {
-       // TRACE("refuse intercept OS for $%X\n",stemdos_Pexec_list_ptr);
         dont_intercept_os=true;
-      }
       else
         Tos.LastPTermedProcess=stemdos_Pexec_list_ptr;
     }

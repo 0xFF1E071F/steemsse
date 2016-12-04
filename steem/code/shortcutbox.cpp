@@ -667,7 +667,6 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
 #if defined(SSE_GUI)
     case CUT_TOGGLEHARDDRIVES:	// toggle hard drives on/off
       HardDiskMan.DisableHardDrives=!HardDiskMan.DisableHardDrives;	// toggle
-//      TRACE("hd off %d\n",HardDiskMan.DisableHardDrives);
       HardDiskMan.update_mount();
       break;
 #if defined(SSE_VID_RECORD_AVI)

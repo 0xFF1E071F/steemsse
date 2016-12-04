@@ -1049,7 +1049,6 @@ bool SteemDisplay::Blit()
                   &our_clipping,DDBLT_WAIT,NULL);
             }
             else // other sizes: blit fast
-              //TRACE("primary %X x%d y%d back %X\n",DDPrimarySur,draw_blit_source_rect.left,draw_blit_source_rect.top,DDBackSur);
               hRet=DDPrimarySur->BltFast(draw_blit_source_rect.left,draw_blit_source_rect.top,
                 DDBackSur,&draw_blit_source_rect,DDBLTFAST_WAIT);
 #else
@@ -2011,7 +2010,6 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
           FreeImage_ConvertFromRawBits==NULL || FreeImage_Save==NULL ||
           FreeImage_FIFSupportsExportBPP==NULL || FreeImage_Free==NULL){
       FreeLibrary(hFreeImage);hFreeImage=NULL;
-      //TRACE("FreeImage failed to init\n");
       return;
     }
     FreeImage_Initialise(TRUE);
@@ -2643,9 +2641,6 @@ void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
     at monitor speed, and triple buffering is useless anyway.
 */
 BOOL SteemDisplay::BlitIfVBlank() {
-  //DWORD line;
-  //HRESULT hRet=Disp.DDObj->GetScanLine(&line);
-//  TRACE("dis %d pc y%d\n",dispatcher,line);
   BOOL Blanking=FALSE;  
 #if !defined(SSE_VID_D3D_ONLY)
   if(Disp.DDObj && ACT-Disp.VSyncTiming>80000-60000) // avoid bursts
@@ -2653,7 +2648,6 @@ BOOL SteemDisplay::BlitIfVBlank() {
     Disp.DDObj->GetVerticalBlankStatus(&Blanking);
     if(Blanking)
     {
-//      TRACE("Blit F%d y%d\n",FRAME,scan_y);
       Disp.VSyncTiming=ACT;
       draw_blit();
     }

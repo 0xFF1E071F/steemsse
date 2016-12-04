@@ -1183,7 +1183,7 @@ Receiver Data Register is retained.
       }
 #if defined(SSE_VIDEO_IOR_TRACE)
       // made possible by our structure change
-      TRACE("Shifter read %X=%X\n",addr,ior_byte); // not LOG
+      TRACE("Video read %X=%X\n",addr,ior_byte); // not LOG
 #endif
       break;
 

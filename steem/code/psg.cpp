@@ -2178,12 +2178,10 @@ void psg_write_buffer(int abc,DWORD to_t)
   double af,bf;
   bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
- // TRACE("Write buffer %d to %d",abc,to_t);
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
   to_t=max(to_t,t);//SS can't go backwards
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
-  //TRACE(" t %d to_t %d count %d\n",t,to_t,count);
   ASSERT( count>=0 );
 #if defined(SSE_YM2149_OPT1)
   if(!count)

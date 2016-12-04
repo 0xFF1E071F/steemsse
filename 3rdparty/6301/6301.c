@@ -238,7 +238,6 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #ifdef SSE_IKBD_6301_EVENT
     if(HD6301.LineTxFreeTime && cycles_run>=HD6301.LineTxFreeTime)
     {
-//      TRACE("6301 Tx free %d cycles in\n",cycles_run);
       TRACE("6301 sending $%X %d cycles in\n",ACIA_IKBD.RDRS,cycles_run);
       ASSERT(!hd6301_completed_transmission_to_MC6850);
       hd6301_completed_transmission_to_MC6850=TRUE; 
@@ -246,7 +245,6 @@ hd6301_run_cycles(u_int cycles_to_run) {
     }
     if(HD6301.LineRxFreeTime && cycles_run>=HD6301.LineRxFreeTime)
     {
-//      TRACE("6301 Rx free %d cycles in\n",cycles_run);
       TRACE("6301 receiving $%X %d cycles in\n",ACIA_IKBD.TDRS,cycles_run);
 #if defined(SSE_IKBD_6301_380) 
       hd6301_receive_byte(HD6301.rdrs); // ACIA_IKBD.TDRS could have been updated
@@ -274,9 +272,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
 //  ASSERT( !reg_getiflag () );
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
-//  ASSERT( !cycles_to_give_back );
   cycles_to_give_back+=cycles_run-cycles_to_run;
-//  TRACE("6301 cycles run %d (%d)\n",cycles_run,cycles_to_give_back);
 #endif
 #if defined(SSE_IKBD_6301_VBL)
   hd6301_vbl_cycles+=cycles_run;
@@ -355,8 +351,6 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
     memmove(&iram,i,sizeof(iram));
   i+=sizeof(iram);
 
-  // our variables (TODO?)
-  //TRACE("Size of 6301 snapshot: %d bytes\n",i-buffer);
   return i-buffer;
 }
 

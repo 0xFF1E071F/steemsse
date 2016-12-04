@@ -1443,7 +1443,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DM_REGROUP // it's getting cluttered
 #define SSE_GUI_DM_REGROUP2 // context
 #define SSE_GUI_DM_REGROUP_PASTI // not sure about this one
-#define SSE_GUI_DM_SHOW_EXT // could be buggy
+#define SSE_GUI_DM_SHOW_EXT 
 #define SSE_GUI_JOYSTICK_383
 #endif
 
@@ -1612,6 +1612,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_REPORT_SCAN_Y_ON_CLICK
 #define SSE_BOILER_REPORT_SDP_ON_CLICK // yeah!
 #define SSE_BOILER_AUTO_FLUSH_TRACE// v3.7.1
+#define SSE_BOILER_AUTO_FLUSH_TRACE_383
 #define SSE_BOILER_BLIT_IN_HISTORY // v3.7.1
 #define SSE_BOILER_BLIT_WHEN_STOPPED // v3.7.1
 #define SSE_BOILER_BLAZING_STEP_OVER 
@@ -1870,6 +1871,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_START_STOP_INFO2
 #define SSE_DEBUG_START_STOP_INFO3
 #define SSE_BOILER_AUTO_FLUSH_TRACE
+#define SSE_BOILER_AUTO_FLUSH_TRACE_383
 #endif
 
 #endif//SSE_DEBUG
@@ -1899,6 +1901,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
+#define SSE_DRIVE_SOUND_SEEK_PASTI
 #define SSE_GLUE_383E // vcount
 #define SSE_GLUE_383E1 //apply
 #if defined(SSE_GLUE_383E1)
@@ -1925,6 +1928,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+#define SSE_DISK_CAPS_383C
 #define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383
 #define SSE_SOUND_383//bugfix
 #undef SSE_SOUND_FILTER_STF3
