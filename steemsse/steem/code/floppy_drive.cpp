@@ -69,6 +69,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     return FIMAGE_FILEDOESNTEXIST;
 
   EasyStr OriginalFile=File,NewZipTemp;
+//#undef SSE_DISK_CAPS_383C
 #if defined(SSE_DISK_CAPS_383C) // we want ReadOnly to be updated before
 #define FileIsReadOnly ReadOnly
   FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
@@ -1614,7 +1615,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
   ImageFile="";MSATempFile="";ZipTempFile="";FormatTempFile="";
   DiskName="";
-  ReadOnly=true;
+#if !defined(SSE_DISK_CAPS_383C)
+  ReadOnly=true; // there's nothing to read
+#endif
   BytesPerSector=0;Sides=0;SectorsPerTrack=0;TracksPerSide=0;
   ZeroMemory(TrackIsFormatted,sizeof(TrackIsFormatted));
 
