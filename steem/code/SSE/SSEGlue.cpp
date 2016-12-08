@@ -1762,7 +1762,8 @@ void TGlue::IncScanline() {
 #if defined(SSE_GLUE_383E1B)
   ASSERT(VCount);
 #endif
-  VCount--;
+  if(VCount)//relz build could crash...
+    VCount--;
 #endif
 
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383) // became useless?

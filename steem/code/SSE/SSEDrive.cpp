@@ -630,6 +630,9 @@ void TSF314::Sound_CheckIrq() {
     Sound_Buffer[SEEK]->Stop();
 #if defined(SSE_WD1772) 
     if(WD1772.CommandType()==1 && TrackAtCommand!=Track()
+#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
+////      && (DRIVE_SOUND_SEEK_SAMPLE /*|| (WD1772.CR&0xE0)*/) // for step
+#endif
 #if defined(SSE_DRIVE_SOUND_SEEK3)    
       && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
 #endif
@@ -637,10 +640,15 @@ void TSF314::Sound_CheckIrq() {
     {
       DWORD dwStatus ;
       Sound_Buffer[STEP]->GetStatus(&dwStatus);
+#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
+      if(!(dwStatus&DSBSTATUS_PLAYING))
+        Sound_Buffer[STEP]->Play(0,0,0);
+#else
       if( (dwStatus&DSBSTATUS_PLAYING) )
         Sound_Buffer[STEP]->Stop();
       Sound_Buffer[STEP]->SetCurrentPosition(0);
       Sound_Buffer[STEP]->Play(0,0,0);
+#endif
     }
 #endif
   }
@@ -672,7 +680,9 @@ void TSF314::Sound_CheckMotor() {
   //TRACE("at command %d now %d\n",TrackAtCommand,fdc_tr); // we don't get them all
   if(motor_on && (fdc_str&1) && !DRIVE_SOUND_SEEK_SAMPLE 
     &&(ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)
-    && WD1772.CommandType()==1 && TrackAtCommand!=Track())
+    //&& WD1772.CommandType()==1 && TrackAtCommand!=Track())
+    //&& !(WD1772.CR&0xE0) && TrackAtCommand!=Track()) // restore, seek, not step
+    && !(WD1772.CR&0xE0) && abs(TrackAtCommand-Track())>1) // restore, seek, not step
     Sound_Step();
 #endif
 }

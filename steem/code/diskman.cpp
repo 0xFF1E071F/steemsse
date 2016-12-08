@@ -3151,8 +3151,8 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
     case WM_RBUTTONDOWN: // right click on drive, make context menu
     {
       GET_THIS;
-      This->MenuTarget=disk;
       ASSERT(disk==(disk&1));
+      This->MenuTarget=disk;
       HMENU Pop=CreatePopupMenu();
 #if defined(SSE_DRIVE_SINGLE_SIDE_NOPASTI)
       if(SF314[disk].ImageType.Manager!=MNGR_PASTI)
@@ -3173,7 +3173,8 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       if(SSEOption.DriveSound)
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
-          1044+This->MenuTarget,T("Seek sound"));
+          //1044+This->MenuTarget,T("Seek sound"));
+          1044+This->MenuTarget,T("Toggle seek sound"));
       }
 #endif
 

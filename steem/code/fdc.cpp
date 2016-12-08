@@ -2455,6 +2455,8 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
+//#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
+//#else
       if(SSEOption.DriveSound)
 #if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[DRIVE].Sound_CheckIrq();

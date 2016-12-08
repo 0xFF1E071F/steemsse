@@ -2578,9 +2578,9 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     ) 
 #endif
   if (addr>=0xff8240 && addr<0xff8260)
-    TRACE_LOG("PC %X write PAL %X to %X\n",pc-2,io_src_w,addr);
+    TRACE_LOG("%d PC %X write PAL %X to %X\n",ACT,pc-2,io_src_w,addr);
   else
-    TRACE_LOG("PC %X write word %X to %X\n",pc-2,io_src_w,addr);
+    TRACE_LOG("%d PC %X write word %X to %X\n",ACT,pc-2,io_src_w,addr);
 #endif
 
 #if defined(SSE_CPU_DATABUS)
