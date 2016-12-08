@@ -1,5 +1,5 @@
 [Text]
-Description=Protection at track 79 randomly fails
+Description=Protection at track 79 randomly fails on a bad image disk
 ApplyWhen=Before pressing F2
 
 Version=STF T102
