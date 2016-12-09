@@ -1176,8 +1176,8 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_GLUE_383E1B)
   ASSERT(Glue.VCount);
 #endif
-  //if(Glue.VCount)
-  Glue.VCount--; //? points to some problem...
+  if(Glue.VCount)
+    Glue.VCount--; //? points to some problem...
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
   bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 

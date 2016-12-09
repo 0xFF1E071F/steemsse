@@ -54,8 +54,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 #define SSE_STRUCTURE //  necessary for the SSE build
 
-#define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
+//#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -68,7 +68,8 @@ Beta: not SSE_PRIVATE_BUILD
 // COMPILER //
 //////////////
 
-#if _MSC_VER == 1200 //VC6: DirectDraw build
+// We use DirectDraw in the VC6 build and in one VS2008 build
+#if _MSC_VER == 1200 || defined(SSE_DD) 
 #define SSE_NO_D3D
 #else
 #define SSE_NO_DD 
@@ -1406,6 +1407,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_DISK
 #define SSE_DISK_CAPS_383
 #define SSE_DISK_CAPS_383B
+#define SSE_DISK_CAPS_383C
 #define SSE_DISK_GHOST_SECTOR_383
 #if defined(SSE_STF)
 #define SSE_DMA_RIPPLE_CARRY
@@ -1416,6 +1418,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_DISK_STW_FAST // +HFE
 #endif
+#define SSE_DRIVE_SOUND_SEEK_PASTI
 #ifdef SSE_FDC
 #define SSE_FDC_383A // bugfixes
 #define SSE_FDC_383B // refactoring
@@ -1436,6 +1439,19 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_383C
 #define SSE_GLUE_383D
 #define SSE_GLUE_VERT_OVERSCAN_383B
+#define SSE_GLUE_383E // vcount
+#define SSE_GLUE_383E1 //apply
+#if defined(SSE_GLUE_383E1)
+#define SSE_GLUE_383E1A //enable vbi
+#define SSE_GLUE_383E1A2 //reload sdp
+#define SSE_GLUE_383E1A3 //vbl
+#define SSE_GLUE_383E1A4 //cancel reload
+#define SSE_GLUE_383E1B //assert
+#define SSE_GLUE_383E2 //remove 'scanline'
+//#define SSE_GLUE_383EC // update idx
+#define SSE_GLUE_383ED //can't count on shifter_freq_idx TODO
+#endif
+#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383
 #endif
 
 #if defined(SSE_GUI)
@@ -1444,6 +1460,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_DM_REGROUP2 // context
 #define SSE_GUI_DM_REGROUP_PASTI // not sure about this one
 #define SSE_GUI_DM_SHOW_EXT 
+#define SSE_GUI_INFOBOX_383
+#define SSE_GUI_INFOBOX_383B
 #define SSE_GUI_JOYSTICK_383
 #endif
 
@@ -1521,6 +1539,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_VAR_RESIZE_383
 #define SSE_VAR_RESIZE_383A // acia, more problematic
+#define SSE_VAR_RESIZE_383B
 // Exception management...
 //#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
 #ifndef _DEBUG
@@ -1534,13 +1553,19 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
 
+#define SSE_SOUND_383//bugfix
+#undef SSE_SOUND_FILTER_STF3
+
 #define SSE_STF_383
 
 #define SSE_TOS_WARNING1A
+#define SSE_TOS_CHECKSUM
 
 #ifdef SSE_VIDEO
 #define SSE_VID_GAMMA
 #define SSE_VID_D3D_383
+#define SSE_VID_D3D_383B // try to restore surfaces when lost
+#define SSE_VID_SAVE_NEO_383 // bugfix resolution endianess
 #endif
 
 #define SSE_YM2149_BUS_JAM_383 // 1 cycle each access
@@ -1580,13 +1605,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_NO_UPDATE_383
 #define SSE_VAR_NO_WINSTON_383
 #define SSE_VID_D3D_SCREENSHOT_383
+#define SSE_VID_D3D_CRISP_383
 #define SSE_VAR_ARCHIVEACCESS_383 // file handle leak
 #if defined(SSE_DISK)
 #define SSE_DISK_READ_TRACK_11_383
 #endif
 #define SSE_OSD_DRIVE_LED_383 // not on parse path
 #define SSE_TOS_PRG_AUTORUN_383 // HD not really off after ejection!
-
 
 #endif//383
 
@@ -1901,21 +1926,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-#define SSE_DRIVE_SOUND_SEEK_PASTI
-#define SSE_GLUE_383E // vcount
-#define SSE_GLUE_383E1 //apply
-#if defined(SSE_GLUE_383E1)
-#define SSE_GLUE_383E1A //enable vbi
-#define SSE_GLUE_383E1A2 //reload sdp
-#define SSE_GLUE_383E1A3 //vbl
-#define SSE_GLUE_383E1A4 //cancel reload
-#define SSE_GLUE_383E1B //assert
-#define SSE_GLUE_383E2 //remove 'scanline'
-//#define SSE_GLUE_383EC // update idx
-#define SSE_GLUE_383ED //can't count on shifter_freq_idx TODO
-#endif
-#define SSE_TOS_CHECKSUM
-#define SSE_VAR_RESIZE_383B
+
 
 #endif//beta
 
@@ -1928,12 +1939,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
-#define SSE_DISK_CAPS_383C
-#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383
-#define SSE_SOUND_383//bugfix
-#undef SSE_SOUND_FILTER_STF3
-#define SSE_VID_D3D_383B // try to restore surfaces when lost
-#define SSE_VID_SAVE_NEO_383 // bugfix resolution endianess
+
 
 #endif//bugfix
 

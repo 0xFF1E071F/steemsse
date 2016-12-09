@@ -1217,7 +1217,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
   }
 #if defined(SSE_GLUE_383E)
-  Glue.VCount=0;  
+  //Glue.VCount=0;  
 #endif
 #endif
 
