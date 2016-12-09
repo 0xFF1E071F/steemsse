@@ -2330,6 +2330,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
 #endif
    log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Changed screen res to "+
      NewRes+" at scanline "+scan_y+", cycle "+CyclesIn);
+   //TRACE("Set shift mode %d\n",NewRes);
 #endif
 
 #if defined(SSE_GLUE_383B)

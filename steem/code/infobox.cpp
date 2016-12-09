@@ -42,6 +42,11 @@ void TGeneralInfo::CreatePage(int pg)
       break;
   }
 }
+#if !defined(SSE_GUI_INFOBOX_383)
+/* in v383 we remove the thanks because they're outdated, maybe some other
+  people should be thanked more today, but making up a list, forgetting 
+  someone... brr...
+*/
 #if defined(SSE_GUI_INFOBOX)
 /*  note about thanks
     also in steem.new
@@ -101,6 +106,25 @@ const char *Credits[40]={
   "Damien Burke for describing the MSA disk image format",
   "Bruno Mathieu for his info on the DIM disk image format",
   NULL};
+#endif
+
+
+#if defined(SSE_GUI_INFOBOX_383B)
+/* so instead, same silly greetings as in demo SSE3.5, typo corrected for Mr JCVD!
+*/
+const char *Credits[10]={
+  "Greetings to:",
+  "Jean Claude Van Damme, Lance Henriksen, Nicolas Cage, Kurt Russel, Mel Gibson, Nick Nolte, John Travolta, Chuck Norris,",
+  "Rutger Hauer, Tom Selleck, Michael Ironside, Stephen Lang, Kayden Nguyen, William Forsythe, Michael Caine, Jeff Speakman,",
+  "Michael Pare, Sylvester Stallone, Danny Trejo, Richard Dean Anderson, Michael Biehn, Kevin Costner, Bolo Yeung,",
+  "Donald Sutherland, Brian Bosworth, Mario Van Peebles, Bruce Willis, Clint Eastwood, Vernon Wells, Billy Drago, Tom Berenger,",
+  "John Saxon, Harrison Page, Brian Thompson, Liam Neeson, Sean Bean, Dolph Lundgren, Donald Gibb, Mickey Rourke, Gary Busey,",
+  "Jesse Ventura, Carl Weathers, Bill Duke, David Carradine, Bill Paxton, Jackie Chan, Harrison Ford, Viggo Mortensen,",
+  "Sven-Ole Thorsen, Arnold Schwarzenegger, Vincent Klyn, Wesley Snipes, Vin Diesel, Alec Baldwin, Willem Dafoe,",
+  "Harry Dean Stanton, Lee Major, Christopher Walken and James Woods.",
+  NULL};
+#endif
+
 
 void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &link_sl)
 {
@@ -334,7 +358,9 @@ EasyStr TGeneralInfo::dp4_disp(int val)
 void TGeneralInfo::CreateAboutPage()
 {
   int y=10,h=4;
+#if !defined(SSE_GUI_INFOBOX_383) || defined(SSE_GUI_INFOBOX_383B)
   HWND Win;
+#endif
 #if defined(SSE_GUI)
 #if defined(SSE_VS2015)
   EasyStr Text = EasyStr("Steem SSE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
@@ -345,7 +371,34 @@ void TGeneralInfo::CreateAboutPage()
   EasyStr Text=EasyStr("Steem Engine v")+(char*)stem_version_text+" (built " __DATE__" " +"- "__TIME__")\n";
 #endif
   Text+="Written by Anthony && Russell Hayward\n";
-#if defined(SSE_GUI_INFOBOX)
+#if defined(SSE_GUI_INFOBOX_383)
+
+#if defined(SSE_X64_MISC)
+  Text+="x64 ";
+#elif defined(WIN32)
+  Text+="Win32 ";
+#elif defined(UNIX)
+  Text+="Unix32 "
+#endif
+#if !defined(SSE_NO_DD)
+  Text+="DD ";
+#endif
+#if defined(SSE_VID_D3D)
+  Text+="D3D ";
+#endif
+#if (_MSC_VER)
+  Text+=EasyStr("VC") + _MSC_VER;
+#elif defined(BCC_BUILD)
+  Text+="BCC";
+#elif defined(MINGW_BUILD)
+  Text+="MinGW";
+#elif defined(SSE_UNIX)
+  Text+="GCC";
+#endif
+  Text+="\n";
+
+
+#elif defined(SSE_GUI_INFOBOX)
   Text+="Copyright 2000-2015\n"; // if that means anything
   /*
    MSVC++ 11.0 _MSC_VER = 1700 (Visual Studio 2012)
@@ -359,6 +412,9 @@ void TGeneralInfo::CreateAboutPage()
   */
 #ifdef SSE_X64_MISC
   Text+="x64 ";
+#endif
+#ifdef SSE_NO_D3D
+  Text+="DD ";
 #endif
 #if _MSC_VER == 1200
   Text+="SSE VC6 build\n";
@@ -392,12 +448,17 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Static",Text,WS_CHILD | WS_VISIBLE,
                       page_l,y,page_w,h,Handle,(HMENU)200,HInstance,NULL);
   y+=h;
+#if defined(SSE_GUI_INFOBOX_383)
+  Text=T("Thanks to all the people who have helped make Steem better.");
 
+
+#else
   Text=T("Thanks To");
+#endif
   CreateWindowEx(0,"Steem HyperLink",Text,WS_CHILD | WS_VISIBLE | HL_STATIC,
                           page_l,y,page_w,TextHeight,Handle,(HMENU)204,HInstance,NULL);
   y+=TextHeight;
-
+#if !defined(SSE_GUI_INFOBOX_383) || defined(SSE_GUI_INFOBOX_383B)
   Scroller.CreateEx(512,WS_CHILD | WS_VSCROLL | WS_HSCROLL,page_l,y,page_w,INFOBOX_HEIGHT-y-(TextHeight+10+10),
                       Handle,203,HInstance);
   Scroller.SetBkColour(GetSysColor(COLOR_WINDOW));
@@ -413,7 +474,7 @@ void TGeneralInfo::CreateAboutPage()
   }
   Scroller.AutoSize(2,2);
   ShowWindow(Scroller,SW_SHOW);
-
+#endif
   y=INFOBOX_HEIGHT-TextHeight-10;
   CreateWindowEx(0,"Steem HyperLink",STEEM_WEB,
                       WS_CHILD | WS_VISIBLE,page_l,y,page_w,TextHeight,

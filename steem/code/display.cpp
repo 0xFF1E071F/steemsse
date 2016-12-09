@@ -2781,7 +2781,13 @@ bool SteemDisplay::D3DBlit() {
 #endif
       pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
 #endif
+
+#if defined(SSE_VID_D3D_CRISP_383) 
+    // there could be trash in fullscreen crisp mode when switching shift modes
+    d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
+#else
     d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
+#endif
     d3derr=pD3DSprite->End();
     d3derr=pD3DDevice->EndScene();
 #ifdef SSE_VID_D3D_WINDOW
@@ -3185,6 +3191,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   if(!pD3D)
     return hr;
 #endif
+
   if(pD3DSprite)
     pD3DSprite->Release(); //so we can init sprite anytime
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
@@ -3303,6 +3310,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
         tx-=16*sw; // same old trick (BPOC 400 pixels)
 #endif//#if !defined(SSE_VID_D3D_ONLY)
     }
+
 #ifdef SSE_VID_EXT_FS1
     if(extended_monitor && stx==SurfaceWidth)
       sw=sh=1;

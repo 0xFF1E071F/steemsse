@@ -18,8 +18,11 @@
 #include <caps/CapsFDC.h>
 #include<caps/CapsLib.h>
 
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 // our interface with CAPSimg.dll, C++ style (RAII)
 struct TCaps {  
+  // FUNCTIONS
   TCaps();
   ~TCaps();
   int Init();
@@ -60,10 +63,9 @@ struct TCaps {
 */
   static void CallbackTRK(PCAPSFDC pc, UDWORD driveact);
 
+  // DATA
   int Version; // 0: failed; else release revision eg 42
-  BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
 
-  //TODO: save space
   // for drive A & B
   SDWORD ContainerID[2]; 
   SDWORD LockedSide[2];
@@ -74,7 +76,11 @@ struct TCaps {
 */
   CapsDrive SF314[2]; // 2 double-sided floppy drives
   CapsFdc WD1772; // 1 cheap controller
+
+  BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
 };
+
+#pragma pack(pop)
 
 #endif//caps
 
