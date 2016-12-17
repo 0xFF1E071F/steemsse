@@ -74,7 +74,7 @@ so refactoring due!
   BYTE LastEClockCycles[3];
 #endif
   BYTE ProcessingState;
-#if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_383D)
+#if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_390D)
   bool IackCycle; // flag to avoid starting IACK during IACK (in an emulator, anything goes...)
 #endif
   bool tpend; // actual internal latch set when CPU should trace current instruction

@@ -51,7 +51,7 @@ typedef struct{
 }JOYINFOEX;
 #endif
 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 EXT const char AxisToName[7];
 #else
 EXT char AxisToName[7];

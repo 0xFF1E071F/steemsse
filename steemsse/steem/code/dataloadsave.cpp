@@ -106,7 +106,7 @@ void LoadAllDialogData(bool FirstLoad,Str INIFile,bool *SecDisabled,GoodConfigSt
   }
 
   int i=pCSF->GetInt("Display","ScreenShotUseFullName",99);
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 //#pragma warning (disable : 4800)
   if (i==(i&1)) Disp.ScreenShotUseFullName=i;
   i=pCSF->GetInt("Display","ScreenShotAlwaysAddNum",99);
@@ -221,7 +221,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
   SEC(PSEC_DISKEMU){
 #if USE_PASTI
 //    pasti_use_all_possible_disks=pCSF->GetInt("Disks","PastiUseAllDisks",pasti_use_all_possible_disks);
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
     pasti_active=(pCSF->GetInt("Disks","PastiActive",pasti_active)!=0)&&(hPasti!=NULL);
 #else
     pasti_active=pCSF->GetInt("Disks","PastiActive",pasti_active);
@@ -794,12 +794,12 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       em_height=pCSF->GetInt("Machine","ExMonHeight",em_height);
       em_planes=pCSF->GetInt("Machine","ExMonPlanes",em_planes);
       if (extended_monitor
-#if defined(SSE_TOS_GEMDOS_EM_383) // if snapshot is corrupt
+#if defined(SSE_TOS_GEMDOS_EM_390) // if snapshot is corrupt
         && em_width && em_height && em_planes>0 && em_planes<5
 #endif
         ) 
         Disp.ScreenChange();
-#if defined(SSE_TOS_GEMDOS_EM_383)
+#if defined(SSE_TOS_GEMDOS_EM_390)
       else
         extended_monitor=0;
 #endif
@@ -826,7 +826,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF)
     OptionBox.Hide(); // hack
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
     SSEConfig.SwitchSTType(ST_TYPE);
 #else
     SwitchSTType(ST_TYPE); // settings for STF or STE

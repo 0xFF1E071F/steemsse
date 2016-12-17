@@ -10,7 +10,7 @@ DESCRIPTION: Med res C++ drawing routine
   MEM_ADDRESS source;
   picture*=2;
   GET_START(0,160)
-#if defined(SSE_DRAW_C_383B)
+#if defined(SSE_DRAW_C_390B)
   DRAW_BORDER_PIXELS(border1)
 #else
   n=border1/16;DRAW_BORDER(n);
@@ -32,7 +32,7 @@ DESCRIPTION: Med res C++ drawing routine
     }
     for(n=picture/16;n>0;n--){
       GET_SCREEN_DATA_INTO_REGS_AND_INC_SA_MEDRES
-#if defined(SSE_DRAW_C_383A) //anyway, to reduce bloat
+#if defined(SSE_DRAW_C_390A) //anyway, to reduce bloat
       for(int mask=BIT_15;mask;mask>>=1)
       {
         CALC_COL_MEDRES_AND_DRAWPIXEL(mask);
@@ -66,7 +66,7 @@ DESCRIPTION: Med res C++ drawing routine
       }
     }
   }
-#if defined(SSE_DRAW_C_383B)
+#if defined(SSE_DRAW_C_390B)
   DRAW_BORDER_PIXELS(border2)
 #else
   n=border2/16;DRAW_BORDER(n);

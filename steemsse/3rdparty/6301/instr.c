@@ -60,7 +60,7 @@ instr_exec ()
   {
     hd6301_completed_transmission_to_MC6850--;
     ASSERT(!hd6301_completed_transmission_to_MC6850);
-#if !defined(SSE_ACIA_383) //finally fixed this (non)issue
+#if !defined(SSE_ACIA_390) //finally fixed this (non)issue
     txinterrupts=1;
 #endif
     //  Start shifting the waiting byte if any
@@ -72,7 +72,7 @@ instr_exec ()
       HD6301.tdrs=iram[TDR];
       keyboard_buffer_write_n_record(HD6301.tdrs); // call Steem's ikbd function
       ACIA_IKBD.ByteWaitingRx=0;
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
       txinterrupts=1;
 #endif
     }

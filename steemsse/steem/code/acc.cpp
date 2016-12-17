@@ -76,7 +76,7 @@ DESCRIPTION: Completely random accessory functions.
                                     {"Shutdown",LOGSECTION_SHUTDOWN},
                                     {"INI File",LOGSECTION_INIFILE},
                                     {"GUI",LOGSECTION_GUI},
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
                                     {"ACIA",LOGSECTION_ACIA},
                                     {"DMA",LOGSECTION_DMA},
                                     {"MMU",LOGSECTION_MMU},
@@ -161,7 +161,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
 }*/
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
 int count_bits_set_in_word1(unsigned short w)
 #else
 int count_bits_set_in_word(unsigned short w) // now a pointer to function
@@ -344,7 +344,7 @@ void STfile_read_to_ST_memory(FILE*f,MEM_ADDRESS ad,int n_bytes)
 
 void STfile_write_from_ST_memory(FILE *f,MEM_ADDRESS ad,int n_bytes)
 {
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
   TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
     for (int n=0;n<n_bytes;n++){
@@ -391,7 +391,7 @@ void log_os_call(int trap)
   if (logging_suspended) return;
 
   EasyStr l="",a="";
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   long lpar=0;
 #else
   long lpar;
@@ -614,14 +614,14 @@ void acc_parse_search_string(Str OriginalText,DynamicArray<BYTE> &ByteList,bool 
         }
       }else{                    // Decimal
         NumLen=0;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         if (Text.Rights(2)==(char*)".W"){
 #else
         if (Text.Rights(2)==".W"){
 #endif
           NumLen=2;
           *(Text.Right()-1)=0;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         }else if (Text.Rights(2)==(char*)".L"){
 #else
         }else if (Text.Rights(2)==".L"){
@@ -708,7 +708,7 @@ Str scanline_cycle_log()
 
 #if defined(SSE_VID_SAVE_NEO) || defined(SSE_DISK_STW) || defined(SSE_DISK_SCP)
 WORD change_endian(WORD x) {
-#if defined(SSE_VC_INTRINSICS_383C)
+#if defined(SSE_VC_INTRINSICS_390C)
   return _byteswap_ushort(x); // every little byte counts...
 #else
   BYTE high=x>>8;

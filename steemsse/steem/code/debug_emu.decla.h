@@ -5,7 +5,7 @@
 #define EXT extern
 #define INIT(s)
 
-class m68k_exception;//383
+class m68k_exception;//390
 
 extern EasyStr disa_d2(MEM_ADDRESS);
 void breakpoint_check();
@@ -82,7 +82,7 @@ EXT void debug_hit_io_mon_write(MEM_ADDRESS,int);
     We use the first 2 watches
 */
   //bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr);
-  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr);//383 warning
+  bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr);//390 warning
 
 #define DEBUG_CHECK_WR_B(ad,num,adarr,maskarr,hit,wr) \
   if (num){ \

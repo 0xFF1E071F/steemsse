@@ -52,7 +52,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_DMA] ) //dma
 #else
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
@@ -109,7 +109,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
   
   switch (addr & 0xffff00){   //0xfffe00 SS: big switch for all byte writes
 
-#if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
+#if defined(SSE_ACIA) && defined(SSE_ACIA_390) //more compact code
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_ACIA
@@ -263,7 +263,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
 
-#else//defined(SSE_ACIA_383) ?
+#else//defined(SSE_ACIA_390) ?
     case 0xfffc00:{  //--------------------------------------- ACIAs
 /*
           MC6850
@@ -675,7 +675,7 @@ system exclusive start and end messages (F0 and F7).
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO//SS
 
-#endif//defined(SSE_ACIA_383) 
+#endif//defined(SSE_ACIA_390) 
 
     case 0xfffa00:  //--------------------------------------- MFP
     {
@@ -1124,7 +1124,7 @@ This address is being used to feed the National LMC both address and data
             for (b=15;b>=10;b--){
               if (MicroWire_Mask & (1 << b)
 #if defined(SSE_SOUND_MICROWIRE_MASK1)                 
-                && (MicroWire_Mask & (1 << (b-1))) // both mask bits must be set //383 added ()
+                && (MicroWire_Mask & (1 << (b-1))) // both mask bits must be set //390 added ()
 #endif
                 ){
                 if ((dat & (1 << b)) && (dat & (1 << (b-1)))==0
@@ -1241,7 +1241,7 @@ bits are being ignored.
                         if (nController==b0101) dma_sound_l_volume=new_val;
                         if (nController==b0100) dma_sound_r_volume=new_val;
                       }
-#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_DMA_383A)
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_DMA_390A)
                       dma_sound_l_top_val=128;
                       dma_sound_r_top_val=128;
 #else // we keep Steem 3.2 code, but will filter further if necessary
@@ -1490,7 +1490,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
     case 0xff8800:{  //--------------------------------------- sound chip
 #if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
-#if defined(SSE_YM2149_BUS_JAM_383B)
+#if defined(SSE_YM2149_BUS_JAM_390B)
       if ((addr & 1) && io_word_access) 
 #else
       if (OPTION_HACKS && (addr & 1) && io_word_access)
@@ -1498,7 +1498,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
         break; //odd addresses ignored on word writes, don't jam
 #endif
 
-#if defined(SSE_YM2149_BUS_JAM_383)
+#if defined(SSE_YM2149_BUS_JAM_390)
 /*  ijor: 
 
 Essentially, the main point is that the 68000 doesn't constrain the wait states
@@ -1535,7 +1535,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_W;
       }
 #endif
-#if !defined(SSE_YM2149_BUS_JAM_383B)
+#if !defined(SSE_YM2149_BUS_JAM_390B)
       if ((addr & 1) && io_word_access) break; //odd addresses ignored on word writes
 #endif
       if ((addr & 2)==0){  //read data / register select
@@ -1826,7 +1826,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 
     case 0xff8200: {
 
-#if defined(SSE_VAR_OPT_383A1)
+#if defined(SSE_VAR_OPT_390A1)
       act=ACT;
 #endif
 
@@ -1849,7 +1849,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
         cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
         Blit.BlitCycles=0;
 #endif
         int n=(addr-0xff8240) >> 1; 
@@ -1899,7 +1899,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
  chips on a separate board fitting over it."
 */
           if (mem_len<=FOUR_MEGS
-#if defined(SSE_TOS_GEMDOS_EM_382) && !defined(SSE_TOS_GEMDOS_EM_383)//oops
+#if defined(SSE_TOS_GEMDOS_EM_382) && !defined(SSE_TOS_GEMDOS_EM_390)//oops
             && !extended_monitor
 #endif
             ) 
@@ -1908,7 +1908,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #if defined(SSE_STF_VBASELO)
           if(ST_TYPE==STE) 
 #endif
-#if defined(SSE_TOS_GEMDOS_EM_383)
+#if defined(SSE_TOS_GEMDOS_EM_390)
             if(!extended_monitor)
 #endif
               DWORD_B_0(&xbios2)=0; 
@@ -2592,7 +2592,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
     cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
 

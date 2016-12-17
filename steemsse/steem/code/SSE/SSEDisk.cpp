@@ -48,7 +48,7 @@ WORD TDisk::BytePositionOfFirstId() { // with +7 for reading ID //no!
   return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );
 }
 
-#if defined(SSE_FDC_383_HBL_DRIFT)
+#if defined(SSE_FDC_390_HBL_DRIFT)
 
 WORD TDisk::BytesToID(BYTE &num) {
 /*  Compute distance in bytes between current byte and desired ID
@@ -76,7 +76,7 @@ WORD TDisk::BytesToID(BYTE &num) {
     if(!num)
     {
       num=(current_byte-byte_first_id)/record_length+1; // current
-      if(((current_byte)%record_length)>byte_first_id) // only if past ID! (383)
+      if(((current_byte)%record_length)>byte_first_id) // only if past ID! (390)
         num++; //next
       if(num==n_sectors+1) num=1; //TODO smart way
     }
@@ -157,7 +157,7 @@ void TDisk::NextID(BYTE &RecordIdx,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     return;
 
-#if defined(SSE_FDC_383_HBL_DRIFT) // use debugged BytesToID
+#if defined(SSE_FDC_390_HBL_DRIFT) // use debugged BytesToID
 
   WORD BytesToRun=BytesToID(RecordIdx);
   if(RecordIdx)
@@ -214,7 +214,7 @@ BYTE TDisk::nSectors() {
 
 
 BYTE TDisk::PostIndexGap() {
-#if defined(SSE_FDC_383B)
+#if defined(SSE_FDC_390B)
   switch( nSectors() )
   {
   case 9:
@@ -247,7 +247,7 @@ BYTE TDisk::PreDataGap() {
 
 
 BYTE TDisk::PostDataGap() {
-#if defined(SSE_FDC_383B) // count CRC?
+#if defined(SSE_FDC_390B) // count CRC?
   // 
   return (nSectors()<11)? 40+2 : 1+2;
 #else
@@ -268,7 +268,7 @@ WORD TDisk::PreIndexGap() {
 #endif
     break;
   case 10:
-#if defined(SSE_FDC_383B)
+#if defined(SSE_FDC_390B)
     gap=50+6+ (60-22);
 #elif defined(SSE_DRIVE_REM_HACKS2)
     gap=50+6;

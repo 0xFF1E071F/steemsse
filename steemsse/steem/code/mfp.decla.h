@@ -165,14 +165,14 @@ struct TMC68901 {
   // FUNCTIONS
   TMC68901();
   void Init();
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   void Reset();
 #else
   void Reset(bool Cold);
 #endif
   int UpdateNextIrq(int at_time=-1);
 #if defined(SSE_INT_MFP_TIMER_B_AER)
-#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
   void CalcCyclesFromHblToTimerB();
 #else
   void CalcCyclesFromHblToTimerB(int freq);
@@ -186,7 +186,7 @@ struct TMC68901 {
 
 #pragma pack(pop)
 
-#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB()
 #elif defined(SSE_INT_MFP_TIMER_B_AER)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)

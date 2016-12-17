@@ -12,7 +12,7 @@ DWORD CpuNormalHz=CPU_STF_PAL;
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
 DWORD CpuCustomHz=CPU_STF_PAL;
 #endif
-double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLK_TH_EXACT;
+double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLOCK;
 #endif
 
 
@@ -102,7 +102,7 @@ void ASMCALL check_for_interrupts_pending() {
           ASSERT(MFP_IRQ);
 //          TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
 #if defined(SSE_INT_MFP_SPURIOUS) 
-#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_383D)
+#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_390D)
           ASSERT(!M68000.IackCycle);
           M68000.IackCycle=true;
 #endif
@@ -212,7 +212,7 @@ void ASMCALL check_for_interrupts_pending() {
     Pacemaker STE! Spurious interrupt has a handler (RTE)
     Zikdisk2        ditto
 */
-#if defined(SSE_INT_MFP_SPURIOUS_383)
+#if defined(SSE_INT_MFP_SPURIOUS_390)
           if(irq==-1 && !no_real_irq) // couldn't find one and there was no break
 #else
           if(irq==-1 && iack_latency <=20 && !no_real_irq) // couldn't find one and there was no break
@@ -228,7 +228,7 @@ void ASMCALL check_for_interrupts_pending() {
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
-#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_383D)
+#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_390D)
           M68000.IackCycle=false;
 #endif
 #endif//spurious
@@ -280,7 +280,7 @@ void ASMCALL check_for_interrupts_pending() {
 #endif
       }
     }
-#if defined(SSE_INTERRUPT) && !defined(SSE_INTERRUPT_383)
+#if defined(SSE_INTERRUPT) && !defined(SSE_INTERRUPT_390)
     else  //looks like a bug...
 #endif
     if (hbl_pending

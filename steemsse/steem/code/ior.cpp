@@ -141,7 +141,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
    }
 #endif
 
-#if defined(SSE_VAR_OPT_383A)
+#if defined(SSE_VAR_OPT_390A)
   act=ACT;
 #endif
 
@@ -153,7 +153,7 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
     // ACIAs (IKBD and MIDI) //
     ///////////////////////////
 
-#if defined(SSE_ACIA) && defined(SSE_ACIA_383) //more compact code
+#if defined(SSE_ACIA) && defined(SSE_ACIA_390) //more compact code
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_ACIA
@@ -268,7 +268,7 @@ Receiver Data Register is retained.
 #define LOGSECTION LOGSECTION_IO
 
 
-#else//SSE_ACIA_383
+#else//SSE_ACIA_390
 #undef LOGSECTION 
 #define LOGSECTION LOGSECTION_IKBD
     case 0xfffc00:      
@@ -539,7 +539,7 @@ Receiver Data Register is retained.
 #undef LOGSECTION //SS
 #define LOGSECTION LOGSECTION_IO //SS
 
-#endif//SSE_ACIA_383
+#endif//SSE_ACIA_390
 
     /////////
     //  ?  //
@@ -854,14 +854,14 @@ Receiver Data Register is retained.
 
     case 0xff8800:
 #if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
-#if defined(SSE_YM2149_BUS_JAM_383B)
+#if defined(SSE_YM2149_BUS_JAM_390B)
       if ((addr & 1) && io_word_access) 
 #else
       if (OPTION_HACKS && (addr & 1) && io_word_access) 
 #endif
         break; //odd addresses ignored on word read, don't jam
 #endif
-#if defined(SSE_YM2149_BUS_JAM_383) //see note in iow.cpp
+#if defined(SSE_YM2149_BUS_JAM_390) //see note in iow.cpp
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) INSTRUCTION_TIME(1);
 #else
       if(!(ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R))
@@ -870,7 +870,7 @@ Receiver Data Register is retained.
         ioaccess|=IOACCESS_FLAG_PSG_BUS_JAM_R;
       }
 #endif
-#if defined(SSE_YM2149_BUS_JAM_383B)
+#if defined(SSE_YM2149_BUS_JAM_390B)
       ASSERT(!((addr & 1) && io_word_access));
 #else
       if((addr & 1) && io_word_access)
@@ -1085,7 +1085,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
         cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
         Blit.BlitCycles=0;
 #endif
         int n=(addr-0xff8240)/2; // which palette
@@ -1158,7 +1158,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
           cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
           Blit.BlitCycles=0;
 #endif
           ior_byte&=~3;           // this way takes care
@@ -1169,7 +1169,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
           cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
           Blit.BlitCycles=0;
 #endif
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
@@ -1356,7 +1356,7 @@ FF8240 - FF827F   palette, res
 //      && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_INTERRUPTS] ) //mfp
       && ( (addr&0xffff00)!=0xFFFA00 || logsection_enabled[LOGSECTION_MFP] ) //mfp
       && ( (addr&0xffff00)!=0xfffc00 || logsection_enabled[LOGSECTION_IKBD] ) //acia
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_DMA] ) //dma
 #else
       && ( (addr&0xffff00)!=0xff8600 || logsection_enabled[LOGSECTION_FDC] ) //dma
@@ -1933,7 +1933,7 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 #if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
     cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
 

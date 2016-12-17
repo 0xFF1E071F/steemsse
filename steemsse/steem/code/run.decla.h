@@ -311,7 +311,7 @@ void event_driveA_ip();
 void event_driveB_ip();
 #endif
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
 extern int time_of_event_acia;
 void event_acia();
 

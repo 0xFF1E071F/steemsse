@@ -85,7 +85,7 @@ void TPatchesBox::PatchPoke(MEM_ADDRESS &ad,int Len,DWORD Data)
       case 4: LPEEK(ad)=DWORD(Data); break;
     }
   }else if (ad>=MEM_IO_BASE){
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
     TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
       switch (Len){
@@ -463,7 +463,7 @@ LRESULT __stdcall TPatchesBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
           EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->PatchDir);
           if (NewFol.NotEmpty()){
             NO_SLASH(NewFol);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
             SendDlgItemMessage(Win,401,WM_SETTEXT,0,(LPARAM)(NewFol).Text);
 #else
             SendDlgItemMessage(Win,401,WM_SETTEXT,0,(long)(NewFol).Text);

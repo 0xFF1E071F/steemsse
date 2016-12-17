@@ -11,7 +11,7 @@ enum ESTModels {STE,STF,MEGASTF,SSE_STF_ST_MODELS};
 #if defined(SSE_TOS_WARNING1) && !defined(SSE_TOS_WARNING1A)
 void CheckSTTypeAndTos();
 #endif
-#if !defined(SSE_STF_383)
+#if !defined(SSE_STF_390)
 int SwitchSTType(int new_type); // adapt to new machine
 #endif
 extern char* st_model_name[];

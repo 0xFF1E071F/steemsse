@@ -14,7 +14,7 @@ m68k_PROCESS
 definitions at top of cpu.cpp
 */
 
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
 // some fun...
 int (*count_bits_set_in_word)(unsigned short);
 int count_bits_set_in_word2(unsigned short w) {
@@ -354,7 +354,7 @@ void cpu_routines_init()
     m68k_jump_line_e[B6_111000+n]=m68k_bit_shift_left_to_mem;
   }
 
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
 /*  Check CPU caps.
     If it knows POPCNT, we'll use it instead of the C code in acc.cpp.
 */

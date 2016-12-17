@@ -54,11 +54,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 
 
   bool InBlitter_Draw; //are we in the routine?
-#if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_380)
-  // we check every 64 cycles when we run for 256 cycles
-  int TimeToCheckIrq; // same name style!
-#endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
   int TimeAtBlit,BlitCycles;
 #endif
 };

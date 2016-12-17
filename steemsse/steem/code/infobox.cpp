@@ -42,8 +42,8 @@ void TGeneralInfo::CreatePage(int pg)
       break;
   }
 }
-#if !defined(SSE_GUI_INFOBOX_383)
-/* in v383 we remove the thanks because they're outdated, maybe some other
+#if !defined(SSE_GUI_INFOBOX_390)
+/* in v3.9.0 we remove the thanks because they're outdated, maybe some other
   people should be thanked more today, but making up a list, forgetting 
   someone... brr...
 */
@@ -109,10 +109,10 @@ const char *Credits[40]={
 #endif
 
 
-#if defined(SSE_GUI_INFOBOX_383B)
+#if defined(SSE_GUI_INFOBOX_390B)
 /* so instead, same silly greetings as in demo SSE3.5, typo corrected for Mr JCVD!
 */
-const char *Credits[10]={
+const char *Credits[11]={
   "Greetings to:",
   "Jean Claude Van Damme, Lance Henriksen, Nicolas Cage, Kurt Russel, Mel Gibson, Nick Nolte, John Travolta, Chuck Norris,",
   "Rutger Hauer, Tom Selleck, Michael Ironside, Stephen Lang, Kayden Nguyen, William Forsythe, Michael Caine, Jeff Speakman,",
@@ -122,6 +122,7 @@ const char *Credits[10]={
   "Jesse Ventura, Carl Weathers, Bill Duke, David Carradine, Bill Paxton, Jackie Chan, Harrison Ford, Viggo Mortensen,",
   "Sven-Ole Thorsen, Arnold Schwarzenegger, Vincent Klyn, Wesley Snipes, Vin Diesel, Alec Baldwin, Willem Dafoe,",
   "Harry Dean Stanton, Lee Major, Christopher Walken and James Woods.",
+  "RIP Paul Walker.",
   NULL};
 #endif
 
@@ -229,7 +230,9 @@ void TGeneralInfo::LoadIcons()
                               hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ]
 #if defined(SSE_GUI_INFOBOX)
                               ,hGUIIcon[RC_ICO_OPS_SSE]
-                              ,hGUIIcon[RC_ICO_OPS_SSE]
+                              ,hGUIIcon[RC_ICO_INFO_FAQ] // for hints
+                              //,hGUIIcon[RC_ICO_OPS_SSE]
+                              //,hGUIIcon[RC_ICO_TEXT]
 #endif
                               ,0);
   }
@@ -358,7 +361,7 @@ EasyStr TGeneralInfo::dp4_disp(int val)
 void TGeneralInfo::CreateAboutPage()
 {
   int y=10,h=4;
-#if !defined(SSE_GUI_INFOBOX_383) || defined(SSE_GUI_INFOBOX_383B)
+#if !defined(SSE_GUI_INFOBOX_390) || defined(SSE_GUI_INFOBOX_390B)
   HWND Win;
 #endif
 #if defined(SSE_GUI)
@@ -371,7 +374,7 @@ void TGeneralInfo::CreateAboutPage()
   EasyStr Text=EasyStr("Steem Engine v")+(char*)stem_version_text+" (built " __DATE__" " +"- "__TIME__")\n";
 #endif
   Text+="Written by Anthony && Russell Hayward\n";
-#if defined(SSE_GUI_INFOBOX_383)
+#if defined(SSE_GUI_INFOBOX_390)
 
 #if defined(SSE_X64_MISC)
   Text+="x64 ";
@@ -448,7 +451,7 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Static",Text,WS_CHILD | WS_VISIBLE,
                       page_l,y,page_w,h,Handle,(HMENU)200,HInstance,NULL);
   y+=h;
-#if defined(SSE_GUI_INFOBOX_383)
+#if defined(SSE_GUI_INFOBOX_390)
   Text=T("Thanks to all the people who have helped make Steem better.");
 
 
@@ -458,7 +461,7 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Steem HyperLink",Text,WS_CHILD | WS_VISIBLE | HL_STATIC,
                           page_l,y,page_w,TextHeight,Handle,(HMENU)204,HInstance,NULL);
   y+=TextHeight;
-#if !defined(SSE_GUI_INFOBOX_383) || defined(SSE_GUI_INFOBOX_383B)
+#if !defined(SSE_GUI_INFOBOX_390) || defined(SSE_GUI_INFOBOX_390B)
   Scroller.CreateEx(512,WS_CHILD | WS_VSCROLL | WS_HSCROLL,page_l,y,page_w,INFOBOX_HEIGHT-y-(TextHeight+10+10),
                       Handle,203,HInstance);
   Scroller.SetBkColour(GetSysColor(COLOR_WINDOW));

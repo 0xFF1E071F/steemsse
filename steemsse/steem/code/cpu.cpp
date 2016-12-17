@@ -15,7 +15,7 @@ SS: this is compiled only if STEVEN_SEAGAL or SSE_CPU isn't defined.
 #define EXT
 #define INIT(s) =s
 
-extern const char*exception_action_name[4];//383
+extern const char*exception_action_name[4];//390
 
 m68k_exception ExceptionObject;
 jmp_buf *pJmpBuf=NULL;

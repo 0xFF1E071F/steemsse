@@ -283,13 +283,13 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     write (what value?)
 */
   int val=0;
-#if defined(SSE_BOILER_383)
+#if defined(SSE_BOILER_390)
   if(ad&1) 
     ad--;  
 #endif
   if(Debug.MonitorValueSpecified && Debug.MonitorComparison)
   {
-#if !defined(SSE_BOILER_383)
+#if !defined(SSE_BOILER_390)
     if(ad&1) 
       ad--;  // We only check words
 #endif
@@ -318,7 +318,7 @@ void debug_hit_mon(MEM_ADDRESS ad,int read)
     if (mask==0xff00) bytes=1;
     if (mask==0x00ff) bytes=1, ad++;
     int val=int((bytes==1) ? int(d2_peek(ad)):int(d2_dpeek(ad)));
-#endif//383
+#endif//390
 
   Str mess;
   if (read){
@@ -363,7 +363,7 @@ void debug_hit_io_mon_write(MEM_ADDRESS ad,int val)
 {
   if (mode!=STEM_MODE_CPU) return;
 
-#if defined(SSE_BOILER_383)
+#if defined(SSE_BOILER_390)
   WORD mask=debug_get_ad_mask(ad,FALSE); // "return pda->mask[int(read ? 1:0)];"
 #elif defined(SSE_BOILER) // 330 
   WORD mask=debug_get_ad_mask(ad,TRUE);
@@ -646,7 +646,7 @@ int __stdcall debug_plugin_write_mem(DWORD ad,BYTE *buf,int len)
     We use the first 2 watches
 */
   //bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr,bool wr) {
-bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr) {//383
+bool debug_check_wr_check_range(MEM_ADDRESS ad,int num,MEM_ADDRESS *adarr) {//390
   MEM_ADDRESS ad1=0,ad2=0;
   for(int i=0;i<num;i++)
   {

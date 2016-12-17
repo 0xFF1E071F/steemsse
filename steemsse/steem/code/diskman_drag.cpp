@@ -28,7 +28,7 @@ void TDiskManager::BeginDrag(int Item,HWND From)
 
   Dragging=Item;
   DragLV=From;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   DragIL=(HIMAGELIST)SendMessage(DragLV,LVM_CREATEDRAGIMAGE,Dragging,(LPARAM)&pt);
 #else
   DragIL=(HIMAGELIST)SendMessage(DragLV,LVM_CREATEDRAGIMAGE,Dragging,(long)&pt);
@@ -58,7 +58,7 @@ void TDiskManager::BeginDrag(int Item,HWND From)
   SetTimer(Handle,DISKVIEWSCROLL_TIMER_ID,30,NULL);
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
 #define DRAG_CHECK_FOR_DESELECT \
       if (DeselectDropTarget){ \
         LV_ITEM lvi; \
@@ -106,7 +106,7 @@ void TDiskManager::MoveDrag()
 
       hti.pt=spt;
       ScreenToClient(DiskView,&hti.pt);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       int Item=SendMessage(DiskView,LVM_HITTEST,0,(LPARAM)&hti);
 #else
       int Item=SendMessage(DiskView,LVM_HITTEST,0,(long)&hti);
@@ -116,7 +116,7 @@ void TDiskManager::MoveDrag()
           lvi.mask=LVIF_PARAM;
           lvi.iItem=Item;
           lvi.iSubItem=0;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
           SendMessage(DiskView,LVM_GETITEM,0,(LPARAM)&lvi);
 #else
           SendMessage(DiskView,LVM_GETITEM,0,(long)&lvi);
@@ -132,7 +132,7 @@ void TDiskManager::MoveDrag()
           lvi.stateMask=LVIS_DROPHILITED;
           if (DropTarget>-1){
             lvi.state=0;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
             SendMessage(DiskView,LVM_SETITEMSTATE,DropTarget,(LPARAM)&lvi);
 #else
             SendMessage(DiskView,LVM_SETITEMSTATE,DropTarget,(long)&lvi);
@@ -140,7 +140,7 @@ void TDiskManager::MoveDrag()
           }
           if (Item>-1){
             lvi.state=LVIS_DROPHILITED;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
             SendMessage(DiskView,LVM_SETITEMSTATE,Item,(LPARAM)&lvi);
 #else
             SendMessage(DiskView,LVM_SETITEMSTATE,Item,(long)&lvi);
@@ -449,7 +449,7 @@ void TDiskManager::EndDrag(int x,int y,bool RightDrag)
           LV_ITEM lvi;
           lvi.stateMask=LVIS_DROPHILITED;
           lvi.state=0;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
           SendMessage(DiskView,LVM_SETITEMSTATE,DropTarget,(LPARAM)&lvi);
 #else
           SendMessage(DiskView,LVM_SETITEMSTATE,DropTarget,(long)&lvi);

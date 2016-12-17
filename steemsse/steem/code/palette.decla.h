@@ -17,7 +17,7 @@ EXT bool palette_changed;
 
 EXT void make_palette_table(int brightness,int contrast);
 
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT short brightness,contrast;
 #else
 EXT int brightness,contrast;

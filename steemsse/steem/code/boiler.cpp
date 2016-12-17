@@ -22,7 +22,7 @@ HMENU menu1;
 HMENU boiler_op_menu,shift_screen_menu;
 #if defined(SSE_BOILER)
 HMENU sse_menu;
-#if defined(SSE_BOILER_383_LOG2) // new title for more options
+#if defined(SSE_BOILER_390_LOG2) // new title for more options
 HMENU logsection_menu2;
 #endif
 #endif
@@ -257,7 +257,7 @@ WORD debug_get_ad_mask(MEM_ADDRESS ad,bool read)
 //---------------------------------------------------------------------------
 void debug_check_break_on_irq(int irq)
 {
-#if defined(SSE_BOILER_383_IRQ_BREAK) //only if breakpoints enabled
+#if defined(SSE_BOILER_390_IRQ_BREAK) //only if breakpoints enabled
   if (breakpoint_mode==2 &&  break_on_irq[irq]){
 #else
   if (break_on_irq[irq]){
@@ -608,7 +608,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
           id-=300;
           // SS id corresponds to 
           logsection_enabled[id]=!logsection_enabled[id];
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
           CheckMenuItem((id<21)?logsection_menu:logsection_menu2,LOWORD(wPar),
             MF_BYCOMMAND| int(logsection_enabled[id] ? MF_CHECKED:MF_UNCHECKED));
 #else
@@ -932,7 +932,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
                 int i=logsections[n].Index;
                 if (i>=0){
                   logsection_enabled[i]=0;
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
                   CheckMenuItem( (i<21) ?  logsection_menu : logsection_menu2 ,
                     300+i,MF_BYCOMMAND | MF_UNCHECKED);
 #else
@@ -1260,7 +1260,7 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
             //////////////////// Browsers Menu
             case 900:case 901:
             {
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
               new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
 #else
               mem_browser *mb=new mem_browser(pc,type_disp_type(LOWORD(wPar)==900 ? DT_MEMORY:DT_INSTRUCTION));
@@ -1582,7 +1582,7 @@ void disa_to_file(FILE*f,MEM_ADDRESS dstart,int dlen,bool as_source)
   // text bytes for 1 code byte, need a lot, your typical line is like
   // cmpi.b #$39,$8252                                ; 008078: 0C39 0039 0000 8252 
   const int multiplier=40; 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   BYTE *buffer=0,*buffer_ptr=0;
 #else
   BYTE *buffer,*buffer_ptr;
@@ -1692,7 +1692,7 @@ void boiler_show_stack_display(int sel)
 void DWin_init()
 {
   char ttt[200];
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   int x=0,y=0;
 #else
   int x,y;
@@ -1844,14 +1844,14 @@ void DWin_init()
 #endif
   AppendMenu(logsection_menu,MF_STRING|
         int(debug_wipe_log_on_reset ? MF_CHECKED:MF_UNCHECKED),1013,"Wipe On Reset");
-  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//383
+  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//390
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
   for (int n=1;logsections[n].Name[0]!='*';n++){
     int i=logsections[n].Index;
     if (logsections[n].Name[0]=='-'){
       AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
     }else{
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
         AppendMenu((i<21)?logsection_menu:logsection_menu2,MF_STRING
           |int(logsection_enabled[i] ? MF_CHECKED:0),300+i,logsections[n].Name);
 #else
@@ -1860,11 +1860,11 @@ void DWin_init()
     }
   }
   AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);
-  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//383
+  ////AppendMenu(logsection_menu,MF_SEPARATOR,0,NULL);//390
   AppendMenu(logsection_menu,MF_STRING,1009,"&Uncheck All");
   AppendMenu(logsection_menu,MF_STRING,1012,"Suspend Logging");
 
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
   logsection_menu2=CreatePopupMenu();
   AppendMenu(menu,MF_STRING | MF_POPUP,(UINT)logsection_menu2,"Log&2");
   for (int n=1;logsections[n].Name[0]!='*';n++){
@@ -2504,7 +2504,7 @@ void debug_vbl()
         if (SpecialKey==0){
           Str HexI=HEXSl(debug_send_alt_keys,2).LowerCase();
           for (int n=0;n<2;n++){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
             BYTE VKCode=0;
 #else
             BYTE VKCode;

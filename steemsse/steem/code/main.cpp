@@ -919,7 +919,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
 
 #ifdef WIN32
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   Disp.DrawToVidMem=(CSF.GetInt("Options","DrawToVidMem",Disp.DrawToVidMem)!=0);
   Disp.BlitHideMouse=(CSF.GetInt("Options","BlitHideMouse",Disp.BlitHideMouse)!=0);
 #else
@@ -1105,7 +1105,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   dbg_log("STARTUP: LoadState finished");
   dbg_log("STARTUP: power_on Called");
   power_on();
-#if !defined(SSE_VAR_NO_UPDATE_383)
+#if !defined(SSE_VAR_NO_UPDATE_390)
 #ifdef WIN32
 #ifndef ONEGAME
   if (CSF.GetInt("Update","AutoUpdateEnabled",true)){
@@ -1118,7 +1118,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   }
 #endif
 #endif
-#endif//SSE_VAR_NO_UPDATE_383
+#endif//SSE_VAR_NO_UPDATE_390
 
 #ifdef DEBUG_BUILD
   dbg_log("STARTUP: update_register_display called");
@@ -1199,7 +1199,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
     bool Full=(BootInMode & BOOT_MODE_FLAGS_MASK)==BOOT_MODE_FULLSCREEN;
 
     if ((BootInMode & BOOT_MODE_FLAGS_MASK)==BOOT_MODE_DEFAULT){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       Full=(CSF.GetInt("Options","StartFullscreen",0)!=0);
 #else
       Full=CSF.GetInt("Options","StartFullscreen",0);

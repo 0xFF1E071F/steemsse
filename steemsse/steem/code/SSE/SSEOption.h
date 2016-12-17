@@ -144,7 +144,7 @@ struct TConfig {
   
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
   int SwitchSTType(int new_type); // adapt to new machine
 #endif
 #endif

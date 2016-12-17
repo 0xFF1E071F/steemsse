@@ -87,7 +87,7 @@ void (*hd6301_trace)(char *fmt, ...);
 #endif
 
 // constructing our module (OBJ) the good old Steem way, hem
-#ifdef VC_BUILD //on vs2008, v3.8.2, 383
+#ifdef VC_BUILD //on vs2008, v3.8.2, v3.9.0
 // we don't want to edit old working 3rd party C code
 #pragma warning( disable : 4013 4100 4127 4131 4431 4245 4706)
 #endif

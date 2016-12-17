@@ -127,7 +127,7 @@ void m68k_get_dest_111_w_faster();
 void m68k_get_dest_111_l_faster();
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
 extern int (*count_bits_set_in_word)(unsigned short);
 #endif
 
@@ -224,7 +224,7 @@ extern void cpu_routines_init();
 extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
-#if defined(SSE_VAR_OPT_383A)
+#if defined(SSE_VAR_OPT_390A)
 extern int act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
 #endif
 
@@ -254,12 +254,12 @@ extern int act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
 #define SR_USER_BYTE 31 //SS = $1F
 #define SR_TRACE (WORD(BIT_f))
 
-#if defined(SSE_VC_INTRINSICS_383)
+#if defined(SSE_VC_INTRINSICS_390)
 enum {SR_C_BIT,SR_V_BIT,SR_Z_BIT,SR_N_BIT,SR_X_BIT,SR_SUPER_BIT=0xd,
 SR_TRACE_BIT=0xf};
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383A)
+#if defined(SSE_VC_INTRINSICS_390A)
 #define SUPERFLAG (BITTEST(sr,SR_SUPER_BIT))
 #elif defined(SSE_VAR_REWRITE)
 #define SUPERFLAG ( ((sr&SR_SUPER)!=0) ) // warning C4800
@@ -276,7 +276,7 @@ SR_TRACE_BIT=0xf};
 #define IOACCESS_NUMBER_MASK 0x0000003F
 
 #define IOACCESS_FLAG_FOR_CHECK_INTRS BIT_6
-#if !defined(SSE_YM2149_BUS_JAM_383) || !defined(SSE_CPU)
+#if !defined(SSE_YM2149_BUS_JAM_390) || !defined(SSE_CPU)
 #define IOACCESS_FLAG_PSG_BUS_JAM_R BIT_7
 #define IOACCESS_FLAG_PSG_BUS_JAM_W BIT_8
 #endif
@@ -317,7 +317,7 @@ inline void FetchTiming() {
   if(pc<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -329,7 +329,7 @@ inline void FetchTimingL() {
   if(pc<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -362,7 +362,7 @@ inline void ReadBusTiming() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
 /*  As we can see, this feature costs a lot in overhead, but that's the price
     of "correct" emulation.
 */
@@ -376,7 +376,7 @@ inline void ReadBusTimingL() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -387,7 +387,7 @@ inline void WriteBusTiming() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -398,7 +398,7 @@ inline void WriteBusTimingL() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -411,7 +411,7 @@ inline void StackTiming() {
   if((MEM_ADDRESS)r[15]<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -422,7 +422,7 @@ inline void StackTimingL() {
   if((MEM_ADDRESS)r[15]<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
     Blit.BlitCycles=0;
 #endif
   }
@@ -1007,7 +1007,7 @@ inline void PrefetchIrc() {
 inline void RefetchIr() {
   ASSERT( IR==*(lpfetch+1) ); //detect cases
   IR=*(lpfetch-MEM_DIR);
-  // we count fetch timing here (383)
+  // we count fetch timing here (390)
   FetchTiming();
 }
 
@@ -1229,7 +1229,7 @@ inline void m68kGetSourceLongNotA() {
 
 #define SR_VALID_BITMASK 0xa71f
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_CHECK_Z_AND_N_B                   \
   if(_bittest((LONG*)m68k_dest,7)){          \
@@ -1277,7 +1277,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_ADD_B                                                        \
   SR_CLEAR(SR_USER_BYTE)                                                \
@@ -1310,7 +1310,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_ADDX_B                                                       \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C)                                         \
@@ -1344,7 +1344,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 #define SR_ADD_W                                                        \
   SR_CLEAR(SR_USER_BYTE)                                                \
   if( ( (( m68k_src_w)&( m68k_old_dest)&(~m68k_DEST_W))|                \
@@ -1376,7 +1376,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_ADDX_W                  \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1411,7 +1411,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 #define SR_ADD_L           \
   SR_CLEAR(SR_USER_BYTE) \
   if( ( (( m68k_src_l)&( m68k_old_dest)&(~m68k_DEST_L))|  \
@@ -1444,7 +1444,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_ADDX_L           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1479,7 +1479,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUB_B(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag) \
@@ -1513,7 +1513,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUBX_B                                                      \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1548,7 +1548,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUB_W(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
@@ -1582,7 +1582,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUBX_W           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1617,7 +1617,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUB_L(extend_flag)           \
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C+extend_flag)                             \
@@ -1651,7 +1651,7 @@ inline void m68kGetSourceLongNotA() {
 
 #endif
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 
 #define SR_SUBX_L           \
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C) \
@@ -1700,7 +1700,7 @@ inline void m68kGetSourceLongNotA() {
 
 #define ILLEGAL  exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
 #define DETECT_TRACE_BIT {if (BITTEST(sr,SR_TRACE_BIT)) \
   ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
 #else
@@ -1856,7 +1856,7 @@ inline void m68kPrefetchSetPC() {
 inline void change_to_user_mode()
 {
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITRESET(sr,SR_SUPER_BIT);
 #else
   SR_CLEAR(SR_SUPER);
@@ -1865,7 +1865,7 @@ inline void change_to_user_mode()
 inline void change_to_supervisor_mode()
 {
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITSET(sr,SR_SUPER_BIT);
 #else
   SR_SET(SR_SUPER);

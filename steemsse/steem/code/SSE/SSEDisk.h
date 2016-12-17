@@ -77,7 +77,7 @@ struct TDisk {
 
   // gaps
   WORD BytePositionOfFirstId();
-#if defined(SSE_FDC_383_HBL_DRIFT)
+#if defined(SSE_FDC_390_HBL_DRIFT)
   WORD BytesToID(BYTE &num);// if num=0, next ID
 #else
   WORD BytesToID(BYTE &num,WORD &nHbls);// if num=0, next ID

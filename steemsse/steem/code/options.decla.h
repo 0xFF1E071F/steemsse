@@ -168,7 +168,7 @@ public:
   void UpdateHzDisplay();
 #endif
   void UpdateWindowSizeAndBorder();
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
   void SetBorder(bool);
 #else
   void SetBorder(int);

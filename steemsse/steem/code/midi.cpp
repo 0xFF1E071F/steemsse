@@ -375,7 +375,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
   TMIDIIn *This=(TMIDIIn*)dwThis;
 
   if (This->Killing) return;
-#if defined(SSE_VS2008_WARNING_383) && defined(_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && defined(_DEBUG)
   BYTE *pData=NULL;
 #else
   BYTE *pData;
@@ -426,7 +426,7 @@ void CALLBACK TMIDIIn::InProc(HMIDIIN Handle,UINT Msg,DWORD dwThis,DWORD MidiMes
       }
       LOG_ONLY( if (DataLen>This->MaxSysExLen-8) dbg_log("MIDI In: Large sysex message received, possible overflow.") );
       break;
-#if defined(SSE_VS2008_WARNING_383____) // bug!
+#if defined(SSE_VS2008_WARNING_390____) // bug!
     default:
       NODEFAULT;
 #endif

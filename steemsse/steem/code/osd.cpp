@@ -550,7 +550,7 @@ void osd_draw()
         char tmp_buffer[BUFFER_LENGTH];
 
 #ifdef SSE_DEBUG // add current command (CR)
-#if defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE
+#if 0 && defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE //MFD
         /*  Instead of the status bar, we put image info on debug OSD track info,
         so it's valid for both drives, we see clearly what happens with
         different types mixed.
@@ -736,7 +736,7 @@ void osd_draw_plasma(int x,int start_y,int frame)
     DWORD bitmask=1;
     for (int x=0;x<PLASMA_W/2;x++){
       for (int pixel=0;pixel<2;pixel++){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         bool draw_data=(fuji_data & bitmask)!=0;
         bool draw_mask=(fuji_mask & bitmask)!=0;
 #else

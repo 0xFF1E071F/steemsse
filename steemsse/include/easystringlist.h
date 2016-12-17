@@ -30,7 +30,7 @@ public:
   int Compare(int,ESLSortEnum,char *,long *,long);
   int Add(long,char*,...);
   int Add(char*);
-#if defined(SSE_X64_383) //?
+#if defined(SSE_X64_390) //?
   int Add(char*,LONG_PTR);
   int Add(char*,LONG_PTR,LONG_PTR);
   int Add(char*,LONG_PTR,LONG_PTR,LONG_PTR);

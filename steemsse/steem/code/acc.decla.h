@@ -167,7 +167,7 @@ WORD change_endian(WORD x); // double of something?
 
 EXT EasyStr HEXSl(long,int);
 
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
 EXT int count_bits_set_in_word1(unsigned short w);
 #else
 EXT int count_bits_set_in_word(unsigned short w);

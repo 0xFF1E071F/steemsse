@@ -127,7 +127,7 @@ void ArchiveAccess_Close() {
   if(ArchiveHandle) // or big crash...
   {
     aaCloseArchive (ArchiveHandle);
-#if defined(SSE_VAR_ARCHIVEACCESS_383)
+#if defined(SSE_VAR_ARCHIVEACCESS_390)
     CloseHandle(zippy.hArcData); // fixes handle leak + impossible to move file
 #endif
   }
@@ -169,7 +169,7 @@ bool ArchiveAccess_Open(TCHAR* ArchiveFileName) {
       aaDetermineArchiveType (readCallback, iStreamID, FileSize, &flags);
     ArchiveHandle = aaOpenArchive(readCallback, iStreamID, FileSize,
       ArchiveType, &OpenArchiveError, password);
-#if defined(SSE_VAR_ARCHIVEACCESS_383)
+#if defined(SSE_VAR_ARCHIVEACCESS_390)
     zippy.hArcData=FileHandle; // memorise this
 #endif
 #ifdef SSE_DEBUG

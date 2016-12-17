@@ -28,7 +28,7 @@
 #ifdef SSE_UNIX
 #include <x/hxc_dir_lv.h>
 #endif
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
 int ExtensionIsDisk(char*);
 #else
 int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn=true);
@@ -99,7 +99,7 @@ private:
   Str MSAConvPath;
   HANDLE MSAConvProcess;
   Str MSAConvSel;
-#if !defined(SSE_VAR_NO_WINSTON_383)
+#if !defined(SSE_VAR_NO_WINSTON_390)
   bool Importing;
 #endif
 #elif defined(UNIX)
@@ -168,7 +168,7 @@ public:
     return (DiskManFileInfo*)lvi.lParam;
   }
   void ShowLinksDiag(),
-#if !defined(SSE_VAR_NO_WINSTON_383)
+#if !defined(SSE_VAR_NO_WINSTON_390)
     ShowImportDiag(),
 #endif
     ShowPropDiag(),ShowDiskDiag();
@@ -181,19 +181,19 @@ public:
   HWND DiskView;
   HICON DriveIcon[2],AccurateFDCIcon,DisableDiskIcon;
   HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,
-#if !defined(SSE_VAR_NO_WINSTON_383)
+#if !defined(SSE_VAR_NO_WINSTON_390)
     ImportDiag,
 #endif
     PropDiag,DiagFocus;
 #ifdef SSE_X64_LPTR
   HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) 
-#if !defined(SSE_VAR_NO_WINSTON_383)
+#if !defined(SSE_VAR_NO_WINSTON_390)
     | int64_t(ImportDiag) 
 #endif
     | int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
 #else
   HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag)
-#if !defined(SSE_VAR_NO_WINSTON_383)    
+#if !defined(SSE_VAR_NO_WINSTON_390)    
     | long(ImportDiag) 
 #endif
     | long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  

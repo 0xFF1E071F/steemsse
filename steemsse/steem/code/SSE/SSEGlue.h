@@ -24,7 +24,7 @@ struct TGlueStatusBYTE {
   unsigned int vbl_done:1;
   unsigned int vbi_done:1;
   unsigned int hbi_done:1;
-#if defined(SSE_GLUE_383B2) //just in case
+#if defined(SSE_GLUE_390B2) //just in case
   unsigned int :11;
 #endif
 };
@@ -46,13 +46,13 @@ struct TGlue {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct screen_event;
 #endif
-#if defined(SSE_GLUE_383B2) //just in case
+#if defined(SSE_GLUE_390B2) //just in case
   TScanline PreviousScanline, CurrentScanline, NextScanline;
 #endif
-#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_383E2)
+#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_390E2)
   WORD scanline; 
 #endif
-#if defined(SSE_GLUE_383E) 
+#if defined(SSE_GLUE_390E) 
   short VCount;
 #endif
   WORD DE_cycles[NFREQS];
@@ -64,7 +64,7 @@ struct TGlue {
   bool ExtraAdded;
 #endif
   // we need keep info for only 3 scanlines:
-#if !defined(SSE_GLUE_383B2) //just in case
+#if !defined(SSE_GLUE_390B2) //just in case
   TScanline PreviousScanline, CurrentScanline, NextScanline;
 #endif
 #if defined(SSE_GLUE_FRAME_TIMINGS)
@@ -106,7 +106,7 @@ struct TGlue {
   int PreviousFreqChange(int cycle);
 #endif
   int NextShiftModeChange(int cycle,int value=-1); //move to shifter...
-#if defined(SSE_GLUE_383B)
+#if defined(SSE_GLUE_390B)
   int NextChangeToHi(int cycle);
   int NextChangeToLo(int cycle); // Lo = not HI for GLU
   int PreviousChangeToHi(int cycle);

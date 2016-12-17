@@ -1,4 +1,4 @@
-// for v3.8.3
+// for v3.9.0
 #pragma once // VC guard
 #ifndef SSE_H // BCC guard
 #define SSE_H
@@ -19,6 +19,8 @@ project/makefile.
 
 SSE_DEBUG, if needed, should also be defined in the project/makefile.
 It has an effect on both the boiler and the VS debug build.
+
+SSE_DD for the DirectDraw build.
 
 SSE.h is supposed to mainly be a collection of compiling switches (defines).
 It should include nothing and can be included everywhere.
@@ -286,12 +288,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_CPU_MFP_RATIO) 
 
-#define SSE_CPU_MFP_RATIO_STF 
-#define SSE_CPU_MFP_RATIO_STE 
 #define SSE_CPU_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_CPU_MFP_RATIO_OPTION2 // L/S
-#define SSE_CPU_MFP_RATIO_STE2
-#define SSE_CPU_MFP_RATIO_STF2 
+#define SSE_CPU_MFP_RATIO_STE // different for STE, hack
 
 #endif
 
@@ -471,7 +470,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_INFOBOX_LINKS
 #define SSE_GUI_INFOBOX_MALLOC
 #define SSE_GUI_INFOBOX_NO_CART // no cartridge howto
-#define SSE_GUI_INFOBOX_NO_DISK // no disk howto //383
+#define SSE_GUI_INFOBOX_NO_DISK // no disk howto //390
 #endif
 #define SSE_GUI_OPTIONS_REFRESH // 6301, STF... up-to-date with snapshot
 #define SSE_GUI_RESET_BUTTON // invert
@@ -776,7 +775,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_NO_EXTRA_PER_VBL //compensating hack? changes what?
 #define SSE_SOUND_OPTIMISE //big word for what it is
 #define SSE_SOUND_RECOMMEND_OPTIONS
-#define SSE_SOUND_DMA_360 // switch created in v383, was missing (undef 383)
+#define SSE_SOUND_DMA_360 // switch created in v3.9.0, was missing (undef 390)
 #define SSE_SOUND_MICROWIRE_WRITE_LATENCY // as documented
 #define SSE_SOUND_VOL_LOGARITHMIC // more intuitive setting
 #define SSE_YM2149_FIX_TABLES // option P.S.G.
@@ -928,7 +927,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_NO_UPDATE_372
 #define SSE_VAR_RESIZE_372
 #define SSE_VAR_ARG_STFM // start as STF (unless overruled)
-#define SSE_VAR_OPT_380 //switch created in v383
+#define SSE_VAR_OPT_380 //switch created in v3.9.0
 #define SSE_VAR_RESIZE_380
 #define SSE_VAR_REWRITE_380
 #define SSE_VAR_OPT_382
@@ -1359,30 +1358,30 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 /////////
-// 383 //
+// 390 //
 /////////
 
 #if 1
 #if _MSC_VER >= 1500 
-#define SSE_VS2008_383
-#define SSE_VS2008_WARNING_383
-#define SSE_VS2008_WARNING_383B
+#define SSE_VS2008_390
+#define SSE_VS2008_WARNING_390
+#define SSE_VS2008_WARNING_390B
 #endif
 
 #ifdef SSE_X64
-#define SSE_X64_383 // bad casts
-#define SSE_X64_383B // ellipses (,...)
+#define SSE_X64_390 // bad casts
+#define SSE_X64_390B // ellipses (,...)
 #endif
 
-#define SSE_ACIA_383
+#define SSE_ACIA_390
 
 #if defined(SSE_BLITTER)
-#define SSE_BLT_383 //bugfix
-#define SSE_BLT_383B //ambitious + overhead: CPU can work when blitter has bus
+#define SSE_BLT_390 //bugfix
+#define SSE_BLT_390B //ambitious + overhead: CPU can work when blitter has bus
 #endif
 
-#define SSE_CARTRIDGE_383
-#if defined(SSE_CARTRIDGE_383)
+#define SSE_CARTRIDGE_390
+#if defined(SSE_CARTRIDGE_390)
 #define SSE_CARTRIDGE_BAT //fun!
 #define SSE_CARTRIDGE_BAT2
 #define SSE_CARTRIDGE_FREEZE
@@ -1405,10 +1404,10 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_FLOPPY
 #define SSE_FLOPPY_ADAT_UPDATE
 #ifdef SSE_DISK
-#define SSE_DISK_CAPS_383
-#define SSE_DISK_CAPS_383B
-#define SSE_DISK_CAPS_383C
-#define SSE_DISK_GHOST_SECTOR_383
+#define SSE_DISK_CAPS_390
+#define SSE_DISK_CAPS_390B
+#define SSE_DISK_CAPS_390C
+#define SSE_DISK_GHOST_SECTOR_390
 #if defined(SSE_STF)
 #define SSE_DMA_RIPPLE_CARRY
 #endif
@@ -1420,56 +1419,56 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_DRIVE_SOUND_SEEK_PASTI
 #ifdef SSE_FDC
-#define SSE_FDC_383A // bugfixes
-#define SSE_FDC_383B // refactoring
-#define SSE_FDC_383C // refactoring
-#define SSE_FDC_383_HBL_DRIFT
+#define SSE_FDC_390A // bugfixes
+#define SSE_FDC_390B // refactoring
+#define SSE_FDC_390C // refactoring
+#define SSE_FDC_390_HBL_DRIFT
 #endif
-#define SSE_WD1772_383
-#define SSE_WD1772_383B 
-#define SSE_WD1772_383C
+#define SSE_WD1772_390
+#define SSE_WD1772_390B 
+#define SSE_WD1772_390C
 #endif
 
 #if defined(SSE_GLUE)
-#define SSE_GLUE_383
-#define SSE_GLUE_383B
-#define SSE_GLUE_383B1
-#define SSE_GLUE_383B2
-#define SSE_GLUE_383B3
-#define SSE_GLUE_383C
-#define SSE_GLUE_383D
-#define SSE_GLUE_VERT_OVERSCAN_383B
-#define SSE_GLUE_383E // vcount
-#define SSE_GLUE_383E1 //apply
-#if defined(SSE_GLUE_383E1)
-#define SSE_GLUE_383E1A //enable vbi
-#define SSE_GLUE_383E1A2 //reload sdp
-#define SSE_GLUE_383E1A3 //vbl
-#define SSE_GLUE_383E1A4 //cancel reload
-#define SSE_GLUE_383E1B //assert
-#define SSE_GLUE_383E2 //remove 'scanline'
-//#define SSE_GLUE_383EC // update idx
-#define SSE_GLUE_383ED //can't count on shifter_freq_idx TODO
+#define SSE_GLUE_390
+#define SSE_GLUE_390B
+#define SSE_GLUE_390B1
+#define SSE_GLUE_390B2
+#define SSE_GLUE_390B3
+#define SSE_GLUE_390C
+#define SSE_GLUE_390D
+#define SSE_GLUE_VERT_OVERSCAN_390B
+#define SSE_GLUE_390E // vcount
+#define SSE_GLUE_390E1 //apply
+#if defined(SSE_GLUE_390E1)
+#define SSE_GLUE_390E1A //enable vbi
+#define SSE_GLUE_390E1A2 //reload sdp
+#define SSE_GLUE_390E1A3 //vbl
+#define SSE_GLUE_390E1A4 //cancel reload
+#define SSE_GLUE_390E1B //assert
+#define SSE_GLUE_390E2 //remove 'scanline'
+//#define SSE_GLUE_390EC // update idx
+#define SSE_GLUE_390ED //can't count on shifter_freq_idx TODO
 #endif
-#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383
+#define SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_390
 #endif
 
 #if defined(SSE_GUI)
-#define SSE_GUI_383
+#define SSE_GUI_390
 #define SSE_GUI_DM_REGROUP // it's getting cluttered
 #define SSE_GUI_DM_REGROUP2 // context
 #define SSE_GUI_DM_REGROUP_PASTI // not sure about this one
 #define SSE_GUI_DM_SHOW_EXT 
-#define SSE_GUI_INFOBOX_383
-#define SSE_GUI_INFOBOX_383B
-#define SSE_GUI_JOYSTICK_383
+#define SSE_GUI_INFOBOX_390
+#define SSE_GUI_INFOBOX_390B
+#define SSE_GUI_JOYSTICK_390
 #endif
 
 #if defined(SSE_INT_MFP)
-#define SSE_INT_MFP_INIT_383
-#define SSE_INT_MFP_SPURIOUS_383
-#define SSE_INT_MFP_TIMER_B_383
-#define SSE_INT_MFP_TIMERS_WOBBLE_383
+#define SSE_INT_MFP_INIT_390
+#define SSE_INT_MFP_SPURIOUS_390
+#define SSE_INT_MFP_TIMER_B_390
+#define SSE_INT_MFP_TIMERS_WOBBLE_390
 #endif
 
 #if defined(SSE_MMU)
@@ -1502,44 +1501,45 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
-#define SSE_VAR_OPT_383
-#if defined(SSE_VAR_OPT_383) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
-#define SSE_VC_INTRINSICS_383
-#if defined(SSE_VC_INTRINSICS_383)
-//#define SSE_VC_INTRINSICS_383A // some cpu sr checks //useless like 383E?
-#define SSE_VC_INTRINSICS_383B // popcount 
-#define SSE_VC_INTRINSICS_383C // byteswap
-#define SSE_VC_INTRINSICS_383D // instruction time => much less object code :)
-//#define SSE_VC_INTRINSICS_383E // set/clear some sr bits => more object code? => bad idea?
-//#define SSE_VC_INTRINSICS_383F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
-#define SSE_VC_INTRINSICS_383G // GLU functions
+#define SSE_VAR_OPT_390
+#if defined(SSE_VAR_OPT_390) && defined(VC_BUILD) && _MSC_VER>=1500 //VS2008+
+#define SSE_VC_INTRINSICS_390
+#if defined(SSE_VC_INTRINSICS_390)
+//#define SSE_VC_INTRINSICS_390A // some cpu sr checks //useless like 390E?
+#define SSE_VC_INTRINSICS_390B // popcount 
+#define SSE_VC_INTRINSICS_390C // byteswap
+#define SSE_VC_INTRINSICS_390D // instruction time => much less object code :)
+//#define SSE_VC_INTRINSICS_390E // set/clear some sr bits => more object code? => bad idea?
+//#define SSE_VC_INTRINSICS_390F // avoid shifting mask in MOVEM //i'm sure it's a bad idea too!
+#define SSE_VC_INTRINSICS_390G // GLU functions
 #endif
 #endif
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
 #ifdef SSE_CPU
-#define SSE_VAR_OPT_383A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
-#define SSE_VAR_OPT_383A1 // Video chipset writes
+#define SSE_VAR_OPT_390A // variable to hold ABSOLUTE_CPU_TIME for a while (TODO)
+#define SSE_VAR_OPT_390A1 // Video chipset writes
 #endif
-#define SSE_VAR_OPT_383C // CycleOfLastChangeToShiftMode()
-#define SSE_VAR_OPT_383D // don't need IackCycle
+#define SSE_VAR_OPT_390C // CycleOfLastChangeToShiftMode()
+#define SSE_VAR_OPT_390D // don't need IackCycle
+#define SSE_VAR_OPT_390E // blitter
 #endif
-#if defined(SSE_VAR_OPT_383) && defined(SSE_DRAW_C)
-#define SSE_DRAW_C_383
-#if defined(SSE_DRAW_C_383)
-#define SSE_DRAW_C_383A //loops (better performance in VS2015)
-#define SSE_DRAW_C_383A1 // replace if ladder with shifts (better performance in VS2015)
-#define SSE_DRAW_C_383B //border (better performance in VS2015)
-#define SSE_DRAW_C_383C //
-#if defined(SSE_VC_INTRINSICS_383)
-#define SSE_DRAW_C_383_INTRINSICS // (better performance in VS2015)
-//#define SSE_DRAW_C_383_INTRINSICSB //BT worse performance in VS2015
-//#define SSE_DRAW_C_383_INTRINSICSC //STOSD 2 items: worse performance in VS2015
+#if defined(SSE_VAR_OPT_390) && defined(SSE_DRAW_C)
+#define SSE_DRAW_C_390
+#if defined(SSE_DRAW_C_390)
+#define SSE_DRAW_C_390A //loops (better performance in VS2015)
+#define SSE_DRAW_C_390A1 // replace if ladder with shifts (better performance in VS2015)
+#define SSE_DRAW_C_390B //border (better performance in VS2015)
+#define SSE_DRAW_C_390C //
+#if defined(SSE_VC_INTRINSICS_390)
+#define SSE_DRAW_C_390_INTRINSICS // (better performance in VS2015)
+//#define SSE_DRAW_C_390_INTRINSICSB //BT worse performance in VS2015
+//#define SSE_DRAW_C_390_INTRINSICSC //STOSD 2 items: worse performance in VS2015
 #endif
 #endif
 #endif
-#define SSE_VAR_RESIZE_383
-#define SSE_VAR_RESIZE_383A // acia, more problematic
-#define SSE_VAR_RESIZE_383B
+#define SSE_VAR_RESIZE_390
+#define SSE_VAR_RESIZE_390A // acia, more problematic
+#define SSE_VAR_RESIZE_390B
 // Exception management...
 //#define SSE_M68K_EXCEPTION_TRY_CATCH //works but too slow, especially if _DEBUG
 #ifndef _DEBUG
@@ -1553,67 +1553,67 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 //#undef SSE_CPU_DIVS_OVERFLOW_PC //temp for tests...
 
-#define SSE_SOUND_383//bugfix
+#define SSE_SOUND_390//bugfix
 #undef SSE_SOUND_FILTER_STF3
 
-#define SSE_STF_383
+#define SSE_STF_390
 
 #define SSE_TOS_WARNING1A
 #define SSE_TOS_CHECKSUM
 
 #ifdef SSE_VIDEO
 #define SSE_VID_GAMMA
-#define SSE_VID_D3D_383
-#define SSE_VID_D3D_383B // try to restore surfaces when lost
-#define SSE_VID_SAVE_NEO_383 // bugfix resolution endianess
+#define SSE_VID_D3D_390
+#define SSE_VID_D3D_390B // update BLIT ERROR message
+#define SSE_VID_SAVE_NEO_390 // bugfix resolution endianess
 #endif
 
-#define SSE_YM2149_BUS_JAM_383 // 1 cycle each access
-#define SSE_YM2149_BUS_JAM_383B // not more (word access)
+#define SSE_YM2149_BUS_JAM_390 // 1 cycle each access
+#define SSE_YM2149_BUS_JAM_390B // not more (word access)
 
-//383 bugfix
-#define SSE_ACSI_ICON_383
+//390 bugfix
+#define SSE_ACSI_ICON_390
 #ifdef SSE_CPU
-#define SSE_CPU_E_CLOCK_383
-#define SSE_CPU_EA_383
+#define SSE_CPU_E_CLOCK_390
+#define SSE_CPU_EA_390
 #endif
-#define SSE_GLUE_VERT_OVERSCAN_383
-#define SSE_GUI_383B
-#define SSE_INTERRUPT_383
-#define SSE_IKBD_6301_383
+#define SSE_GLUE_VERT_OVERSCAN_390
+#define SSE_GUI_390B
+#define SSE_INTERRUPT_390
+#define SSE_IKBD_6301_390
 #define SSE_JOYSTICK_JOYPAD
-#define SSE_JOYSTICK_JUMP_BUTTON_383 
-#define SSE_SHIFTER_383 //bugfixes
-#define SSE_SHIFTER_UNSTABLE_383 //bugfixes
+#define SSE_JOYSTICK_JUMP_BUTTON_390 
+#define SSE_SHIFTER_390 //bugfixes
+#define SSE_SHIFTER_UNSTABLE_390 //bugfixes
 #undef SSE_SOUND_DMA_360
 #undef SSE_SOUND_DMA_CLOCK // and molz still ok?
-#define SSE_SOUND_DMA_383A // no "dsp" for volume
-#define SSE_SOUND_DMA_383B // treble (trouble?)
-//#define SSE_SOUND_DMA_383C //  balance (trouble)
-#define SSE_SOUND_DMA_383D
-#define SSE_SOUND_DMA_383E //remove TOS condition
-#define SSE_SOUND_INLINE_383
-#define SSE_STF_MATCH_TOS_383 // to keep autoselect T104 for HD
-#define SSE_STF_MEGASTF_383
+#define SSE_SOUND_DMA_390A // no "dsp" for volume
+#define SSE_SOUND_DMA_390B // treble (trouble?)
+//#define SSE_SOUND_DMA_390C //  balance (trouble)
+#define SSE_SOUND_DMA_390D
+#define SSE_SOUND_DMA_390E //remove TOS condition
+#define SSE_SOUND_INLINE_390
+#define SSE_STF_MATCH_TOS_390 // to keep autoselect T104 for HD
+#define SSE_STF_MEGASTF_390
 #define SSE_TIMING_MULTIPLIER
-#define SSE_TOS_GEMDOS_EM_383 
+#define SSE_TOS_GEMDOS_EM_390 
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS2 //HD/TOS check
 #undef SSE_TOS_GEMDOS_RESTRICT_TOS3 //INI option
 #define SSE_TOS_GEMDOS_RESTRICT_TOS4 // STF T206 OK!
-#define SSE_TOS_SNAPSHOT_AUTOSELECT_383 // correct country
+#define SSE_TOS_SNAPSHOT_AUTOSELECT_390 // correct country
 #define SSE_VAR_CHECK_SNAPSHOT2
-#define SSE_VAR_NO_UPDATE_383
-#define SSE_VAR_NO_WINSTON_383
-#define SSE_VID_D3D_SCREENSHOT_383
-#define SSE_VID_D3D_CRISP_383
-#define SSE_VAR_ARCHIVEACCESS_383 // file handle leak
+#define SSE_VAR_NO_UPDATE_390
+#define SSE_VAR_NO_WINSTON_390
+#define SSE_VID_D3D_SCREENSHOT_390
+#define SSE_VID_D3D_CRISP_390
+#define SSE_VAR_ARCHIVEACCESS_390 // file handle leak
 #if defined(SSE_DISK)
-#define SSE_DISK_READ_TRACK_11_383
+#define SSE_DISK_READ_TRACK_11_390
 #endif
-#define SSE_OSD_DRIVE_LED_383 // not on parse path
-#define SSE_TOS_PRG_AUTORUN_383 // HD not really off after ejection!
+#define SSE_OSD_DRIVE_LED_390 // not on parse path
+#define SSE_TOS_PRG_AUTORUN_390 // HD not really off after ejection!
 
-#endif//383
+#endif//390
 
 
 ///////////
@@ -1637,7 +1637,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_REPORT_SCAN_Y_ON_CLICK
 #define SSE_BOILER_REPORT_SDP_ON_CLICK // yeah!
 #define SSE_BOILER_AUTO_FLUSH_TRACE// v3.7.1
-#define SSE_BOILER_AUTO_FLUSH_TRACE_383
+#define SSE_BOILER_AUTO_FLUSH_TRACE_390
 #define SSE_BOILER_BLIT_IN_HISTORY // v3.7.1
 #define SSE_BOILER_BLIT_WHEN_STOPPED // v3.7.1
 #define SSE_BOILER_BLAZING_STEP_OVER 
@@ -1860,12 +1860,12 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_BOILER
 #define SSE_DEBUG_START_STOP_INFO3
 
-//383
+//390
 #ifdef SSE_BOILER
-#define SSE_BOILER_383
-#define SSE_BOILER_383B
-#define SSE_BOILER_383_LOG2 // new title for more options
-#define SSE_BOILER_383_IRQ_BREAK //request
+#define SSE_BOILER_390
+#define SSE_BOILER_390B
+#define SSE_BOILER_390_LOG2 // new title for more options
+#define SSE_BOILER_390_IRQ_BREAK //request
 #endif
 
 
@@ -1896,7 +1896,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_START_STOP_INFO2
 #define SSE_DEBUG_START_STOP_INFO3
 #define SSE_BOILER_AUTO_FLUSH_TRACE
-#define SSE_BOILER_AUTO_FLUSH_TRACE_383
+#define SSE_BOILER_AUTO_FLUSH_TRACE_390
 #endif
 
 #endif//SSE_DEBUG
@@ -1926,20 +1926,15 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-
-
 #endif//beta
 
 #ifdef SSE_BETA // long term
 //#define SSE_IKBD_6301_NOT_OPTIONAL
-//#define SSE_CPU_MFP_RATIO_STE3 // = STF
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
-
-
 
 #endif//bugfix
 

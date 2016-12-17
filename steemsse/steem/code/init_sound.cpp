@@ -148,7 +148,7 @@ void sound_record_close_file()
 BOOL CALLBACK DSEnumProc(LPGUID Guid,LPCSTR Desc,LPCSTR /* Mod */,LPVOID)
 {
   dbg_log(Str("SOUND: Found device ")+Desc);
-#if defined(SSE_X64_383) //?
+#if defined(SSE_X64_390) //?
   DSDriverModuleList.Add((char*)Desc,(long)Guid);
 #else
   DSDriverModuleList.Add((char*)Desc,(long)Guid);

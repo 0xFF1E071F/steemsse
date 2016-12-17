@@ -182,7 +182,7 @@ int LoadSnapShotChangeCart(Str NewCart)
   return 0;
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
 int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer,int NewROMCountry)
 #else
 int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
@@ -208,7 +208,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
             BYTE Country;
             Tos.GetTosProperties(Path,Ver,Country,Date);
             if(Ver==NewROMVer
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
               && (Country==NewROMCountry)
 #endif
               )
@@ -348,7 +348,7 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_383E1)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_390E1)
         // This is a hack to make the first screen work
         if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
           Glue.Status.hbi_done=Glue.Status.vbi_done=true;
@@ -620,7 +620,7 @@ bool load_cart(char *filename) {
     if(!failed)
     {
       fread(&FirstBytes,4,1,f);
-#if defined(SSE_CARTRIDGE_383)// cartidge header is TOS' business
+#if defined(SSE_CARTRIDGE_390)// cartidge header is TOS' business
 #if defined(SSE_CARTRIDGE_BAT)
       if(FirstBytes==0x3631564D) // "MV16"
         SSEConfig.mv16=true; 
@@ -668,10 +668,10 @@ bool load_cart(char *filename) {
           SET_PC(PC32);        //TODO ?
         }
         //TRACE2("Cartridge %X %X\n",FirstBytes,checksum);
-#if defined(SSE_CARTRIDGE_DIAGNOSTIC) && !defined(SSE_CARTRIDGE_383) 
+#if defined(SSE_CARTRIDGE_DIAGNOSTIC) && !defined(SSE_CARTRIDGE_390) 
 /*  If these four bytes are found, the computer will transfer control
     to memory location $FA0004.
-    383: TOS will do it itself
+    390: TOS will do it itself
 */
         if(FirstBytes==0x5F2352FA)
         {

@@ -212,7 +212,7 @@ void TShifter::DrawScanlineToEnd()  {
 
 
         ASSERT(screen_res==2);
-#if defined(SSE_SHIFTER_383)
+#if defined(SSE_SHIFTER_390)
         if(nsdp<=mem_len)
 #elif defined(SSE_SHIFTER_382)
         if(nsdp<mem_len) // potential crash
@@ -569,7 +569,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           }
 #endif
 
-#if defined(SSE_SHIFTER_383)
+#if defined(SSE_SHIFTER_390)
           if(nsdp<=mem_len) // Antiques
 #elif defined(SSE_SHIFTER_382)
           //ASSERT(nsdp<=mem_len);
@@ -692,7 +692,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
     while(src<(DWORD*)draw_dest_ad)
       *(dest++)=*(src++); 
 //    ASSERT(draw_med_low_double_height);//OK, never asserted
-    if(draw_med_low_double_height) //383 on my system... you never know
+    if(draw_med_low_double_height) //390 on my system... you never know
     {
       src=(DWORD*)draw_temp_line_buf;                        
       dest=(DWORD*)(draw_store_dest_ad+draw_line_length);     

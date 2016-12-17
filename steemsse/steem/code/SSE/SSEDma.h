@@ -89,7 +89,7 @@ TODO: maybe use the feature and remove #define to make code more readable?
     always up-to-date. This function copies the values from CAPS or
     Pasti so that they are. Useful for debug, OSD.
 */
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
   void UpdateRegs();
 #else
   void UpdateRegs(bool trace_them=false);

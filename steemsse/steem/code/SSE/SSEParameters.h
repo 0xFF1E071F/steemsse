@@ -40,7 +40,7 @@ The ACIA master clock is 500kHz.
 
 */
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
 
 #define HD6301_TO_ACIA_IN_CYCLES (acia[0].TransmissionTime())
 #define ACIA_TO_HD6301_IN_CYCLES (acia[0].TransmissionTime())
@@ -65,7 +65,7 @@ The ACIA master clock is 500kHz.
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
 #define ACIA_MIDI_OUT_CYCLES (acia[1].TransmissionTime())
 #define ACIA_MIDI_IN_CYCLES (acia[1].TransmissionTime())
 #elif defined(SSE_ACIA_MIDI_SR02_CYCLES)
@@ -92,8 +92,9 @@ The ACIA master clock is 500kHz.
     It could be deduced from the example program and the mention restarting 
     the blitter takes "7 cycles". The timing table is also in NOP.
 */
-//#undef SSE_BLT_BLIT_MODE_CYCLES
-#if defined(SSE_BLT_381)
+#if defined(SSE_BLT_390)
+#define BLITTER_BLIT_MODE_CYCLES ((64*4)) // is it 63 or 64??
+#elif defined(SSE_BLT_381)
 #define BLITTER_BLIT_MODE_CYCLES ((63*4)) // hack of 380 removed in 381
 #elif defined(SSE_BLT_380)
 #define BLITTER_BLIT_MODE_CYCLES (OPTION_HACKS?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
@@ -112,7 +113,7 @@ The ACIA master clock is 500kHz.
 //////////
 
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_CPU_MFP_RATIO) && defined(SSE_DISK_CAPS_383)
+#if defined(SSE_CPU_MFP_RATIO) && defined(SSE_DISK_CAPS_390)
 #define SSE_DISK_CAPS_FREQU CpuNormalHz
 #else
 #define SSE_DISK_CAPS_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
@@ -131,26 +132,8 @@ The ACIA master clock is 500kHz.
 #endif
 
 #if defined(SSE_CPU_MFP_RATIO) 
-/*  There was a hack in Steem up to v3.3, where the CPU/MFP frequency ratio
-    was set different from what was measured on an STE by Steem authors, that
-    allowed Lethal Xcess to run. This hack was hiding a blitter timing problem,
-    however (the 64 NOP issue), which explains why the game wasn't sensitive
-    to the ratio in STF mode. Now that the blitter bug has been corrected,
-    we use a more precise value.
-    
-    For STF we use the precise value of the MFP quarz and the real value of
-    a typical "PAL" STF, as read on atari-forum (ijor?)
-    The STE value is a bit different to help some cases. TODO
-
-    MFP (no variation) ~ 2457600 hz
-    CPU STF ~ 8021247
-    CPU STE ~ 8021030, being pragmatic (programs must run - or not - like on
-    my STE)
-  
-*/
 /*
 The master clock crystal and derived CPU clock table is:
-Code: Select all
 PAL (all variants)       32.084988   8.021247
 NTSC (pre-STE)           32.0424     8.0106
 NTSC (STE)               32.215905   8.053976
@@ -158,20 +141,20 @@ Peritel (STE) (as PAL)   32.084988   8.021247
 Some STFs                32.02480    8.0071
 */
 
-#if defined(SSE_CPU_MFP_RATIO_STF2)
+
 #define  CPU_STF_PAL 8021247
-#else
-#define  CPU_STF_PAL (8021248) // ( 2^8 * 31333 )
-#endif
 #define  CPU_STF_ALT (8007100) //ljbk's? 
-#if defined(SSE_CPU_MFP_RATIO_STE3)
-#define  CPU_STE_PAL (CPU_STF_PAL) // should be
-#elif defined(SSE_CPU_MFP_RATIO_STE2)
-#define  CPU_STE_PAL 8021030//8020992//(8021030)//8020736
+/*  The CPU clock should be the same for STF and STE.
+    We use a slightly different value (217 cycles only) to help some cases:
+    DSOTS, Japtro
+    At least, it's protected by 'Hacks' in v3.9.0
+    TODO
+*/
+#if defined(SSE_CPU_MFP_RATIO_STE)
+#define  CPU_STE_PAL (OPTION_HACKS?8021030:CPU_STF_PAL)
 #else
-#define  CPU_STE_PAL (CPU_STF_PAL+64) //64 for DMA sound!
+#define  CPU_STE_PAL (CPU_STF_PAL) 
 #endif
-#define  MFP_CLK_TH_EXACT 2457600 // ( 2^15 * 3 * 5^2 )
 #endif
 
 
@@ -233,7 +216,7 @@ Some STFs                32.02480    8.0071
     8mhz, which is the case on the ST.
 */
 
-#if defined(SSE_FDC_383_HBL_DRIFT) 
+#if defined(SSE_FDC_390_HBL_DRIFT) 
 #define DRIVE_BYTES_ROTATION (6256) // finally
 #else
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
@@ -313,22 +296,6 @@ enum {
 
 #define EXT_TXT ".txt" //save bytes?
 #define CONFIG_FILE_EXT "ini" // ini, cfg?
-
-
-
-
-///////////
-// Hacks //
-///////////
-
-#if defined(SSE_HACKS)
-enum { //none are used (v383)
-SIGNAL_TOS_PATCH106=1, // checking all ST files we open
-SIGNAL_SHIFTER_CONFUSED_1,// temp hacks for 3.4
-SIGNAL_SHIFTER_CONFUSED_2,// not looking for elegance!
-};
-#endif
-
 
 
 //////////
@@ -420,6 +387,8 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SSE_INT_MFP)
 /*  
+    MFP clock (no variation) ~ 2457600 hz
+
     MFP_IACK_LATENCY: it may seem high but it's not #IACK cycles, it's when 
     IACK ends.
     Final Conflict, Super Hang-On, Anomaly menu, Froggies/OVR
@@ -441,10 +410,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
     MFP_WRITE_LATENCY + MFP_TIMER_DATA_REGISTER_ADVANCE = MFP_TIMER_SET_DELAY
 */
 
+#define MFP_CLOCK 2457600
 #define MFP_IACK_LATENCY (28) 
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
-#define MFP_TIMER_SET_DELAY (8)
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+#define MFP_TIMER_SET_DELAY (8) // see DSOTS
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
 #else
 #define MFP_TIMERS_WOBBLE (4) // &
@@ -504,29 +474,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HBL_PER_SECOND HBLS_PER_SECOND_AVE//(HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
 #endif
 
-
 // DMA sound has its own clock, it's not CPU's
-// We adjust this so that we have 50065 in ljbk's test
-//TODO should be 8010613
-#if defined(SSE_CPU_MFP_RATIO_STE2)
 
-#if CPU_STE_PAL==(8020736) // too slow for Overscan Demos STE...
-#define STE_DMA_CLOCK 8021000 // 50065; MOLZ OK
-#elif CPU_STE_PAL==(8020736+512+512)
-#define STE_DMA_CLOCK 8021350
-#elif CPU_STE_PAL==(8021030)
-#define STE_DMA_CLOCK 8021500 //50065; MOLZ OK // this is it in 3.8.2
-//#define STE_DMA_CLOCK 8012800
-#else
-#define STE_DMA_CLOCK 8012800//8021250//8021350 // 50065; MOLZ OK v3.8.0 : 8021250
-//#define STE_DMA_CLOCK 8021118 //(8021502-256-128) // before v3.8.0
-#endif
-#else
-#define STE_DMA_CLOCK 8021502 //OK with STE clock=STF?
-#endif
+#define STE_DMA_CLOCK 8010613
 
-//#define STE_DMA_CLOCK 8010613//test
-//#define CPU_STE_PAL CPU_STF_PAL//test
 
 /////////
 // TOS //
@@ -537,7 +488,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_STF_MATCH_TOS)
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) || defined(SSE_STF_MATCH_TOS_383)
+#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) || defined(SSE_STF_MATCH_TOS_390)
 #define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
 #else
 #define DEFAULT_TOS_STF 0x102
@@ -550,7 +501,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // VERSION //
 /////////////
 
-#define SSE_VERSION 383 
+#define SSE_VERSION 390
 
 
 ///////////

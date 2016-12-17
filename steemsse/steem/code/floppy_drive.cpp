@@ -55,7 +55,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   SF314[drive].State.ghost=false;
 #endif
 
-#ifndef SSE_VAR_RESET_SAME_DISK //383
+#ifndef SSE_VAR_RESET_SAME_DISK //390
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) 
   {//SS
     TRACE_LOG("Same file %s, exit SetDisk\n",File.Text);
@@ -69,8 +69,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     return FIMAGE_FILEDOESNTEXIST;
 
   EasyStr OriginalFile=File,NewZipTemp;
-//#undef SSE_DISK_CAPS_383C
-#if defined(SSE_DISK_CAPS_383C) // we want ReadOnly to be updated before
+//#undef SSE_DISK_CAPS_390C
+#if defined(SSE_DISK_CAPS_390C) // we want ReadOnly to be updated before
 #define FileIsReadOnly ReadOnly
   FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
 #else
@@ -522,7 +522,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
     SF314[drive].ImageType.Manager=MNGR_STEEM;
-#if defined(SSE_FDC_383A)
+#if defined(SSE_FDC_390A)
     Disk[drive].TrackBytes=TDisk::TRACK_BYTES; 
 #endif
 #ifdef SSE_OSD_DRIVE_INFO_EXT //gotta be a smarter way...
@@ -861,7 +861,7 @@ Header:
     ValidBPB=f_ValidBPB;
     DiskFileLen=f_DiskFileLen;
   }
-#if defined(SSE_DISK_CAPS_383C)
+#if defined(SSE_DISK_CAPS_390C)
 #undef FileIsReadOnly
 #else
   ReadOnly=FileIsReadOnly;
@@ -939,7 +939,7 @@ bool TFloppyImage::ReinsertDisk()
     || CTRDisk
 #endif
 #endif
-#if defined(SSE_DISK_STW) //383
+#if defined(SSE_DISK_STW) //390
     || STWDisk //
 #endif
 #if defined(SSE_DISK_SCP)
@@ -1615,7 +1615,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
   ImageFile="";MSATempFile="";ZipTempFile="";FormatTempFile="";
   DiskName="";
-#if !defined(SSE_DISK_CAPS_383C)
+#if !defined(SSE_DISK_CAPS_390C)
   ReadOnly=true; // there's nothing to read
 #endif
   BytesPerSector=0;Sides=0;SectorsPerTrack=0;TracksPerSide=0;

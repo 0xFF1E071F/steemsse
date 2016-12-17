@@ -439,7 +439,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #include "stemwin.cpp"
 //#define LOGSECTION LOGSECTION_INIT
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
 #define LOGSECTION LOGSECTION_OPTIONS
@@ -554,7 +554,7 @@ int ChangeBorderSize(int size_in) {
     Disp.ScreenChange();
 //#endif
 
-#if defined(SSE_GUI_383B)
+#if defined(SSE_GUI_390B)
     draw_set_jumps_and_source(); // avoid crash when running?
 #endif
 
@@ -936,7 +936,7 @@ void GUIColdResetChangeSettings()
   }
   if (OptionBox.NewMonitorSel>=0){
 #ifndef NO_CRAZY_MONITOR
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     BYTE old_em=extended_monitor; //would need type_of() 
 #else
     bool old_em=extended_monitor;
@@ -969,7 +969,7 @@ void GUIColdResetChangeSettings()
 #endif
     }
 #ifndef NO_CRAZY_MONITOR
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     if (extended_monitor!=old_em || extended_monitor){
 #else
     if (bool(extended_monitor)!=old_em || extended_monitor){
@@ -1054,7 +1054,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
   bool UseDefault=0;
   HDC dc=GetDC(NULL);
   if (GetDeviceCaps(dc,BITSPIXEL)<=8){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     UseDefault=(pCSF->GetInt("Icons","UseDefaultIn256",0)!=0);
 #else
     UseDefault=bool(pCSF->GetInt("Icons","UseDefaultIn256",0));
@@ -1583,7 +1583,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
 
     char *dot=strrchr(GetFileNameFromPath(Path),'.');
     if (dot){
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
       if (ExtensionIsDisk(dot)){
 #else
       if (ExtensionIsDisk(dot,false)){
@@ -1805,7 +1805,7 @@ void InitTranslations()
   strupr(TranslateUpperBuf);
 }
 //---------------------------------------------------------------------------
-#pragma warning (disable: 4701) //EStart==0 if break;//383
+#pragma warning (disable: 4701) //EStart==0 if break;//390
 EasyStr Translation(char *s)
 {
 #ifdef TRANSLATION_TEST
@@ -1898,7 +1898,7 @@ EasyStr Translation(char *s)
 }
 
 //---------------------------------------------------------------------------
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 #define FileTypes ansi_string //no problem as it's used for modal fileselect
 #else
 char FileTypes[512];
@@ -1907,7 +1907,7 @@ char FileTypes[512];
 char *FSTypes(int Type,...)
 {
   char *tp=FileTypes;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
   ZeroMemory(FileTypes,256);
 #else
   ZeroMemory(FileTypes,512);
@@ -1959,7 +1959,7 @@ char *FSTypes(int Type,...)
   }
   ASSERT(strlen(FileTypes)<256); //512 was overkill (maybe...)
   return FileTypes;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 #undef FileTypes
 #endif
 }
@@ -2068,7 +2068,7 @@ void ShowAllDialogs(bool Show)
   if (FSQuitBut) ShowWindow(FSQuitBut,int(Show ? SW_SHOWNA:SW_HIDE));
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 void HandleKeyPress(UINT VKCode,DWORD Up,int Extended)
 #else
 void HandleKeyPress(UINT VKCode,bool Up,int Extended)
@@ -2220,7 +2220,7 @@ LRESULT CALLBACK NTKeyboardProc(INT nCode,WPARAM wParam,LPARAM lParam)
   KBDLLHOOKSTRUCT *pkbhs=LPKBDLLHOOKSTRUCT(lParam);
 
   if (nCode==HC_ACTION){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     bool ControlDown=(GetAsyncKeyState(VK_CONTROL) < 0),AltDown=(pkbhs->flags & LLKHF_ALTDOWN)!=0;
 #else
     bool ControlDown=(GetAsyncKeyState(VK_CONTROL) < 0),AltDown=(pkbhs->flags & LLKHF_ALTDOWN);
@@ -2396,7 +2396,7 @@ int Alert(char *Mess,char *Title,UINT Flags)
 void ShiftSwitchChangeModifiers(bool ShiftShouldBePressed,bool AltShouldBePressed,int ModifierRestoreArray[3])
 {
   // Get current states
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   BYTE STLShiftDown=(ST_Key_Down[key_table[VK_LSHIFT]]);
   BYTE STRShiftDown=(ST_Key_Down[key_table[VK_RSHIFT]]);
 #else
@@ -2440,7 +2440,7 @@ void ShiftSwitchRestoreModifiers(int ModifierRestoreArray[3])
   if (ModifierRestoreArray[2]==2) keyboard_buffer_write_n_record(key_table[VK_MENU] | MSB_B);
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 void HandleShiftSwitching(UINT VKCode,DWORD Up,BYTE &STCode,int ModifierRestoreArray[3])
 #else
 void HandleShiftSwitching(UINT VKCode,bool Up,BYTE &STCode,int ModifierRestoreArray[3])
@@ -2471,7 +2471,7 @@ void HandleShiftSwitching(UINT VKCode,bool Up,BYTE &STCode,int ModifierRestoreAr
   STCode=LOBYTE(KeyEntry);
   KeyDownModifierState[BYTE(VKCode)]=BYTE(Shift | Alt);
   if (STCode && Up==0){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     bool ShiftShouldBePressed=(HIBYTE(KeyEntry) & BIT_0)!=0;
     bool AltShouldBePressed=(HIBYTE(KeyEntry) & BIT_1)!=0;
 #else
@@ -2561,7 +2561,7 @@ void PasteVBL()
               int ModifierRestoreArray[3]={0,0,0};
               BYTE STCode=LOBYTE(LOWORD(Chars[n]));
               BYTE Modifiers=HIBYTE(LOWORD(Chars[n]));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
               ShiftSwitchChangeModifiers((Modifiers & BIT_0)!=0,
                 (Modifiers & BIT_1)!=0,ModifierRestoreArray);
 #else
