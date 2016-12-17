@@ -53,8 +53,13 @@ EXT const char *stem_version_text INIT("3.2");
 #define STEEM_WEB "http:/""/steem.atari.st/"
 #endif
 
-#define MSACONV_WEB "http:/""/msaconverter.free.fr/"
+#define MSACONV_WEB "http:/""/msaconverter.free.fr/" //390 still valid
+
+#if defined(SSE_BUILD) //fix 390
+#define DIDATABASE_WEB STEEM_WEB "Other_downloads.htm#ST_disk_image_database"
+#else
 #define DIDATABASE_WEB STEEM_WEB "database.htm"
+#endif
 
 #define MEM_EXTRA_BYTES 320
 
@@ -378,7 +383,7 @@ EXT char m68k_src_b;
 #define PARAM_M (ir&0x7)
 
 #define MSB_B BYTE(0x80)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 #define MSB_W (WORD)0x8000
 #define MSB_L (DWORD)0x80000000
 #else

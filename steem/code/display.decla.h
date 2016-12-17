@@ -144,7 +144,7 @@ public:
 #if defined(SSE_VID_D3D_382)
   UINT D3DFsW,D3DFsH;
   void D3DUpdateWH(UINT mode);
-#if !defined(SSE_VID_D3D_383)
+#if !defined(SSE_VID_D3D_390)
   void Cls();
 #endif
 #endif
@@ -224,7 +224,7 @@ public:
 #ifdef SHOW_WAVEFORM
   void DrawWaveform();
 #endif
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
   void RunStart(bool=0),RunEnd();
 #else
   void RunStart(bool=0),RunEnd(bool=0);
@@ -233,7 +233,7 @@ public:
   void ChangeToFullScreen(),ChangeToWindowedMode(bool=0);
   void DrawFullScreenLetterbox(),FlipToDialogsScreen();
   bool CanGoToFullScreen();
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
   HRESULT SetDisplayMode();
 #else
   HRESULT SetDisplayMode(int,int,int,int=0,int* = NULL);
@@ -244,7 +244,7 @@ public:
   bool BorderPossible();
   int Method,UseMethods[5],nUseMethod;
   bool RunOnChangeToWindow;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
   WORD SurfaceWidth,SurfaceHeight;
 #else
   int SurfaceWidth,SurfaceHeight;

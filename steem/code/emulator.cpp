@@ -23,7 +23,7 @@ EXT BYTE *Mem INIT(NULL),*Rom INIT(NULL);
 EXT WORD tos_version;
 
 EXT int interrupt_depth INIT(0);
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT WORD em_width INIT(480);
 EXT WORD em_height INIT(480);
 EXT BYTE em_planes INIT(4);
@@ -53,7 +53,7 @@ EXT int shifter_pixel;
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 extern "C" 
 #endif
-#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_VAR_RESIZE_390B)
 EXT BYTE shifter_freq INIT(60);
 EXT BYTE shifter_freq_idx INIT(1);
 #else
@@ -203,7 +203,7 @@ void init_timings()
   Glue.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
   ASSERT(Glue.CurrentScanline.Cycles>=224);
 #endif
-#if !defined(SSE_VAR_OPT_383)
+#if !defined(SSE_VAR_OPT_390)
   screen_event_vector=screen_event_pointer->event;
 #endif
   time_of_next_event=cpu_time_of_start_of_event_plan+(screen_event_pointer->time);
@@ -537,7 +537,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
 
 #if defined(SSE_ACIA_REGISTERS)
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
   if(OPTION_C1)
   {
     if((acia[nACIA].IrqForTx()) && !acia[nACIA].ByteWaitingTx)
@@ -572,7 +572,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
 
 void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
 // one function, used by io_read_b() and io_write_b() 
@@ -1005,7 +1005,7 @@ void call_a000()
 
 
 //  dbg_log(EasyStr("interrupt - increasing interrupt depth from ")+interrupt_depth+" to "+(interrupt_depth+1));
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITRESET(sr,SR_TRACE_BIT);
 #else
   SR_CLEAR(SR_TRACE);

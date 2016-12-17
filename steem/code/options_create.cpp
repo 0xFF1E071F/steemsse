@@ -55,7 +55,7 @@ void TOptionBox::CreateMachinePage()
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[0]));
   SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[1]));
 #if defined(SSE_STF_MEGASTF)
@@ -70,7 +70,7 @@ void TOptionBox::CreateMachinePage()
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
   Wid+=73;//by hand...
-#if defined(SSE_GUI_383)
+#if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
     T("The STE was more elaborated than the older STF but some programs are \
 compatible only with the STF"));
@@ -87,7 +87,7 @@ compatible only with the STF"));
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("Ignore"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL3 WU2 WS2"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL4 WU2 WS4"));
@@ -101,7 +101,7 @@ compatible only with the STF"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL6 WU1 WS1"));
 #endif//x64
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
-#if defined(SSE_GUI_383)
+#if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
     T("Check Hints for cases"));
 #else
@@ -301,7 +301,7 @@ void TOptionBox::MachineUpdateIfVisible()
 
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
-#if defined(SSE_GUI_OPTIONS_STF)//383
+#if defined(SSE_GUI_OPTIONS_STF)//390
 #if defined(SSE_STF)
   HWND Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
@@ -667,7 +667,7 @@ void TOptionBox::CreatePortsPage()
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                       15+Wid,50,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+11),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None"));
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("None"));
@@ -676,7 +676,7 @@ void TOptionBox::CreatePortsPage()
     MIDIOUTCAPS moc;
     for (int n=-1;n<c;n++){
       midiOutGetDevCaps(n,&moc,sizeof(moc));
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       SendMessage(Win,CB_ADDSTRING,0,(LPARAM)moc.szPname);
 #else
       SendMessage(Win,CB_ADDSTRING,0,(long)moc.szPname);
@@ -690,7 +690,7 @@ void TOptionBox::CreatePortsPage()
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                             15+Wid,80,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+13),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None"));
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("None"));
@@ -699,7 +699,7 @@ void TOptionBox::CreatePortsPage()
     MIDIINCAPS mic;
     for (int n=0;n<c;n++){
       midiInGetDevCaps(n,&mic,sizeof(mic));
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       SendMessage(Win,CB_ADDSTRING,0,(LPARAM)mic.szPname);
 #else
       SendMessage(Win,CB_ADDSTRING,0,(long)mic.szPname);
@@ -1088,7 +1088,7 @@ void TOptionBox::CreateDisplayPage()
   x+=w+5;
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                     x,y,page_w-(w+5),200,Handle,(HMENU)201,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw Every Frame"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw Every Second Frame"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw Every Third Frame"));
@@ -1107,7 +1107,7 @@ void TOptionBox::CreateDisplayPage()
   Wid=get_text_width(T("Borders"));
   CreateWindow("Static",T("Borders"),WS_CHILD,
                           page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   BorderOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+5+Wid,y,Wid+15,200,Handle,(HMENU)207,HInstance,NULL);
@@ -1151,7 +1151,7 @@ void TOptionBox::CreateDisplayPage()
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 #endif
   mask=WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST;
-#if defined(SSE_GUI_383B_)
+#if defined(SSE_GUI_390B_)
   if(runstate!=RUNSTATE_STOPPED)
     mask|=WS_DISABLED;
 #endif
@@ -1179,7 +1179,7 @@ void TOptionBox::CreateDisplayPage()
     page_l+5+Wid,y,80,200,Handle,(HMENU)1026,HInstance,NULL);
 #endif
 
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
 
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(LPARAM)CStrT("384 x 270"));
 #if !defined(SSE_VID_D3D_ONLY)
@@ -1684,7 +1684,7 @@ void TOptionBox::CreateFullscreenPage()
     Disp.pD3D->EnumAdapterModes(Adapter,DisplayFormat,i,&Mode);
     char tmp[20];
     sprintf(tmp,"%dx%d %dhz",Mode.Width,Mode.Height,Mode.RefreshRate);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)tmp);
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)tmp);
@@ -1775,7 +1775,7 @@ void TOptionBox::CreateFullscreenPage()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+5+w,y,page_w-(5+w),200,Handle,(HMENU)204,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Screen Flip"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Straight Blit"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Stretch Blit"));
@@ -1893,7 +1893,7 @@ void TOptionBox::CreateFullscreenPage()
   Win=CreateWindow("Combobox","",
     WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+15+w,y,page_w-10-(105+w),200,Handle,(HMENU)220,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Default"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Default"));
@@ -1914,7 +1914,7 @@ void TOptionBox::CreateFullscreenPage()
   Win=CreateWindow("Combobox","",
     WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+15+w,y,page_w-10-(105+w),200,Handle,(HMENU)222,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Default"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Default"));
@@ -1934,7 +1934,7 @@ void TOptionBox::CreateFullscreenPage()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+15+w,y,page_w-10-(105+w),200,Handle,(HMENU)224,HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Default"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Default"));
@@ -2075,7 +2075,7 @@ void TOptionBox::CreateMIDIPage()
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                           x,y,40,200,Handle,HMENU(6021),HInstance,NULL);
   for (int n=2;n<MAX_SYSEX_BUFS;n++){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)Str(n).Text);
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)Str(n).Text);
@@ -2091,7 +2091,7 @@ void TOptionBox::CreateMIDIPage()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                           x,y,page_w-10-(x-page_l),200,Handle,HMENU(6023),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"16Kb");
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"32Kb");
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"64Kb");
@@ -2123,7 +2123,7 @@ void TOptionBox::CreateMIDIPage()
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                           x,y,40,200,Handle,HMENU(6031),HInstance,NULL);
   for (int n=2;n<MAX_SYSEX_BUFS;n++){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)Str(n).Text);
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)Str(n).Text);
@@ -2140,7 +2140,7 @@ void TOptionBox::CreateMIDIPage()
 
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                           x,y,page_w-10-(x-page_l),200,Handle,HMENU(6033),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"16Kb");
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"32Kb");
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"64Kb");
@@ -2523,7 +2523,7 @@ void TOptionBox::CreateSoundPage()
 void TOptionBox::CreateStartupPage()
 {
   ConfigStoreFile CSF(INIFile);
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
   bool NoDD=(CSF.GetInt("Options","NoDirectDraw",0)!=0);
 #else
   bool NoDD=(bool)CSF.GetInt("Options","NoDirectDraw",0);
@@ -3105,7 +3105,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_IKBD_6301) 
-#if defined(SSE_ACIA_383) 
+#if defined(SSE_ACIA_390) 
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
 #else
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/MIDI/E-Clock")).Width;
@@ -3124,7 +3124,7 @@ Windows 2000	5.0
   }
 #endif
 
-#if defined(SSE_ACIA_383) // it's more ACIA than MIDI
+#if defined(SSE_ACIA_390) // it's more ACIA than MIDI
   Win=CreateWindow("Button",T("C1: 6850/6301/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
 #else
@@ -3137,7 +3137,7 @@ Windows 2000	5.0
   else
     SendMessage(Win,BM_SETCHECK,OPTION_C1,0);
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
   ToolAddWindow(ToolTip,Win,
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock and ACIA timings.\
@@ -3271,7 +3271,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   Win=GetDlgItem(Handle,7301); //kkb click
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
-#if !defined(SSE_GUI_OPTIONS_STF)//383
+#if !defined(SSE_GUI_OPTIONS_STF)//390
 #if defined(SSE_STF)
   Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 

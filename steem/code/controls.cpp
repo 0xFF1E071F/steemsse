@@ -111,7 +111,7 @@ LRESULT __stdcall PicButton_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
       int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
       char *Text=new char[Len+1];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
 #else
       DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
@@ -403,7 +403,7 @@ LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 
       Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
       Text=new char[Len+1];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
 #else
       DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
@@ -880,7 +880,7 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (LOWORD(lPar)<rc.right && HIWORD(lPar)<rc.bottom){
             int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
             char *Text=new char[Len+1];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
             DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
 #else
             DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
@@ -950,7 +950,7 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
     int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
     char *Text=new char[Len+1];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
 #else
     DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
@@ -1014,7 +1014,7 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
     int Len=DefWindowProc(Win,WM_GETTEXTLENGTH,0,0)+1;
     char *Text=new char[Len+1];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     DefWindowProc(Win,WM_GETTEXT,Len,(LPARAM)Text);
 #else
     DefWindowProc(Win,WM_GETTEXT,Len,(long)Text);
@@ -1040,7 +1040,7 @@ LRESULT __stdcall HyperLinkWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
       TextOut(DC,0,0,Text,strlen(Text));
     }else{
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       GrayString(DC,NULL,NULL,(LPARAM)Text,strlen(Text),0,0,rc.right,rc.bottom);
 #else
       GrayString(DC,NULL,NULL,(long)Text,strlen(Text),0,0,rc.right,rc.bottom);

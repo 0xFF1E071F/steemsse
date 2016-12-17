@@ -34,7 +34,7 @@ char key_location[]="Software\\Classes\\"; // where we put the extensions
 //#include <strsafe.h>
 
 HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   strncpy(pszDest,pszSrc,cchDest);
 #else
   strcpy(pszDest,pszSrc);
@@ -312,15 +312,15 @@ bool IsSteemAssociated(EasyStr Exts)
       }
     }
   }
-#endif //else of defined(SSE_GUI_ASSOCIATE_CU)//383 warning
+#endif //else of defined(SSE_GUI_ASSOCIATE_CU)//390 warning
 #elif defined(UNIX)
 #endif
-#if !(defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU))
+#if !(defined(SSE_VS2008_WARNING_390) && defined(SSE_GUI_ASSOCIATE_CU))
   return 0;
 #endif
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_VS2008_WARNING_390) && defined(SSE_GUI_ASSOCIATE_CU)
 void AssociateSteem(EasyStr Exts,EasyStr FileClass)
 #else
 void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayName,int IconNum,bool IconOnly)
@@ -333,7 +333,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
   LONG ErrorCode;
   HKEY Key;
   EasyStr KeyName,OriginalKeyName;
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
   unsigned long Size=400;
 #endif
   // check before Exts will change

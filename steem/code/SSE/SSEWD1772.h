@@ -242,14 +242,14 @@ struct TWD1772 {
 /*  This is useful for OSD: if we're writing then we need to display a red
     light (green when reading). This is used by pasti & IPF.
 */
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   bool WritingToDisk();
 #else
   int WritingToDisk();
 #endif
 #endif
 #if defined(SSE_WD1772_RESET)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   void Reset();
 #else
   void Reset(bool Cold);
@@ -271,7 +271,7 @@ struct TWD1772 {
   void WriteCR(BYTE io_src_b); //horrible TODO
   void OnUpdate();
   // called by drive or by image
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
   void OnIndexPulse(bool image_triggered); 
 #else
   void OnIndexPulse(int id,bool image_triggered); 

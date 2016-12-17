@@ -134,7 +134,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( !drive || drive==1 );
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
-#if defined(SSE_DISK_CAPS_383C) //didn't work with archives
+#if defined(SSE_DISK_CAPS_390C) //didn't work with archives
   bool FileIsReadOnly=FloppyDrive[drive].ReadOnly;
 #else
   bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
@@ -171,7 +171,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
-#if defined(SSE_DISK_CAPS_383C)
+#if defined(SSE_DISK_CAPS_390C)
   else
     SF314[drive].diskattr|=CAPSDRIVE_DA_WP; // Jupiter's Master Drive
 #endif
@@ -197,7 +197,7 @@ void TCaps::RemoveDisk(int drive) {
 }
 
 
-#if defined(SSE_DISK_CAPS_383)
+#if defined(SSE_DISK_CAPS_390)
 
 void TCaps::WritePsgA(int data) {
   // drive selection 
@@ -315,7 +315,7 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
-#if defined(SSE_DISK_CAPS_383B)
+#if defined(SSE_DISK_CAPS_390B)
   // function called to clear IRQ, can mess with sound (Jupiter's Masterdrive)
   if(lineout) {
 #endif
@@ -336,7 +336,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
 #endif
     }
 #endif
-#if defined(SSE_DISK_CAPS_383B)
+#if defined(SSE_DISK_CAPS_390B)
   }
 #endif
 

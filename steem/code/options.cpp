@@ -95,7 +95,7 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   if (min(border,2)==min(newval,2)){
 #endif
     proceed=false;
-#if defined(SSE_VS2008_WARNING_383) // :)
+#if defined(SSE_VS2008_WARNING_390) // :)
   }else if ((border^(newval!=0)) & 1){
 #elif defined(SSE_VS2008_WARNING_382)
   }else if ((border^(bool)newval) & 1){
@@ -111,7 +111,7 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
     }
 #endif
   }
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
   if (proceed) border_last_chosen=(newborder!=0);
 #else
   if (proceed) border_last_chosen=newborder;
@@ -592,7 +592,7 @@ void TOptionBox::LoadProfile(char *File)
 
   BYTE ProfileMemConf[2]={(BYTE)CSF.GetInt("Machine","Mem_Bank_1",CurMemConf[0]),
                           (BYTE)CSF.GetInt("Machine","Mem_Bank_2",CurMemConf[1])};
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
   int ProfileMonSel=(CSF.GetInt("Machine","Colour_Monitor",mfp_gpip_no_interrupt & MFP_GPIP_COLOUR))!=0;
 #else
   int ProfileMonSel=!bool(CSF.GetInt("Machine","Colour_Monitor",mfp_gpip_no_interrupt & MFP_GPIP_COLOUR));
@@ -702,7 +702,7 @@ void TOptionBox::ChooseScreenShotFolder(HWND Win)
   EasyStr NewFol=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),ScreenShotFol);
   if (NewFol.NotEmpty()){
     NO_SLASH(NewFol);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     if (Handle) if (GetDlgItem(Handle,1021)) SendDlgItemMessage(Handle,1021,WM_SETTEXT,0,(LPARAM)(NewFol.Text));
 #else
     if (Handle) if (GetDlgItem(Handle,1021)) SendDlgItemMessage(Handle,1021,WM_SETTEXT,0,(long)(NewFol.Text));
@@ -935,7 +935,7 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
   if (Handle!=NULL){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
         return IsDialogMessage(Handle,mess)&1;
 #else
         return IsDialogMessage(Handle,mess);
@@ -948,13 +948,13 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
   }
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
 void TOptionBox::SetBorder(bool newborder)
 #else
 void TOptionBox::SetBorder(int newborder)
 #endif
 {
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
   bool oldborder=border;
 #else
   int oldborder=border;
@@ -1132,7 +1132,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 207:
           if (HIWORD(wPar)==CBN_SELENDOK){
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
             This->SetBorder((SendMessage(HWND(lPar),CB_GETCURSEL,0,0))!=0);
 #else
             This->SetBorder(SendMessage(HWND(lPar),CB_GETCURSEL,0,0));
@@ -1180,7 +1180,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             BYTE old_st_type=ST_TYPE;//v3.6.0
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
             SSEConfig.SwitchSTType(ST_TYPE);
 #else
             SwitchSTType(ST_TYPE);
@@ -1188,7 +1188,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
 #endif
-#if defined(SSE_GUI_OPTIONS_REFRESH) && !defined(SSE_STF_MEGASTF_383)
+#if defined(SSE_GUI_OPTIONS_REFRESH) && !defined(SSE_STF_MEGASTF_390)
             OptionBox.SSEUpdateIfVisible(); 
 #endif
 #if defined(SSE_STF_MATCH_TOS)
@@ -1241,7 +1241,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 This->NewMemConf0=-1;
               }
               CheckResetIcon();
-#if defined(SSE_GUI_OPTIONS_STF) && !defined(SSE_STF_MEGASTF_383)
+#if defined(SSE_GUI_OPTIONS_STF) && !defined(SSE_STF_MEGASTF_390)
               This->MachineUpdateIfVisible();//it's on same page now, better so
 #endif
             }
@@ -1250,7 +1250,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-#if defined(SSE_ACSI_MEGASTF) && !defined(SSE_STF_MEGASTF_383)//gemdos likelier
+#if defined(SSE_ACSI_MEGASTF) && !defined(SSE_STF_MEGASTF_390)//gemdos likelier
               if(SSEConfig.AcsiImg)
                 SSEOption.Acsi=true;
               else
@@ -1265,7 +1265,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             HardDiskMan.update_mount();
 #endif
           }
-#if defined(SSE_STF_MEGASTF_383)
+#if defined(SSE_STF_MEGASTF_390)
 //          OptionBox.MachineUpdateIfVisible(); //anyway
           This->MachineUpdateIfVisible(); //anyway
 #endif
@@ -1619,7 +1619,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-#if !defined(SSE_VAR_NO_UPDATE_383)
+#if !defined(SSE_VAR_NO_UPDATE_390)
         case 4200:case 4201:case 4202:case 4203:
           if (HIWORD(wPar)==BN_CLICKED){
             ConfigStoreFile CSF(INIFile);
@@ -1655,7 +1655,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             EasyStr Ext;
             switch (LOWORD(wPar)){
-#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_VS2008_WARNING_390) && defined(SSE_GUI_ASSOCIATE_CU)
               case 5100: Ext=dot_ext(EXT_ST);AssociateSteem(Ext,"st_disk_image"); break;
               case 5101: Ext=dot_ext(EXT_STT);AssociateSteem(Ext,"st_disk_image"); break;
               case 5102: Ext=dot_ext(EXT_MSA);AssociateSteem(Ext,"st_disk_image"); break;
@@ -2145,7 +2145,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option CPU clock = %d\n",OPTION_CPU_CLOCK);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_CPU_CLOCK,0);
             CpuMfpRatio=(OPTION_CPU_CLOCK?(double)CpuCustomHz
-              :(double)CpuNormalHz)  /(double)MFP_CLK_TH_EXACT;
+              :(double)CpuNormalHz)  /(double)MFP_CLOCK;
           }
           break;
 #endif
@@ -2342,7 +2342,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 8402: // Keyboard alt and shift correction
           if (HIWORD(wPar)==BN_CLICKED){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
             EnableShiftSwitching=(SendMessage(HWND(lPar),BM_GETCHECK,0,0)!=0);
 #else
             EnableShiftSwitching=SendMessage(HWND(lPar),BM_GETCHECK,0,0);
@@ -2503,7 +2503,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 8311:
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->eslTOS_Sort=(ESLSortEnum)(signed short)LOWORD(CBGetSelectedItemData(HWND(lPar)));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
             This->eslTOS_Descend=(HIWORD(CBGetSelectedItemData(HWND(lPar)))!=0);
 #else
             This->eslTOS_Descend=HIWORD(CBGetSelectedItemData(HWND(lPar)));
@@ -3011,7 +3011,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           itoa(CpuCustomHz,tmp,10);
           SendDlgItemMessage(Win,7321,WM_SETTEXT,0,LPARAM(tmp));
           if(OPTION_CPU_CLOCK)
-            CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+            CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLOCK;
           break;
         }
 #endif

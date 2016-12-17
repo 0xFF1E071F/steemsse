@@ -12,11 +12,7 @@ DESCRIPTION: Emulation of the STE only blitter chip.
 TBlitter Blit;
 #endif
 
-#if defined(SSE_DEBUG)
-int nBytesBlitted=0; // for traces
-#endif
-
-#if defined(SSE_BLT_383)
+#if defined(SSE_BLT_390)
 /*  We finally can use the logical values, thanks to a timing
     bugfix at blitter write (access was counted after write).
 */
@@ -43,7 +39,7 @@ WORD Blitter_DPeek(MEM_ADDRESS ad)
   if (ad>=himem){
     if (ad>=MEM_IO_BASE){
       WORD RetVal=0xffff;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
         RetVal=io_read_w(ad);
@@ -67,7 +63,7 @@ void Blitter_DPoke(MEM_ADDRESS abus,WORD x)
 {
   abus&=0xffffff;
   if (abus>=MEM_IO_BASE){
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
     TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
       io_write_w(abus,x); // SS to the palette: Illusion, RGBeast...
@@ -122,10 +118,6 @@ inline void Blitter_ReadSource(MEM_ADDRESS SrcAdr)
 void Blitter_Start_Line()
 {
   if (Blit.YCounter<=0){ // Blit finished?
-#ifdef SSE_DEBUG
-    TRACE_LOG("Blitted %d bytes src=%X dst=%X\n",nBytesBlitted,Blit.SrcAdr,Blit.DestAdr);
-    nBytesBlitted=0;
-#endif
 #if defined(SSE_BLT_380) 
 //BLTBENCH.TOS, http://www.atari-forum.com/viewtopic.php?f=25&t=28424 (1st version)
     Blit.Hog=Blit.Busy=Blit.HasBus=false; 
@@ -145,16 +137,17 @@ void Blitter_Start_Line()
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
 /*  Record # blit cycles during which the CPU could work without
     accessing the bus. More like real emulation, but it has a cost.
 */
     Blit.BlitCycles=ACT-Blit.TimeAtBlit;
+    ASSERT(Blit.BlitCycles>=0);
 
-#elif defined(SSE_BLT_383)
+#elif defined(SSE_BLT_390)
 /*  Relapse plasma: OP-based temp hack because our other hack isn't reliable
     anymore after instruction timing refactoring (We Were broken).
-    In case we don't define SSE_BLT_383B.
+    In case we don't define SSE_BLT_390B.
 */
     if(OPTION_HACKS && (IR&0xF0F8)==0x50C8) //DBcc
     {
@@ -227,7 +220,7 @@ void Blitter_Start_Line()
 //---------------------------------------------------------------------------
 void ASMCALL Blitter_Start_Now()
 {
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
   Blit.TimeAtBlit=ACT;
 #endif
   ioaccess=0;
@@ -257,7 +250,9 @@ void ASMCALL Blitter_Start_Now()
 void Blitter_Blit_Word() //SS Data is blitted word by word
 {
   ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
+#if !defined(SSE_VAR_OPT_390E)
   if (Blit.Busy==0) return;
+#endif
 
   WORD SrcDat,DestDat=0,NewDat;  //internal data registers
   // The modes 0,3,12,15 are source only
@@ -421,9 +416,6 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   BLT_ABUS_ACCESS_WRITE; //+ bugfix! before the poke (Circus) //incredible that I didn't see it before
 #endif
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
-#if defined(SSE_DEBUG)
-  nBytesBlitted+=sizeof(WORD);
-#endif
 #if !defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
   INSTRUCTION_TIME_ROUND(4);
 #endif
@@ -507,7 +499,9 @@ void Blitter_Draw()
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
     return;
   }else{
-#if defined(SSE_BLT_381)
+#if defined(SSE_BLT_390)
+    INSTRUCTION_TIME(BLITTER_START_WAIT);
+#elif defined(SSE_BLT_381)
     INSTRUCTION_TIME((Blit.Hog||!OPTION_HACKS)?BLITTER_START_WAIT:4);//for BLIT02A, temp hack
 #endif
     Blit.YCounter=Blit.YCount;
@@ -531,9 +525,6 @@ void Blitter_Draw()
 
   Blit.HasBus=true;
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
-#if !defined(SSE_BLT_380)
-  Blit.TimeToCheckIrq=ABSOLUTE_CPU_TIME+SSE_BLT_BLIT_MODE_IRQ_CHK;
-#endif
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
 #else
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
@@ -579,19 +570,12 @@ void Blitter_Draw()
 #endif
       }
 
-#if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_380)
-      // make sure to check for interrupts often enough
-      if(!Blit.Hog && ABSOLUTE_CPU_TIME-Blit.TimeToCheckIrq>=0)
-      {
-        Blit.TimeToCheckIrq+=SSE_BLT_BLIT_MODE_IRQ_CHK;
-        check_for_interrupts_pending();
-      }
-#endif
-
       if (Blit.Busy){
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
-#if defined(SSE_BLT_380)
+#if defined(SSE_BLT_390)
+            INSTRUCTION_TIME(4); // start = end
+#elif defined(SSE_BLT_380)
             INSTRUCTION_TIME(Blit.HasBus?BLITTER_END_WAIT:BLITTER_START_WAIT);
 #endif
 #if defined(SSE_BLT_381) // BLIT03C, experimental but true feature
@@ -609,7 +593,7 @@ void Blitter_Draw()
 #if defined(DEBUG_BUILD) || !defined(SSE_BLITTER)
             if (Blit.HasBus){
 #if defined(SSE_BOILER_BLIT_WHEN_TRACING2) // do the blit before leaving...
-#if defined(SSE_BLT_383)
+#if defined(SSE_BLT_390)
               ASSERT(mode==STEM_MODE_CPU);
               if(debug_in_trace)
 #endif
@@ -629,9 +613,6 @@ void Blitter_Draw()
             }
 #endif
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
-#if !defined(SSE_BLT_380)
-            Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
-#endif
 #if defined(SSE_BLT_380)
             Blit.TimeToSwapBus=ACT+BLITTER_BLIT_MODE_CYCLES; // + delay
 #else
@@ -645,9 +626,6 @@ void Blitter_Draw()
         }
       }else{
         Blit.HasBus=false;  
-#if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_380)
-        Blit.TimeToCheckIrq=0;
-#endif
         break;
       }
     }//while (cpu_cycles>0
@@ -718,14 +696,12 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 	
 #if defined(SSE_STF_BLITTER)
 /*  When TOS>1.00 resets, it tests for Blitter.
-    There was a blitter on (some!) Mega STF, in this emulation you're entitled
+    There was a blitter on (most!) Mega ST, in this emulation you're entitled
     to a blitter without having to place an order with Atari.
-    But it's the exact same blitter for STF & STE, while they were different
-    chips.
+    It's the exact same blitter for STF & STE.
 */
  if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
-    TRACE_LOG("STF: no blitter exception in ior\n");
     exception(BOMBS_BUS_ERROR,EA_READ,Adr);
     return 0;
   }
@@ -803,7 +779,6 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
 #if defined(SSE_STF_BLITTER)
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
   {
-    TRACE_LOG("STF: no blitter exception in iow\n");
     exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);
     return ;
   }
@@ -1121,17 +1096,17 @@ Byte instructions can not be used to read or write this register.
         if (Val & BIT_7){ //start new
 #if defined(SSE_DEBUG)
           if(!Blit.YCount)
-            TRACE_LOG("No blit\n");
+          {
+            //TRACE_LOG("No blit\n");
+          }
           else
           {
-            int end_src=Blit.SrcAdr+Blit.SrcXInc*(Blit.XCount-1)*Blit.YCount+Blit.YCount*Blit.SrcYInc;
-            int end_dst=Blit.DestAdr+Blit.DestXInc*(Blit.XCount-1)*Blit.YCount+Blit.YCount*Blit.DestYInc;
-TRACE_LOG("PC %X F%d y%d c%d Blt %X Hop%d Op%X %dx%d from %X (x%d y%d end %X) to %X (x%d y%d end %X) NF%d FX%d Sk%d Msk %X %X %X\n",
-old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,end_src,Blit.DestAdr,Blit.DestXInc,end_dst,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
+TRACE_LOG("PC %X F%d y%d c%d Blt %X Hop%d Op%X %dx%d from %X (%d, %d) to %X (%d, %d) NF%d FX%d Sk%d Msk %X %X %X\n",
+old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
           }
 #if defined(SSE_OSD_CONTROL)
           if(OSD_MASK3 & OSD_CONTROL_STEBLT) 
-            TRACE_OSD("%X %dx%d",Val,Blit.XCount,Blit.YCount);
+            TRACE_OSD("BLT %X %dx%d",Val,Blit.XCount,Blit.YCount);
 #endif
 #endif//dbg
           if (Blit.YCount) ioaccess|=IOACCESS_FLAG_DO_BLIT;
@@ -1161,17 +1136,14 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 */
         if (Val & BIT_7){ // Restart
 #if defined(SSE_DEBUG)
- TRACE_LOG("PC %X F%d y%d c%d REBlt %X Hop%d Op%X %d(%d)x%d from %X (x%d y%d) to %X (x%d y%d) NF%d FX%d Sk%d Msk %X %X %X\n",
-   old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.XCounter,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
+TRACE_LOG("PC %X F%d y%d c%d ReBlt %X Hop%d Op%X %dx%d from %X (%d, %d) to %X (%d, %d) NF%d FX%d Sk%d Msk %X %X %X\n",
+old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
 #endif
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
           Blit.HasBus=true;
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
 
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
-#if !defined(SSE_BLT_380)
-          Blit.TimeToCheckIrq=Blit.TimeToSwapBus+SSE_BLT_BLIT_MODE_IRQ_CHK;
-#endif
 #if defined(SSE_BLT_381)
           INSTRUCTION_TIME(BLITTER_START_WAIT);
           Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
@@ -1186,6 +1158,7 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter clear busy changing GPIP bit from "+
                   bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
           mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
+          
         }
       }
       return;

@@ -78,7 +78,7 @@ DEFINE_GUID( IID_IDirectDraw7,0x15e65ec0,0x3b9c,0x11d2,0xb9,0x2f,0x00,0x60,0x97,
 
 
 //SS: the singleton object is Disp
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
 #define LOGSECTION LOGSECTION_INIT
@@ -159,7 +159,7 @@ void SteemDisplay::SetMethods(int Method1,...)
 {
   int *mp=&Method1;
   for (int n=0;n<5;n++){
-#if defined(SSE_X64_383B)
+#if defined(SSE_X64_390B)
     UseMethods[n]=mp[n*2];
 #else
     UseMethods[n]=mp[n];
@@ -1271,7 +1271,7 @@ void SteemDisplay::RunStart(bool Temp)
   if (FullScreen==0) return;
   if (Temp==0){
     bool ChangeSize=0;
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
     int w=640,h=400;
 #else
     int w=640,h=400,hz=0;
@@ -1294,7 +1294,7 @@ void SteemDisplay::RunStart(bool Temp)
     }
 #endif
     if (ChangeSize){
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
       if (SetDisplayMode()==DD_OK){
 #else
       int hz_ok=0;
@@ -1336,7 +1336,7 @@ void SteemDisplay::RunStart(bool Temp)
 #endif
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
 void SteemDisplay::RunEnd()
 #else
 void SteemDisplay::RunEnd(bool Temp)
@@ -1818,7 +1818,7 @@ void SteemDisplay::FlipToDialogsScreen() //SS called by Alert()
 #endif
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
 HRESULT SteemDisplay::SetDisplayMode()
 #else
 HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
@@ -2097,7 +2097,7 @@ HRESULT SteemDisplay::SaveScreenShot()
   {
     if(pNeoFile)
     {
-#if defined(SSE_VID_SAVE_NEO_383)
+#if defined(SSE_VID_SAVE_NEO_390)
       pNeoFile->resolution=change_endian(screen_res);
 #else
       pNeoFile->resolution=screen_res;
@@ -2129,7 +2129,7 @@ HRESULT SteemDisplay::SaveScreenShot()
     D3DDISPLAYMODE d3ddm;
     if((hRet=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm))!=0)
       return hRet;
-#if defined(SSE_VID_D3D_SCREENSHOT_383) // bugfix stretch mode
+#if defined(SSE_VID_D3D_SCREENSHOT_390) // bugfix stretch mode
     w=draw_blit_source_rect.right-draw_blit_source_rect.left;
     h=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
 #else
@@ -2138,9 +2138,9 @@ HRESULT SteemDisplay::SaveScreenShot()
 #endif
     ASSERT((w) && (h));
     if((hRet=pD3DDevice->CreateOffscreenPlainSurface(w,h,d3ddm.Format,
-      D3DPOOL_SYSTEMMEM,&SaveSur,NULL))!=0)//383
+      D3DPOOL_SYSTEMMEM,&SaveSur,NULL))!=0)//390
       return hRet;
-    if((hRet=pD3DDevice->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&SaveSur))!=0)//383
+    if((hRet=pD3DDevice->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&SaveSur))!=0)//390
     {
       SaveSur->Release();
       return hRet;
@@ -2149,7 +2149,7 @@ HRESULT SteemDisplay::SaveScreenShot()
     if(hFreeImage)
     {
       D3DLOCKED_RECT LockedRect;
-      if((hRet=SaveSur->LockRect(&LockedRect,NULL,0))!=0)//383
+      if((hRet=SaveSur->LockRect(&LockedRect,NULL,0))!=0)//390
       {
         SaveSur->Release();
         return hRet;
@@ -2416,7 +2416,7 @@ bitmap in the desired bit depth, FALSE otherwise.
         }
         break;
       }
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       default:
         NODEFAULT;
 #endif
@@ -2471,7 +2471,7 @@ bitmap in the desired bit depth, FALSE otherwise.
             g_mask=0x00ff00 << rgb32_bluestart_bit;
             b_mask=0x0000ff << rgb32_bluestart_bit;
             break;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
           default:
             NODEFAULT;
 #endif
@@ -2751,7 +2751,7 @@ char *GetTextFromD3DError(HRESULT hr){
 #define REPORT_D3D_ERR 
 #endif
 
-#pragma warning( disable : 4701) //OldCur, 383
+#pragma warning( disable : 4701) //OldCur, 390
 
 bool SteemDisplay::D3DBlit() {
   //ASSERT(pD3D);
@@ -2782,7 +2782,7 @@ bool SteemDisplay::D3DBlit() {
       pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
 #endif
 
-#if defined(SSE_VID_D3D_CRISP_383) 
+#if defined(SSE_VID_D3D_CRISP_390) 
     // there could be trash in fullscreen crisp mode when switching shift modes
     d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
 #else
@@ -2805,16 +2805,16 @@ bool SteemDisplay::D3DBlit() {
 #if defined(SSE_VID_D3D_382)
   if(d3derr) 
   {
+    TRACE("BLIT ERROR\n");
     TRACE_LOG("Blit error %d\n",d3derr);
     REPORT_D3D_ERR;
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
     M68000.ProcessingState=TM68000::BLIT_ERROR;
+#if defined(SSE_VID_D3D_390B)
+    GUIRefreshStatusBar(true); // make sure player sees it
 #endif
-    runstate=RUNSTATE_STOPPING;
-#if defined(SSE_VID_D3D_383B)
-    TRACE2("BLIT ERROR\n");
-    D3DCreateSurfaces(); //test, nothing to lose, Steem crashes when losing surface anyway
 #endif
+    runstate=RUNSTATE_STOPPING; // player can save & quit
   }
 #elif defined(SSE_DEBUG)
   if(d3derr)
@@ -2824,9 +2824,9 @@ bool SteemDisplay::D3DBlit() {
   return !d3derr;
 }
 
-#pragma warning( default : 4701) //OldCur, 383
+#pragma warning( default : 4701) //OldCur, 390
 
-#if defined(SSE_VID_D3D_382) && !defined(SSE_VID_D3D_383)
+#if defined(SSE_VID_D3D_382) && !defined(SSE_VID_D3D_390)
 
 void SteemDisplay::Cls() {
   if(pD3DDevice)
@@ -2854,7 +2854,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 */
   HRESULT d3derr=E_FAIL;
 
-#if defined(SSE_VID_D3D_383) && !defined(BCC_BUILD)
+#if defined(SSE_VID_D3D_390) && !defined(BCC_BUILD)
   if(!pD3D)
     goto D3DCreateSurfacesEnd;
 #else
@@ -2892,7 +2892,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
       d3derr=check_device_type(DeviceType,DisplayFormat);
     }
   }
-#if defined(SSE_VID_D3D_383) && !defined(BCC_BUILD)
+#if defined(SSE_VID_D3D_390) && !defined(BCC_BUILD)
   if(d3derr)
     goto D3DCreateSurfacesEnd; //forget it
 #else
@@ -3022,7 +3022,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 
   if(!pD3DDevice)
   {
-#if defined(SSE_VID_D3D_383)  && !defined(BCC_BUILD)
+#if defined(SSE_VID_D3D_390)  && !defined(BCC_BUILD)
     goto D3DCreateSurfacesEnd;
 #else
     REPORT_D3D_ERR;
@@ -3051,7 +3051,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 
   if(!pD3DTexture)
   {
-#if defined(SSE_VID_D3D_383)  && !defined(BCC_BUILD)
+#if defined(SSE_VID_D3D_390)  && !defined(BCC_BUILD)
     goto D3DCreateSurfacesEnd;
 #else
     REPORT_D3D_ERR;
@@ -3073,7 +3073,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 
   draw_init_resdependent();
   palette_prepare(true);
-#if defined(SSE_VID_D3D_383) && !defined(BCC_BUILD)
+#if defined(SSE_VID_D3D_390) && !defined(BCC_BUILD)
 D3DCreateSurfacesEnd:
   if(d3derr!=D3D_OK)
   {
@@ -3213,7 +3213,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #ifndef NO_CRAZY_MONITOR
 #ifdef SSE_VID_EXT_FS1
     if(extended_monitor
-#if defined(SSE_TOS_GEMDOS_EM_383)
+#if defined(SSE_TOS_GEMDOS_EM_390)
       && em_width && em_height
 #endif
       )
@@ -3327,7 +3327,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   };
   pD3DSprite->SetTransform((D3DXMATRIX*)&matrix);
 #endif
-#if defined(SSE_VID_D3D_383)
+#if defined(SSE_VID_D3D_390)
   if(pD3DDevice)
     pD3DDevice->Clear(0,0,D3DCLEAR_TARGET,0,0,0);
 #elif defined(SSE_VID_D3D_382)
@@ -3344,7 +3344,7 @@ void SteemDisplay::D3DUpdateWH(UINT mode) {
   D3DDISPLAYMODE d3ddm;
   pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
   D3DDISPLAYMODE Mode; 
-#if defined(SSE_VS2008_WARNING_383)//could do without param but it looks more logical this way
+#if defined(SSE_VS2008_WARNING_390)//could do without param but it looks more logical this way
   pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,mode,&Mode);
 #else
   pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,D3DMode,&Mode);

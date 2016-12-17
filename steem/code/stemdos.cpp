@@ -496,7 +496,7 @@ void stemdos_seek(int h,MEM_ADDRESS sp)
     r[0]=ftell(stemdos_file[h].f);
   }
 
-#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_383)
+#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_390)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1754,7 +1754,7 @@ void stemdos_parse_path()  //remove \..\ etc.
 {
   dbg_log(EasyStr("STEMDOS: Parsing path ")+stemdos_filename);
 
-#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_383)
+#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_390)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -2112,7 +2112,7 @@ void TTos::CheckKeyboardClick() {
 
 void TTos::HackMemoryForExtendedMonitor() {
   TRACE_INIT("EM mem_len %X xbios2 %X phystop %X _memtop %X\n",mem_len,xbios2,LPEEK(0x42E),LPEEK(0x436));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS bytes_needed=max((em_width*em_height*em_planes)/8,0x8000);
   ASSERT(bytes_needed>0x8000);
   MEM_ADDRESS xbios2a=mem_len-(bytes_needed+256);
@@ -2121,7 +2121,7 @@ void TTos::HackMemoryForExtendedMonitor() {
   int xbios2a=mem_len-(bytes_needed+256);
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_382)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS xbios2b=(xbios2a+255)&-256;
 #else
   int xbios2b=(xbios2a+255)&-256;

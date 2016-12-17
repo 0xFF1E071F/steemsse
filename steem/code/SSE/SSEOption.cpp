@@ -22,7 +22,7 @@ TOption::TOption() {
 
 void TOption::Init() {
 
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
 #ifdef WIN32
   ZeroMemory(this,sizeof(TOption));
 #else
@@ -47,7 +47,7 @@ void TOption::Init() {
 #ifdef SSE_VID_DIRECT3D
   Direct3D=1;
 #endif
-#else//opt383?
+#else//opt390?
 #if defined(SSE_HACKS)
   Hacks=TRUE;
 #endif
@@ -100,7 +100,7 @@ void TOption::Init() {
 #if defined(SSE_OSD_SHOW_TIME)
   OsdTime=0;
 #endif
-#endif//opt383?
+#endif//opt390?
 }
 
 
@@ -116,7 +116,7 @@ TConfig::TConfig() {
 #endif
 }
 
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
 
 int TConfig::SwitchSTType(int new_type) { 
 
@@ -131,11 +131,11 @@ int TConfig::SwitchSTType(int new_type) {
 #if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
-      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLOCK;
     else
 #endif
     {
-      CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLOCK;
       CpuNormalHz=CPU_STF_PAL;
     }
 #endif
@@ -149,11 +149,11 @@ int TConfig::SwitchSTType(int new_type) {
 #if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
-      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLOCK;
     else
 #endif
     {
-    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLK_TH_EXACT;
+    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLOCK;
     CpuNormalHz=CPU_STE_PAL; 
     }
 #endif

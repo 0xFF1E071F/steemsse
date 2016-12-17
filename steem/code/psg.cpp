@@ -27,7 +27,7 @@ EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT BYTE sound_bytes_per_sample INIT(1);
 #else
 EXT int sound_bytes_per_sample INIT(1);
@@ -109,7 +109,7 @@ WORD dma_sound_internal_buf[4],dma_sound_last_word;
 MEM_ADDRESS dma_sound_fetch_address;
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT BYTE psg_reg_select;
 EXT BYTE sound_time_method INIT(0);
 EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
@@ -134,14 +134,14 @@ int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 BYTE dma_sound_bass=6; // 6 is neutral value
 BYTE dma_sound_treble=6;
 #else
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 #endif
-#if !defined(SSE_SOUND_DMA_383A)// too many click problems (report Foebane)
+#if !defined(SSE_SOUND_DMA_390A)// too many click problems (report Foebane)
 TIirVolume MicrowireVolume[2]; 
 #endif
 TIirLowShelf MicrowireBass[2];
@@ -181,7 +181,7 @@ const //const must be removed for linker
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
 
-#if defined(SSE_SOUND_383)
+#if defined(SSE_SOUND_390)
 inline bool playing_samples() {
 #if defined(SSE_SOUND_FILTER_STF3)
 /*  This test is more complicated but will work with
@@ -207,7 +207,7 @@ inline bool playing_samples() {
   return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
 #endif
 }
-#endif//#if defined(SSE_SOUND_383)
+#endif//#if defined(SSE_SOUND_390)
 
 #endif//SSE_YM2149_FIXED_VOL_TABLE
 
@@ -281,7 +281,7 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
 #if defined(SSE_SOUND_MICROWIRE)
-#if defined(SSE_SOUND_DMA_383B)
+#if defined(SSE_SOUND_DMA_390B)
 #define LOW_SHELF_FREQ 80 // officially 50 Hz
 #define HIGH_SHELF_FREQ (min(2000,(int)dma_sound_freq/2)) // officially  15 kHz
 #else
@@ -657,7 +657,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
 inline void Microwire(int channel,int &val) {
-#if !defined(SSE_SOUND_DMA_383C) // tested before
+#if !defined(SSE_SOUND_DMA_390C) // tested before
   if(OPTION_MICROWIRE)
 #endif
   {
@@ -670,15 +670,15 @@ inline void Microwire(int channel,int &val) {
       if(dma_sound_bass!=6)
         d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
           dma_sound_bass-6);
-#if defined(SSE_SOUND_DMA_383B)
-/*  In v3.8.3, we use the optional dsp module for bass and treble,
+#if defined(SSE_SOUND_DMA_390B)
+/*  In v3.9.0, we use the optional dsp module for bass and treble,
     but not for volume, because of some clicks.
 */
       if(dma_sound_treble!=6)
         d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
          ,dma_sound_treble-6);
 #endif
-#if defined(SSE_SOUND_DMA_383A)
+#if defined(SSE_SOUND_DMA_390A)
       // no "dsp" volume
 #else
       if(dma_sound_volume<0x28
@@ -709,7 +709,7 @@ inline void Microwire(int channel,int &val) {
 inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel) {
-#if defined(SSE_SOUND_INLINE_383)
+#if defined(SSE_SOUND_INLINE_390)
   // check size once (hopefully optimised?)
   if(Size==sizeof(BYTE)) //8bit
   {
@@ -732,7 +732,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
       val=v;
 #if defined(SSE_OSD_CONTROL)
-      if(OSD_MASK3 & OSD_CONTROL_DMASND) 
+      if(dma_sound_on_this_screen&&(OSD_MASK3 & OSD_CONTROL_DMASND)) 
         TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
 #endif
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
@@ -793,10 +793,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
 
       val=v; //inefficient?
-#if defined(SSE_OSD_CONTROL)
-      if(OSD_MASK3 & OSD_CONTROL_DMASND) 
-        TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
-#endif
+
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
@@ -895,7 +892,7 @@ now put the mixer to mix YM2149 and DMA sound, the LMC1992 will also manipulate
 the YM sound output. However, the YM2149 as a soundchip is not really meant to 
 have Bass and Trebble enhanced. This might result in a very ugly sound.
 */
-#if defined(SSE_SOUND_DMA_383C)
+#if defined(SSE_SOUND_DMA_390C)
 /*  If sound is mono and balance is changed, Steem applied only 50% of the
     balance. We do the rest here. Fixes Beat Demo L/R.
     We don't use 'dsp' gain adjustment anymore.
@@ -948,7 +945,7 @@ have Bass and Trebble enhanced. This might result in a very ugly sound.
           val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SSE_SOUND_MICROWIRE)
-#if defined(SSE_SOUND_DMA_383C) // balance, not dsp
+#if defined(SSE_SOUND_DMA_390C) // balance, not dsp
         if(OPTION_MICROWIRE)
         {
           Microwire(1,val);
@@ -1563,7 +1560,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
   TRACE_LOG(" Freq %d\n",dma_sound_freq);
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound control set to "+(io_src_b & 3)+" from "+(dma_sound_control & 3));
   dma_sound_control=io_src_b;
-#if !defined(SSE_SOUND_DMA_383E) //remove TOS condition
+#if !defined(SSE_SOUND_DMA_390E) //remove TOS condition
   if (tos_version>=0x106) 
 #endif
   mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,bool(COLOUR_MONITOR)^bool(dma_sound_control & BIT_0));
@@ -1778,14 +1775,14 @@ void dma_sound_fetch()
       dma_sound_control&=~BIT_0;
 
       DMA_SOUND_CHECK_TIMER_A
-#if !defined(SSE_SOUND_DMA_383E) //remove TOS condition
+#if !defined(SSE_SOUND_DMA_390E) //remove TOS condition
       if (tos_version>=0x106) 
 #endif
       mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,bool(COLOUR_MONITOR)^bool(dma_sound_control & BIT_0));
 
       if (dma_sound_control & BIT_1){
         dma_sound_control|=BIT_0; //Playing again immediately
-#if !defined(SSE_SOUND_DMA_383E) //remove TOS condition
+#if !defined(SSE_SOUND_DMA_390E) //remove TOS condition
         if (tos_version>=0x106) 
 #endif
         mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,bool(COLOUR_MONITOR)^bool(dma_sound_control & BIT_0));
@@ -2595,7 +2592,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     When user tries to mute PSG channels, we give up this rendering system
     because it's all or nothing.
 */
-#if defined(SSE_SOUND_383)
+#if defined(SSE_SOUND_390)
       if(OPTION_SAMPLED_YM
 #else
       if(SSEOption.PSGFixedVolume && playing_samples()

@@ -1290,7 +1290,7 @@ void m68k_get_dest_101_b(){
   CPU_ABUS_ACCESS_READ_FETCH; //np
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2)
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ; //nr
@@ -1311,7 +1311,7 @@ void m68k_get_dest_101_w(){
   CPU_ABUS_ACCESS_READ_FETCH; //np
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2)
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ; //nr
@@ -1332,7 +1332,7 @@ void m68k_get_dest_101_l(){
   CPU_ABUS_ACCESS_READ_FETCH; //np
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2)
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ_L;//nR nr
@@ -1359,7 +1359,7 @@ void m68k_get_dest_110_b(){
   }else{         //.w
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
   CPU_ABUS_ACCESS_READ;//nr
   m68k_SET_DEST_B_TO_ADDR
 #else
@@ -1380,7 +1380,7 @@ void m68k_get_dest_110_w(){
   }else{         //.w
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
   CPU_ABUS_ACCESS_READ;//nr
   m68k_SET_DEST_W_TO_ADDR
 #else
@@ -1401,7 +1401,7 @@ void m68k_get_dest_110_l(){
   }else{         //.w
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
   CPU_ABUS_ACCESS_READ_L;//nR nr
   m68k_SET_DEST_L_TO_ADDR
 #else
@@ -1424,7 +1424,7 @@ void m68k_get_dest_111_b(){
     pc+=2; 
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif
@@ -1452,7 +1452,7 @@ void m68k_get_dest_111_b(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif
@@ -1485,7 +1485,7 @@ void m68k_get_dest_111_w(){
 #endif
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif
@@ -1513,7 +1513,7 @@ void m68k_get_dest_111_w(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif
@@ -1547,7 +1547,7 @@ void m68k_get_dest_111_l(){
     pc+=2; 
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif
@@ -1575,7 +1575,7 @@ void m68k_get_dest_111_l(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_CPU_EA_383)
+#if defined(SSE_CPU_EA_390)
 #if defined(SSE_MMU_ROUNDING_BUS2A_EA2) && !defined(SSE_MMU_ROUNDING_BUS2A_EA3)
     abus=fw;
 #endif

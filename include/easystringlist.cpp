@@ -101,7 +101,7 @@ int EasyStringList::Add(char *AddStr)
 {
   return Add(0,AddStr);
 }
-#if defined(SSE_X64_383) //?
+#if defined(SSE_X64_390) //?
 int EasyStringList::Add(char *AddStr,LONG_PTR AddData)
 {
   return Add(1,AddStr,AddData);

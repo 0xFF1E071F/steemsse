@@ -56,7 +56,7 @@ void trace()
 
   //execute
 //  try{
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
     TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
 

@@ -116,7 +116,7 @@ void SetSTKeys(char *Letters,int Val1,...)
   do{
     Code=VkKeyScan(Letters[l]);
     if (HIBYTE(Code)==0){ //No shift required to type character #Letters[l]
-#if defined(SSE_X64_383B)
+#if defined(SSE_X64_390B)
       key_table[LOBYTE(Code)]=LOBYTE(lpVals[l*2]); // each parameter takes 8 bytes
 #else
       key_table[LOBYTE(Code)]=LOBYTE(lpVals[l]);
@@ -506,7 +506,7 @@ void InitKeyTable()
           Key #221 = ASCII å (#-27) = ST keycode 0x1a
           Key #222 = ASCII æ (#-26) = ST keycode 0x27
         */
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 #pragma warning (disable: 4310)
 #endif
 #if defined(SSE_VAR_REWRITE) // stops a warning L2 in VC6

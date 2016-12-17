@@ -12,7 +12,7 @@ to create the ST palette and also the code to add to the PC palette.
 #if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT short brightness=0,contrast=0;
 #else
 EXT int brightness=0,contrast=0;

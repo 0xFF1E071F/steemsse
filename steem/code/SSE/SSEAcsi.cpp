@@ -97,7 +97,7 @@ bool TAcsiHdc::Init(int num, char *path) {
     acsi_dev=device_num;
   }
   //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   return (Active!=0);
 #else
   return (bool)Active;
@@ -269,7 +269,7 @@ void TAcsiHdc::Irq(bool state) {
 void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
   ASSERT(block_count);
   TRACE_HDC("%s sectors %d-%d (%d)\n",write?"Write":"Read",SectorNum(),SectorNum()+block_count-1,block_count);
-#if defined(SSE_VS2008_WARNING_383)//!
+#if defined(SSE_VS2008_WARNING_390)//!
   size_t ok=Seek();
 #elif defined(SSE_VS2008_WARNING_382)
   bool ok=Seek(); // read/write implies seek

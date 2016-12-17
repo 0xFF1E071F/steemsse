@@ -259,7 +259,7 @@ void TDebug::Trace(char *fmt, ...){
 #if defined(SSE_UNIX)
   int nchars=vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
   _vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
 #else
   int nchars=_vsnprintf(trace_buffer,MAX_TRACE_CHARS,fmt,body); // check for overrun 
@@ -305,7 +305,7 @@ void TDebug::Trace(char *fmt, ...){
 #endif
 #endif
 
-#if defined(SSE_BOILER_AUTO_FLUSH_TRACE_383)
+#if defined(SSE_BOILER_AUTO_FLUSH_TRACE_390)
   if(trace_file_pointer)
     fflush(trace_file_pointer);
 #endif
@@ -774,7 +774,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_driveB_ip)
     TRACE("event_driveB_ip");
 #endif
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
   else if(pointer==event_acia)
     TRACE("event_acia");
 #elif defined(SSE_IKBD_6301_EVENT)

@@ -75,7 +75,7 @@ void CreateNotifyInitWin()
 }
 //---------------------------------------------------------------------------
 #ifndef ONEGAME
-#pragma warning (disable: 4100)//383
+#pragma warning (disable: 4100)//390
 void SetNotifyInitText(char *NewText)
 {
 #if defined(_DEBUG)
@@ -160,7 +160,7 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       RemoveProp(Win,"NotifyText");
       break;
 //#endif//#if !defined(_DEBUG)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     //default:
       //NODEFAULT; //not sure it is so...
     default:

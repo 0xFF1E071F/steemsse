@@ -50,7 +50,7 @@ int nbytes;
 #if !defined(SSE_VS2008_WARNING_382) || !defined(SSE_IKBD_6301_380)
   int i;
 #endif
-#if !defined(SSE_VS2008_WARNING_383) || defined(SSE_DEBUG)
+#if !defined(SSE_VS2008_WARNING_390) || defined(SSE_DEBUG)
   u_char trcsr=iram[TRCSR];
 #endif
   ASSERT(nbytes==1);
@@ -346,7 +346,7 @@ tdr_putb (offs, value)
     TRACE("6301 TDRS %X\n",HD6301.tdrs);
 #endif
     keyboard_buffer_write_n_record(value); // call Steem's ikbd function
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
     txinterrupts=1;
 #endif
   }

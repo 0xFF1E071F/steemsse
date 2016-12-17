@@ -175,7 +175,7 @@ WORD TSF314::BytePosition() {
 }
 
 WORD TSF314::BytesToHbls(int bytes) {
-#if defined(SSE_FDC_383A)
+#if defined(SSE_FDC_390A)
   return HblsPerRotation()*bytes/Disk[Id].TrackBytes;
 #else
   return HblsPerRotation()*bytes/TDisk::TRACK_BYTES;
@@ -198,7 +198,7 @@ WORD TSF314::HblsPerRotation() {
 }
 
 WORD TSF314::HblsToBytes(int hbls) {
-#if defined(SSE_FDC_383A)
+#if defined(SSE_FDC_390A)
   return Disk[Id].TrackBytes*hbls/HblsPerRotation();
 #else
   return TDisk::TRACK_BYTES*hbls/HblsPerRotation();
@@ -295,7 +295,7 @@ void TSF314::IndexPulse(bool image_triggered) {
 #if defined(SSE_WD1772_EMU)
   // send pulse to WD1772
   if(DRIVE==Id)
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
     WD1772.OnIndexPulse(image_triggered); // transmitting image_triggered
 #else
     WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered

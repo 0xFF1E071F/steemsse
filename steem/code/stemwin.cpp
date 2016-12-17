@@ -10,7 +10,7 @@ and its various buttons.
 #endif
 
 
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
 #define LOGSECTION LOGSECTION_INIT//SS
@@ -32,7 +32,7 @@ void StemWinResize(int xo,int yo)
 #else
     int FrameWidth=0;
 #endif
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     SetStemWinSize(min(em_width,(WORD)(GetScreenWidth()-4-FrameWidth)),
                     min(em_height,(WORD)(GetScreenHeight()-5-MENUHEIGHT-4-30)),
                     0,0);
@@ -434,7 +434,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               int old_runstate=runstate;
               if (FullScreen && runstate==RUNSTATE_RUNNING){
                 runstate=RUNSTATE_STOPPED;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
                 Disp.RunEnd();
 #else
                 Disp.RunEnd(0);
@@ -649,7 +649,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           return 0;
         case 110:case 111:case 112: //Borders
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
           OptionBox.SetBorder((wPar-110)!=0);
 #else
           OptionBox.SetBorder(wPar-110);
@@ -1074,7 +1074,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if (NextClipboardViewerWin) SendMessage(NextClipboardViewerWin,Mess,wPar,lPar);
       break;
     case WM_ACTIVATEAPP:
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       bAppActive=(wPar!=0);
 #else
       bAppActive=(bool)wPar;
@@ -1172,7 +1172,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
 #define status_bar ansi_string
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
 #endif
         // erase rectangle (different colour for hires)
@@ -1586,7 +1586,7 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       PAINTSTRUCT ps;
       BeginPaint(Win,&ps);
       FillRect(ps.hdc,&rc,(HBRUSH)GetSysColorBrush(COLOR_BTNFACE));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       int Down=int((GetProp(Win,"Down")) ? 1:0);
 #else
       int Down=int(bool(GetProp(Win,"Down")) ? 1:0);
@@ -1625,7 +1625,7 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     }
   }
   if (CheckDown){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     bool OldDown=(GetProp(Win,"Down")!=0);
 #else
     bool OldDown=(bool)GetProp(Win,"Down");
@@ -1672,7 +1672,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #if defined(SSE_VID_D3D_ONLY)
   RECT rc={0,MENUHEIGHT,monitor_width,monitor_height};
 //  int hz256=0;
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
   int hz_ok=0,hz=0;
 #endif
 #else
@@ -1708,7 +1708,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
   }
 //#endif
 #endif//#if defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
   if ((Ret=Disp.SetDisplayMode())!=DD_OK) 
 #else
   if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) 

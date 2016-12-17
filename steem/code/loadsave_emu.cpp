@@ -133,7 +133,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(on_rte);          //4
   ReadWrite(on_rte_interrupt_depth); //4
   ReadWrite(shifter_draw_pointer); //4
-#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_VAR_RESIZE_390B)
   int shifter_freq_int=shifter_freq;
   ReadWrite(shifter_freq_int);         //4
   shifter_freq=shifter_freq_int;
@@ -188,7 +188,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   ReadWrite(mfp_gpip_no_interrupt); //1
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
   int i_psg_reg_select=psg_reg_select;
   ReadWrite(i_psg_reg_select);      //4
   psg_reg_select=i_psg_reg_select;
@@ -301,7 +301,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=5) ReadWriteArray(ST_Key_Down);
 
-#if defined(SSE_VAR_RESIZE_383A) // problem is memory snapshots, structure: more complicated
+#if defined(SSE_VAR_RESIZE_390A) // problem is memory snapshots, structure: more complicated
   struct {
     int clock_divide;
     int rx_delay__unused;
@@ -490,7 +490,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool old_em=bool(extended_monitor);
   if (Version>=24){
 
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     // what we win in pure size, we lose in code, but this function could be paged
     int em_ints[4];
     em_ints[0]=em_width;
@@ -567,7 +567,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=30){
     ReadWrite(MicroWire_Mask);
     ReadWrite(MicroWire_Data);
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     int i_dma_sound_volume=dma_sound_volume;
     int i_dma_sound_l_volume=dma_sound_l_volume;
     int i_dma_sound_r_volume=dma_sound_r_volume;
@@ -721,7 +721,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     DWORD l=256;
     if (emudetect_called==0) l=0;
     ReadWrite(l);
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     for (DWORD n=0;n<(BYTE)l;n++){
 #else
     for (DWORD n=0;n<l;n++){
@@ -732,7 +732,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=39){
     ReadWriteArray(dma_sound_internal_buf);
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     int i_dma_sound_internal_buf_len=dma_sound_internal_buf_len;
     ReadWrite(i_dma_sound_internal_buf_len);
     dma_sound_internal_buf_len=i_dma_sound_internal_buf_len;
@@ -834,7 +834,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if SSE_VERSION>=382
     if(LoadOrSave==LS_LOAD)
 #endif
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
     SSEConfig.SwitchSTType(ST_TYPE);
 #else
     SwitchSTType(ST_TYPE);
@@ -851,7 +851,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWrite(SampleRate); // global of 3rd party
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     int i_dma_sound_bass=dma_sound_bass;
     ReadWrite(i_dma_sound_bass);
     dma_sound_bass=dma_sound_bass;
@@ -860,7 +860,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
     if(dma_sound_bass<0 || dma_sound_bass>=0xC)
       dma_sound_bass=6;
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
     int i_dma_sound_treble=dma_sound_treble;
     ReadWrite(i_dma_sound_treble);
     dma_sound_treble=dma_sound_treble;
@@ -920,7 +920,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       OPTION_C1=0;
 #endif
 #if defined(SSE_ACIA_REGISTERS)
-#if defined(SSE_VAR_RESIZE_383A)
+#if defined(SSE_VAR_RESIZE_390A)
   old_acia[NUM_ACIA_MIDI].clock_divide=ACIA_MIDI.clock_divide;
   old_acia[NUM_ACIA_MIDI].rx_irq_enabled=ACIA_MIDI.rx_irq_enabled;
   old_acia[NUM_ACIA_MIDI].rx_not_read=ACIA_MIDI.rx_not_read;
@@ -1168,7 +1168,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=380
   if(Version>=52) 
   {
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_383E2)
+#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_390E2)
     Glue.scanline=0; // Steem is always stopped at the start of a frame
 #endif
 #if defined(SSE_IKBD_6301_380) 
@@ -1197,26 +1197,26 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 #if defined(SSE_CPU_E_CLOCK) // keep E-Clock synced on loading a snapshot
     ReadWrite(M68000.cycles_for_eclock); 
-#if defined(SSE_CPU_E_CLOCK_383)
+#if defined(SSE_CPU_E_CLOCK_390)
     if(LoadOrSave==LS_SAVE)
       M68000.cycles_for_eclock+=ioaccess; // restore
 #endif
 #endif
 
   }
-#if SSE_VERSION>=383
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+#if SSE_VERSION>=390
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
   int NewROMCountry=Tos.DefaultCountry;
 #endif
-  if(Version>=54) //383
+  if(Version>=54) //390
   {
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
     if(LoadOrSave==LS_SAVE)
       NewROMCountry=ROM_PEEK(0x1D);
     ReadWrite(NewROMCountry);
 #endif
   }
-#if defined(SSE_GLUE_383E)
+#if defined(SSE_GLUE_390E)
   //Glue.VCount=0;  
 #endif
 #endif
@@ -1262,7 +1262,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #ifndef ONEGAME
   if (ChangeTOS){
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_383)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer,NewROMCountry);
 #else
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer);

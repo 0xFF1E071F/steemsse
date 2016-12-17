@@ -223,7 +223,7 @@ void IKBD_VBL()
 #endif
       }
 #endif
-#if defined(SSE_IKBD_6301_383)
+#if defined(SSE_IKBD_6301_390)
       if(stick[0]&0xF)
         SSEConfig.Port0Joy=true; // it's joystick or mouse
 #endif
@@ -430,7 +430,7 @@ void IKBD_VBL()
       mouse_change_since_last_interrupt=false;
       mouse_move_since_last_interrupt_x=0;
       mouse_move_since_last_interrupt_y=0;
-#if defined(SSE_IKBD_6301_383)
+#if defined(SSE_IKBD_6301_390)
       SSEConfig.Port0Joy=0;
 #endif
     }
@@ -1353,7 +1353,7 @@ or FIRE BUTTON MONITORING mode.
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_383)// we want it to hit default
+#if !defined(SSE_VAR_RESIZE_390)// we want it to hit default
       case 0x8d: /*DEAD*/ break;
       case 0x8e: /*DEAD*/ break;
 #endif
@@ -1366,7 +1366,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_383)
+#if !defined(SSE_VAR_RESIZE_390)
       case 0x91: /*DEAD*/ break;
 #endif
       case 0x92:  //is mouse off?
@@ -1378,7 +1378,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_383)
+#if !defined(SSE_VAR_RESIZE_390)
       case 0x93: /*DEAD*/ break;
 #endif
       case 0x94:case 0x95:case 0x99:
@@ -1395,7 +1395,7 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       }
-#if !defined(SSE_VAR_RESIZE_383)
+#if !defined(SSE_VAR_RESIZE_390)
       case 0x96: /*DEAD*/ break;
       case 0x97: /*DEAD*/ break;
       case 0x98: /*DEAD*/ break;
@@ -1414,7 +1414,7 @@ or FIRE BUTTON MONITORING mode.
       default: 
 #if defined(SSE_DEBUG)
         if(src) TRACE_LOG("Byte ignored",src);
-/////#elif defined(SSE_VS2008_WARNING_383)
+/////#elif defined(SSE_VS2008_WARNING_390)
 ///////        NODEFAULT;  //gross bug!!
 #else
         ;
@@ -1495,7 +1495,7 @@ void agenda_keyboard_replace(int) {
       {
         HD6301.tdrs=HD6301.tdr;
         TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
         time_of_event_acia=ACIA_IKBD.time_of_event_incoming
           =time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
 #else
@@ -1597,13 +1597,13 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301_EVENT)
       {
         TRACE_LOG("IKBD TDRS %X\n",src);
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
         ASSERT(OPTION_C1); //fool!
 #else
         if(OPTION_C1)
         {
 #endif
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
         time_of_event_acia=ACIA_IKBD.time_of_event_incoming
           =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
           + ACIA_TO_HD6301_IN_CYCLES;

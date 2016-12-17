@@ -203,7 +203,7 @@ void power_on()
 #endif
 
 #if defined(SSE_STF)
-#if defined(SSE_STF_383)
+#if defined(SSE_STF_390)
   SSEConfig.SwitchSTType(ST_TYPE);
 #else
   SwitchSTType(ST_TYPE);
@@ -309,7 +309,7 @@ void reset_peripherals(bool Cold)
 #endif
 
 #if defined(SSE_WD1772_RESET)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   WD1772.Reset();
 #else
   WD1772.Reset(Cold);
@@ -317,7 +317,7 @@ void reset_peripherals(bool Cold)
 #endif
 
 #if defined(SSE_INT_MFP)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   MC68901.Reset();
 #else
   MC68901.Reset(Cold);
@@ -398,7 +398,7 @@ void reset_peripherals(bool Cold)
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_last_word=MAKEWORD(128,128);
-#if defined(SSE_SOUND_DMA_383D)
+#if defined(SSE_SOUND_DMA_390D)
   dma_sound_internal_buf_len=0;
 #endif
 #if defined(SSE_CARTRIDGE_BAT) //hack to reduce pops
@@ -465,7 +465,7 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
   Glue.Reset(Cold);
 #endif
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;//useful?
 #endif
 }

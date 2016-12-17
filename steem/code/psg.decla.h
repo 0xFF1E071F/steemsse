@@ -88,7 +88,7 @@ EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT BYTE sound_bytes_per_sample INIT(1);
 #else
 EXT int sound_bytes_per_sample INIT(1);
@@ -199,7 +199,7 @@ EXT DWORD dma_sound_channel_buf_last_write_t;
       }                                 \
     }
 
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT BYTE psg_reg_select;
 EXT BYTE sound_time_method INIT(0);
 EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
@@ -224,7 +224,7 @@ EXT int dma_sound_l_top_val,dma_sound_r_top_val;
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT BYTE dma_sound_bass;
 EXT BYTE dma_sound_treble;
 #else

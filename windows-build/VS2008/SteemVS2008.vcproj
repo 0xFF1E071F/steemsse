@@ -25104,6 +25104,13 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
+						Name="Release_Opt_DrawC|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
 						Name="Release-Steem3.2+|Win32"
 						ExcludedFromBuild="true"
 						>
@@ -25154,6 +25161,13 @@
 					<FileConfiguration
 						Name="Release-DD|x64"
 						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-DD-64|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"

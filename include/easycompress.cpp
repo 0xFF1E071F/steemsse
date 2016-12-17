@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------
 #define MIN_PACK_LENGTH 4  //If we have 4 words the same in a row then pack them
 //---------------------------------------------------------------------------
-#pragma warning (disable: 4701) //SameLen==0 if break;//383
+#pragma warning (disable: 4701) //SameLen==0 if break;//390
 void EasyCompressFromMem(void *Buf,long Len,FILE *f)
 {
   WORD *Mem=(WORD*)Buf,*SearchAdr,*MemEnd=(WORD*)(long(Buf)+Len);
@@ -79,7 +79,7 @@ int EasyUncompressToMem(void *Buf,int Len,FILE* &f,bool FIsMem)
   if (Version!=0) return EASYCOMPRESS_CORRUPTFILE;
 
   for(;;){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     if(FIsMem)
       Desc=*(p++);
     else if (fread(&Desc,1,2,f)<2) 

@@ -219,7 +219,7 @@ void THD6301::Init() { // called in 'main'
     if(fp) // put ROM (4KB) at the end of 6301 RAM
     {
 #if defined(SSE_IKBD_6301_MINIRAM)
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
       fread(ram+256,1,4096,fp);
 #elif defined(SSE_VS2008_WARNING_382)
       size_t n=fread(ram+256,1,4096,fp);
@@ -278,7 +278,7 @@ void THD6301::ReceiveByte(BYTE data) {
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
   ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
   ACIA_IKBD.LineTxBusy=true;
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
   if(OPTION_C1)
     time_of_event_acia=ACIA_IKBD.time_of_event_outgoing=ACT+ACIA_TO_HD6301_IN_CYCLES;
   else

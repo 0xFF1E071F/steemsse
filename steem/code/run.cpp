@@ -130,7 +130,17 @@ void run()
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
 #if defined(SSE_GUI_STATUS_BAR_ICONS)
-  else if(M68000.ProcessingState==TM68000::BOILER_MESSAGE)
+
+  else if(
+#if defined(SSE_VID_D3D_390B)
+    M68000.ProcessingState==TM68000::BLIT_ERROR
+#ifdef SSE_BOILER
+    ||M68000.ProcessingState==TM68000::BOILER_MESSAGE
+#endif
+#else
+    M68000.ProcessingState==TM68000::BOILER_MESSAGE
+#endif
+    )
   {
     M68000.ProcessingState=TM68000::NORMAL;
     HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
@@ -208,10 +218,10 @@ void run()
   if (Blit.Busy) Blitter_Draw();
   do{
     ExcepHappened=0;
-#if defined(SSE_VAR_MAIN_LOOP1)//undef 383, see main.cpp
+#if defined(SSE_VAR_MAIN_LOOP1)//undef 390, see main.cpp
     try {
 #endif
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
     TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
       while (runstate==RUNSTATE_RUNNING){
@@ -262,7 +272,7 @@ void run()
       if (crash_notification!=CRASH_NOTIFICATION_NEVER){
         alertflag=true;
 //        try{
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
         TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
           WORD a=m68k_dpeek(LPEEK(e.bombs*4));
@@ -303,7 +313,7 @@ void run()
       if (runstate!=RUNSTATE_RUNNING) ExcepHappened=0;
 #endif
     END_M68K_EXCEPTION
-#if defined(SSE_VAR_MAIN_LOOP1)//undef 383
+#if defined(SSE_VAR_MAIN_LOOP1)//undef 390
 /*  This will catch exceptions during emulation.
     Tested with DIVMAX.TOS when SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
     Also triggered sometimes when refactoring GLUE/Frame timings
@@ -419,7 +429,7 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
     PREPARE_EVENT_CHECK_FOR_ACIA;
 #elif defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD;
@@ -472,7 +482,7 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
     PREPARE_EVENT_CHECK_FOR_ACIA;
 #elif defined(SSE_IKBD_6301_EVENT)
     PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
@@ -538,7 +548,7 @@ inline void handle_timeout(int tn) {
     new_timeout+=1; 
   }
 #endif
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
   new_timeout+=MC68901.Wobble[tn]=(rand() % MFP_TIMERS_WOBBLE);
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE)
    new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
@@ -871,7 +881,7 @@ void event_scanline()
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
 #if defined(SSE_SHIFTER) || defined(SSE_GLUE)
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
   if(Glue.FetchingLine())
 #endif
     Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
@@ -1095,7 +1105,7 @@ void event_start_vbl()
 {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.sdp_reload_done=true; // checked this line
-#if !defined(SSE_GLUE_383E1A4)
+#if !defined(SSE_GLUE_390E1A4)
 /*  This emulates several "reloads" just in case, but we use # line cycles to
     avoid spurious "reloads", because we don't even know the exact timing,
     nor how the GLU decides (Closure multi-scroll triggered reload if checking
@@ -1172,8 +1182,8 @@ void event_vbl_interrupt() //SS misleading name?
 */
   event_scanline_sub(); 
 #endif
-#if defined(SSE_GLUE_383E)
-#if defined(SSE_GLUE_383E1B)
+#if defined(SSE_GLUE_390E)
+#if defined(SSE_GLUE_390E1B)
   ASSERT(Glue.VCount);
 #endif
   if(Glue.VCount)
@@ -1197,7 +1207,7 @@ void event_vbl_interrupt() //SS misleading name?
         Shifter.DrawScanlineToEnd();
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-#if defined(SSE_GLUE_383E) //it's just to fill up the window
+#if defined(SSE_GLUE_390E) //it's just to fill up the window
       scan_y++;
 #else
       Glue.IncScanline();
@@ -1630,7 +1640,7 @@ void event_vbl_interrupt() //SS misleading name?
 
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
-#if !defined(SSE_INT_MFP_TIMER_B_383)
+#if !defined(SSE_INT_MFP_TIMER_B_390)
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 #endif
 // SS: this was so in the source
@@ -1816,7 +1826,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.vbi_done=true;
 #endif
-#if defined(SSE_GLUE_383E)
+#if defined(SSE_GLUE_390E)
 /*  Our hypothesis: the GLUE reloads a counter with a value depending on 
     frequency each time it runs out, then updates it each scanline.
     Not sure it's right, but it could be, and it makes emulation more simple
@@ -1827,10 +1837,10 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
-  #if defined(SSE_GLUE_383E1B)
+  #if defined(SSE_GLUE_390E1B)
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
 #endif
-#if defined(SSE_GLUE_383ED) // can't count on shifter_freq_idx TODO
+#if defined(SSE_GLUE_390ED) // can't count on shifter_freq_idx TODO
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
     Glue.VCount=501; // not 500
   else if (Glue.m_SyncMode&2) // 50hz
@@ -1890,7 +1900,7 @@ void event_driveB_ip() {
 
 #endif//wd
 
-#if defined(SSE_ACIA_383)
+#if defined(SSE_ACIA_390)
 //  ACIA events to handle IO with both 6301 and MIDI
 
 int time_of_event_acia=0;

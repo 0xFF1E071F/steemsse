@@ -34,7 +34,7 @@
 
 #if defined(SSE_WD1772_RESET)
 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 
 void TWD1772::Reset() {
 
@@ -72,7 +72,7 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
   IDField.track=SF314[drive].Track(); // not TR
   IDField.side=YM2149.SelectedSide;
   IDField.num=SR; 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   WORD nbytes=512;
 #else
   WORD nbytes;
@@ -89,17 +89,17 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
     switch(Dma.Counter) {
     case 0:
       nbytes=0;
-#if defined(SSE_DISK_GHOST_SECTOR_383)//oops
+#if defined(SSE_DISK_GHOST_SECTOR_390)//oops
       break;
 #endif
     case 2:
       nbytes=1024;
       IDField.len=3;
-#if defined(SSE_DISK_GHOST_SECTOR_383)
+#if defined(SSE_DISK_GHOST_SECTOR_390)
       break;
 #endif
     default:
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
       nbytes=512;
 #endif
       IDField.len=2;
@@ -252,7 +252,7 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
 
 BYTE TWD1772::IORead(BYTE Line) {
   
-#if defined(SSE_WD1772_383)
+#if defined(SSE_WD1772_390)
   ASSERT( Line<=3 );
   BYTE drive=DRIVE;
 #ifdef _DEBUG
@@ -372,7 +372,7 @@ WD doc:
       ior_byte=DR;
       TRACE_FDC("FDC DR R %d PC %X\n",ior_byte,old_pc);
       break;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 		default:
 			NODEFAULT;
 #endif
@@ -386,7 +386,7 @@ WD doc:
 
   return ior_byte;
 
-#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_383)
+#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_390)
 #undef drive
 #endif
 }
@@ -394,7 +394,7 @@ WD doc:
 
 void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 
-#if defined(SSE_WD1772_383)
+#if defined(SSE_WD1772_390)
   ASSERT( Line<=3 );
   BYTE drive=DRIVE;
 #else
@@ -523,7 +523,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
     DR=io_src_b;
     break;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   default:
     NODEFAULT;
 #endif
@@ -543,7 +543,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       Caps.WriteWD1772(Line,io_src_b);
 #endif
       
-#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_383)
+#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_390)
 #undef drive
 #endif
   
@@ -569,7 +569,7 @@ BYTE TWD1772::CommandType(int command) {
 
 
 #if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 bool TWD1772::WritingToDisk() {
 #else
 int TWD1772::WritingToDisk() { // could do this at DMA level?
@@ -1076,7 +1076,7 @@ void TWD1772::Irq(bool state) {
       SF314[0].Sound_CheckIrq();
 #endif
 #endif
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
     Dma.UpdateRegs();
 #else
     Dma.UpdateRegs(true);
@@ -1163,7 +1163,7 @@ void TWD1772::NewCommand(BYTE command) {
       Motor(true); // but does it make sense?
       prg_phase=WD_TYPEI_SPUNUP;
       STR|=STR_SU; // eg ST NICCC 2
-#if defined(SSE_WD1772_383B) 
+#if defined(SSE_WD1772_390B) 
 /*  Add a delay, not only for RESTORE (My Socks Are Weapons), but also
     SEEK (Suretrip II), while being fast enough for MPS Golf-ELT!
 */
@@ -1265,7 +1265,7 @@ void TWD1772::NewCommand(BYTE command) {
 /*  Drive calls this function at IP if it's selected.
     Whether the WD1772 is waiting for it or not.
 */
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
 void TWD1772::OnIndexPulse(bool image_triggered) {
 #else
 void TWD1772::OnIndexPulse(int id,bool image_triggered) {
@@ -1412,13 +1412,13 @@ void TWD1772::OnUpdate() {
         if(Lines.track0)
           TR=0;
         DR=0;
-#if !defined(SSE_WD1772_383B) //done before now
+#if !defined(SSE_WD1772_390B) //done before now
         // imitate Steem native, eg My Socks are Weapons
         // not documented; only restore?
         update_time=time_of_next_event+1024;
 #endif
       }    
-#if !defined(SSE_WD1772_383B)
+#if !defined(SSE_WD1772_390B)
       else
 #endif
        OnUpdate(); // some recursion is always cool   
@@ -1671,7 +1671,7 @@ r1       r0            1772
 //    SF314[DRIVE].State.reading=true;
     // check Write Protect for command write sector
     if((CR&CR_TYPEII_WRITE) 
-#if defined(SSE_WD1772_383C) //Lines.write_protect is undefined!
+#if defined(SSE_WD1772_390C) //Lines.write_protect is undefined!
       && (FloppyDrive[DRIVE].ReadOnly) )
 #else
       && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )
@@ -1930,7 +1930,7 @@ r1       r0            1772
     }
     // check Write Protect for command write track
     else if((CR&CR_TYPEIII_WRITE) 
-#if defined(SSE_WD1772_383C) //Lines.write_protect is undefined!
+#if defined(SSE_WD1772_390C) //Lines.write_protect is undefined!
       && (FloppyDrive[DRIVE].ReadOnly) )
 #else
       && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )

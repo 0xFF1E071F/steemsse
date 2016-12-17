@@ -46,7 +46,7 @@ bool ExtensionIsPastiDisk(char *Ext)
   return false;
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
 int ExtensionIsDisk(char *Ext)
 #else
 int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
@@ -262,7 +262,7 @@ TDiskManager::TDiskManager()
 #endif
 
   DiskDiag=NULL;
-#if !defined(SSE_VAR_NO_WINSTON_383)
+#if !defined(SSE_VAR_NO_WINSTON_390)
   LinksDiag=NULL;
   ImportDiag=NULL;
 #endif
@@ -448,7 +448,7 @@ http://www.microsoft-questions.com/microsoft/Platform-SDK-Shell/32138755/vista-l
   for (int d=0;d<27;d++){
     Root[0]=char('A'+d);
     if (GetDriveType(Root)>1){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       SendMessage(Win,CB_ADDSTRING,0,(LPARAM)Root);
 #else
       SendMessage(Win,CB_ADDSTRING,0,(long)Root);
@@ -631,7 +631,7 @@ void TDiskManager::SetDiskViewMode(int Mode)
     WIDTHHEIGHT widh=GetTextSize(Font,"8");
     ListView_SetIconSpacing(DiskView,32+24+IconSpacing*12,38 + (widh.Height+2)*2);
   }
-#ifdef SSE_X64_383
+#ifdef SSE_X64_390
   SendMessage(DiskView,LVM_SORTITEMS,0,(LPARAM)CompareFunc);
 #else
   SendMessage(DiskView,LVM_SORTITEMS,0,(long)CompareFunc);
@@ -682,7 +682,7 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
 
     {
       SetWindowText(GetDlgItem(Handle,97),Fol.Lefts(Fol.Length()-1).Text+min(3,Fol.Length()-1));
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       int idx=SendMessage(GetDlgItem(Handle,90),CB_FINDSTRING,0xffffffff,(LPARAM)((Fol.Lefts(2)+"\\").Text));
 #else
       int idx=SendMessage(GetDlgItem(Handle,90),CB_FINDSTRING,0xffffffff,(long)((Fol.Lefts(2)+"\\").Text));
@@ -856,7 +856,7 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
     lvi.iSubItem=0;
     lvi.pszText=LPSTR_TEXTCALLBACK;
     for (int n=0;n<Files.NumItems;n++){
-#ifdef SSE_X64_383
+#ifdef SSE_X64_390
       lvi.lParam=(LPARAM)(Files[n]);
 #else
       lvi.lParam=long(Files[n]);
@@ -902,7 +902,7 @@ void TDiskManager::SetDir(EasyStr NewFol,bool AddToHistory,
       lvi.stateMask=LVIS_SELECTED | LVIS_FOCUSED;
       lvi.state=LVIS_SELECTED | LVIS_FOCUSED;
       iSelItem=bound(iSelItem,0,max(SendMessage(DiskView,LVM_GETITEMCOUNT,0,0)-1,0L));
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
       SendMessage(DiskView,LVM_SETITEMSTATE,iSelItem,(LPARAM)&lvi);
 #else
       SendMessage(DiskView,LVM_SETITEMSTATE,iSelItem,(long)&lvi);
@@ -977,7 +977,7 @@ int TDiskManager::GetSelectedItem()
 bool TDiskManager::HasHandledMessage(MSG *mess)
 {
   if (Handle!=NULL && Dragging==-1){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     if (VisibleDiag()){
       return (IsDialogMessage(VisibleDiag(),mess)!=0);
     }else{
@@ -1236,7 +1236,7 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
     InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
     if (AddProperties){
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1099,T("Properties"));
-#if !defined(SSE_GUI_383)
+#if !defined(SSE_GUI_390)
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,999,NULL);
 #endif
     }
@@ -1291,7 +1291,7 @@ void wd1772_write_stw(BYTE data,TWD1772MFM* wd1772mfm,TWD1772Crc* wd1772crc,
 #else
 #define GET_THIS This=(TDiskManager*)GetWindowLong(Win,GWL_USERDATA);
 #endif
-#pragma warning (disable: 4701) //lvi in case WM_USER//383
+#pragma warning (disable: 4701) //lvi in case WM_USER//390
 LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   LRESULT Ret=DefStemDialogProc(Win,Mess,wPar,lPar);
@@ -1682,7 +1682,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
           if (HIWORD(wPar)==CBN_SELENDOK){
             char Text[8];
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
             SendMessage((HWND)lPar,CB_GETLBTEXT,SendMessage((HWND)lPar,CB_GETCURSEL,0,0),(LPARAM)Text);
 #else
             SendMessage((HWND)lPar,CB_GETLBTEXT,SendMessage((HWND)lPar,CB_GETCURSEL,0,0),(long)Text);
@@ -1690,7 +1690,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             if (Text[0]!=This->DisksFol[0]){
               This->SetDir(Text,true);
               if (Text[0]!=This->DisksFol[0]){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
                 int idx=SendMessage((HWND)lPar,CB_FINDSTRING,0xffffffff,(LPARAM)((This->DisksFol.Lefts(2)+"\\").Text));
 #else
                 int idx=SendMessage((HWND)lPar,CB_FINDSTRING,0xffffffff,(long)((This->DisksFol.Lefts(2)+"\\").Text));
@@ -2588,7 +2588,7 @@ That will toggle bit x.
 /*  This is so the player can read the full name of the disk without
     checking at the place of storage.
     If he clicks on it, it is copied in the clipboard, whatever use this
-    then may have. (383 switch restored)
+    then may have. (390 switch restored)
 */
 #if defined(SSE_GUI_DM_NAME_CLIPBOARD)
           InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,1082,
@@ -3085,7 +3085,7 @@ That will toggle bit x.
     case WM_GETMINMAXINFO:
     {
       MINMAXINFO *mmi=(MINMAXINFO*)lPar;
-#if defined(SSE_ACSI_ICON_383) //report Dima
+#if defined(SSE_ACSI_ICON_390) //report Dima
       mmi->ptMinTrackSize.x=403+70+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
 #else
       mmi->ptMinTrackSize.x=403+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
@@ -3698,13 +3698,13 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
   lvi.iImage=int(Inf->Zip ? 8:(1+FloppyDrive[Drive].ReadOnly*4));
   lvi.stateMask=LVIS_SELECTED | LVIS_FOCUSED;
   lvi.state=LVIS_SELECTED | LVIS_FOCUSED;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   lvi.lParam=(LPARAM)Inf;
 #else
   lvi.lParam=(long)Inf;
 #endif
   lvi.pszText=Inf->Name;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(LV,LVM_INSERTITEM,0,(LPARAM)&lvi);
 #else
   SendMessage(LV,LVM_INSERTITEM,0,(long)&lvi);
@@ -3845,7 +3845,7 @@ void TDiskManager::EjectDisk(int Drive)
     ||SF314[Drive].ImageType.Extension==EXT_TOS)
   {
     HardDiskMan.DisableHardDrives=true; // we suppose it's wanted
-#ifdef SSE_TOS_PRG_AUTORUN_383
+#ifdef SSE_TOS_PRG_AUTORUN_390
     stemdos_current_drive=0; // A:
 #endif
 #ifdef SSE_GUI_DM_HD_SELECTED // update GEMDOS HD icon

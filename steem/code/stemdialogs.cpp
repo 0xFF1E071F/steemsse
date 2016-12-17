@@ -40,7 +40,7 @@ TStemDialog::TStemDialog()
 inline bool TStemDialog::HasHandledMessage(MSG *mess)
 {
   if (Handle){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     return (IsDialogMessage(Handle,mess)!=0);
 #else
     return IsDialogMessage(Handle,mess);

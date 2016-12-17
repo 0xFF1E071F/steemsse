@@ -31,7 +31,7 @@ void CheckSTTypeAndTos() {
 }
 #endif
 
-#if !defined(SSE_STF_383)
+#if !defined(SSE_STF_390)
 
 int SwitchSTType(int new_type) { 
 
@@ -45,21 +45,15 @@ int SwitchSTType(int new_type) {
 #endif
 #if defined(SSE_CPU_MFP_RATIO)
 
-#if defined(SSE_CPU_MFP_RATIO_STF) 
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
-      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLOCK;
     else
 #endif
     {
-      CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLOCK;
       CpuNormalHz=CPU_STF_PAL;
     }
-
-#else
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
-#endif
 #endif
 
   }
@@ -73,24 +67,12 @@ int SwitchSTType(int new_type) {
 #if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
-      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLK_TH_EXACT;
+      CpuMfpRatio=(double)CpuCustomHz/(double)MFP_CLOCK;
     else
 #endif
     {
-#if defined(SSE_CPU_MFP_RATIO_STE_AS_STF)
-#if defined(SSE_CPU_MFP_RATIO_STE2)
-    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLK_TH_EXACT;
-#else
-    CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLK_TH_EXACT;
-#endif
+    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLOCK;
     CpuNormalHz=CPU_STE_PAL; 
-#elif defined(SSE_CPU_MFP_RATIO_STE)
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_STE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
-#else
-    CpuMfpRatio=(double)CPU_STE_TH/(double)MFP_CLK_LE_EXACT;
-    CpuNormalHz=CPU_STE_TH;
-#endif
     }
     TRACE_INIT("CPU~%d hz\n",CpuNormalHz);
 #endif

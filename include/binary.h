@@ -1,4 +1,4 @@
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 #define b00000000 (BYTE) 0x0
 #define b00000001 (BYTE) 0x1
 #define b00000010 (BYTE) 0x2

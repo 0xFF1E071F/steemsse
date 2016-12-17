@@ -58,7 +58,7 @@
  
  */
 #include <SSE/SSE.h>
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 extern int abs(int);
 #endif
 

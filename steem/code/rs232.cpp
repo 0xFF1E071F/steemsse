@@ -136,7 +136,7 @@ void RS232_WriteReg(int Reg,BYTE NewVal)
   switch (Reg){
     case MFPR_UCR:
     {
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       DWORD old_bpw=rs232_bits_per_word;
 #else
       int old_bpw=rs232_bits_per_word;

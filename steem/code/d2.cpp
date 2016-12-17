@@ -176,7 +176,7 @@ BYTE d2_peek(MEM_ADDRESS ad){
       BYTE x;
       int old_mode=mode;
       mode=STEM_MODE_INSPECT;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
 //      try{
@@ -229,7 +229,7 @@ WORD d2_dpeek(MEM_ADDRESS ad)
       for(int nn=0;nn<2;nn++){
         x<<=8;
         d2_peekvalid<<=8;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
         TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
           x|=io_read_b(ad+nn);
@@ -270,7 +270,7 @@ LONG d2_lpeek(MEM_ADDRESS ad){
         x<<=8;
         d2_peekvalid<<=8;
 //        try{
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
         TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
           x|=io_read_b(ad+nn);
@@ -307,7 +307,7 @@ bool d2_poke(MEM_ADDRESS ad,BYTE val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
         io_write_b(ad,val);
@@ -351,7 +351,7 @@ bool d2_dpoke(MEM_ADDRESS ad,WORD val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
         io_write_w(ad,val);
@@ -382,7 +382,7 @@ bool d2_lpoke(MEM_ADDRESS ad,LONG val){
     if(ad>=MEM_IO_BASE){
 //      try{
       bool Ret=true;
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
         io_write_l(ad,val);
@@ -422,7 +422,7 @@ EasyStr d2_get_movem_regs(bool backwards){
   int regs=d2_dpeek(dpc);dpc+=2;
   bool had_one=false;
   d2_n_movem_regs=0;
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   int msk=1,old_msk=0;if(backwards)msk=0x8000;
 #else
   int msk=1,old_msk;if(backwards)msk=0x8000;

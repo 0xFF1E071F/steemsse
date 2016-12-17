@@ -39,7 +39,7 @@ EXT BYTE stick[8];
 #if defined(SSE_UNIX) || defined(MINGW_BUILD)
 char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 const char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
 static char AxisToName[7]={'X','Y','Z','R','U','V','P'};
@@ -417,7 +417,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       if (Joy[N_JOY_STE_A_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_A_0));
       }else{
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
         Ret|=(stick[N_JOY_STE_A_0] & BIT_7);
         Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
 #else
@@ -432,7 +432,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       if (Joy[N_JOY_STE_B_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_B_0));
       }else{
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
         Ret|=(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
         Ret|=(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
 #else
@@ -531,7 +531,7 @@ void InitJoysticks(int Method)
 
         JoyInfo[i].AxisExists[AXIS_X]=true;
         JoyInfo[i].AxisExists[AXIS_Y]=true;
-#if defined(SSE_VS2008_WARNING_383)         
+#if defined(SSE_VS2008_WARNING_390)         
         JoyInfo[i].AxisExists[AXIS_Z]=(jc.wCaps & JOYCAPS_HASZ)!=0;
         JoyInfo[i].AxisExists[AXIS_R]=(jc.wCaps & JOYCAPS_HASR)!=0;
         JoyInfo[i].AxisExists[AXIS_U]=(jc.wCaps & JOYCAPS_HASU)!=0;
@@ -674,7 +674,7 @@ bool TJoystickConfig::HasHandledMessage(MSG *mess)
   if (Handle!=NULL){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
         if (GetKeyState(VK_CONTROL)>=0) return (IsDialogMessage(Handle,mess)!=0);
 #else
         if (GetKeyState(VK_CONTROL)>=0) return IsDialogMessage(Handle,mess);
@@ -687,7 +687,7 @@ bool TJoystickConfig::HasHandledMessage(MSG *mess)
   }
 }
 //---------------------------------------------------------------------------
-#pragma warning (disable: 4701) //FireY init when p=0//383
+#pragma warning (disable: 4701) //FireY init when p=0//390
 void TJoystickConfig::Show()
 {
   if (Handle!=NULL){
@@ -798,7 +798,7 @@ void TJoystickConfig::Show()
                       CBS_HASSTRINGS | CBS_DROPDOWNLIST,
                       x+15+w,y,225-(5+w),200,
                       Handle,(HMENU)(102+p*100),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Never"));
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Always"));
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("When Scroll Lock On"));
@@ -886,7 +886,7 @@ void TJoystickConfig::Show()
     y+=30;
 
     EasyStr Text=T("Or any button on");
-#if defined(SSE_JOYSTICK_JUMP_BUTTON_383) //116 is for 2nd jump button
+#if defined(SSE_JOYSTICK_JUMP_BUTTON_390) //116 is for 2nd jump button
     CreateWindow("Static",Text,WS_CHILD | WS_VISIBLE | int(NumJoysticks==0 ? WS_DISABLED:0),
                   x+10,y+4,GetTextSize(Font,Text).Width,23,Handle,(HMENU)(1160+p*100),HInstance,NULL);
 #else
@@ -896,7 +896,7 @@ void TJoystickConfig::Show()
     w=GetTextSize(Font,Text).Width;
     HWND Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST | int(NumJoysticks==0 ? WS_DISABLED:0),
                             x+w+15,y,235-(w+15),200,Handle,(HMENU)(118+p*100),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)"-");
     for (int n=0;n<MAX_PC_JOYS;n++) if (JoyExists[n]) SendMessage(Win,CB_ADDSTRING,0,(LPARAM)((T("Joystick")+" "+(n+1)).Text));
 #else
@@ -911,7 +911,7 @@ void TJoystickConfig::Show()
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST,
                             x+15+w,y,80,200,Handle,(HMENU)(117+p*100),HInstance,NULL);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("V.Fast"));
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Fast"));
@@ -1020,14 +1020,14 @@ void TJoystickConfig::FillJoyTypeCombo()
 //---------------------------------------------------------------------------
 void TJoystickConfig::CheckJoyType()
 {
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
   bool Port0Hidden=(GetWindowLong(GetDlgItem(Handle,95),GWL_STYLE) & WS_VISIBLE)!=0;
 #else
   bool Port0Hidden=bool(GetWindowLong(GetDlgItem(Handle,95),GWL_STYLE) & WS_VISIBLE);
 #endif
   int Port0ShowType=SW_SHOW;
   bool PortOAlter=Port0Hidden;
-#if defined(SSE_VS2008_WARNING_383) 
+#if defined(SSE_VS2008_WARNING_390) 
   bool Port1Jagpad=(GetWindowLong(GetDlgItem(Handle,170),GWL_STYLE) & WS_VISIBLE)!=0;
 #else
   bool Port1Jagpad=bool(GetWindowLong(GetDlgItem(Handle,170),GWL_STYLE) & WS_VISIBLE);
@@ -1137,7 +1137,7 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
         InvalidateRect(GetDlgItem(Handle,n),NULL,0);
       }
     }
-#if defined(SSE_JOYSTICK_JUMP_BUTTON_383) // hide "Or any button on" for joypad
+#if defined(SSE_JOYSTICK_JUMP_BUTTON_390) // hide "Or any button on" for joypad
     ShowWindow(GetDlgItem(Handle,1160),false);
 #endif
   }
@@ -1226,7 +1226,7 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
         {
           int Port=BasePort+(LOWORD(wPar)/100 - 1);
           Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=GetWindowWord(HWND(lPar),0);
-#if defined(SSE_GUI_JOYSTICK_383)
+#if defined(SSE_GUI_JOYSTICK_390)
           if(Joy[Port].DirID[(LOWORD(wPar) % 100)-10]==VK_DELETE)
           {
             Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=0; // assign nothing

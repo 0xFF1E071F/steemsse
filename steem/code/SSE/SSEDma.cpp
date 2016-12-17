@@ -41,7 +41,7 @@
 
 #if defined(SSE_DMA_OBJECT)
 
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_DMA
 #endif
 
@@ -169,7 +169,7 @@ BYTE TDma::GetFifoByte() {
 /*  Read/write on disk DMA registers.
 */
 
-#if !defined(SSE_BOILER_383_LOG2)
+#if !defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_IO
 #endif
 
@@ -487,7 +487,7 @@ Not emulated
 #endif
 
 
-#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_390_LOG2)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_LOG("PC %X DMA R %X %X\n",old_pc,addr,ior_byte);
 #endif
@@ -500,7 +500,7 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
 
   ASSERT( (addr&0xFFFF00)==0xFF8600 );
 
-#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_TRACE_CONTROL) && !defined(SSE_BOILER_390_LOG2)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCDMA)
     TRACE_FDC("PC %X DMA W %X %X\n",old_pc,addr,io_src_b);
 #endif
@@ -810,7 +810,7 @@ is no such effect because they are read only on the ST.
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_FDC
 
-#if defined(SSE_VS2008_WARNING_383) && !defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
 void TDma::UpdateRegs() {
 #else
 void TDma::UpdateRegs(bool trace_them) {
@@ -887,7 +887,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_DEBUG_FDC_TRACE_STATUS)
       WD1772.TraceStatus();
 #endif
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
       TRACE_FDC("TR %d (CYL %d) SR %d DR %d\n",fdc_tr,floppy_head_track[DRIVE],fdc_sr,fdc_dr);
 #else
       TRACE_LOG("TR %d SR %d DR %d",fdc_tr,fdc_sr,fdc_dr);
@@ -896,7 +896,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #if defined(SSE_YM2149A)//?
  //   TRACE_FDC(" %c%d:",'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
-#if !defined(SSE_BOILER_383_LOG2)
+#if !defined(SSE_BOILER_390_LOG2)
     TRACE_LOG(" CYL %d byte %d DMA CR %X $%X #%d\n",
       floppy_head_track[DRIVE],SF314[DRIVE].BytePosition(),MCR,BaseAddress,Counter);
 #endif

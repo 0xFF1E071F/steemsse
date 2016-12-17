@@ -15,7 +15,7 @@ table of Motorola 68000 timings, except for... exceptions.
 #define EXT
 #define INIT(s) =s
 
-extern const char*exception_action_name[4];//383
+extern const char*exception_action_name[4];//390
 
 m68k_exception ExceptionObject;
 jmp_buf *pJmpBuf=NULL;
@@ -53,7 +53,7 @@ bool m68k_do_trace_exception;
 #endif
 signed int compare_buffer;
 
-#if defined(SSE_VAR_OPT_383A)
+#if defined(SSE_VAR_OPT_390A)
 int act; 
 #endif
 
@@ -119,7 +119,7 @@ void m68k_interrupt(MEM_ADDRESS ad) {
 #endif
   m68k_PUSH_W(_sr);
   SET_PC(ad);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITRESET(sr,SR_TRACE_BIT);
 #else
   SR_CLEAR(SR_TRACE);
@@ -346,7 +346,7 @@ ST:                 | 36(4/3)  |              nn    ns nS ns nV nv np n+ np
       CPU_ABUS_ACCESS_WRITE_PUSH; // ns
       m68k_PUSH_W(_sr); // Status register 
       MEM_ADDRESS ad=LPEEK(bombs*4); // Get the vector
-      abus=ad;//383
+      abus=ad;//390
       CPU_ABUS_ACCESS_READ_L; //nV nv
       if(ad & 1) // bad vector!
       {
@@ -362,13 +362,13 @@ ST:                 | 36(4/3)  |              nn    ns nS ns nV nv np n+ np
       }
       else
       {
-        pc=ad;//383
+        pc=ad;//390
         TRACE_LOG("PC = %X\n\n",ad);
         CPU_ABUS_ACCESS_READ_FETCH; // np
         INSTRUCTION_TIME(2); //n (-> nn)
         CPU_ABUS_ACCESS_READ_FETCH; //np
         SET_PC(ad);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_TRACE_BIT);
 #else
         SR_CLEAR(SR_TRACE);
@@ -389,7 +389,7 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
       INSTRUCTION_TIME(4); //nn
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
-#pragma warning(disable: 4611) //383
+#pragma warning(disable: 4611) //390
       TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
       {
@@ -439,12 +439,12 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
         TRACE_LOG("Exception during exception...\n");
 #if defined(SSE_CPU_HALT)
         perform_crash_and_burn(); //wait for cases...
-#else//383
+#else//390
         r[15]=0xf000; // R15=A7  // should be halt?
 #endif
       }
       END_M68K_EXCEPTION
-      abus=LPEEK(bombs*4);//383
+      abus=LPEEK(bombs*4);//390
       TRACE_LOG("PC = %X\n\n",abus);
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
       Debug.RecordInterrupt("BOMBS",bombs);
@@ -455,7 +455,7 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
       INSTRUCTION_TIME(2); //n (-> nn)
       SET_PC(abus);
       CPU_ABUS_ACCESS_READ_FETCH; //np
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_TRACE_BIT);
 #else
       SR_CLEAR(SR_TRACE);
@@ -506,7 +506,7 @@ void m68k_unrecognised() //SS trap1 in Motorola doc
 #if defined(DEBUG_BUILD)
 
 void DebugCheckIOAccess() {
-#if defined(SSE_BOILER_383)
+#if defined(SSE_BOILER_390)
   if (ioaccess & IOACCESS_DEBUG_MEM_WRITE_LOG){ \
     int val=int((debug_mem_write_log_bytes==1) ? int(d2_peek(debug_mem_write_log_address)):int(d2_dpeek(debug_mem_write_log_address))); \
     log_write(HEXSl(old_pc,6)+": Write to address $"+HEXSl(debug_mem_write_log_address,6)+ \
@@ -659,7 +659,7 @@ void m68kProcess() {
 #if defined(SSE_CPU_TRACE_REFACTOR)
   if(M68000.tpend)
     M68000.tpend=false;
-#if defined(SSE_VC_INTRINSICS_382) && defined(SSE_VC_INTRINSICS_383A)
+#if defined(SSE_VC_INTRINSICS_382) && defined(SSE_VC_INTRINSICS_390A)
   else if BITTEST(sr,0xf)
 #else
   else if(sr&SR_TRACE)
@@ -947,7 +947,7 @@ extern "C" ASMCALL void m68k_trace() //execute instruction with trace bit set
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#if defined(SSE_VC_INTRINSICS_383A) //apparently it performs worse?
+#if defined(SSE_VC_INTRINSICS_390A) //apparently it performs worse?
 
 inline bool m68k_condition_test_t(){return true;}
 inline bool m68k_condition_test_f(){return false;}
@@ -1300,13 +1300,13 @@ void                              m68k_btst(){
     INSTRUCTION_TIME(2); //n
     m68k_src_b&=31;
     if((r[PARAM_M]>>m68k_src_b)&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1331,13 +1331,13 @@ void                              m68k_btst(){
       m68k_GET_SOURCE_B_NOT_A; //EA
       PREFETCH_IRC; //np
       if((m68k_src_b>>m68k_ap)&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1367,13 +1367,13 @@ void                              m68k_bchg(){
       INSTRUCTION_TIME(2); //n
     m68k_src_l=1<<m68k_src_b;
     if(r[PARAM_M]&m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1397,13 +1397,13 @@ void                              m68k_bchg(){
     PREFETCH_IRC; // np
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1433,13 +1433,13 @@ void                              m68k_bclr(){
       INSTRUCTION_TIME(4); //nn
     m68k_src_l=1<<m68k_src_b;
     if(r[PARAM_M]&m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1463,13 +1463,13 @@ void                              m68k_bclr(){
     PREFETCH_IRC; //np
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1499,13 +1499,13 @@ void                              m68k_bset(){
       INSTRUCTION_TIME(2); // n
     m68k_src_l=1 << m68k_src_b;
     if (r[PARAM_M] & m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1529,13 +1529,13 @@ void                              m68k_bset(){
     PREFETCH_IRC; //np
     m68k_src_b=(BYTE)(1<<m68k_src_b);
     if(m68k_DEST_B&m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_Z_BIT);
 #else
       SR_CLEAR(SR_Z);
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
@@ -1775,15 +1775,15 @@ Dn,Dm :           |                 |             |               |
   .L :            |  6(1/0)  0(0/0) |             |               | np n    
 */
       PREFETCH_IRC; //np
-      INSTRUCTION_TIME(2); //n //383
+      INSTRUCTION_TIME(2); //n //390
       if ((r[PARAM_M] >> (31 & r[PARAM_N])) & 1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1801,17 +1801,17 @@ Dn,Dm :           |                 |             |               |
     (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
     (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np     
 */
-      CPU_ABUS_ACCESS_READ_FETCH; //np //383
+      CPU_ABUS_ACCESS_READ_FETCH; //np //390
       m68k_GET_SOURCE_B_NOT_A; //EA  //even immediate mode is allowed!!!!
       PREFETCH_IRC; //np
       if( (m68k_src_b >> (7 & r[PARAM_N])) & 1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1885,13 +1885,13 @@ Dn,Dm :           |                 |             |               |
       else
         INSTRUCTION_TIME(2); //n
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1914,13 +1914,13 @@ Dn,<ea> :         |                 |             |               |
       m68k_GET_DEST_B_NOT_A; // EA
       PREFETCH_IRC; //np
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1964,13 +1964,13 @@ Dn,Dm :           |                 |             |               |
       else
         INSTRUCTION_TIME(4); //n
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -1993,13 +1993,13 @@ Dn,<ea> :         |                 |             |               |
       m68k_GET_DEST_B_NOT_A; // EA
       PREFETCH_IRC; //np
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -2062,13 +2062,13 @@ Dn,Dm :           |                 |             |               |
       else
         INSTRUCTION_TIME(2); //n
       if((r[PARAM_M]>>(m68k_src_w))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -2090,13 +2090,13 @@ Dn,<ea> :         |                 |             |               |
       m68k_GET_DEST_B_NOT_A; // EA
       PREFETCH_IRC; //np
       if((m68k_DEST_B>>(7&r[PARAM_N]))&1){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
 #else
         SR_CLEAR(SR_Z);
 #endif
       }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_Z_BIT);
 #else
         SR_SET(SR_Z);
@@ -2146,12 +2146,12 @@ void                              m68k_negx_b(){
   m68k_GET_DEST_B_NOT_A; //EA
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER) 
-    CPU_ABUS_ACCESS_WRITE; // nw //383
+    CPU_ABUS_ACCESS_WRITE; // nw //390
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   if(sr&SR_X)m68k_DEST_B--;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_DEST_B)
     BITRESET(sr,SR_Z_BIT);
   if(m68k_old_dest&m68k_DEST_B&MSB_B)
@@ -2185,12 +2185,12 @@ void                             m68k_negx_w(){
   m68k_GET_DEST_W_NOT_A; //EA
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER) 
-    CPU_ABUS_ACCESS_WRITE; // nw 383
+    CPU_ABUS_ACCESS_WRITE; // nw 390
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   if(sr&SR_X)m68k_DEST_W--;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_DEST_W)
     BITRESET(sr,SR_Z_BIT);
   if(m68k_old_dest&m68k_DEST_W&MSB_W)
@@ -2231,7 +2231,7 @@ void                             m68k_negx_l(){
   m68k_DEST_L=-m68k_DEST_L;
   if(sr&SR_X)m68k_DEST_L-=1;
   SR_CLEAR(SR_X+SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_DEST_L)
     BITRESET(sr,SR_Z_BIT);
   if(m68k_old_dest&m68k_DEST_L&MSB_L)
@@ -2272,7 +2272,7 @@ void                              m68k_clr_b(){
     DEBUG_CHECK_WRITE_B(abus);
 #endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITSET(sr,SR_Z_BIT);
 #else
   SR_SET(SR_Z);
@@ -2304,7 +2304,7 @@ void                             m68k_clr_w(){
     DEBUG_CHECK_WRITE_W(abus);
 #endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITSET(sr,SR_Z_BIT);
 #else
   SR_SET(SR_Z);
@@ -2340,7 +2340,7 @@ void                             m68k_clr_l(){
     DEBUG_CHECK_WRITE_L(abus);
 #endif
   SR_CLEAR(SR_N+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   BITSET(sr,SR_Z_BIT);
 #else
   SR_SET(SR_Z);
@@ -2368,7 +2368,7 @@ void                              m68k_neg_b(){
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_old_dest&m68k_DEST_B&MSB_B)
     BITSET(sr,SR_V_BIT);
 #else
@@ -2399,7 +2399,7 @@ void                             m68k_neg_w(){
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_old_dest&m68k_DEST_W&MSB_W)
     BITSET(sr,SR_V_BIT);
 #else
@@ -2432,7 +2432,7 @@ void                             m68k_neg_l(){
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   SR_CLEAR(SR_USER_BYTE);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_old_dest&m68k_DEST_L&MSB_L)
     BITSET(sr,SR_V_BIT);
 #else
@@ -2533,7 +2533,7 @@ void                              m68k_tst_b(){
 */
   BYTE x=m68k_read_dest_b(); // EA
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(!x)
     BITSET(sr,SR_Z_BIT);
   if(x&MSB_B)
@@ -2560,7 +2560,7 @@ void                             m68k_tst_w(){
 */
   WORD x=m68k_read_dest_w(); // EA
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(!x)
     BITSET(sr,SR_Z_BIT);
   if(x&MSB_W)
@@ -2587,7 +2587,7 @@ void                             m68k_tst_l(){
 */
   LONG x=m68k_read_dest_l(); // EA
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(!x)
     BITSET(sr,SR_Z_BIT);
   if(x&MSB_L)
@@ -2774,7 +2774,7 @@ void                              m68k_nbcd(){
   SR_CLEAR(SR_X+SR_C);
   if(m)SR_SET(SR_X+SR_C); //there will be a carry
   m68k_DEST_B=(BYTE)(n-m);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(m68k_DEST_B) 
     BITRESET(sr,SR_Z_BIT);
 #else
@@ -2795,7 +2795,7 @@ Dn :              |                 |
 */
     r[PARAM_M]=MAKELONG(HIWORD(r[PARAM_M]),LOWORD(r[PARAM_M]));
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     if(!r[PARAM_M])
       BITSET(sr,SR_Z_BIT);
     if(r[PARAM_M]&MSB_L)
@@ -2890,7 +2890,7 @@ Dn :              |                 |
     default:
       m68k_unrecognised();
     }//sw
-//383
+//390
     if(PREFETCH_CLASS_1) //(xxx).W (xxx).L   np nS ns np 
       CPU_ABUS_ACCESS_READ_FETCH;  //np
     else //np nS ns
@@ -2927,13 +2927,13 @@ Dn :              |                 |               |
     m68k_src_w=m68k_fetchW();pc+=2; 
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     short bit=0,BlitterStart=0;
 #else
     short mask=1,BlitterStart=0;
 #endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       if(BITTEST(m68k_src_w,bit)) {
 #else
       if (m68k_src_w & mask){
@@ -2949,7 +2949,7 @@ Dn :              |                 |               |
           }
         }
       }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       bit++;
 #else
       mask<<=1;
@@ -2991,7 +2991,7 @@ Dn :              |                 |               |
     }
     CPU_ABUS_ACCESS_READ_FETCH; //np
     m68k_src_w=m68k_fetchW();pc+=2;  // registers
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     MEM_ADDRESS ad=areg[PARAM_M];
 #else
     MEM_ADDRESS ad;
@@ -2999,14 +2999,14 @@ Dn :              |                 |               |
     switch (ir & BITS_543){
 
     case BITS_543_010: // (An)
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
       ad=areg[PARAM_M];
 #endif
       break;
 
     case BITS_543_101: // (d16,An)
       CPU_ABUS_ACCESS_READ_FETCH; // np
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed short)m68k_fetchW();
 #else
       ad=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -3021,13 +3021,13 @@ Dn :              |                 |               |
       INSTRUCTION_TIME(2); // n
       CPU_ABUS_ACCESS_READ_FETCH; // np
       if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #endif
       }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
 #else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
@@ -3047,30 +3047,30 @@ Dn :              |                 |               |
         ad=0xffffff & m68k_fetchL();
         pc+=4;  
         break;
-#if defined(SSE_VS2008_WARNING_383B) //no risk
+#if defined(SSE_VS2008_WARNING_390B) //no risk
       default:
         ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383)
+#elif defined(SSE_VS2008_WARNING_390)
       default:
         NODEFAULT; // should be sure??
 #endif
       }
       break;
-#if defined(SSE_VS2008_WARNING_383B) //no risk
+#if defined(SSE_VS2008_WARNING_390B) //no risk
     default:
       ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383)
+#elif defined(SSE_VS2008_WARNING_390)
     default:
       NODEFAULT;
 #endif
     }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     short bit=0,BlitterStart=0;
 #else
     short mask=1,BlitterStart=0;
 #endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       if(BITTEST(m68k_src_w,bit)) {
 #else
       if (m68k_src_w & mask){
@@ -3086,7 +3086,7 @@ Dn :              |                 |               |
           }
         }
       }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       bit++;
 #else
       mask<<=1;
@@ -3094,7 +3094,7 @@ Dn :              |                 |               |
     }
     PREFETCH_IRC; // np
   }
-#if !defined(SSE_YM2149_BUS_JAM_383)
+#if !defined(SSE_YM2149_BUS_JAM_390)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple words to the PSG
     int s=count_bits_set_in_word(m68k_src_w);
     if (s>4) BUS_JAM_TIME((s-1) & -4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
@@ -3139,13 +3139,13 @@ R --> M           |                 |
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
     TRUE_PC=pc+2;
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     short bit=0;
 #else
     short mask=1;
 #endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       if(BITTEST(m68k_src_w,bit)) {
 #else
       if (m68k_src_w & mask){
@@ -3156,7 +3156,7 @@ R --> M           |                 |
         if (ioaccess & IOACCESS_FLAG_DO_BLIT) 
           Blitter_Start_Now();
       }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       bit++;
 #else
       mask<<=1;
@@ -3198,7 +3198,7 @@ R --> M           |                 |
     }
     //note because of (d8,An,Xn) we can't count prefetch timing here
     m68k_src_w=m68k_fetchW();pc+=2; // register mask
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     MEM_ADDRESS ad=areg[PARAM_M];
 #else
     MEM_ADDRESS ad;
@@ -3207,7 +3207,7 @@ R --> M           |                 |
     case BITS_543_010: 
       // (An)          |  8+8m(2/2m)     |                np (nW nw)*    np
       CPU_ABUS_ACCESS_READ_FETCH; //np
-#if !defined(SSE_VS2008_WARNING_383)
+#if !defined(SSE_VS2008_WARNING_390)
       ad=areg[PARAM_M];
 #endif
       break;
@@ -3215,7 +3215,7 @@ R --> M           |                 |
     case BITS_543_101: 
       // (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np     
       CPU_ABUS_ACCESS_READ_FETCH_L; // np np
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed short)m68k_fetchW();
 #else
       ad=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -3229,13 +3229,13 @@ R --> M           |                 |
       CPU_ABUS_ACCESS_READ_FETCH_L; // np np
       m68k_ap=m68k_fetchW();pc+=2; 
       if(m68k_ap&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         ad+=(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
 #else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
 #endif
       }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         ad+=(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
 #else
         ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
@@ -3260,31 +3260,31 @@ R --> M           |                 |
         ad=0xffffff&m68k_fetchL();
         pc+=4;  
         break;
-#if defined(SSE_VS2008_WARNING_383B)
+#if defined(SSE_VS2008_WARNING_390B)
       default: //ILLEGAL
         ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383)
+#elif defined(SSE_VS2008_WARNING_390)
       default:
         NODEFAULT;
 #endif
       }
       break;
-#if defined(SSE_VS2008_WARNING_383B)
+#if defined(SSE_VS2008_WARNING_390B)
     default:
       ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383)
+#elif defined(SSE_VS2008_WARNING_390)
     default:
       NODEFAULT;
 #endif
     }
     TRUE_PC=pc+2; // Blood Money original
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     short bit=0;
 #else
     short mask=1;
 #endif
     for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       if(BITTEST(m68k_src_w,bit)) {
 #else
       if (m68k_src_w&mask){
@@ -3293,7 +3293,7 @@ R --> M           |                 |
         m68k_lpoke(ad,r[n]);
         ad+=4;
       }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
       bit++;
 #else
       mask<<=1;
@@ -3301,7 +3301,7 @@ R --> M           |                 |
     }//nxt
     PREFETCH_IRC; // np
   }//movem regs->mem
-#if !defined(SSE_YM2149_BUS_JAM_383)
+#if !defined(SSE_YM2149_BUS_JAM_390)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_W){  //oh dear, writing multiple longs to the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2; //number of words to write
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
@@ -3343,13 +3343,13 @@ void                              m68k_movem_l_to_regs(){
   bool postincrement=false;
   CPU_ABUS_ACCESS_READ_FETCH; //np
   m68k_src_w=m68k_fetchW();pc+=2; 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS ad=areg[PARAM_M];
 #else
   MEM_ADDRESS ad;
 #endif
   switch(ir&BITS_543){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   case BITS_543_011:
     postincrement=true;
   case BITS_543_010:
@@ -3365,7 +3365,7 @@ void                              m68k_movem_l_to_regs(){
 
   case BITS_543_101://(d16,An)
     CPU_ABUS_ACCESS_READ_FETCH; //np
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     ad+=(signed short)m68k_fetchW();
 #else
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -3375,17 +3375,17 @@ void                              m68k_movem_l_to_regs(){
 
   case BITS_543_110:
     //(d8,An,Xn)    | 18+8m(4+2m/0)   |          np n  np nR (nr nR)* np
-    INSTRUCTION_TIME(2); //n //383
+    INSTRUCTION_TIME(2); //n //390
     CPU_ABUS_ACCESS_READ_FETCH; // np
     m68k_iriwo=m68k_fetchW();pc+=2; 
     if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #endif
     }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
 #else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
@@ -3418,7 +3418,7 @@ void                              m68k_movem_l_to_regs(){
 
     case 3:
       //(d8,An,Xn)    | 18+8m(4+2m/0)   |          np n  np nR (nr nR)* np         
-      INSTRUCTION_TIME(2); //n //383
+      INSTRUCTION_TIME(2); //n //390
       CPU_ABUS_ACCESS_READ_FETCH;//np
       m68k_iriwo=m68k_fetchW();
       if(m68k_iriwo&BIT_b){  //.l
@@ -3432,7 +3432,7 @@ void                              m68k_movem_l_to_regs(){
 #if defined(SSE_DEBUG)
     default:
       ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383__)
+#elif defined(SSE_VS2008_WARNING_390__)
     default:
       NODEFAULT;
 #endif
@@ -3441,22 +3441,22 @@ void                              m68k_movem_l_to_regs(){
 #if defined(SSE_DEBUG)
   default:
     ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_383__)
+#elif defined(SSE_VS2008_WARNING_390__)
   default:
     NODEFAULT;
 #endif
   }
-  CPU_ABUS_ACCESS_READ; //nR 383
-  m68k_dpeek(ad); //extra word read (discarded) 383
+  CPU_ABUS_ACCESS_READ; //nR 390
+  m68k_dpeek(ad); //extra word read (discarded) 390
   TRUE_PC=pc+2;
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     short bit=0;
 #else
   short mask=1;
 #endif
   for (int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     if(BITTEST(m68k_src_w,bit)) {
 #else
     if (m68k_src_w & mask){
@@ -3465,7 +3465,7 @@ void                              m68k_movem_l_to_regs(){
       r[n]=m68k_lpeek(ad);
       ad+=4;
     }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     bit++;
 #else
     mask<<=1;
@@ -3474,7 +3474,7 @@ void                              m68k_movem_l_to_regs(){
   if (postincrement) 
     areg[PARAM_M]=ad | areg_hi;
   PREFETCH_IRC;
-#if !defined(SSE_YM2149_BUS_JAM_383)
+#if !defined(SSE_YM2149_BUS_JAM_390)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple longs from the PSG
     int s=count_bits_set_in_word(m68k_src_w)*2+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
@@ -3516,14 +3516,14 @@ void                              m68k_movem_w_to_regs(){
   bool postincrement=false;
   CPU_ABUS_ACCESS_READ_FETCH; //np
   m68k_src_w=m68k_fetchW();pc+=2; 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS ad=areg[PARAM_M]; // so we have a default
 #else
   MEM_ADDRESS ad;
 #endif
 
   switch (ir & BITS_543){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
   case BITS_543_011://(An)+         | 12+4m(3+m/0)    |                np (nr)*    nr np
     postincrement=true;
   case BITS_543_010://(An)          | 12+4m(3+m/0)    |                np (nr)*    nr np
@@ -3539,7 +3539,7 @@ void                              m68k_movem_w_to_regs(){
 
   case BITS_543_101://(d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np
     CPU_ABUS_ACCESS_READ_FETCH; //np
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     ad+=(signed short)m68k_fetchW();
 #else
     ad=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -3548,17 +3548,17 @@ void                              m68k_movem_w_to_regs(){
     break;
 
   case BITS_543_110://(d8,An,Xn)    | 18+4m(4+m/0)    |          np n  np (nr)*    nr np 
-    INSTRUCTION_TIME(2);//n //383
+    INSTRUCTION_TIME(2);//n //390
     CPU_ABUS_ACCESS_READ_FETCH; //np
     m68k_iriwo=m68k_fetchW();pc+=2; 
     if(m68k_iriwo&BIT_b){  //.l
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
 #endif
     }else{         //.w
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ad+=(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
 #else
       ad=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
@@ -3587,7 +3587,7 @@ void                              m68k_movem_w_to_regs(){
       break;
 
     case 3:
-      INSTRUCTION_TIME(2);//n //383
+      INSTRUCTION_TIME(2);//n //390
       CPU_ABUS_ACCESS_READ_FETCH; //np
       m68k_iriwo=m68k_fetchW();
       if(m68k_iriwo&BIT_b){  //.l
@@ -3612,13 +3612,13 @@ void                              m68k_movem_w_to_regs(){
 
   DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
   TRUE_PC=pc+2;
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
   short bit=0;
 #else
   short mask=1;
 #endif
   for(int n=0;n<16;n++){
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     if(BITTEST(m68k_src_w,bit)) {
 #else
     if (m68k_src_w & mask){
@@ -3627,7 +3627,7 @@ void                              m68k_movem_w_to_regs(){
       r[n]=(signed long)((signed short)m68k_dpeek(ad));
       ad+=2;
     }
-#if defined(SSE_VC_INTRINSICS_383F)
+#if defined(SSE_VC_INTRINSICS_390F)
     bit++;
 #else
     mask<<=1;
@@ -3638,7 +3638,7 @@ void                              m68k_movem_w_to_regs(){
   CPU_ABUS_ACCESS_READ;//nr
   m68k_dpeek(ad); //extra word read (discarded)
   PREFETCH_IRC;//np
-#if !defined(SSE_YM2149_BUS_JAM_383)
+#if !defined(SSE_YM2149_BUS_JAM_390)
   if (ioaccess & IOACCESS_FLAG_PSG_BUS_JAM_R){  //oh dear, reading multiple words from the PSG
     int s=count_bits_set_in_word(m68k_src_w)+1; //number of words read
     if(s>4)BUS_JAM_TIME((s-1)&-4);  //we've already had a bus jam of 4, for s=5..8 want extra bus jam of 4
@@ -3906,7 +3906,7 @@ Not exactly the same... cases?
 */
     m68k_GET_SOURCE_W; //EA
     PREFETCH_IRC; // np 
-    //INSTRUCTION_TIME(6);//383
+    //INSTRUCTION_TIME(6);//390
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("CHK");
 #endif
@@ -3927,7 +3927,7 @@ Not exactly the same... cases?
         //np n- nn ns nS ns np np np n np
         //   2  4  4  4  4  4  4  4  4  4  -> np + 38
 */
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
 #else
       SR_SET(SR_N);
@@ -3955,7 +3955,7 @@ Not exactly the same... cases?
         //np    nn ns nS ns np np np n np
         //      4  4  4  4  4  4  4  4  4 -> np + 36
 */
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_N_BIT);
 #else
       SR_CLEAR(SR_N);
@@ -4264,7 +4264,7 @@ So EXG+STOP+INTR does pair, because EXG and INTR pair."
     delay of 8 cycles, even if an interrupt is pending.
     option C2: this fixes the spurious interrupt in Return -HMD (STE)
 */
-      if(!M68000.tpend)//383
+      if(!M68000.tpend)//390
         INSTRUCTION_TIME(CPU_STOP_DELAY); 
 
     }else{ // already stopped
@@ -4901,7 +4901,7 @@ void                              m68k_divu(){
   if (m68k_src_w==0){ // div by 0
     // Clear V flag when dividing by zero. (from WinUAE)
     // also clear CC
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_V_BIT);
     BITRESET(sr,SR_C_BIT);
 #else
@@ -4976,7 +4976,7 @@ FLOWCHART :
     INSTRUCTION_TIME(cycles_for_instr); // fixes Pandemonium loader
     q=(unsigned long)((unsigned long)dividend)/(unsigned long)((unsigned short)divisor);
     if(q&0xffff0000){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
 #else
       SR_SET(SR_V);
@@ -4992,7 +4992,7 @@ FLOWCHART :
     v3.7: 
     C — Always cleared, official doc (Spacker II)
 */
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
       BITRESET(sr,SR_C_BIT);
 #else
@@ -5001,7 +5001,7 @@ FLOWCHART :
 #endif
     }else{
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       if(q&MSB_W)
         BITSET(sr,SR_N_BIT);
       if(q==0)
@@ -5066,14 +5066,14 @@ Dy,Dx :           |                 |
     if(lo_nibble&0xF0)
     {
       lo_nibble-=6;
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C);//internal
 #endif
     }
     WORD hi_nibble=(dst & 0xF0) - (src & 0xF0) - ((sr&SR_C)?0x10:0);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_C_BIT);
 #else
     SR_CLEAR(SR_C);//clear internal bit
@@ -5083,11 +5083,11 @@ Dy,Dx :           |                 |
       hi_nibble-=0x60;
       SR_SET(SR_X+SR_C+SR_N);
     }
-    if((ir&BITS_543)==BITS_543_001) //383
+    if((ir&BITS_543)==BITS_543_001) //390
       CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
     if(!m68k_DEST_B)
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z)
@@ -5179,7 +5179,7 @@ void                             m68k_or_l_from_dN(){
 void                              m68k_divs(){
   m68k_GET_SOURCE_W_NOT_A; //EA
   if (m68k_src_w==0){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_V_BIT);
     BITRESET(sr,SR_C_BIT);
 #else
@@ -5271,7 +5271,7 @@ FLOWCHART :
 #endif
     q=(signed long)((signed long)dividend)/(signed long)((signed short)divisor);
     if(q<-32768 || q>32767){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
       BITSET(sr,SR_N_BIT); // TODO test prg
       BITRESET(sr,SR_C_BIT);
@@ -5284,7 +5284,7 @@ FLOWCHART :
     else
     {
       SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       if(q&MSB_W)
         BITSET(sr,SR_N_BIT);
       if(q==0)
@@ -6086,7 +6086,7 @@ FLOWCHART :
   m68k_GET_SOURCE_W_NOT_A; // EA
   PREFETCH_IRC; // np 
   INSTRUCTION_TIME(34);
-#if defined(SSE_VC_INTRINSICS_383B)
+#if defined(SSE_VC_INTRINSICS_390B)
   int m=count_bits_set_in_word(m68k_src_w);
   INSTRUCTION_TIME(2*m); //n*
 #else
@@ -6170,10 +6170,10 @@ Dy,Dx :           |                 |
     hi_nibble+=0x60;
     SR_SET(SR_X+SR_C);
   }
-  if((ir&BITS_543)==BITS_543_001)//383
+  if((ir&BITS_543)==BITS_543_001)//390
     CPU_ABUS_ACCESS_WRITE; // nw
   m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(!m68k_DEST_B)
     BITSET(sr,SR_Z_BIT);
   else if(m68k_DEST_B<0)
@@ -6474,7 +6474,7 @@ Dy,Dx :           |                 |
       areg[PARAM_M]--;
       if(PARAM_M==7)
         areg[PARAM_M]--;
-      CPU_ABUS_ACCESS_READ; //nr 383
+      CPU_ABUS_ACCESS_READ; //nr 390
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       areg[PARAM_N]--;
       if(PARAM_N==7)
@@ -6541,7 +6541,7 @@ Dy,Dx :           |                 |
 */
       INSTRUCTION_TIME(2); // n
       areg[PARAM_M]-=2; // or after peek? TODO
-      CPU_ABUS_ACCESS_READ; // nr 383
+      CPU_ABUS_ACCESS_READ; // nr 390
       m68k_src_w=m68k_dpeek(areg[PARAM_M]);
       CHECK_READ=true;
       areg[PARAM_N]-=2;
@@ -6611,7 +6611,7 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .L :            | 30(5/2)         |              n nr nR nr nR nw np    nW    
 */
-      PREFETCH_CLASS(1);//383?
+      PREFETCH_CLASS(1);//390?
       INSTRUCTION_TIME(2); //n
       areg[PARAM_M]-=4;
       CPU_ABUS_ACCESS_READ_L; // nr nR
@@ -6783,7 +6783,7 @@ void                             m68k_roxr_b_to_dM(){ //okay
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -6811,13 +6811,13 @@ void                             m68k_ror_b_to_dM(){  //okay!
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -6879,7 +6879,7 @@ void                             m68k_roxr_w_to_dM(){          //okay
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);  
 #else
@@ -6907,13 +6907,13 @@ void                             m68k_ror_w_to_dM(){
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -6976,7 +6976,7 @@ void                             m68k_roxr_l_to_dM(){   //okay!
   INSTRUCTION_TIME(2*m68k_src_w+4); // n* nn
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -7004,13 +7004,13 @@ void                             m68k_ror_l_to_dM(){   //okay!
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7042,14 +7042,14 @@ void                              m68k_asl_b_to_dM(){
       // mask:  m  m-1 m-2 m-3 ... m-r m-r-1 ...
       //        1   1   1   1       1   0    0...
       if((mask&(m68k_DEST_B))!=0 && ((mask&(m68k_DEST_B))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_V_BIT);
 #else
         SR_SET(SR_V);
 #endif
       }
     }else if(m68k_DEST_B){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
 #else
       SR_SET(SR_V);
@@ -7070,7 +7070,7 @@ void                             m68k_lsl_b_to_dM(){
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_X_BIT);
 #else
     SR_CLEAR(SR_X);
@@ -7092,7 +7092,7 @@ void                             m68k_roxl_b_to_dM(){
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -7120,13 +7120,13 @@ void                             m68k_rol_b_to_dM(){
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_B&MSB_B;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7156,14 +7156,14 @@ void                              m68k_asl_w_to_dM(){       //okay!
     if(m68k_src_w<=15){
       signed short mask=(signed short)(((signed short)(MSB_W))>>(m68k_src_w));
       if((mask&(m68k_DEST_W))!=0 && ((mask&(m68k_DEST_W))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_V_BIT);
 #else
         SR_SET(SR_V);
 #endif
       }
     }else if(m68k_DEST_W){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
 #else
       SR_SET(SR_V);
@@ -7184,7 +7184,7 @@ void                             m68k_lsl_w_to_dM(){
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_X_BIT);
 #else
     SR_CLEAR(SR_X);
@@ -7206,7 +7206,7 @@ void                             m68k_roxl_w_to_dM(){
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -7234,13 +7234,13 @@ void                             m68k_rol_w_to_dM(){
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_W&MSB_W;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7268,14 +7268,14 @@ void                              m68k_asl_l_to_dM(){    //okay!
     if(m68k_src_w<=31){
       signed long mask=(((signed long)(MSB_L))>>(m68k_src_w));
       if((mask&(m68k_DEST_L))!=0 && ((mask&(m68k_DEST_L))^mask)!=0){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
         BITSET(sr,SR_V_BIT);
 #else
         SR_SET(SR_V);
 #endif
       }
     }else if(m68k_DEST_L){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
 #else
       SR_SET(SR_V);
@@ -7295,7 +7295,7 @@ void                             m68k_lsl_l_to_dM(){
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
   if(m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_X_BIT);
 #else
     SR_CLEAR(SR_X);
@@ -7318,7 +7318,7 @@ void                             m68k_roxl_l_to_dM(){
   INSTRUCTION_TIME(2*m68k_src_w+4); // n* nn
   m68k_dest=&(r[PARAM_M]);
   SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -7346,13 +7346,13 @@ void                             m68k_rol_l_to_dM(){
   for(int n=0;n<m68k_src_w;n++){
     bool old_x=m68k_DEST_L&MSB_L;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7397,7 +7397,7 @@ void                              m68k_bit_shift_right_to_mem(){
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
   if(BITTEST(sr,SR_X_BIT))
     BITSET(sr,SR_C_BIT);
 #else
@@ -7416,13 +7416,13 @@ void                              m68k_bit_shift_right_to_mem(){
     SR_CLEAR(SR_N+SR_V+SR_Z);
     bool old_x=m68k_DEST_W&1;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7464,7 +7464,7 @@ void                              m68k_bit_shift_left_to_mem(){
       SR_SET(SR_C+SR_X);
     }
     if((m68k_DEST_W&0xc000)==0x8000 || (m68k_DEST_W&0xc000)==0x4000){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_V_BIT);
 #else
       SR_SET(SR_V);
@@ -7483,7 +7483,7 @@ void                              m68k_bit_shift_left_to_mem(){
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
     if(BITTEST(sr,SR_X_BIT))
       BITSET(sr,SR_C_BIT);
 #else
@@ -7502,13 +7502,13 @@ void                              m68k_bit_shift_left_to_mem(){
     SR_CLEAR(SR_N+SR_V+SR_Z);
     bool old_x=m68k_DEST_W&MSB_W;
     if(old_x){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_C_BIT);
 #else
       SR_SET(SR_C)
 #endif
     }else{
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_C_BIT);
 #else
       SR_CLEAR(SR_C)
@@ -7931,14 +7931,14 @@ void m68k_0001() {  // move.b
     // Set flags
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if(!m68k_src_b){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
 #endif
     }
     if(m68k_src_b&MSB_B){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
 #else
       SR_SET(SR_N);
@@ -8057,14 +8057,14 @@ void m68k_0010() { //move.l
     }
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if(!m68k_src_l){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
 #endif
     }
     if(m68k_src_l&MSB_L){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
 #else
       SR_SET(SR_N);
@@ -8179,14 +8179,14 @@ void m68k_0011() { //move.w
     }
     SR_CLEAR(SR_Z+SR_N+SR_C+SR_V);
     if (!m68k_src_w){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_Z_BIT);
 #else
       SR_SET(SR_Z);
 #endif
     }
     if (m68k_src_w & MSB_W){
-#if defined(SSE_VC_INTRINSICS_383E)
+#if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
 #else
       SR_SET(SR_N);

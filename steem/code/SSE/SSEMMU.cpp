@@ -194,6 +194,11 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     FrameEvents.Add(scan_y,LINECYCLES,'C',((addr&0xF)<<8)|io_src_b);
 #endif
 
+#if defined(SSE_OSD_CONTROL)
+  if(OSD_MASK3 & OSD_CONTROL_WRITESDP) 
+    TRACE_OSD("VC%d y%d",addr-0xff8200,scan_y);
+#endif
+
 #if defined(SSE_STF_SDP)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)

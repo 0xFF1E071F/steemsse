@@ -42,7 +42,7 @@ typedef unsigned __int64	uint64_t;
 #include <windows.h>
 #endif
 
-#if defined(SSE_VS2008_WARNING_383) && !defined(NODEFAULT) //can be defined in caps/CommomTypes.h
+#if defined(SSE_VS2008_WARNING_390) && !defined(NODEFAULT) //can be defined in caps/CommomTypes.h
 #ifdef _DEBUG
 #define NODEFAULT   assert(0)
 #else
@@ -71,7 +71,7 @@ typedef unsigned __int64	uint64_t;
 #if defined(SSE_VC_INTRINSICS_382)
 #include <intrin.h>
 #define BITTEST(var,bit) (_bittest((long*)&var,bit)/*!=0*/)
-#if defined(SSE_VC_INTRINSICS_383)
+#if defined(SSE_VC_INTRINSICS_390)
 #define BITRESET(var,bit) (_bittestandreset((long*)&var,bit))
 #define BITSET(var,bit) (_bittestandset((long*)&var,bit))
 #endif
@@ -245,7 +245,7 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify, DelayLoadInfo * pdli
 
 
 #define TIMING_INFO FRAME,scan_y,LINECYCLES
-#if defined(SSE_VS2008_383)
+#if defined(SSE_VS2008_390)
 #include <assert.h> //NODEFAULT
 #endif
 

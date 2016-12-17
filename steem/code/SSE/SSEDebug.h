@@ -282,9 +282,9 @@ enum logsection_enum_tag {
 #define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+//#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 #define OSD_CONTROL_WRITESDP                (1<<13)
-#endif//osdcontrol
+//#endif//osdcontrol
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
 /*  We use this to better control trace output, log section is still
@@ -314,7 +314,7 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_FDCPSG (1<<13)//drive/side
 #define TRACE_CONTROL_FDCREGS (1<<12)// writes to registers CR,TR,SR,DR
 #define TRACE_CONTROL_FDCMFM (1<<11)
-#if !defined(SSE_BOILER_383_LOG2)
+#if !defined(SSE_BOILER_390_LOG2)
 #define TRACE_CONTROL_FDCDMA (1<<10)
 #endif
 

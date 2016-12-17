@@ -301,7 +301,7 @@ static unsigned int mouse_y_counter=MOUSE_MASK;
 
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_VAR_RESIZE_390B)
 extern BYTE shifter_freq;
 #else
 extern int shifter_freq;
@@ -386,7 +386,7 @@ static dr4_getb (offs)
     if(joy0mvt||joy1mvt)
     {
       value=0; // not always right (game mouse+joy?) but can't do better yet
-#if !defined(SSE_IKBD_6301_383)
+#if !defined(SSE_IKBD_6301_390)
       if(joy0mvt) // for games using joystick 0
         mouse_y_counter=mouse_x_counter=MOUSE_MASK; 
 #endif
@@ -411,7 +411,7 @@ static dr4_getb (offs)
     }
   }  
 
-#if defined(SSE_IKBD_6301_383)
+#if defined(SSE_IKBD_6301_390)
   if(!SSEConfig.Port0Joy)
 #endif
     value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);

@@ -182,7 +182,7 @@ void TShortcutBox::TranslateCutNames()
     TranslatedCutNamesSL.Sort=eslNoSort;
     for (int n=0;n<NUM_SHORTCUTS*2;n+=2){
       if (ShortcutNames[n]==NULL) break;
-#if defined(SSE_X64_383) //?
+#if defined(SSE_X64_390) //?
       LONG_PTR i=(LONG_PTR)ShortcutNames[n+1];
 #else
       long i=(long)ShortcutNames[n+1];
@@ -600,7 +600,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       int ModifierRestoreArray[3]={0,0,0};
       BYTE STCode=LOBYTE(LOWORD(Inf.PressChar));
       BYTE Modifiers=HIBYTE(LOWORD(Inf.PressChar));
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
       ShiftSwitchChangeModifiers(Modifiers & BIT_0,(Modifiers & BIT_1)!=0,ModifierRestoreArray);
 #else
       ShiftSwitchChangeModifiers(Modifiers & BIT_0,Modifiers & BIT_1,ModifierRestoreArray);
@@ -1069,7 +1069,7 @@ bool TShortcutBox::HasHandledMessage(MSG *mess)
   if (Handle){
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
         if (GetKeyState(VK_CONTROL)>=0) return (IsDialogMessage(Handle,mess)!=0);
 #else
         if (GetKeyState(VK_CONTROL)>=0) return IsDialogMessage(Handle,mess);

@@ -88,7 +88,7 @@ EXT DWORD DisableDiskLightAfter INIT(3000);
 
 #define IGNORE_EXTEND 2
 #define NO_SHIFT_SWITCH 8
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 EXT void HandleKeyPress(UINT,DWORD,int DEFVAL(IGNORE_EXTEND));
 #else
 EXT void HandleKeyPress(UINT,bool,int DEFVAL(IGNORE_EXTEND));
@@ -285,7 +285,7 @@ EXT BYTE KeyDownModifierState[256];
 
 void ShiftSwitchChangeModifiers(bool,bool,int[]);
 void ShiftSwitchRestoreModifiers(int[]);
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 void HandleShiftSwitching(UINT,DWORD,BYTE&,int[]);
 #else
 void HandleShiftSwitching(UINT,bool,BYTE&,int[]);
@@ -315,7 +315,7 @@ void DisableTaskSwitch();
 void EnableTaskSwitch();
 
 bool IsSteemAssociated(EasyStr);
-#if defined(SSE_VS2008_WARNING_383) && defined(SSE_GUI_ASSOCIATE_CU)
+#if defined(SSE_VS2008_WARNING_390) && defined(SSE_GUI_ASSOCIATE_CU)
 void AssociateSteem(EasyStr,EasyStr);
 #else
 void AssociateSteem(EasyStr,EasyStr,bool,char *,int,bool);

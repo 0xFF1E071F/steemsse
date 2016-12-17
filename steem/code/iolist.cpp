@@ -327,7 +327,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(FAKE_IO_START+8,"OSD2 Shifter",2,
     "tricks|load|RS|.|.|.|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+10,"OSD3 STE",2,
-    "dma|blt|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "dma|blt|vc|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -335,7 +335,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
     "vert|1line|vbl|off|adj|0byte|.|.|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+14,"TRACE irq",2,
     "E|rte|evt|.|.|.|.|.|.|.|.|.|.|.|.|.");
-#if defined(SSE_BOILER_383_LOG2)
+#if defined(SSE_BOILER_390_LOG2)
   iolist_add_entry(FAKE_IO_START+16,"TRACE disk",2,
     "str|data|psg|reg|mfm|.|.|.|.|.|.|.|.|.|.|.");
 #else

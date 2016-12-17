@@ -5,12 +5,10 @@
 #include <conditions.h>
 #include <dynamicarray.h>
 
-//#include <SSE/SSEMMU.h>
 #include <SSE/SSEVideo.h>
-
 #include <SSE/SSEDebug.h>
 
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
 #include <blitter.decla.h>
 #endif
 
@@ -44,7 +42,7 @@ EXT WORD tos_version;
 
 EXT int interrupt_depth INIT(0);
 
-#if defined(SSE_VAR_RESIZE_383)
+#if defined(SSE_VAR_RESIZE_390)
 EXT WORD em_width INIT(480);
 EXT WORD em_height INIT(480);
 EXT BYTE em_planes INIT(4);
@@ -75,7 +73,7 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
-#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_VAR_RESIZE_390B)
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 #if defined(MINGW_BUILD) || defined(SSE_UNIX)
 extern "C"{ EXT BYTE shifter_freq INIT(60); }
@@ -97,7 +95,7 @@ EXT int shifter_freq INIT(60);
 #endif
 #endif
 
-#if defined(SSE_VAR_RESIZE_383B)
+#if defined(SSE_VAR_RESIZE_390B)
 EXT BYTE shifter_freq_idx INIT(1); //1 for 60hz
 #else
 EXT int shifter_freq_idx INIT(1);
@@ -238,7 +236,7 @@ EXT MEM_ADDRESS on_rte_return_address;
 extern "C" int cpu_cycles; // defined in emu.cpp
 
 inline void InstructionTime(int t) {
-#if defined(SSE_BLT_383B)
+#if defined(SSE_BLT_390B)
 /*  As we can see, this feature costs a lot in overhead, but that's the price
     of "correct" emulation.
 */
@@ -256,9 +254,9 @@ inline void InstructionTimeRound(int t) {
   InstructionTime(t);
 
 #ifdef SSE_MMU_ROUNDING_BUS0A
-#if defined(SSE_VC_INTRINSICS_383D) && defined(SSE_MMU_ROUNDING_BUS) // great optimisation
+#if defined(SSE_VC_INTRINSICS_390D) && defined(SSE_MMU_ROUNDING_BUS) // great optimisation
   MMU.Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
-#else//383?
+#else//390?
 
 #if defined(SSE_MMU_ROUNDING_BUS)
 #if defined(SSE_VC_INTRINSICS_382)
@@ -269,9 +267,9 @@ inline void InstructionTimeRound(int t) {
 #endif
   cpu_cycles&=-4;
 
-#endif//383?
+#endif//390?
 #else
-#if defined(SSE_VC_INTRINSICS_383D)
+#if defined(SSE_VC_INTRINSICS_390D)
   _bittestandreset((LONG*)&cpu_cycles,1); //?
 #else
   cpu_cycles&=-4;

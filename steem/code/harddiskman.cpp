@@ -193,14 +193,14 @@ void THardDiskManager::Show()
   SendMessage(Win,WM_SETFONT,(UINT)Font,0);
   char DriveName[8];
   DriveName[1]=':';DriveName[2]=0;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
 #endif
   for (int i=0;i<24;i++){
     DriveName[0]=(char)('C'+i);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)DriveName);
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)DriveName);
@@ -261,7 +261,7 @@ void THardDiskManager::CreateDriveControls(int Idx)
   else
 #endif
   DriveName[1]=':';DriveName[2]=0;
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
 #else
   SendMessage(Win,CB_ADDSTRING,0,(long)CStrT("Off"));
@@ -275,7 +275,7 @@ void THardDiskManager::CreateDriveControls(int Idx)
   for (int i=0;i<24;i++){
 #endif
     DriveName[0]=(char)('C'+i);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)DriveName);
 #else
     SendMessage(Win,CB_ADDSTRING,0,(long)DriveName);
@@ -323,7 +323,7 @@ void THardDiskManager::GetDriveInfo()
 {
   for (int i=0;i<nDrives;i++){
     Drive[i].Path.SetLength(MAX_PATH+1);
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
     SendMessage(GetDlgItem(Handle,100+i),WM_GETTEXT,MAX_PATH,(LPARAM)Drive[i].Path.Text);
 #else
     SendMessage(GetDlgItem(Handle,100+i),WM_GETTEXT,MAX_PATH,(long)Drive[i].Path.Text);
@@ -505,7 +505,7 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             else
               NewPath=ChooseFolder(HWND(FullScreen ? StemWin:Win),T("Pick a Folder"),This->Drive[ID].Path);
             if (NewPath.NotEmpty()){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
               SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(LPARAM)NewPath.Text);
 #else
               SendMessage(GetDlgItem(This->Handle,100+ID),WM_SETTEXT,0,(long)NewPath.Text);
@@ -527,7 +527,7 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
             char Text[MAX_PATH+1];
             This->nDrives--;
             for (int i=ID;i<This->nDrives;i++){
-#if defined(SSE_X64_383)
+#if defined(SSE_X64_390)
               SendMessage(GetDlgItem(This->Handle,100+i+1),WM_GETTEXT,MAX_PATH,(LPARAM)Text);
               SendMessage(GetDlgItem(This->Handle,100+i),WM_SETTEXT,0,(LPARAM)Text);
 #else

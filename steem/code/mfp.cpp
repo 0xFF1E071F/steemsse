@@ -380,8 +380,8 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     TEST10B doesn't confirm, but unconlusive
     MFPTA001 could indicate timer wobble
 */
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_383)
-            MC68901.Wobble[timer]=(rand() % MFP_TIMERS_WOBBLE);
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
+            MC68901.Wobble[timer]=(rand() % MFP_TIMERS_WOBBLE); //1-4
 #else
             MC68901.Wobble[timer]=(rand()&MFP_TIMERS_WOBBLE);
 #endif
@@ -641,9 +641,12 @@ void mfp_interrupt(int irq) {
 /*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
     Xcess if we use the correct BLIT mode cycles (64x4).
     v3.7 This mod is better placed here, when there's an actual interrupt.
+    390: remove explanation - LXs doesn't need this now?
 */
+#if !defined(SSE_VAR_OPT_390E)//reduce footprint
   if(Blit.HasBus) // opt: we assume the test is quicker than clearing
-    Blit.HasBus=false; 
+#endif
+  Blit.HasBus=false; 
 #endif
 
   MEM_ADDRESS vector;
@@ -764,7 +767,7 @@ TMC68901::TMC68901() {
 }
 
 void TMC68901::Init() {
-#if defined(SSE_INT_MFP_INIT_383)
+#if defined(SSE_INT_MFP_INIT_390)
   ZeroMemory(this,sizeof(TMC68901)); //struct has been changed
 #else
   ZeroMemory(&IrqInfo,sizeof(TMC68901IrqInfo)*16);
@@ -848,7 +851,7 @@ void TMC68901::AdjustTimerB() {
 }
 
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_383) && defined(SSE_GLUE)
+#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
 /*  Timer B can be programmed to trigger on DE change (start or end of 
     video picture).
     However there's a delay between DE change and MFP IRQ.
@@ -901,7 +904,7 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
 #endif
 
 
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
 void TMC68901::Reset() {
 #else
 void TMC68901::Reset(bool Cold) {

@@ -38,7 +38,7 @@ bool IsDirIDPressed(int ID,int DeadZonePercent,bool CheckDisable,bool DiagonalPO
       }
     }
 #endif
-#if defined(SSE_VS2008_WARNING_383)
+#if defined(SSE_VS2008_WARNING_390)
     return (GetAsyncKeyState(Key) & MSB_W)!=0;
 #else
     return bool(GetAsyncKeyState(Key) & MSB_W);

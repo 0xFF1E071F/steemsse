@@ -51,7 +51,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     {
       CurrentScanline.StartCycle
 #if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-#if defined(SSE_GLUE_383)
+#if defined(SSE_GLUE_390)
         =(shifter_hscroll_extra_fetch?2:6);
 #else
         =(shifter_hscroll_extra_fetch?ScanlineTiming[GLU_DE_ON][FREQ_72]:6);
@@ -150,7 +150,7 @@ void TGlue::CheckSideOverscan() {
     scroll the screen by using "sync lines" (eg Enchanted Land, No Buddies Land).
 */
 
-#if defined(SSE_VS2008_WARNING_383) && defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && defined(SSE_DEBUG)
   int t=0;
 #else
   int t;
@@ -241,7 +241,7 @@ void TGlue::CheckSideOverscan() {
 
   if(!(TrickExecuted&(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_0BYTE_LINE)))
   {
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
 #define lim_r2 Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]
 #define lim_r0 Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50]
 #else
@@ -251,16 +251,16 @@ void TGlue::CheckSideOverscan() {
     if(!(CurrentScanline.Tricks
       &(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_24)))
     {
-#if defined(SSE_GLUE_383C) && defined(SSE_GLUE_383B)//test
+#if defined(SSE_GLUE_390C) && defined(SSE_GLUE_390B)//test
       r2cycle=PreviousChangeToHi(lim_r2+2);
-#elif defined(SSE_GLUE_383B)
+#elif defined(SSE_GLUE_390B)
       r2cycle=NextChangeToHi(lim_r2-14);
 #else
       r2cycle=NextShiftModeChange(lim_r2-14,2);
 #endif
       if(r2cycle!=-1 && r2cycle>=lim_r2-12 && r2cycle<=lim_r2) //TODO those limits?
       {
-#if defined(SSE_GLUE_383B) // if same mode, not recorded, + use other function
+#if defined(SSE_GLUE_390B) // if same mode, not recorded, + use other function
         r0cycle=NextChangeToLo(r2cycle);
 #else
 /*  ShiftMode at r0cycle can be 0 (generally) or 1 (ST-CNX, HighResMode)
@@ -473,7 +473,7 @@ D4/Tekila
             if(ST_TYPE==STE)
             {
               Shifter.Preload=2;
-#if defined(SSE_GLUE_383D)
+#if defined(SSE_GLUE_390D)
 // hack Closure TODO, we know that's not correct
 //008:S0082 016:R0000 376:S0000 512:R0082 516:a0230 512:T0011
               if(OPTION_HACKS && FreqChangeAtCycle(8)==50) 
@@ -558,7 +558,7 @@ Closure STF2
       overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
     }
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
 #undef lim_r2
 #undef lim_r0
 #endif
@@ -695,7 +695,7 @@ Closure STF2
 #endif
     draw_line_off=true; // Steem's original flag for black line
     memset(PCpal,0,sizeof(long)*16); // all colours black
-#if !(defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) && defined(SSE_GLUE_383))
+#if !(defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA) && defined(SSE_GLUE_390))
     shifter_draw_pointer-=160; // hack: Steem will draw black from video RAM and update SDP
 #endif
     CurrentScanline.Bytes=0;
@@ -1209,7 +1209,7 @@ detect unstable: switch MED/LOW - Beeshift
 
 #if defined(SSE_SHIFTER_DOLB_SHIFT1) 
     else  //  hack for DOLB, Omega, centering the pic
-#if defined(SSE_SHIFTER_UNSTABLE_383) //interference with Closure STE
+#if defined(SSE_SHIFTER_UNSTABLE_390) //interference with Closure STE
     if(OPTION_HACKS && MMU.WS[OPTION_WS]==2&&Shifter.Preload==2 &&ST_TYPE!=STE)
 #else
     if(OPTION_HACKS && MMU.WS[OPTION_WS]&&Shifter.Preload==2)
@@ -1423,7 +1423,7 @@ Dragonnels reset
   if(!(CurrentScanline.Tricks&TRICK_STABILISER) && CyclesIn>432)
   {
     r2cycle=NextShiftModeChange(432); // can be 1 or 2
-#if defined(SSE_GLUE_383B2) //just in case
+#if defined(SSE_GLUE_390B2) //just in case
     if(r2cycle>432 && r2cycle<460) 
 #else
     if(r2cycle>-1 && r2cycle<460) 
@@ -1556,12 +1556,12 @@ void TGlue::CheckVerticalOverscan() {
   enum{NO_LIMIT=0,LIMIT_TOP,LIMIT_BOTTOM};
   BYTE on_overscan_limit=(scan_y==-30)?LIMIT_TOP:LIMIT_BOTTOM;
 
-#if defined(SSE_VS2008_WARNING_383) && defined(SSE_DEBUG)
+#if defined(SSE_VS2008_WARNING_390) && defined(SSE_DEBUG)
   int t=0;
 #else
   int t;
 #endif
-#if defined(SSE_GLUE_VERT_OVERSCAN_383) // feature just couldn't work. TODO test
+#if defined(SSE_GLUE_VERT_OVERSCAN_390) // feature just couldn't work. TODO test
   if(emudetect_overscans_fixed && on_overscan_limit) 
   {
     CurrentScanline.Tricks|= (on_overscan_limit==LIMIT_TOP) 
@@ -1601,7 +1601,7 @@ void TGlue::CheckVerticalOverscan() {
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
-#if !defined(SSE_VAR_OPT_383)
+#if !defined(SSE_VAR_OPT_390)
     ASSERT(screen_event.event==event_scanline);
 #endif
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
@@ -1642,7 +1642,7 @@ void TGlue::CheckVerticalOverscan() {
 
 
 void TGlue::EndHBL() {
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
   ASSERT(FetchingLine());//argh!
 #endif
 #if defined(SSE_SHIFTER_END_OF_LINE_CORRECTION)
@@ -1701,7 +1701,7 @@ void TGlue::EndHBL() {
 #endif
         Shifter.Preload=1;
     }
-#ifndef SSE_SHIFTER_UNSTABLE_383___ //TODO
+#ifndef SSE_SHIFTER_UNSTABLE_390___ //TODO
     else if(CurrentScanline.Cycles==508 && FetchingLine()
       && FreqAtCycle(0)==60 && FreqAtCycle(464)==60)
       Shifter.Preload=0; // a full 60hz scanline should reset the shifter 
@@ -1755,18 +1755,18 @@ void TGlue::IncScanline() {
 #endif
 #endif//dbg
 
-#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_383E2)
+#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_390E2)
   scanline++; // this is GLU's variable, scan_y is Shifter's
 #endif
-#if defined(SSE_GLUE_383E)
-#if defined(SSE_GLUE_383E1B)
+#if defined(SSE_GLUE_390E)
+#if defined(SSE_GLUE_390E1B)
   ASSERT(VCount);
 #endif
   if(VCount)//relz build could crash...
     VCount--;
 #endif
 
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_383) // became useless?
+#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA_390) // became useless?
   if(FetchingLine()) //TODO, it's because we don't display line 246 in lores
   {
     if(scan_y==246 && screen_res<2)
@@ -1824,12 +1824,12 @@ void TGlue::IncScanline() {
 void TGlue::AddFreqChange(int f) {
   // Replacing macro ADD_SHIFTER_FREQ_CHANGE(shifter_freq)
   shifter_freq_change_idx++;
-#if defined(SSE_VC_INTRINSICS_383G)
+#if defined(SSE_VC_INTRINSICS_390G)
   BITRESET(shifter_freq_change_idx,5);//stupid, I guess
 #else
   shifter_freq_change_idx&=31;
 #endif
-#if defined(SSE_VAR_OPT_383A1)
+#if defined(SSE_VAR_OPT_390A1)
   shifter_freq_change_time[shifter_freq_change_idx]=act;
 #else
   shifter_freq_change_time[shifter_freq_change_idx]=ABSOLUTE_CPU_TIME;
@@ -1841,12 +1841,12 @@ void TGlue::AddFreqChange(int f) {
 void TGlue::AddShiftModeChange(int mode) {
   // called only by SetShiftMode
   shifter_shift_mode_change_idx++;
-#if defined(SSE_VC_INTRINSICS_383G)
+#if defined(SSE_VC_INTRINSICS_390G)
   BITRESET(shifter_shift_mode_change_idx,5);//stupid, I guess
 #else
   shifter_shift_mode_change_idx&=31;
 #endif
-#if defined(SSE_VAR_OPT_383A1)
+#if defined(SSE_VAR_OPT_390A1)
   shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=act;
 #else
   shifter_shift_mode_change_time[shifter_shift_mode_change_idx]=ABSOLUTE_CPU_TIME;
@@ -1930,7 +1930,7 @@ int TGlue::NextFreqChange(int cycle,int value) {
 
 #endif
 
-#if defined(SSE_GLUE_383B3) // refactor + bugfix 
+#if defined(SSE_GLUE_390B3) // refactor + bugfix 
 
 int TGlue::NextShiftModeChange(int cycle,int value) {
   // return cycle of next change after this cycle
@@ -1973,7 +1973,7 @@ int TGlue::NextShiftModeChange(int cycle,int value) {
 
 #endif
 
-#if defined(SSE_GLUE_383B3) //the same for new functions
+#if defined(SSE_GLUE_390B3) //the same for new functions
 
 
 int TGlue::NextChangeToHi(int cycle) {
@@ -2016,7 +2016,7 @@ int TGlue::NextChangeToLo(int cycle) {
   return rv;
 }
 
-#elif defined(SSE_GLUE_383B)
+#elif defined(SSE_GLUE_390B)
 
 // we add functions but they're faster, the point being clarification anyway
 int TGlue::NextChangeToHi(int cycle) {
@@ -2049,7 +2049,7 @@ int TGlue::NextChangeToLo(int cycle) {
 
 #endif
 
-#if defined(SSE_GLUE_383B)
+#if defined(SSE_GLUE_390B)
 
 //and those?
 int TGlue::PreviousChangeToHi(int cycle) {
@@ -2111,7 +2111,7 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
     ; shifter_shift_mode_change[i]!=value && j<32
-#if defined(SSE_VAR_OPT_383C) //we only need positive values, looking for R1
+#if defined(SSE_VAR_OPT_390C) //we only need positive values, looking for R1
     // sensible difference in VS2015 diagnostic tools
     && (shifter_shift_mode_change_time[i] - LINECYCLE0)>0 
 #endif
@@ -2149,7 +2149,7 @@ int TGlue::CycleOfLastChangeToShiftMode(int value) {
 
 void TGlue::GetNextScreenEvent() {
 
-#if !defined(SSE_VAR_OPT_383) // at end of if-else ladder
+#if !defined(SSE_VAR_OPT_390) // at end of if-else ladder
   // default event = scanline
   screen_event.event=event_scanline;
   screen_event.time=CurrentScanline.Cycles;
@@ -2158,7 +2158,7 @@ void TGlue::GetNextScreenEvent() {
   // VBI is set pending some cycles into first scanline of frame, 
   // when VSYNC stops.
   // The video counter will be reloaded again.
-#if defined(SSE_GLUE_383E1A)
+#if defined(SSE_GLUE_390E1A)
   if(!Status.vbi_done&&!VCount)
 #else
   if(!Status.vbi_done&&!scanline)
@@ -2169,7 +2169,7 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.time=ST_TYPE==STE?68:64;
 #endif
-#if defined(SSE_VAR_OPT_383) // directly assign on screen_event_vector
+#if defined(SSE_VAR_OPT_390) // directly assign on screen_event_vector
     screen_event_vector=event_trigger_vbi;
 #else
     screen_event.event=event_trigger_vbi;
@@ -2178,7 +2178,7 @@ void TGlue::GetNextScreenEvent() {
       hbl_pending=true; 
   }
 
-#if defined(SSE_GLUE_383E1A2)
+#if defined(SSE_GLUE_390E1A2)
   // 3 lines before the end of the frame
   // VBLANK is already on since a couple of scanlines.
   // VSYNC will start, which will trigger reloading of the Video Counter
@@ -2196,13 +2196,13 @@ void TGlue::GetNextScreenEvent() {
 #else
     screen_event.time=62;
 #endif
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
     screen_event_vector=event_start_vbl;
 #else
     screen_event.event=event_start_vbl;
 #endif
   }
-#if defined(SSE_GLUE_383E1A3)
+#if defined(SSE_GLUE_390E1A3)
   // VSYNC is triggered when the vertical counter is at the last but one
   // line, some cycles into this line
   else if(!Status.vbl_done && VCount==1) //simpler
@@ -2217,18 +2217,18 @@ void TGlue::GetNextScreenEvent() {
 #endif
   {
     screen_event.time=CurrentScanline.Cycles;
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
     screen_event_vector=event_vbl_interrupt;
 #else
     screen_event.event=event_vbl_interrupt;
 #endif
     Status.vbi_done=false;
   }  
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
   else
   {
     // default event = scanline
-#if defined(SSE_VAR_OPT_383)
+#if defined(SSE_VAR_OPT_390)
     screen_event_vector=event_scanline;
 #else
     screen_event.event=event_scanline;
@@ -2237,7 +2237,7 @@ void TGlue::GetNextScreenEvent() {
   }
 #endif
 
-#if !defined(SSE_VAR_OPT_383)
+#if !defined(SSE_VAR_OPT_390)
   screen_event_vector=screen_event.event;
 #elif defined(SSE_DEBUG)
   screen_event.event=screen_event_vector;
@@ -2271,12 +2271,12 @@ void TGlue::Reset(bool Cold) {
   if(Cold) // if warm, Glue keeps on running
   {
 #if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
-#if !defined(SSE_GLUE_383E2)
+#if !defined(SSE_GLUE_390E2)
     scanline=0;
 #endif
     cpu_timer_at_start_of_hbl=0;
 #endif
-#if defined(SSE_GLUE_383E)
+#if defined(SSE_GLUE_390E)
     VCount=0;
    // Vbl();
 #endif
@@ -2333,7 +2333,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
    //TRACE("Set shift mode %d\n",NewRes);
 #endif
 
-#if defined(SSE_GLUE_383B)
+#if defined(SSE_GLUE_390B)
   int OldRes=m_ShiftMode;
 #endif
 
@@ -2367,7 +2367,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
     NewRes=2; // fixes The World is my Oyster screen #2
 
 #if defined(SSE_SHIFTER_TRICKS)
-#if defined(SSE_GLUE_383B)
+#if defined(SSE_GLUE_390B)
   if(NewRes!=OldRes)
 #endif
     AddShiftModeChange(NewRes); // add time & mode
@@ -2405,7 +2405,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
       }
 #endif
     }
-#if defined(SSE_VAR_OPT_383A1)
+#if defined(SSE_VAR_OPT_390A1)
     if(mixed_output==3 && (act-cpu_timer_at_res_change<30))
 #else
     if(mixed_output==3 && (ABSOLUTE_CPU_TIME-cpu_timer_at_res_change<30))
@@ -2417,7 +2417,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
       mixed_output=3;
     else if(mixed_output<2)
       mixed_output=2;
-#if defined(SSE_VAR_OPT_383A1)
+#if defined(SSE_VAR_OPT_390A1)
     cpu_timer_at_res_change=act;
 #else
     cpu_timer_at_res_change=ABSOLUTE_CPU_TIME;
@@ -2437,7 +2437,7 @@ void TGlue::SetShiftMode(BYTE NewRes) {
     shifter_last_draw_line>>=1; // simplistic?
 #endif
   AdaptScanlineValues(CyclesIn);
-#if defined(SSE_GLUE_383EC)//LEGACY
+#if defined(SSE_GLUE_390EC)//LEGACY
   //CALC_SHIFTER_FREQ_IDX
   shifter_freq_idx=(m_ShiftMode>=2) ? 2 : ((m_SyncMode&2)?0:1);
 #endif
@@ -2478,7 +2478,7 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   ASSERT(shifter_freq_idx>=0 && shifter_freq_idx<NFREQS);
   int new_freq=Freq[shifter_freq_idx];
   ASSERT(new_freq==50||new_freq==60||new_freq==72);
-#if !defined(SSE_GLUE_383__) //?
+#if !defined(SSE_GLUE_390__) //?
   if(shifter_freq!=new_freq)
 #endif
   freq_change_this_scanline=true;  
@@ -2633,7 +2633,7 @@ LOOP
 void TGlue::Vbl() {
   cpu_timer_at_start_of_hbl=time_of_next_event;
   scan_y=-scanlines_above_screen[shifter_freq_idx];
-#if !defined(SSE_GLUE_383E2)
+#if !defined(SSE_GLUE_390E2)
   scanline=0;
 #endif
   Status.hbi_done=Status.sdp_reload_done=false;
@@ -2646,7 +2646,7 @@ void TGlue::Vbl() {
   if(OSD_MASK2&OSD_CONTROL_MODES)
     TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
 #endif
-#if defined(SSE_GLUE_383B1) && defined(SSE_SHIFTER_TRICKS)
+#if defined(SSE_GLUE_390B1) && defined(SSE_SHIFTER_TRICKS)
   AddFreqChange(shifter_freq); //? doubtful use...
   AddShiftModeChange(m_ShiftMode); //?
 #endif

@@ -14,7 +14,7 @@ EXT HMENU menu1;
 EXT HMENU boiler_op_menu,shift_screen_menu;
 #if defined(SSE_BOILER)
 extern HMENU sse_menu;
-#if defined(SSE_BOILER_383_LOG2) // new title for more options
+#if defined(SSE_BOILER_390_LOG2) // new title for more options
 extern HMENU logsection_menu2;
 #endif
 #endif
