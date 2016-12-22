@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.8.1
+v3.8.3
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
@@ -51,16 +51,18 @@ Apps
 - Neochrome: C1
 - Notator and other MIDI programs: C1
 - Spectrum 512: use correct TOS for 50/60hz
-
+- Synergy Chipmon II: STF
 
 Games
 =========
 
-- 4 Wheel Drive/Combo Racer STX: Pasti.dll version
+- 4 Wheel Drive/Combo Racer STX: pasti 02j
+- Albedo STX: DI, pasti 02j
 - Altaïr: to use the missile, press any SHIFT key
 - Amberstar STX: WP
 - Antago STX, SCP: WP
 - Arctic Fox: not T106
+- Billiards Simulator: <4MB
 - Chessmaster 2000: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
@@ -80,7 +82,7 @@ Games
 - Hunchy 2010: not C1
 - Hyper Force: STF
 - International Tennis: not C1
-- Jupiter Masterdrive STX: Pasti.dll version
+- Jupiter Masterdrive STX: DI
 - Les Aventures De Moktar: no ghost disk
 - Lethal Xcess: Borders on
 - Live & Let Die: STF
@@ -94,20 +96,22 @@ Games
 - Obsession: Borders on
 - Pacmania STE: Borders on
 - Pang: Borders on
-- Platoon STX: STF T100US
+- Platoon STX: STF T100US (DI)
 - Realm of the Trolls: create STW disk
+- R-Type: STF
 - Seven Gates of Jambala: C2 
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
-- Super Hang-On: DI, C1, C2
+- Super Hang-On: DI, ADAT, C1, C2
 - The Sentinel (aka The Sentry): C1
 - Test Drive: RAM <4MB
-- Trauma STX: French TOS
+- Trauma STX (DI): French TOS
 - Trex Warrior: C2
 - Ultimate Arena: STE
 - Ultimate Ride: No B
 - Vroom -RPL: ADAT
-- War Heli STX: Pasti.dll version
+- War Heli: ADAT
+- War Heli STX: DI
 - Warp STX: C1, DI, retry!
 - X-Out: C1
 
@@ -117,7 +121,7 @@ Demos
 
 - 0913: STE French TOS
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD: not ADAT or STW; #1: STF, patch or WS1, #
+- 36.15 HMD: STW or not ADAT or STW
 - 36.15 OVR: STF, CPU speed
 - Audio Artistic Demo: C2
 - Awakening of the Gods: press space twice for menu; not T102
@@ -128,7 +132,7 @@ Demos
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
 - Circus back²STage: STE, 4MB
-- Closure: ADAT, #
+- Closure: ADAT
 - Corporation Megademo: STE, C1
 - Cuddly Demos: DI, WS1 if STE
 - Dangerous Fantaisy: STE
@@ -158,6 +162,7 @@ Demos
 - New Stream Writer.prg: STW, HD, no acc
 - nordlicht_stniccc2015_partyversion: WS1 if STE
 - Noughts and Mad Crosses: STE, ADAT
+- Oh No More Froggies: <4MB
 - Ooh Crikey Hidden screen: STF
 - Omega Full Overscan Screen: STF, WS2
 - Overdrive: C1, ADAT
@@ -167,7 +172,7 @@ Demos
 - Panic.tos v1: STF, C2
 - Phalanx: STF T102
 - Phaleon "normal loader": DI
-- Place To Be Again: not T102
+- Place To Be Again: STE
 - Punish Your Machine/Best Part of the Creation: 400x275 or higher
 - Punish Your Machine/Coast: 400x275 or higher
 - Punish Your Machine/Let's Do The Twist Again: STF
@@ -219,6 +224,7 @@ available.
 - Automation 000/IK+: STF
 - Automation 001/The Sentinel: STF, C1, ADAT
 - Automation 081/Star Wars: STF
+- Automation 120: <4MB
 - Automation 168: STF (WU2)
 - Automation 222: STF (WU2)
 - Automation 231/Rainbow Island: STF
@@ -236,7 +242,8 @@ Many Automation CDs were redone for the STE, they're not mentioned here.
 - Fuzion 078: DI
 - Fuzion 150: No B
 - Fuzion 155: DI
-- Medway 001, ...: STF because of the stupid antivirus by you guess who!
+- Medway 001, ...: <4MB because of the stupid antivirus by you guess who!
+This antivirus ('Protector') can be found on other disks. 
 - Lemmings 40: STF
 - Pyromaniacs 08: STF WU2
 - Ripped Off 14, 56, 60, etc.: STF because of the stupid antivirus

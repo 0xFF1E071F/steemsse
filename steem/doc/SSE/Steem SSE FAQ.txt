@@ -1,19 +1,25 @@
 Steem SSE FAQ
 ---------------
 
-v3.8.2
+v3.9.0
+
+Q:
+What is the Atari ST?
+A:
+The Atari ST was the best 16bit computer.
 
 Q:
 What is Steem?
 A:
 Steem stands for STE Emulation Engine.
-It's an excellent Atari STE emulator coded by Anthony and Russel Hayward.
+It's an excellent Atari STE emulator for the PC coded by Anthony and
+Russel Hayward.
 
 
 Q:
 Where are Steem authors?
 A:
-They suddenly disappeared in the lower border never to be seen again...
+They suddenly disappeared in the lower border, never to be seen again...
 Before that they released the source of their great emulator, mercifully.
 
 
@@ -60,7 +66,7 @@ To use Steem, you need a copy of the Atari ROM, called "TOS", and some
 image disk files. 
 When you first launch Steem, you may indicate where they are, which you can
 change later.
-Disk images are easy to find. Some are also available on the site.
+Disk images are easy to find.
 Legally this is still copyrighted material, and if they really wanted,
 companies who own it could call a halt on emulation, but they don't.
 
@@ -68,7 +74,7 @@ companies who own it could call a halt on emulation, but they don't.
 Q:
 What is TOS?
 A:
-This stands for 'The Operating System', also called 'Tramiel Operating System'.
+The system ROM.
 Including the BIOS, the GEM graphic environment and other layers, the full OS,
 except on very early models (also emulated), was printed on a ROM chip. You need
 an image of one of those roms to use Steem.
@@ -106,17 +112,29 @@ programs are listed.
 
 
 Q:
-Aren't programs better on the Amiga anyway?
+With Display size 413x275, the left border seems larger than the right border.
+A:
+I think it is correct emulation. Believe me, it's been a pain to implement.
+
+
+Q:
+Weren't programs better on the Amiga anyway?
 A:
 Generally, serious applications were better on the ST, thanks to a
-better file system and the outstanding monochrome monitor.
+better file system and the no-nonsense GEM operating system, working hard 
+disks and the outstanding monochrome monitor.
+The Amiga OS was more groundbreaking (multitask) but at the same time fragile
+(no memory protection).
 Games were better animated on the Amiga, but the Atari ST is one of
 the contenders for best chip music. 
 The sound of the Amiga was impressive back then but is nothing more
 than bad 8bit samples today (ouch!), and it was quickly outclassed by
-the Soundblaster.
+the Soundblaster. A remark you'll read more and more.
 Some important games of the era were actually better on the ST or not even
 released on the Amiga.
+This said, the Amiga had better action games, especially space shooters.
+But practically, it was handicapped by one button joysticks (in fact, the
+Amiga could handle two buttons, but game developpers overlooked this feature).
 
 
 Q:
@@ -196,6 +214,12 @@ A:
 It depends on the system, apparently it's due to sound initialisation.
 
 
+Q: 
+The sound filters all sound the same.
+A:
+They apply only on PSG sound, not DMA (STE).
+
+
 Q:
 I have problems with sound!
 A:
@@ -224,17 +248,6 @@ restarting Steem gives you control back.
 
 
 Q:
-When Pasti is on, the red led for writing doesn't seem to work.
-A:
-It's because Pasti (v0.2i) doesn't attempt to emulate correct timings for
-writes. The operation is instantaneous, so you have no time to catch the 
-red led.
-Notice that without Pasti as well, write operations are followed by seek and 
-read operations, so that the led doesn't remain red all the time. In fast
-disk mode, you won't see red for short operations.
-
-
-Q:
 When I take a screenshot in Steem my pictures turn out upside down and back
 to front if I am using FreeImage.dll.
 A:
@@ -249,7 +262,8 @@ After starting Steem SSE on my machine, it asks for D3DX9_43.dll.
 A:
 Your DX9 installation isn't complete. 
 You may try to update it, or copy D3DX9_43.dll into Steem directory.
-[available on my site: http://ataristeven.exxoshost.co.uk/Files/D3DX9_43.zip]
+[available on my site: http://ataristeven.exxoshost.co.uk/Files/D3DX9_43.zip
+ caution: 32bit only]
 
 
 Q:
@@ -275,21 +289,12 @@ xinput1_3.dll
 If it doesn't help, some search engine will be more useful than me.
 There is also a DirectDraw build available in case it really won't work.
 
-
 Q:
-Some Pasti images (STX) of games work in Hatari but not in Steem. Can you fix
-that?
+What is the difference between the D3D and the DirectDraw (DD) build?
 A:
-Hatari directly handles those images, with up-to-date knowledge of drive
-emulation. Steem uses a plugin, pasti.dll, that is much older and is in need
-of an update.
-Fortunately, those cases are rare, and we have alternatives now, like CTR
-and IPF, that also use a plugin, capsimg.dll, which is up-to-date, as well
-as SPC images using an up-to-date emulation in Steem SSE itself.
-Who knows? Maybe one day pasti.dll will be improved.
-For those reasons directly handling STX images in Steem is not planned and
-those errors will remain for the time being.
-
+The main difference is in fullscreen mode. The DD build uses 800x600 (with
+borders on) while the D3D uses any resolution you choose. There are other
+options available.
 
 Q:
 What's the difference between ACSI and GEMDOS hard drives?
@@ -308,7 +313,7 @@ It's useful for me too, to quickly compare versions in case of bugs.
 
 
 Q:
-What is "wake-up state"?
+What is the "wake-up state"?
 A:
 It is the state in which your ST booted, due to synchronisation between 
 various chips. It has an influence on shifter trick timings.
@@ -321,10 +326,10 @@ Hey you claim to have fixed this or that issue with drive emulation but when
 I try it doesn't work.
 A:
 All drive emulation improvements operate only if the option 'Accurate Disk
-Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM disk
-images.
-For IPF, CTR, STW, SCP and HFE disk images, the option isn't necessary as 
-emulation is slow anyway :)
+Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM, STW
+and HFE disk images.
+For IPF, CTR, and SCP disk images, the option isn't necessary as emulation
+is slow anyway :) 
 For STX images, settings are in 'Pasti configuration'.
 
 
@@ -340,7 +345,13 @@ By the way, with most files zipped, file association makes less sense.
 Q:
 There's a strange bug, the keyboard doesn't click like on a real ST.
 A:
-If you really want that click, check sound options.
+If you really want that click, check the sound options.
+
+
+Q:
+Steem stutters when loading a SCP game.
+A:
+If it is in 7Z format, delay is the price of high compression.
 
 
 Q:
@@ -410,8 +421,9 @@ You can help by testing stuff and reporting bugs.
 
 Q:
 I can't code, I won't help, I use Linux (only recently switched from Amiga
-OS), Hatari is better than Steem, fullscreen don't work, STW is useless, you
-suck, Aikido is fake, in fact Steven Seagull's movies are notoriously bad, 
+OS), Hatari is better than Steem, fullscreen don't work, STW is useless, I
+enjoy trashing your Coming Soon threads at Atari-Forum (who cares?), you suck,
+Aikido is fake, in fact Steven Seagull's movies are notoriously bad, 
 that's why all his releases are DTV!
 A:
 https://www.youtube.com/watch?v=YIZsazaQick
