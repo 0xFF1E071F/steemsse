@@ -25,8 +25,7 @@ screen 1: overscan flicker on STE (correct)
 screen 2: sometimes monochrome rasters! (now they'll find a body)
           sometimes wrong rasters (lacking colour)
 
--Blitter: only partial emulation of CPU instruction executed while the
-blitter is working
+-BOLO: sampled music horribly distorted (correct)
 
 -Brattacas: poor control (correct)
 
@@ -41,8 +40,6 @@ Some lines on 3 clowns (correct)
 Dots in WU2 (correct)
 
 -Civilization STX HD install fails at disk A (correct)
-
--Closure doesn't work as STF WS1
 
 -Crash possible when Windows automatically blocks the session
 
@@ -61,21 +58,26 @@ Mouse move can be erratic with option C1
 
 -File associations lost at new version
 
--Hades Nebula sometimes fails to start
+-Froggies over the Fence doesn't respond if MIDI keyboard connected.
+Some MIDI keyboards send $FE all the time as  'Active Sensing'.
+It will mess other programs.
 
--HFE no fast mode
+-Hades Nebula sometimes fails to start
 
 -hi-fi dreams should sound better on STE
 
 -International Tennis 3D: controls don't respond right (correct)
 
 -Japtro hangs in STE mode (correct - depends on hardware rev.?)
+patched version jumping woman trash on bottom
 
 -Jumping Jackson on Automation 239: sometimes crashes at start game
 
 -Jumping Jacskon -MCA STE lower border flickers (correct)
 
 -Keyboard: sometimes won't take input anymore - quit Steem and start again
+
+-Lethal Xcess: possible to lose overscan at start on STE - reboot
 
 -Lose picture at stop with 400x278 display size
 Due to DirectDraw hacks
@@ -93,11 +95,6 @@ STE sometimes lower border scanlines are shifted
 
 -Notator: instrument assignment?
 
--Oh no more froggies: ADAT too slow (STW ok)
-
--Pacemaker credits line 70 flicker/shift with large borders,
-noise without
-
 -Pacemaker credits crash at end (correct)
 
 -Panic v1
@@ -107,12 +104,11 @@ display totally wrong on STE (correct)
 
 -Pasti: failure on resume snapshot
 
--Pasti: some games that work in Hatari don't in Steem
-This is because pasti.dll should be improved, the fault isn't on
-Steem's side. (eg Jupiter's Masterdrive)
-
 -pcsv62im
 no lower oversan, glitches on the right (correct)
+
+-phaleon
+HMD plasma wrong left border (correct)
 
 -Random crashes and failures... (rare!)
 
@@ -123,9 +119,15 @@ no lower oversan, glitches on the right (correct)
 -ReDMCSB fails halfway in TOS1.02 (you can compile 50%!)
 Is it Steem or TOS bug?
 
+-Return STE: random glitches in sound (correct, maybe worse on Steem)
+
 -RGBeast: start of lower border is shifted (correct)
 
+-Rick Dangerous: clicks on sample play/stop, some sound echoing (correct)
+
 -SCP no fast mode
+
+-Sea of Colour hangs on ACSI disk (depends on driver?)
 
 -Sinfull Sinuses: bad 4bit rasters display on TOS 1.62UK (correct)
 
@@ -148,8 +150,6 @@ samples too noisy
 
 -STE microwire; treble control doesn't work
 
--STW no fast mode
-
 -Super Hang-On sound not clean (correct)
 
 -Super Hang-On -BLR Crash after some checkpoints (correct)
@@ -159,6 +159,11 @@ samples too noisy
 -Switching between versions of Steem may corrupt auto.sts and cause crashes
 
 -Ultimate 3D dots STE can fail to load
+
+-Union demo: sound dirty
+
+-Trauma STX: claims there's a KEYBOARD PROOBLEM. Apparently, it checks
+if it's a French layout. Works with French TOS.
 
 -Tyranny STE: dot clouds between 3D shapes (correct)
 

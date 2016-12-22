@@ -1171,7 +1171,7 @@ f902	ee 00		ldx  00,x		;load word in X
 f904	27 10		beq  10 (F916)		;0->exit
 f906	85 80		bita #80		;bit7
 f908	27 0a		beq  0a (F914)
-f90a	7b 08 cb	tim 08cb		;CB bit3 BUSY?
+f90a	7b 08 cb	tim 08cb		;CB bit3 "output disabled"?
 f90d	26 07		bne  07 (F916)
 f90f	7b 03 ca	tim 03ca		;CA bit0,1 BUSY?
 f912	26 02		bne  02 (F916)

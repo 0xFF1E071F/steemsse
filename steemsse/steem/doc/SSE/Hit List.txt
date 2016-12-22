@@ -3,9 +3,12 @@ This is Steven Seagal's hit list!
 Games
 --------
 
-- 4 Wheel Drive/Combo Racer STX (3.7)
-- Blood Money STX+IPF (CPU) (3.5.1)
-- Crazy Cars 2 STX (3.3, broken 3.5.1, fixed 3.6.0)
+- 4 Wheel Drive/Combo Racer original (3.7)
+- 10th Frame original (3.8.3)
+- B.A.T and B.A.T II original (3.8.3)
+- Blood Money original (CPU) (3.5.1)
+- Crazy Cars 2 original (3.3, broken 3.5.1, fixed 3.6.0)
+- Cricket Captain original (3.8.3)
 - Demoniak cr. Elite (3.6.4)
 - Dragonflight (3.7)
 - Enchanted Land (3.3)
@@ -16,29 +19,30 @@ Games
 - International 3D Tennis (3.3)
 - Jumping Jackson on Automation 239 (3.6)
 - Leavin' Terramis 60hz overscan (3.4)
+- Leader Board original (3.8.3)
 - Lethal Xcess Beta STX (3.5.1)
 - Live & Let Die (3.3)
 - Manchester United (3.4)
 - Microprose Golf (thx Petari) (3.5.1)
+- Multi Player Soccer Manager original (3.8.3)
 - Nightdawn (3.3)
 - No Buddies Land (3.3)
 - Rainbow Island on Automation 231 (3.3)
 - Realm of the Trolls (3.7)
+- Rugby Coach original (3.8.3)
 - The Sentinel (3.4), Automation 001 (3.5.1)
 - Seven Gates Of Jambala (from Hatari) (3.3)
 - Trex Warriors (from Hatari) (3.4)
-- The Teller STX (3.7)
+- The Teller original (3.7)
 - Titan STE (3.3), STF (3.5)
 - Utopia cr. Elite (3.6.4)
-- Warp STX (3.5.1)
+- Warp original (3.5.1)
 - Wipe-Out -RPL (3.7)
 - X-Out mouse (3.4), HD version (3.5.1)
 
 - Demos
 ---------
 
-We fix more demos than games just because demo programming generally 
-was edgier.
 Some of those fixes actually are hacks, but it's temporary :)
 
 - 36.15 Gen4 by Cakeman (3.3) 
@@ -149,9 +153,10 @@ Some intros also benefit from larger display.
 ----------------
 
 - Aladin (3.5.0; broken 3.5.1, fixed 3.5.2, broken 3.6.0, fixed 3.6.1,
-  legit 3.7.1)
+  legit 3.7.1!)
 - Atari Diagnostic Cartridge (3.5.2)
 - Megamax C (scripts on HD) (3.6.1)
+- Music Master (3.8.3)
 - NEOchrome: mouse speed? (3.4)
 - Notator (3.5.1)
 - Panzer (3.5.3)
