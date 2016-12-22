@@ -91,7 +91,7 @@ TDebug::TDebug() {
 #endif
   logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
-//  logsection_enabled[ LOGSECTION_OPTIONS ] = 1; // now free
+//  logsection_enabled[ LOGSECTION_OPTIONS ] = 1;
 #endif
 
 #if defined(SSE_DEBUG_TRACE_FILE)
@@ -106,16 +106,20 @@ TDebug::TDebug() {
 #else
   SetCurrentDirectory(GetEXEDir().Text);
 #endif
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+  trace_file_pointer=NULL;
+#else
   trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
 #ifdef SSE_DEBUG
   if(!trace_file_pointer)
-    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
+//    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
+    Alert("Couldn't open TRACE file",RunDir.Text,0);
 #endif
  
 #if !defined(SSE_BOILER_WIPE_TRACE2)
 #ifdef WIN32 // at each start now because of wiping
 
-#ifdef TRACE_FOR_RELEASE //date is enough, time on start/stop
+#ifdef SSE_TRACE_FOR_RELEASE //date is enough, time on start/stop
   char sdate[9];
   _strdate( sdate );
   if(trace_file_pointer)printf("Steem SSE TRACE - %s\n",sdate);
@@ -126,6 +130,7 @@ TDebug::TDebug() {
   _strdate( sdate );
   _strtime( stime );
   if(trace_file_pointer)printf("Steem SSE TRACE - %s - %s\n",sdate,stime);
+#endif
 #endif
 #endif
 #endif
@@ -222,6 +227,39 @@ void TDebug::Vbl(){
 }
 
 #endif//#if defined(SSE_DEBUG)
+
+
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+
+void TDebug::TraceInit() {
+  trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
+#ifdef SSE_DEBUG
+  if(!trace_file_pointer)
+//    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
+    Alert("Couldn't open TRACE file",RunDir.Text,0);
+#endif
+ 
+#if !defined(SSE_BOILER_WIPE_TRACE2)
+#ifdef WIN32 // at each start now because of wiping
+
+#ifdef SSE_TRACE_FOR_RELEASE //date is enough, time on start/stop
+  char sdate[9];
+  _strdate( sdate );
+  if(trace_file_pointer)printf("Steem SSE TRACE - %s\n",sdate);
+#else
+  // http://www.ehow.com/how_2190605_use-date-time-c-program.html
+  char sdate[9];
+  char stime[9];
+  _strdate( sdate );
+  _strtime( stime );
+  if(trace_file_pointer)printf("Steem SSE TRACE - %s - %s\n",sdate,stime);
+#endif
+#endif
+#endif
+   //TraceGeneralInfos(INIT);
+}
+
+#endif
 
 
 #if defined(SSE_DEBUG_RESET) 
@@ -377,8 +415,9 @@ void TDebug::TraceGeneralInfos(int when) {
       PASTI_DLL,SSEConfig.PastiDll,ARCHIVEACCESS_DLL,SSEConfig.ArchiveAccess,
       HD6301_ROM_FILENAME,SSEConfig.Hd6301v1Img);
     //TRACE("High priority %d Task switch %d Auto pause %d Floppy skip %d Start on click %d Load snapshot %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
-    TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
+//    TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
     TRACE("Video DX %d D3D %d Mem %d BHM %d 8 %d 16 %d \n",TryDD,SSEConfig.Direct3d9,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit);
+    TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
     //TRACE("Sound DX %d drive %d\n",TrySound,SSEConfig.DriveSound);
     //TRACE("ACSI %d 6301 %d\n",SSEConfig.AcsiImg,SSEConfig.Hd6301v1Img);
 #endif
@@ -422,7 +461,7 @@ void TDebug::TraceGeneralInfos(int when) {
 #if defined(SSE_STF) && defined(SSE_MMU_WU)
     TRACE("%s%d; ",st_model_name[ST_TYPE],MMU.WS[OPTION_WS]);
 #endif
-    TRACE("T%X %d; ",tos_version,ROM_PEEK(0x1D)); //+country
+    TRACE("T%X-%d; ",tos_version,ROM_PEEK(0x1D)); //+country
     TRACE("%dK",mem_len/1024);
 
 #if defined(SSE_HACKS)
@@ -438,26 +477,34 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; C2");
 #if defined(SSE_CPU_MFP_RATIO) 
     if(n_cpu_cycles_per_second>CpuNormalHz)
-      TRACE("; Speed %d",n_cpu_cycles_per_second);
+      //TRACE("; Speed %d",n_cpu_cycles_per_second);
+      TRACE("; ~%d",n_cpu_cycles_per_second);
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
-    if(OPTION_CPU_CLOCK)
-      TRACE("; Clock %d",CpuCustomHz);
+    if(OPTION_C2 && OPTION_CPU_CLOCK)
+      //TRACE("; Clock %d",CpuCustomHz);
+      TRACE("; ~%d",CpuCustomHz); // not ambiguous, different order
 #endif
 #endif
     if(OPTION_SAMPLED_YM)
       TRACE("; YM");
-    if(MONO)
-      //TRACE("Monochrome\n");  
-      TRACE("; HI");  
 #if defined(SSE_DONGLE_PORT3) // if bug report = mouse drift...
     if(STPort[3].Type)
       TRACE("; Dongle %d", STPort[3].Type);  
 #endif
+    if(MONO)
+      //TRACE("Monochrome\n");  
+      TRACE("; HI");  
 #if defined(SSE_VID_BORDERS)
     else if(DISPLAY_SIZE)
       //TRACE("Dispay size %d\n", DISPLAY_SIZE);
       TRACE("; Size %d", DISPLAY_SIZE);
 #endif
+    if(extended_monitor)
+      TRACE("; ext %dx%d",em_width,em_height);
+    if(FullScreen)
+      TRACE("; FS");
+    else
+      TRACE("; WM %d-%d,%d-%d,%d",WinSizeForRes[0],draw_win_mode[0],WinSizeForRes[1],draw_win_mode[1],WinSizeForRes[2]); 
     TRACE("\n");
     //disk
     //TRACE("%d drives",num_connected_floppies);

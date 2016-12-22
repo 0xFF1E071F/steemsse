@@ -146,6 +146,9 @@ struct TDebug {
   TDebug();
   ~TDebug();
 #if defined(SSE_DEBUG_TRACE)
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+  void TraceInit();
+#endif
   void Trace(char *fmt, ...); // one function for both IDE & file
   void TraceIde(char *fmt, ...); // in IDE, not file, whatever the defines
   // if logsection enabled, static for function pointer, used in '6301':
@@ -247,7 +250,7 @@ enum logsection_enum_tag {
 // LOGSECTION_IPF_LOCK_INFO,
 #endif
  LOGSECTION_IMAGE_INFO, //was Pasti
- LOGSECTION_OPTIONS, // now free (we use INIT for options)
+ LOGSECTION_OPTIONS, 
  LOGSECTION_ACIA,
  LOGSECTION_DMA,
  LOGSECTION_CARTRIDGE,
@@ -651,7 +654,7 @@ enum { // to pass compilation
 #define TRACE_OSD2 TRACE_OSD
 #endif
 
-#ifdef TRACE_FOR_RELEASE
+#ifdef SSE_TRACE_FOR_RELEASE
 //#undef TRACE_INIT
 //#define TRACE_INIT Debug.Trace
 #define TRACE2 Debug.Trace

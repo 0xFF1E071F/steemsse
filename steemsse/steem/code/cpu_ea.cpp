@@ -1097,7 +1097,8 @@ void m68k_get_source_111_l(){
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-/*  For some instructions, EA microcodes are used and the data is read even if
+/*  note for TRUE_PC
+    For some instructions, EA microcodes are used and the data is read even if
     it isn't necessary for the logic of the instruction.
     CLR etc. read before write.
     If we really are in a write cycle, PC should be at its definitive value.

@@ -153,6 +153,9 @@ Str Comlines[NUM_COMLINES]={Comlines_Default[0][0],Comlines_Default[1][0],Comlin
 bool StepByStepInit=0;
 EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName="auto";
+#if defined(SSE_GUI_SNAPSHOT_INI_383)
+EasyStr DefaultSnapshotFile;
+#endif
 #if defined(SSE_GUI_CONFIG_FILE)
 EasyStr LastCfgFile;
 #endif
@@ -1552,6 +1555,11 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
     Path=strchr(Arg,'=')+1;
     return ARG_RTBUFNUM;
   }
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+  else if (ComLineArgCompare(Arg,"NOTRACE",true)){
+    return ARG_NOTRACE;
+  }
+#endif
 #if defined(SSE_UNIX_TRACE)
   else if (ComLineArgCompare(Arg,"TRACEFILE=",true)){ //Y,N
     Path=strchr(Arg,'=')+1;
