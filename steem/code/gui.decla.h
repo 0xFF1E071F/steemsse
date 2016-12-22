@@ -263,6 +263,9 @@ int GetComLineArgType(char *,EasyStr &);
 #define ARG_LOGSECTION 252
 #define ARG_TRACEFILE 253
 #endif
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+#define ARG_NOTRACE 254
+#endif
 
 void ParseCommandLine(int,char*[],int=0);
 
@@ -546,6 +549,9 @@ void CleanUpSteem();
 EXT bool StepByStepInit;
 EXT EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EXT EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
+#if defined(SSE_GUI_SNAPSHOT_INI_383)
+EXT EasyStr DefaultSnapshotFile;
+#endif
 #if defined(SSE_GUI_CONFIG_FILE)
 EXT EasyStr LastCfgFile;
 #endif

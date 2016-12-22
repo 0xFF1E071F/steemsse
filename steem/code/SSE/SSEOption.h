@@ -141,6 +141,7 @@ struct TConfig {
   unsigned int mv16:1; // B.A.T cartridge
   unsigned int mr16:1; // Microdeal Replay 16 cartridge
   unsigned int Port0Joy:1;
+  unsigned int NoTrace:1;
   
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();

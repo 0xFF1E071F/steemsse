@@ -478,6 +478,10 @@ bool Initialise()
     }else if (Type==ARG_NONOTIFYINIT){
       ShowNotify=0;
     }
+#if defined(SSE_TRACE_FOR_RELEASE_390)
+    else if(Type==ARG_NOTRACE)
+      SSEConfig.NoTrace=true;
+#endif
 #if defined(SSE_UNIX_TRACE)
     else if (Type==ARG_TRACEFILE){
       if(Path.Length()>0) // room for improvement...
@@ -497,6 +501,11 @@ bool Initialise()
   }
 #else
   INIFile=RunDir+SLASH ONEGAME_NAME ".ini";
+#endif
+
+#if defined(SSE_TRACE_FOR_RELEASE_390) 
+  if(!SSEConfig.NoTrace)
+    Debug.TraceInit();
 #endif
 
   GoodConfigStoreFile CSF(INIFile);
@@ -914,6 +923,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
     }
   }
 #endif
+
 #ifndef ONEGAME
   ParseCommandLine(_argc-1,_argv+1);
 #endif

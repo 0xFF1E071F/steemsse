@@ -1389,6 +1389,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CARTRIDGE_TRANSPARENT //check for bugs
 #endif
 
+
+
 #define SSE_DONGLE //new domain of emulation!
 #if defined(SSE_DONGLE)
 #define SSE_DONGLE_PORT3 // all dongles grouped in "virtual" port
@@ -1612,6 +1614,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_OSD_DRIVE_LED_390 // not on parse path
 #define SSE_TOS_PRG_AUTORUN_390 // HD not really off after ejection!
+#define SSE_GUI_SNAPSHOT_INI_383
 
 #endif//390
 
@@ -1877,7 +1880,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(DEBUG_FACILITIES_IN_RELEASE)
 //#define ASSERT_FOR_RELEASE //careful with this (performance)
 #define OSD_FOR_RELEASE // time
-#define TRACE_FOR_RELEASE // TRACE2: the new breed!
+#define SSE_TRACE_FOR_RELEASE // TRACE2: the new breed!
 #endif
 
 #if defined(ASSERT_FOR_RELEASE)
@@ -1889,7 +1892,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_RESET
 #endif
 
-#ifdef TRACE_FOR_RELEASE
+#ifdef SSE_TRACE_FOR_RELEASE
 #define SSE_DEBUG_TRACE
 #define SSE_DEBUG_TRACE_FILE
 #define SSE_DEBUG_START_STOP_INFO
@@ -1897,6 +1900,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_START_STOP_INFO3
 #define SSE_BOILER_AUTO_FLUSH_TRACE
 #define SSE_BOILER_AUTO_FLUSH_TRACE_390
+#define SSE_TRACE_FOR_RELEASE_390
 #endif
 
 #endif//SSE_DEBUG

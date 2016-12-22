@@ -967,7 +967,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       SetWindowText(StemWin,stem_window_title);
     }
 #endif
-#if defined(SSE_GUI_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI_383)
+    DefaultSnapshotFile=pCSF->GetStr("Main","DefaultSnapshot","");
+#elif defined(SSE_GUI_SNAPSHOT_INI)
 /*  Request, be able to load a specified snapshot using a shortcut.
     We also don't want to bloat Steem, so we use BootStateFile.
     This variable is overwritten if Steem is launched with a state

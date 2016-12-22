@@ -336,7 +336,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           EasyStr fn=LastSnapShot;
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
-#if defined(SSE_GUI_SNAPSHOT_INI)
+#if defined(SSE_GUI_SNAPSHOT_INI_383)
+          if(LOWORD(wPar)==209)
+            fn=DefaultSnapshotFile;
+#elif defined(SSE_GUI_SNAPSHOT_INI)
           if(LOWORD(wPar)==209)
             fn=BootStateFile;
 #endif
