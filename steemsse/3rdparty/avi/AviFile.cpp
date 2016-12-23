@@ -16,7 +16,7 @@
 #define _tcsncpy strncpy
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf; // VC9 doesn't know that
 unsigned int FormatAviMessage(HRESULT code, char *buf,unsigned int len);
-extern int shifter_freq_at_start_of_vbl;
+extern BYTE shifter_freq_at_start_of_vbl;
 
 #include "avifile.h"
 
