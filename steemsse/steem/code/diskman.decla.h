@@ -28,7 +28,7 @@
 #ifdef SSE_UNIX
 #include <x/hxc_dir_lv.h>
 #endif
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
 int ExtensionIsDisk(char*);
 #else
 int ExtensionIsDisk(char*,bool returnPastiDisksOnlyWhenPastiOn=true);

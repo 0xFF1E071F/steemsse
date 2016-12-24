@@ -47,9 +47,6 @@ struct TImageType {
 };
 
 
-//TODO move gap stuff from drive here
-
-
 /* v3.7.0 We create a new object 'Disk', as global duet for
    floppy drives inserted in drives.
    Global to avoid long references (drive[0].disk.etc.) and 
@@ -77,7 +74,7 @@ struct TDisk {
 
   // gaps
   WORD BytePositionOfFirstId();
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
   WORD BytesToID(BYTE &num);// if num=0, next ID
 #else
   WORD BytesToID(BYTE &num,WORD &nHbls);// if num=0, next ID

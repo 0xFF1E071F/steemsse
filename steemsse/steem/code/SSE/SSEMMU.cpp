@@ -64,7 +64,7 @@
 */
 
 void TMMU::UpdateVideoCounter(int CyclesIn) {
-//  ASSERT(scan_y!=-29);
+
   MEM_ADDRESS vc;
   if (bad_drawing){  // Fake SDP, eg extended monitor
     if (scan_y<0)
@@ -199,7 +199,7 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     TRACE_OSD("VC%d y%d",addr-0xff8200,scan_y);
 #endif
 
-#if defined(SSE_STF_SDP)
+#if defined(SSE_STF)
   // some STF programs write to those addresses, it just must be ignored.
   if(ST_TYPE!=STE)
     return; // eg Nightdawn

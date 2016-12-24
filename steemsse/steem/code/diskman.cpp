@@ -46,7 +46,7 @@ bool ExtensionIsPastiDisk(char *Ext)
   return false;
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
 int ExtensionIsDisk(char *Ext)
 #else
 int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
@@ -237,7 +237,7 @@ void TDiskManager::SetNumFloppies(int NewNum)
 //---------------------------------------------------------------------------
 TDiskManager::TDiskManager()
 {
-#ifdef SSE_ACSI_ICON2 // more space for the ACSI icon in initial disk manager
+#ifdef SSE_ACSI_ICON // more space for the ACSI icon in initial disk manager
   Width=403+70+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
 #else 
   Width=403+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
@@ -3085,7 +3085,7 @@ That will toggle bit x.
     case WM_GETMINMAXINFO:
     {
       MINMAXINFO *mmi=(MINMAXINFO*)lPar;
-#if defined(SSE_ACSI_ICON_390) //report Dima
+#if defined(SSE_ACSI_ICON) //report Dima
       mmi->ptMinTrackSize.x=403+70+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
 #else
       mmi->ptMinTrackSize.x=403+GetSystemMetrics(SM_CXFRAME)*2+GetSystemMetrics(SM_CXVSCROLL);
@@ -3718,7 +3718,7 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 //---------------------------------------------------------------------------
 void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 {
-#if defined(SSE_GUI_DM_WRONG_IMAGE_ALERT1)
+#if defined(SSE_GUI_DM_WRONG_IMAGE_ALERT)
   if (Alert(Path+": "+T("Steem doesn't recognise any disk images.")+"\n\n"+
 #else
   if (Alert(Path+" "+T("doesn't contain any disk images.")+"\n\n"+

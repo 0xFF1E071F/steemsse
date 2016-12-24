@@ -436,7 +436,7 @@ void stemdos_read(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters read
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -460,7 +460,7 @@ void stemdos_write(int h,MEM_ADDRESS sp)
   }
   r[0]=c; //number of characters written
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -495,11 +495,6 @@ void stemdos_seek(int h,MEM_ADDRESS sp)
   }else{
     r[0]=ftell(stemdos_file[h].f);
   }
-
-#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_390)
-  HDDisplayTimer=timer+HD_TIMER;
-#endif
-
   dbg_log(EasyStr("STEMDOS: FSeek returned ")+r[0]);
 }
 
@@ -786,7 +781,7 @@ void stemdos_mkdir()
     r[0]=0; //succeed!
   }
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -802,7 +797,7 @@ void stemdos_rmdir()
   }else{
     r[0]=0; //succeed!
   }
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 }
@@ -827,7 +822,7 @@ void stemdos_Fdelete()
     r[0]=0; //succeed!
   }
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -836,7 +831,7 @@ void stemdos_Fdelete()
 void stemdos_Fattrib()
 {
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -889,7 +884,7 @@ void stemdos_Fattrib()
 void stemdos_rename()
 {
 
-#if defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD)
   HDDisplayTimer=timer+HD_TIMER;
 #endif
 
@@ -1754,10 +1749,6 @@ void stemdos_parse_path()  //remove \..\ etc.
 {
   dbg_log(EasyStr("STEMDOS: Parsing path ")+stemdos_filename);
 
-#if defined(SSE_OSD_DRIVE_LED) && !defined(SSE_OSD_DRIVE_LED_390)
-  HDDisplayTimer=timer+HD_TIMER;
-#endif
-
   int c=0;
   while (c<stemdos_filename.Length()){
     if (stemdos_filename.Mids(c,3)=="\\.."){ //back
@@ -2146,14 +2137,11 @@ void TTos::HackMemoryForExtendedMonitor() {
 
 #endif
 
-#if defined(SSE_TOS_WARNING1A)
+#if defined(SSE_TOS_WARNING)
 
 void TTos::CheckSTTypeAndTos() {
-  if(tos_version<0x106 && ST_TYPE==STE || tos_version>=0x106 && ST_TYPE!=STE
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS4)    
-    && tos_version!=0x206
-#endif
-    )
+  if(tos_version<0x106 && ST_TYPE==STE 
+    || tos_version>=0x106 && ST_TYPE!=STE && tos_version!=0x206)
     Alert("TOS and ST type normally not compatible","Warning",MB_OK|MB_ICONWARNING);
 }
 

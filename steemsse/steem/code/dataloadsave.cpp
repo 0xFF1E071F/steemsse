@@ -826,11 +826,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF)
     OptionBox.Hide(); // hack
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
-#if defined(SSE_STF_390)
     SSEConfig.SwitchSTType(ST_TYPE);
-#else
-    SwitchSTType(ST_TYPE); // settings for STF or STE
-#endif
 #endif
 #if defined(SSE_CPU_MFP_RATIO_OPTION2)
     OPTION_CPU_CLOCK=pCSF->GetInt("Options","FinetuneCPUclock",OPTION_CPU_CLOCK);
@@ -948,7 +944,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     SSE_OPTION_D3D=pCSF->GetInt("Options","Direct3D",SSE_OPTION_D3D);
     Disp.ScreenChange();
 #endif
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
 #endif
 #if defined(SSE_DRIVE_SOUND_SEEK5)
@@ -989,9 +985,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
-#endif
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3)
-    Tos.VersionWarning=pCSF->GetInt("Main","TosVersionWarning",1);
 #endif
 #if defined(SSE_VID_DISABLE_AUTOBORDER3) // monochrome
     SSEOption.MonochromeDisableBorder=pCSF->GetInt("Main","MonochromeDisableBorder",0);
@@ -1193,8 +1186,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
   SEC(PSEC_SOUND){
     MaxVolume=pCSF->GetInt("Options","Volume",MaxVolume);
-
-#if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
+#if defined(SSE_SOUND_VOL_LOGARITHMIC)
     MaxVolume=min(MaxVolume,10000);
 #endif
     sound_mode=pCSF->GetInt("Options","SoundMode",sound_mode);
@@ -1493,7 +1485,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_D3D_OPTION)
   pCSF->SetStr("Display","Direct3D",EasyStr(SSE_OPTION_D3D)); 
 #endif
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
 #endif
 #if defined(SSE_DRIVE_SOUND_SEEK5)

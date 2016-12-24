@@ -103,9 +103,6 @@ void TOption::Init() {
 #endif//opt390?
 }
 
-
-#if defined(SSE_SSE_CONFIG_STRUCT)
-
 TConfig SSEConfig;
 
 TConfig::TConfig() {
@@ -116,11 +113,11 @@ TConfig::TConfig() {
 #endif
 }
 
-#if defined(SSE_STF_390)
+#if defined(SSE_STF)
 
 int TConfig::SwitchSTType(int new_type) { 
 
-  ASSERT(new_type>=0 && new_type<SSE_STF_ST_MODELS);
+  ASSERT(new_type>=0 && new_type<N_ST_MODELS);
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types
   {
@@ -180,8 +177,5 @@ int TConfig::SwitchSTType(int new_type) {
 }
 
 #endif
-
-
-#endif//#if defined(SSE_SSE_CONFIG_STRUCT)
 
 #endif//sse

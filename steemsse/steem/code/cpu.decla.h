@@ -307,7 +307,81 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #if defined(SSE_CPU)
 
-#if defined(SSE_MMU_ROUNDING_BUS1A)
+#if defined(SSE_MMU_ROUNDING_BUS)
+
+/*
+Note on rounding
+
+You need "round cycles up to 4" only for RAM and Shifter accesses.
+
+Funny but this was already in the Engineering Hardware Specification of 1986:
+
+    ---------------
+    | MC68000 MPU   |<--
+    |               |   |
+     ---------------    |
+                        |                           ----------
+                        |<------------------------>|192 Kbyte |<--->EXPAN
+               ---------|------------------------->| ROM      |
+              |         |                           ----------
+              |         |                           ----------
+              |         |                          |512K or 1M|  
+              |         |                       -->| byte RAM |<--
+      ----------        |        ----------    |    ----------    |
+     | Control  |<----->|<----->| Memory   |<--                   |
+     | Logic    |-------|------>|Controller|<--                   |
+      ----------        |        ----------    |    ----------    |
+       |||||            |        ----------     -->| Video    |<--  RF MOD
+       |||||            |<----->| Buffers  |<----->| Shifter  |---->RGB
+       |||||            |       |          |        ----------      MONO
+       |||||            |        ----------
+       |||||            |        ----------         ----------
+       |||||            |<----->| MC6850   |<----->| Keyboard |<--->IKBD
+       |||| ------------|------>| ACIA     |       | Port     |
+       ||||             |        ----------         ----------
+       ||||             |        ----------         ----------
+       ||||             |<----->| MC6850   |<----->| MIDI     |---->OUT/THRU
+       ||| -------------|------>| ACIA     |       | Ports    |<----IN
+       |||              |        ----------         ----------
+       |||              |        ----------         ----------
+       |||              |<----->| MK68901  |<----->| RS232    |<--->MODEM
+       || --------------|------>| MFP      |<--    | Port     |
+       ||               |        ----------    |    ----------
+       ||               |                      |    ----------
+       ||               |                       ---| Parallel |<--->PRINTER
+       ||               |                       -->| Port     |
+       ||               |        ----------    |    ----------
+       ||               |<----->| YM-2149  |<--     ----------
+       | ---------------|------>| PSG      |------>| Sound    |---->AUDIO
+       |                |       |          |---    | Channels |
+       |                |        ----------    |    ----------
+       |                |                      |    ----------
+       |                |        ----------     -->| Floppy   |<--->FLOPPY
+       |                |<------| WD1772   |<----->|Disk Port |     DRIVE
+       |                |    -->| FDC      |        ----------
+       |                |   |    ----------
+       |                |   |    ----------         ----------
+       |                |    -->| DMA      |<----->|Hard Disk |<--->HARD
+       |                |<----->|Controller|       | Port     |     DRIVE
+        ----------------------->|          |        ----------
+                                 ----------
+
+The CPU accesses RAM and the Shifter through the MMU, which forces it to share
+cycles with the video system. All the rest is directly available on the bus.
+Though there may be wait states for 8bit peripherals.
+
+
+ijor:
+The scheme is a bit misleading. 
+MMU doesn't really sit between the CPU and RAM, those buffers are.
+
+There are two data buses in the ST, the main CPU bus, and the RAM/SHIFTER
+(and nothing else) bus. Four TTL chips (two buffers and two latches) 
+connect or separate both buses. MMU is connected to the main data bus. 
+But it controls the buffers and the RAM address bus.
+*/
+
+
 
 //pc is of course up-to-date
 //we don't round on palette, but it's done in ior (?)
@@ -334,28 +408,6 @@ inline void FetchTimingL() {
 #endif
   }
 }
-
-#else
-
-inline void FetchTiming() {
-  if(pc>=rom_addr && pc<rom_addr+tos_len)
-    INSTRUCTION_TIME(4);
-  else
-    INSTRUCTION_TIME_ROUND(4);
-}
-
-
-inline void FetchTimingL() {
-  if(pc>=rom_addr && pc<rom_addr+tos_len)
-    INSTRUCTION_TIME(8);
-  else
-    INSTRUCTION_TIME_ROUND(8);
-}
-
-#endif
-
-
-#if defined(SSE_MMU_ROUNDING_BUS2)
 
 inline void ReadBusTiming() {
   cpu_cycles-=4;
@@ -404,8 +456,6 @@ inline void WriteBusTimingL() {
   }
 }
 
-#if defined(SSE_MMU_ROUNDING_BUS2_STACK)
-// it's in case abus wasn't correct vs stack
 inline void StackTiming() {
   cpu_cycles-=4;
   if((MEM_ADDRESS)r[15]<himem)
@@ -428,7 +478,23 @@ inline void StackTimingL() {
   }
 }
 
-#endif
+
+#else
+
+inline void FetchTiming() {
+  if(pc>=rom_addr && pc<rom_addr+tos_len)
+    INSTRUCTION_TIME(4);
+  else
+    INSTRUCTION_TIME_ROUND(4);
+}
+
+
+inline void FetchTimingL() {
+  if(pc>=rom_addr && pc<rom_addr+tos_len)
+    INSTRUCTION_TIME(8);
+  else
+    INSTRUCTION_TIME_ROUND(8);
+}
 
 #endif
 
@@ -457,16 +523,6 @@ inline void m68k_poke_abus(BYTE x){
     DEBUG_CHECK_WRITE_B(abus);
 #endif
 #if defined(SSE_CPU_CHECK_VIDEO_RAM)
-/*  If we're going to write in video RAM of the current scanline,
-    we check whether we need to render before. Some programs write
-    just after the memory has been fetched, but Steem renders at
-    shift mode changes, and if nothing happens, at the end of the line.
-    So if we do nothing it will render wrong memory.
-    The test isn't perfect and will cause some "false alerts" but
-    we have performance in mind: CPU poke is used a lot, it is rare
-    when the address bus is around the current scanline.
-*/
-
     if(Glue.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
@@ -506,7 +562,17 @@ inline void m68k_dpoke_abus(WORD x){
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
-#if defined(SSE_CPU_CHECK_VIDEO_RAM) // 3615 GEN4
+#if defined(SSE_CPU_CHECK_VIDEO_RAM) 
+/*  If we're going to write in video RAM of the current scanline,
+    we check whether we need to render before. Some programs write
+    just after the memory has been fetched, but Steem renders at
+    shift mode changes, and if nothing happens, at the end of the line.
+    So if we do nothing it will render wrong memory.
+    The test isn't perfect and will cause some "false alerts" but
+    we have performance in mind: CPU poke is used a lot, it is rare
+    when the address bus is around the current scanline.
+    Fixes ULM's 3615GEN4 demo.
+*/
     if(Glue.FetchingLine()
       && abus>=shifter_draw_pointer
       && abus<shifter_draw_pointer_at_start_of_line+LINECYCLES/2)
@@ -903,7 +969,7 @@ inline void SetDestLToAddr() {
 
 #endif
 
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4) && defined(SSE_MMU_ROUNDING_BUS2B)
+#if defined(SSE_MMU_ROUNDING_BUS) && defined(SSE_MMU_ROUNDING_BUS)
 
 #define m68k_SET_DEST_B(abus) m68k_SET_DEST_B_TO_ADDR;
 
@@ -1881,7 +1947,7 @@ inline void sr_check_z_n_l_for_r0()
 //---------------------------------------------------------------------------
 #if defined(SSE_CPU)
 
-#if defined(SSE_MMU_ROUNDING_BUS2B)
+#if defined(SSE_MMU_ROUNDING_BUS)
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
@@ -1911,7 +1977,7 @@ inline void ReadL(MEM_ADDRESS addr) {
 
 #endif
 
-#if defined(SSE_MMU_ROUNDING_BUS2B)
+#if defined(SSE_MMU_ROUNDING_BUS)
 
 #define m68k_READ_B(abus) ReadB();
 #define m68k_READ_W(abus) ReadW();
@@ -2020,7 +2086,7 @@ WinUAE
     trace: My Socks Are Weapons (Legacy)
     trap: Bird Mad Girl Show
 */
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION) // in detail
+#if defined(SSE_MMU_ROUNDING_BUS) // in detail
   if(ir==0x4E76) // trapv
     CPU_ABUS_ACCESS_READ_FETCH;
   else
@@ -2036,7 +2102,7 @@ WinUAE
 #endif
 }
 
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
 
 inline void m68kInterruptTiming() {
 /*  

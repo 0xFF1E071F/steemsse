@@ -89,34 +89,6 @@ typedef unsigned __int64	uint64_t;
 #define IRD   ir              // Instruction Register Decoder
 #endif
 
-///////////
-// Hacks //
-///////////
-
-#if ! defined(SSE_SSE_CONFIG_STRUCT)
-extern
-#ifdef __cplusplus
- "C" 
-#endif
-int iDummy;// can be l-value
-#endif
-
-
-
-#if defined(SSE_HACKS)
-extern 
-#ifdef __cplusplus
- "C" 
-#endif
- //"C" 
-int SS_signal; // "handy" global mask (future coding horror case)
-#endif
-
-
-//////////
-// IKBD //
-//////////
-
 
 ///////////////
 // INTERRUPT //
@@ -161,24 +133,6 @@ int SS_signal; // "handy" global mask (future coding horror case)
 #endif
 
 #endif
-
-
-/////////////
-// SHIFTER //
-/////////////
-
-#if defined(SSE_SHIFTER)
-
-#endif
-
-
-
-//////////
-// TEMP //
-//////////
-
-//before moving to a better location/class
-
 
 
 //////////

@@ -853,7 +853,7 @@ CRC.
 */
 
           if (SectorIdx>-1 && nSects>0) {
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
             BYTE num=fdc_sr;
             WORD CurrentByte=SF314[DRIVE].BytePosition();
             WORD BytesToNextID=Disk[DRIVE].BytesToID(num);
@@ -917,7 +917,7 @@ CRC.
 #endif
 
             agenda_delete(agenda_floppy_readwrite_sector);
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
             agenda_add(agenda_floppy_readwrite_sector,int(hbl_multiply
               *(HBLOfSectorStart-hbl_count))+2,MAKELONG(0,start));
 #else
@@ -1562,7 +1562,7 @@ void agenda_floppy_readwrite_sector(int Data)
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
   int Command=fdc_cr; //shouldn't change...
 #else
   int Command=HIWORD(Data);
@@ -1646,9 +1646,6 @@ instant_sector_access_loop:
 #endif
           PosInSector++;
         }
-#if defined(SSE_DMA_COUNT_CYCLES) &&!defined(SSE_DMA_FIFO_NATIVE)
-        INSTRUCTION_TIME(8);
-#endif
       }
     }else{ // SS Read
 
@@ -1693,9 +1690,6 @@ instant_sector_access_loop:
 #endif
         PosInSector++;
       }
-#if defined(SSE_DMA_COUNT_CYCLES) &&!defined(SSE_DMA_FIFO_NATIVE)
-      INSTRUCTION_TIME(8);
-#endif
     }
     if (PosInSector>=int(FromFormat ? floppy->FormatLargestSector:floppy->BytesPerSector)){
       Part=64; // Done sector, last part
@@ -1755,7 +1749,7 @@ instant_sector_access_loop:
     bytes except for the latest part, CRC + $FF included, 19 bytes.
 */
   ASSERT(Part!=64); // 32 -> 65
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
 /*  Correct drift due to hbl system imprecision. 
     With packs of 16 bytes it can accumulate, and at the end of the sector, 
     we're off by a couple of HBL, enough to miss next ID.
@@ -1899,7 +1893,7 @@ void agenda_floppy_read_track(int part)
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
   if (floppy->Empty()) return; // Stop, timeout
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
   int RealPart=HIWORD(part);//starts at 0
   part=LOWORD(part);
 #endif
@@ -1986,19 +1980,16 @@ void agenda_floppy_read_track(int part)
         int SectorBytes=(128 << IDList[IDListIdx].SectorLen);
         BYTE pre_sect[200];
         int i=0;
-#if defined(SSE_DISK_READ_TRACK_11_390)
+#if defined(SSE_DISK_READ_TRACK_11)
         for (int n=0;n<(ADAT?nSects<Disk[floppyno].PostIndexGap():22);n++) 
           pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
-#else
-        for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
-#endif
-
-#if defined(SSE_DISK_READ_TRACK_11)
 /*
 Gap 2 Pre ID                    12+3        12+3         3+3     00+A1
 */
         for (int n=0;n< (nSects<11?12:3);n++) pre_sect[i++]=0x00;
+
 #else
+        for (int n=0;n<22;n++) pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
         for (int n=0;n<12;n++) pre_sect[i++]=0x00;  // Gap 3 (12)
 #endif  
         for (int n=0;n<3;n++) pre_sect[i++]=0xa1;   // Marker
@@ -2103,7 +2094,7 @@ CRC                                2           2           2
         byte_idx-=2;
 
         // Write Gap 4
-#if defined(SSE_DISK_READ_TRACK_11B)
+#if defined(SSE_DISK_READ_TRACK_11)
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
@@ -2138,15 +2129,9 @@ Gap 4 Post Data                   40          40           1      4E
 #endif
       }else{
         // End of track, read in 0x4e
-#if defined(SSE_DISK_READ_TRACK_11C)
-        //ASSERT(nSects<11);
-#if defined(SSE_DISK_READ_TRACK_11C2)
+#if defined(SSE_DISK_READ_TRACK_11)
         BYTE gap5bytes=(nSects>=11?20:16); //ProCopy 1.5 Analyze
         // isn't it a bug anyway? More gap with 11 than 9-10 ???
-#else
-        //BYTE gap5bytes=(nSects>=11?20:16); //tmp, break nothing
-        BYTE gap5bytes=Disk[DRIVE].PreIndexGap();
-#endif
         write_to_dma(0x4e,gap5bytes);
         BytesRead+=gap5bytes;
 #else
@@ -2180,7 +2165,7 @@ Gap 4 Post Data                   40          40           1      4E
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
 #endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
-#if defined(SSE_FDC_390_HBL_DRIFT) 
+#if defined(SSE_DISK_HBL_DRIFT) 
 /*  Correct HBL drift for Read Track.
     Timing is important for ProCopy Analyze.
 */

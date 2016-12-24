@@ -69,7 +69,7 @@ EXT int cpu_timer_at_start_of_hbl;
 //          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
 
 
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
 
 #define INTERRUPT_START_TIME_WOBBLE  \
           cpu_cycles&=-4; \

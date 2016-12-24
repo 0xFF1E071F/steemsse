@@ -89,15 +89,11 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
     switch(Dma.Counter) {
     case 0:
       nbytes=0;
-#if defined(SSE_DISK_GHOST_SECTOR_390)//oops
       break;
-#endif
     case 2:
       nbytes=1024;
       IDField.len=3;
-#if defined(SSE_DISK_GHOST_SECTOR_390)
       break;
-#endif
     default:
 #if !defined(SSE_VS2008_WARNING_390)
       nbytes=512;

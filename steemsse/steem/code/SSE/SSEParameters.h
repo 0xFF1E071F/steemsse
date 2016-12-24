@@ -113,7 +113,7 @@ The ACIA master clock is 500kHz.
 //////////
 
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_CPU_MFP_RATIO) && defined(SSE_DISK_CAPS_390)
+#if defined(SSE_CPU_MFP_RATIO)
 #define SSE_DISK_CAPS_FREQU CpuNormalHz
 #else
 #define SSE_DISK_CAPS_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
@@ -216,7 +216,7 @@ Some STFs                32.02480    8.0071
     8mhz, which is the case on the ST.
 */
 
-#if defined(SSE_FDC_390_HBL_DRIFT) 
+#if defined(SSE_DISK_HBL_DRIFT) 
 #define DRIVE_BYTES_ROTATION (6256) // finally
 #else
 #define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
@@ -474,10 +474,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HBL_PER_SECOND HBLS_PER_SECOND_AVE//(HBL_PER_FRAME*shifter_freq_at_start_of_vbl)  //still not super accurate
 #endif
 
-// DMA sound has its own clock, it's not CPU's
-
-#define STE_DMA_CLOCK 8010613
-
 
 /////////
 // TOS //
@@ -488,7 +484,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_STF_MATCH_TOS)
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) || defined(SSE_STF_MATCH_TOS_390)
+#if defined(SSE_STF_MATCH_TOS_390)
 #define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
 #else
 #define DEFAULT_TOS_STF 0x102

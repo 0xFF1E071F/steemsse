@@ -359,7 +359,7 @@ void HBLInterrupt() {
 #if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.hbi_done=true;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
   m68kInterruptTiming();
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
@@ -421,7 +421,7 @@ void VBLInterrupt() {
     INSTRUCTION_TIME(e_clock_wait_states);
   }
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
   m68kInterruptTiming();
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);

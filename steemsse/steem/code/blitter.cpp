@@ -13,19 +13,9 @@ TBlitter Blit;
 #endif
 
 #if defined(SSE_BLT_390)
-/*  We finally can use the logical values, thanks to a timing
-    bugfix at blitter write (access was counted after write).
-*/
 #define BLITTER_START_WAIT 4
 #define BLITTER_END_WAIT 4
-#elif defined(SSE_BLT_381) 
-/*  Those values shouldn't be correct, we should have something like
-    4 for CPU and BLiTTER, but it works better so in Steem.
-    4 + 4 breaks Circus!
-    6 + 0 better for Down TLN (still not good)
-*/
-#define BLITTER_START_WAIT 6 
-#define BLITTER_END_WAIT 0
+#define GRAB_BUS_TIMING 4
 #else // Steem 3.2
 #define BLITTER_START_WAIT 8//8
 #define BLITTER_END_WAIT 0//0
@@ -143,43 +133,6 @@ void Blitter_Start_Line()
 */
     Blit.BlitCycles=ACT-Blit.TimeAtBlit;
     ASSERT(Blit.BlitCycles>=0);
-
-#elif defined(SSE_BLT_390)
-/*  Relapse plasma: OP-based temp hack because our other hack isn't reliable
-    anymore after instruction timing refactoring (We Were broken).
-    In case we don't define SSE_BLT_390B.
-*/
-    if(OPTION_HACKS && (IR&0xF0F8)==0x50C8) //DBcc
-    {
-      INSTRUCTION_TIME(-2);
-    }
-
-#elif defined(SSE_BLT_380)
-/*  Steem doesn't emulate the CPU running when the Blitter has the bus.
-    This hack corrects for it when the next instruction doesn't access
-    the bus at once, but it works only for one bus cycle (not MULU DN,DN).
-    If we wanted to do it for as long as the CPU doesn't need the bus, we
-    should add a variable in core emulation (probably INSTRUCTION_TIME_ROUND).
-    It's the same idea as in Hatari 1.9.0, but more general than just DBCC.
-    It's a hack because it's negative and it counts on the timing being rounded
-    up by the next INSTRUCTION_TIME_ROUND.
-    It is in this form because BLITTER_END_WAIT=0 (probably not correct). (TODO)
-    Cases: Relapse plasma, Return -HMD
-
-    Case: We Were
-	move.b d0,(a3)                                   ; 007D78: 1680  blit
-	move.b d6,(a5)                                   ; 007D7A: 1A86  write sync
-    Problem to avoid: remove 2 cycles twice for one INSTRUCTION_TIME_ROUND
-*/
-#if defined(SSE_BETA)//detect cases
-    if(OPTION_HACKS)
-#endif
-    {
-      INSTRUCTION_TIME(-2);
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-      MMU.Unrounded = true; // barbarous, hacky, but reduces # checks
-#endif
-    }
 #endif
     dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING DONE --------------");
 
@@ -209,9 +162,7 @@ void Blitter_Start_Line()
 */      
       Blitter_ReadSource(Blit.SrcAdr); //ss prefetch
 #if defined(SSE_BLT_381)
-      INSTRUCTION_TIME(4); // don't round, because "start" cycle weren't counted yet
-#elif defined(SSE_BLT_380)
-      INSTRUCTION_TIME_ROUND(4); // bugfix, was missing
+      INSTRUCTION_TIME(4); // don't round, because "start" cycle weren't counted yet TODO
 #endif
       Blit.SrcAdr+=Blit.SrcXInc;       
     }
@@ -281,7 +232,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
       }
     }else{
       Blitter_ReadSource(Blit.SrcAdr);
-#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=Blit.SrcAdr;
       BLT_ABUS_ACCESS_READ;
 #else
@@ -368,7 +319,7 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   if (Blit.NeedDestRead || Blit.Mask!=0xffff){
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
-#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus=Blit.DestAdr;
     BLT_ABUS_ACCESS_READ;
 #else
@@ -411,12 +362,12 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
     case 15: // 1 1 1 1    - Target is set to "1"      (blind copy)
       NewDat|=WORD(0xffff) & Blit.Mask; break;
   }
-#if defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+#if defined(SSE_MMU_ROUNDING_BUS)
   abus=Blit.DestAdr;
-  BLT_ABUS_ACCESS_WRITE; //+ bugfix! before the poke (Circus) //incredible that I didn't see it before
+  BLT_ABUS_ACCESS_WRITE; //+ bugfix, must be counted before the poke
 #endif
   Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
-#if !defined(SSE_MMU_ROUNDING_BUS2_BLITTER)
+#if !defined(SSE_MMU_ROUNDING_BUS)
   INSTRUCTION_TIME_ROUND(4);
 #endif
   if (Blit.Last){
@@ -473,13 +424,7 @@ void Blitter_Draw()
 {
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
-#if defined(SSE_BLT_381) // not if there's no blit anyway
-#elif defined(SSE_BLT_380)
-/*  It most probably changes nothing, but all blitter tests were done with
-    this defined, by accident :)
-*/
-  INSTRUCTION_TIME(BLITTER_START_WAIT);
-#else
+#if !defined(SSE_BLT_381) // not if there's no blit anyway
   INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
 #endif
   if (Blit.YCount==0){  //see note in Blitter.txt - trying to restart with a ycount of zero results in no restart
@@ -501,8 +446,6 @@ void Blitter_Draw()
   }else{
 #if defined(SSE_BLT_390)
     INSTRUCTION_TIME(BLITTER_START_WAIT);
-#elif defined(SSE_BLT_381)
-    INSTRUCTION_TIME((Blit.Hog||!OPTION_HACKS)?BLITTER_START_WAIT:4);//for BLIT02A, temp hack
 #endif
     Blit.YCounter=Blit.YCount;
   }
@@ -574,9 +517,7 @@ void Blitter_Draw()
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
 #if defined(SSE_BLT_390)
-            INSTRUCTION_TIME(4); // start = end
-#elif defined(SSE_BLT_380)
-            INSTRUCTION_TIME(Blit.HasBus?BLITTER_END_WAIT:BLITTER_START_WAIT);
+            INSTRUCTION_TIME(GRAB_BUS_TIMING);
 #endif
 #if defined(SSE_BLT_381) // BLIT03C, experimental but true feature
             if(OPTION_HACKS && !Blit.HasBus
@@ -654,7 +595,7 @@ void Blitter_Draw()
 /*  
 " The Hog-Mode of the Blitter does not allow the CPU to access to bus while 
 the Blitter is active - Not even for interrupts. "
-    Fixes Extreme Rage guest screen overscan logo.
+    Fixes Extreme Rage guest screen overscan logo. TODO check if it's still the case...
 */
       if(!Blit.Hog)
 #endif
@@ -662,14 +603,6 @@ the Blitter is active - Not even for interrupts. "
 
     }
     CHECK_BREAKPOINT
-
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-/*  Hopefully, having this here in the blitter routine is enough.
-    We wouldn't want to have this in Process or inlined in INSTRUCTION_TIME...
-*/
-    MMU.Unrounded = false;
-#endif
-
     DEBUG_ONLY( mode=STEM_MODE_CPU; )
 
 //---------------------------------------------------------------------------
@@ -1144,12 +1077,8 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
 
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
-#if defined(SSE_BLT_381)
           INSTRUCTION_TIME(BLITTER_START_WAIT);
           Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
-#else
-          Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
-#endif
 #else
           Blit.TimeToSwapBus+=64;
 #endif
@@ -1158,7 +1087,6 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter clear busy changing GPIP bit from "+
                   bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
           mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
-          
         }
       }
       return;

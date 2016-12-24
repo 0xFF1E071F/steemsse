@@ -30,10 +30,8 @@ EXT DWORD FDCCantWriteDisplayTimer INIT(0);
 
 #if defined(SSE_OSD_DRIVE_LED)
 EXT long col_fd_red[2],col_fd_green[2];
-#if !defined(SSE_OSD_DRIVE_LED2)
-EXT DWORD FDCWriting INIT(0);
-EXT DWORD FDCWritingTimer INIT(0);
 #endif
+#if defined(SSE_OSD_DRIVE_LED_HD)
 EXT DWORD HDDisplayTimer INIT(0);
 #endif
 

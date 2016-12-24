@@ -69,7 +69,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     return FIMAGE_FILEDOESNTEXIST;
 
   EasyStr OriginalFile=File,NewZipTemp;
-//#undef SSE_DISK_CAPS_390C
+
 #if defined(SSE_DISK_CAPS_390C) // we want ReadOnly to be updated before
 #define FileIsReadOnly ReadOnly
   FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
@@ -513,7 +513,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   else
   {
 
-#if defined(SSE_DISK_IMAGETYPE)
 #if defined(SSE_TOS_PRG_AUTORUN)
     if(SF314[drive].ImageType.Extension==EXT_PRG
       || SF314[drive].ImageType.Extension==EXT_TOS)
@@ -535,7 +534,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #else
     SF314[drive].ImageType.Extension=MSA?EXT_MSA:EXT_ST; //DIM?
 #endif
-#endif
+
 
     // Open for read for an MSA (going to convert to ST and write to that)
     // and if the file is read-only, otherwise open for update
@@ -906,9 +905,6 @@ Header:
   if (this==&FloppyDrive[1]) floppy_mediach[1]=30;
   // disable input for pasti
   disable_input_vbl_count=max(disable_input_vbl_count,30);
-#if defined(SSE_DISK_IMAGETYPE__)
-  ASSERT(SF314[drive].ImageType.Extension);
-#endif
   dbg_log("");
   dbg_log(EasyStr("FDC: Inserted disk ")+OriginalFile);
   dbg_log(EasyStr("     Into drive ")+LPSTR(floppy_current_drive() ? "B":"A")+" its BPB was "+LPSTR(ValidBPB ? "valid.":"invalid."));
@@ -1284,9 +1280,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Removing) return;
   Removing=true;
 
-//#if defined(SSE_DISK_CAPS) || defined(SSE_UNIX)
-
-#if defined(SSE_DISK_IMAGETYPE) 
+#if defined(SSE_DISK) 
   int drive=-1;
   if (this==&FloppyDrive[0]) drive=0;
   if (this==&FloppyDrive[1]) drive=1;
@@ -1592,7 +1586,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if (Format_f) fclose(Format_f);
   Format_f=NULL;
 
-#if defined(SSE_DISK_IMAGETYPE) 
+#if defined(SSE_DISK) 
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
 #endif

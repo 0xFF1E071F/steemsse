@@ -29,10 +29,8 @@ EXT DWORD FDCCantWriteDisplayTimer INIT(0);
 
 #if defined(SSE_OSD_DRIVE_LED)
 EXT long col_fd_red[2],col_fd_green[2];
-#if !defined(SSE_OSD_DRIVE_LED2)
-EXT DWORD FDCWriting INIT(0);
-EXT DWORD FDCWritingTimer INIT(0);
 #endif
+#if defined(SSE_OSD_DRIVE_LED_HD)
 EXT DWORD HDDisplayTimer INIT(0);
 #endif
 
@@ -211,14 +209,8 @@ void osd_draw_full_stop()
 {
   if (osd_no_draw || osd_disable) return;
 #ifndef ONEGAME
-#if !(defined(SSE_OSD_FORCE_REDRAW_AT_STOP) && defined(SSE_VS2008_WARNING_382))
   int seconds=max(min((timer-osd_start_time)/1000,DWORD(30)),DWORD(0));
-#endif
-  if (
-#if !defined(SSE_OSD_FORCE_REDRAW_AT_STOP)
-    (seconds<osd_show_icons || pc==rom_addr) && 
-#endif
-    runstate!=RUNSTATE_RUNNING){
+  if ((seconds<osd_show_icons || pc==rom_addr) && runstate!=RUNSTATE_RUNNING){
     int x1,y1;
     osd_no_draw=true;
     draw_begin();
@@ -587,6 +579,7 @@ void osd_draw()
       }
 
     }
+#if defined(SSE_OSD_DRIVE_LED_HD)
     // Hard disk activity
     if(HDDisplayTimer>timer)
     {
@@ -597,6 +590,7 @@ void osd_draw()
       osd_draw_char(osd_font+(idx*64),draw_mem,(x1-w)-4,4,
         draw_line_length,col,8);
     }
+#endif
   }
 #else //steem 3.2
   if (osd_show_disk_light){

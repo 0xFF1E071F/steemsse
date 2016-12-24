@@ -440,11 +440,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           if(Ver==DEFAULT_TOS_STF && Date<0x2000
             &&(KnownSTETosPath.Empty()||Country==Tos.DefaultCountry))
 #else
-          if(Ver==DEFAULT_TOS_STF
-#if !defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // check each time, HD may be on/off
-            && KnownSTFTosPath.Empty()
-#endif
-          )
+          if(Ver==DEFAULT_TOS_STF && KnownSTFTosPath.Empty())
 #endif
           {
             //TRACE_LOG("Memorising %s for TOS%X\n",Path.c_str(),Ver);
@@ -1180,11 +1176,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             BYTE old_st_type=ST_TYPE;//v3.6.0
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
-#if defined(SSE_STF_390)
             SSEConfig.SwitchSTType(ST_TYPE);
-#else
-            SwitchSTType(ST_TYPE);
-#endif
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
 #endif
@@ -1214,24 +1206,17 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               This->NewROMFile=KnownSTFTosPath;
             }
 #endif
-#if defined(SSE_STF_MEGASTF) || defined(SSE_STE_2MB) ||  defined(SSE_STF_1MB)
+#if defined(SSE_STF_STE_AUTORAM)
 /*  Preselect a RAM configuration acording to the ST model.
 */
             DWORD Conf=0;
-#if defined(SSE_STF_MEGASTF)  // Mega ST4: 4MB
-            if(ST_TYPE==MEGASTF)
-              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
-#endif
-#if defined(SSE_STE_4MB) // v3.8 many demos require 4MB
             if(ST_TYPE==STE) // STE with 4MB (not Mega STE!)
               Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
-#elif defined(SSE_STE_2MB)
-            if(ST_TYPE==STE) // STE with 2MB
-              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_0);
-#endif
-#if defined(SSE_STF_1MB)
-            if(ST_TYPE==STF) // Atari 1040 ST
+            else if(ST_TYPE==STF) // Atari 1040 ST
               Conf=MAKELONG(MEMCONF_512,MEMCONF_512);
+#if defined(SSE_STF_MEGASTF)  // Mega ST4: 4MB
+            else if(ST_TYPE==MEGASTF)
+              Conf=MAKELONG(MEMCONF_2MB,MEMCONF_2MB);
 #endif
             if(Conf)
             {
@@ -2059,7 +2044,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
 
 
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
         case 7315: // Option Aspect Ratio
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
@@ -2322,13 +2307,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED) 
           {//SS
             reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_BACKUP);
-#if defined(SSE_TOS_WARNING1A)
+#if defined(SSE_TOS_WARNING)
             Tos.CheckSTTypeAndTos();
-#elif defined(SSE_TOS_WARNING1)
-            CheckSTTypeAndTos();
-#endif
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
-            HardDiskMan.CheckTos();
 #endif
           }//SS
           break;

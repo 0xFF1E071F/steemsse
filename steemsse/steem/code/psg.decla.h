@@ -93,8 +93,8 @@ EXT BYTE sound_bytes_per_sample INIT(1);
 #else
 EXT int sound_bytes_per_sample INIT(1);
 #endif
-#if defined(SSE_SOUND_VOL_LOGARITHMIC_2)
-EXT int MaxVolume;// INIT(0xffff);
+#if defined(SSE_SOUND_VOL_LOGARITHMIC)
+EXT int MaxVolume;
 #else
 EXT DWORD MaxVolume INIT(0xffff);
 #endif

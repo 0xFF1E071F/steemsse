@@ -119,7 +119,6 @@ extern struct TOption SSEOption;
 #define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)
 #define OPTION_OSD_TIME (SSEOption.OsdTime)
 
-#if defined(SSE_SSE_CONFIG_STRUCT)
 
 struct TConfig {
 
@@ -145,7 +144,7 @@ struct TConfig {
   
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
-#if defined(SSE_STF_390)
+#if defined(SSE_STF)
   int SwitchSTType(int new_type); // adapt to new machine
 #endif
 #endif
@@ -173,17 +172,6 @@ extern struct TConfig SSEConfig;
 #else
 #define ACSI_EMU_ON 0
 #endif
-
-#else//#if ! defined(SSE_SSE_CONFIG_STRUCT)
-
-#define CAPSIMG_OK (Caps.Version)
-#define DD_FULLSCREEN (iDummy)
-#define HD6301_OK (HD6301.Initialised)
-#define SDL_OK (iDummy)
-#define UNRAR_OK (iDummy)
-#define D3D9_OK (iDummy)
-
-#endif//#if defined(SSE_SSE_CONFIG_STRUCT)
 
 #endif//#ifndef SSEOPTION_H
 

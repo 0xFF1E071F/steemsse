@@ -1745,23 +1745,23 @@ void                              m68k_movep_w_to_dN_or_btst(){
     CPU_ABUS_ACCESS_READ_FETCH; //np
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus=addr;
 #endif
     CPU_ABUS_ACCESS_READ; //nR
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr);
 #endif
     DWORD_B_1(&r[PARAM_N])=m68k_src_b; //high byte
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus+=2;
-#elif defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#elif defined(SSE_MMU_ROUNDING_BUS)
     abus=addr+2;
 #endif
     CPU_ABUS_ACCESS_READ; //nr
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr+2);
@@ -1829,41 +1829,41 @@ void                              m68k_movep_l_to_dN_or_bchg(){
     CPU_ABUS_ACCESS_READ_FETCH; // np
     MEM_ADDRESS addr=areg[PARAM_M]+(signed short)m68k_fetchW();
     pc+=2; 
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus=addr;
 #endif
     CPU_ABUS_ACCESS_READ; // nR
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr)//ss problem with putting timing there, sometimes it shouldn't be there
 #endif
     DWORD_B_3(&r[PARAM_N])=m68k_src_b;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus+=2;
 #endif
     CPU_ABUS_ACCESS_READ; // nR
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr+2)
 #endif
     DWORD_B_2(&r[PARAM_N])=m68k_src_b;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus+=2;
 #endif
     CPU_ABUS_ACCESS_READ; // nr
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr+4)
 #endif
     DWORD_B_1(&r[PARAM_N])=m68k_src_b;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR)
+#if defined(SSE_MMU_ROUNDING_BUS)
     abus+=2;
 #endif
     CPU_ABUS_ACCESS_READ; // nr
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR2)
+#if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_B(abus);
 #else
     m68k_READ_B(addr+6)
@@ -3737,10 +3737,7 @@ void                              m68k_jsr()
       m68k_unrecognised();
   }
   PREFETCH_CLASS(1); 
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-  MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
   abus=effective_address;
   // The sequence is 'np nS ns np'
   // First np could cause bus/address error, before stacking - Blood Money STX
@@ -3856,10 +3853,7 @@ NOTES :
     default:
       m68k_unrecognised();
   }
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-  MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
   abus=effective_address;
   m68k_READ_W(abus);
 #else
@@ -3932,7 +3926,7 @@ Not exactly the same... cases?
 #else
       SR_SET(SR_N);
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
       INSTRUCTION_TIME(2);
       m68kTrapTiming();
 #else
@@ -3960,7 +3954,7 @@ Not exactly the same... cases?
 #else
       SR_CLEAR(SR_N);
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
       m68kTrapTiming();
 #else
       INSTRUCTION_TIME_ROUND(36); //TODO
@@ -4241,13 +4235,6 @@ So EXG+STOP+INTR does pair, because EXG and INTR pair."
     it just uses it without refetching at the same time.
 */
       m68k_GET_IMMEDIATE_W;
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-      if(MMU.Rounded)
-      {
-        INSTRUCTION_TIME(-2); // pairing previous opcode with exception
-        MMU.Rounded=false;
-      }
-#endif
       DEBUG_ONLY( int debug_old_sr=sr; )
       sr=m68k_src_w; // IPL
       sr&=SR_VALID_BITMASK;
@@ -4391,7 +4378,7 @@ void                              m68k_rts(){
   Debug.PseudoStackPop();
 #endif
   r[15]+=4;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
   abus=effective_address;
   m68k_READ_W(abus);
 #else
@@ -4454,10 +4441,7 @@ NOTES :
   CCR=LOBYTE(m68k_dpeek(r[15]));r[15]+=2;
   sr&=SR_VALID_BITMASK;
   effective_address=m68k_lpeek(r[15]);r[15]+=4;
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-  MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
   abus=effective_address;
   m68k_READ_W(abus);
 #else
@@ -4731,10 +4715,7 @@ FLOWCHART :
         // counter not expired, branch taken
         // | 10(2/0)         |                      n np       np        
         MEM_ADDRESS new_pc=(pc+(signed short)m68k_src_w-2) | pc_high_byte;
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-        MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
         abus=new_pc;
         m68k_READ_W(abus);
 #else
@@ -4913,7 +4894,7 @@ void                              m68k_divu(){
 #endif
 //Divide by Zero      | 38(4/3)+ |           nn nn    ns nS ns nV nv np np (36 accounted)
 //Divide by Zero      | 38(4/3)+ |           nn nn    ns nS ns nV nv np n np ("corrected")
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
       INSTRUCTION_TIME(4);
       m68kTrapTiming();
 #else
@@ -5047,11 +5028,11 @@ Dy,Dx :           |                 |
       if(PARAM_N==7)areg[PARAM_N]--;
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       CHECK_READ=true;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
 #endif
       CPU_ABUS_ACCESS_READ; //nr
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       m68k_SET_DEST_B(abus);
 #else
       m68k_SET_DEST_B(areg[PARAM_N]);
@@ -5191,7 +5172,7 @@ void                              m68k_divs(){
 #endif
 //Divide by Zero      | 38(4/3)+ |           nn nn    ns nS ns nV nv np np (36 accounted)
 //Divide by Zero      | 38(4/3)+ |           nn nn    ns nS ns nV nv np n np ("corrected")
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
       INSTRUCTION_TIME(4);
       m68kTrapTiming();
 #else
@@ -5451,12 +5432,12 @@ Dy,Dx :           |                 |
       areg[PARAM_N]--;      
       if(PARAM_N==7)
         areg[PARAM_N]--;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
 #endif
       CPU_ABUS_ACCESS_READ; // nr
       CHECK_READ=true;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       m68k_SET_DEST_B(abus); // can crash
 #else
       m68k_SET_DEST_B(areg[PARAM_N]); // can crash
@@ -5525,7 +5506,7 @@ Dy,Dx :           |                 |
       m68k_src_w=m68k_dpeek(areg[PARAM_M]);
       CHECK_READ=true;
       areg[PARAM_N]-=2;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ; //nr
       m68k_SET_DEST_W(abus);
@@ -5598,7 +5579,7 @@ Dy,Dx :           |                 |
       m68k_src_l=m68k_lpeek(areg[PARAM_M]);
       CHECK_READ=true;
       areg[PARAM_N]-=4;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ_L; // nr nR
       m68k_SET_DEST_L(abus);
@@ -6133,7 +6114,7 @@ Dy,Dx :           |                 |
       CPU_ABUS_ACCESS_READ; //nr
       m68k_src_b=m68k_peek(areg[PARAM_M]);
       CHECK_READ=true;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ; // nr
       m68k_SET_DEST_B(abus);
@@ -6480,7 +6461,7 @@ Dy,Dx :           |                 |
       if(PARAM_N==7)
         areg[PARAM_N]--;
       CHECK_READ=true;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ; //nr
       m68k_SET_DEST_B(abus);
@@ -6545,7 +6526,7 @@ Dy,Dx :           |                 |
       m68k_src_w=m68k_dpeek(areg[PARAM_M]);
       CHECK_READ=true;
       areg[PARAM_N]-=2;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ; // nr
       m68k_SET_DEST_W(abus);
@@ -6618,7 +6599,7 @@ Dy,Dx :           |                 |
       m68k_src_l=m68k_lpeek(areg[PARAM_M]);
       CHECK_READ=true;
       areg[PARAM_N]-=4;
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR4)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=areg[PARAM_N];
       CPU_ABUS_ACCESS_READ_L; // nr nR
       m68k_SET_DEST_L(abus);
@@ -8238,10 +8219,7 @@ extern "C" void m68k_0110(){  //bCC + BSR
 #if defined(SSE_BOILER_PSEUDO_STACK)
       Debug.PseudoStackPush(PC32);
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-      MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=new_pc;
       m68k_READ_W(abus);
 #else
@@ -8262,10 +8240,7 @@ extern "C" void m68k_0110(){  //bCC + BSR
 */
       if (m68k_CONDITION_TEST){ // branch taken
         INSTRUCTION_TIME(2); // n
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-        MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
         abus=new_pc;
         m68k_READ_W(abus);
 #else
@@ -8298,10 +8273,7 @@ extern "C" void m68k_0110(){  //bCC + BSR
 #endif
       MEM_ADDRESS new_pc=(pc+(signed long)((signed short)m68k_fetchW())) | pc_high_byte;
       // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-      MMU.Rounded=false;
-#endif
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
       abus=new_pc;
       m68k_READ_W(abus);
 #else
@@ -8325,7 +8297,7 @@ extern "C" void m68k_0110(){  //bCC + BSR
       if (m68k_CONDITION_TEST){ // branch taken
         INSTRUCTION_TIME(2); //n
         // stacked pc is always instruction pc+2 due to prefetch (pc doesn't increase before new_pc is read)
-#if defined(SSE_MMU_ROUNDING_BUS2A_INSTR3)
+#if defined(SSE_MMU_ROUNDING_BUS)
         abus=new_pc;
         m68k_READ_W(abus);
 #else

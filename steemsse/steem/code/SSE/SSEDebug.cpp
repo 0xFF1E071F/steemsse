@@ -409,7 +409,6 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("DD ");
 #endif
     TRACE("v%d %s %s\n",SSE_VERSION,__DATE__,__TIME__);
-#ifdef SSE_SSE_CONFIG_STRUCT
     TRACE("%s %d %s %d %s %d %s %d %s %d %s %d\n",UNRAR_DLL,SSEConfig.UnrarDll,
       UNZIP_DLL,SSEConfig.unzipd32Dll,SSE_DISK_CAPS_PLUGIN_FILE,SSEConfig.CapsImgDll,
       PASTI_DLL,SSEConfig.PastiDll,ARCHIVEACCESS_DLL,SSEConfig.ArchiveAccess,
@@ -420,8 +419,6 @@ void TDebug::TraceGeneralInfos(int when) {
     TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
     //TRACE("Sound DX %d drive %d\n",TrySound,SSEConfig.DriveSound);
     //TRACE("ACSI %d 6301 %d\n",SSEConfig.AcsiImg,SSEConfig.Hd6301v1Img);
-#endif
-    
   }
   else
 #endif

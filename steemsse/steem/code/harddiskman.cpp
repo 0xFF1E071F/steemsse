@@ -584,35 +584,6 @@ LRESULT __stdcall THardDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARA
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
 
-
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
-void THardDiskManager::CheckTos() {
-  if(!DisableHardDrives && nDrives)
-  { 
-    if(tos_version!=0x104 && tos_version!=0x162
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3) 
-      && Tos.VersionWarning // steem.ini
-      && ROM_LPEEK(0x2C)!=0x45544F53 // "ETOS"
-      && !stemdos_check_mount(AUTORUN_HD) // PRG and TOS support
-#else
-      || ROM_PEEK(0x1E)>0x15
-#endif
-      )
-#if defined(SSE_ACSI)
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS3) 
-      Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62 or EmuTOS.\
- For other TOS, it is recommended to use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
-#else
-      Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62.\
- For other TOS, it is recommended to use an ACSI image instead."),"Warning",MB_OK|MB_ICONWARNING);
-#endif
-#else
-      Alert(T("GEMDOS hard disk emulation works better with Atari TOS 1.04 or 1.62."),"Warning",MB_OK|MB_ICONWARNING);
-#endif
-  }
-}
-#endif
-
 #if defined(SSE_ACSI_HDMAN)
 TAcsiHardDiskManager::TAcsiHardDiskManager()
 {

@@ -700,7 +700,7 @@ void mfp_interrupt(int irq) {
 
   int iack_cycles=ACT-MC68901.IackTiming;
 
-#if defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)
+#if defined(SSE_MMU_ROUNDING_BUS)
   INSTRUCTION_TIME(-iack_cycles);//temp
   m68kInterruptTiming();
 #else

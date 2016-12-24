@@ -52,7 +52,7 @@ void LoadUnzipDLL()
       TRACE_INIT("%s loaded\n",UNZIP_DLL);
     else
       TRACE_INIT("%s not available",UNZIP_DLL);
-#elif defined(SSE_SSE_CONFIG_STRUCT)//3.8.2
+#else
     else SSEConfig.unzipd32Dll=true;
 #endif
 

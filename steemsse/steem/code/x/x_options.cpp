@@ -3,9 +3,6 @@
 
 #include "SSE/SSE6301.h"
 #if defined(SSE_STF)
-#if !defined(SSE_STF_390)
-int SwitchSTType(int new_type);//forward
-#endif
 #endif
 //---------------------------------------------------------------------------
 TOptionBox::TOptionBox()
@@ -813,12 +810,7 @@ int TOptionBox::dd_notify_proc(hxc_dropdown*dd,int mess,int i)
   else if(dd->id==4005) // ST model
   {
     ST_TYPE=dd->sel;
-#if defined(SSE_STF_390)
     SSEConfig.SwitchSTType(ST_TYPE);
-#else
-    SwitchSTType(ST_TYPE);
-#endif
-    // TODO: add TOS matching, Mega STF 4MB 
   }
 #endif
 #if defined(SSE_MMU_WU)

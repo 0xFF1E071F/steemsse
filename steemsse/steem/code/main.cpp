@@ -608,7 +608,7 @@ bool Initialise()
         p_dest+=strlen(p_dest)+1;
         p_src+=strlen(p_src)+1;
       }
-#if defined(SSE_SSE_CONFIG_STRUCT)//3.8.2
+#if defined(SSE_BUILD)//3.8.2
       SSEConfig.PastiDll=true;
 #endif
     }
@@ -1198,10 +1198,6 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   }
   if (OptionBox.NeedReset()) 
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
-
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) && defined(WIN32) 
-  HardDiskMan.CheckTos();
-#endif
 
   CheckResetDisplay();
 
