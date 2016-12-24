@@ -219,7 +219,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
     cmd_ctr++;
     ASSERT(cmd_ctr<8);
-#if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD) && defined(SSE_ACSI_LED)
     HDDisplayTimer=timer+HD_TIMER; // simplistic
 #endif
 #if defined(SSE_ACSI_TIMING) // some delay... 1MB/s 512bytes/ 0.5ms
@@ -227,7 +227,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
     {
       time_of_irq=ACT+cmd_block[4]*4000;
       Active=2; // signal for ior
-#if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_OSD_DRIVE_LED_HD) && defined(SSE_ACSI_LED)
       HDDisplayTimer+=cmd_block[4]/2;
 #endif
     }

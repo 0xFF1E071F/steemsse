@@ -197,8 +197,6 @@ void TCaps::RemoveDisk(int drive) {
 }
 
 
-#if defined(SSE_DISK_CAPS_390)
-
 void TCaps::WritePsgA(int data) {
   // drive selection 
   if ((data&BIT_1)==0)
@@ -211,22 +209,6 @@ void TCaps::WritePsgA(int data) {
     SF314[WD1772.drivenew].newside=((data&BIT_0)==0);
 }
 
-#else
-void TCaps::WritePsgA(int data) {//TODO use data
-  // drive selection 
-  if ((psg_reg[PSGR_PORT_A]&BIT_1)==0 /*&& DriveIsIPF[0]*/)
-    WD1772.drivenew=0;
-  else if ((psg_reg[PSGR_PORT_A]&BIT_2)==0 /*&& DriveIsIPF[1]*/)
-    WD1772.drivenew=1;
-//TODO: no drive...
-  else //if(DriveIsIPF[0])
-    WD1772.drivenew=-2; //0;  //?  //TESTING
-  // side selection (Burger Man, Turbo Outrun...)
-//  ASSERT( !WD1772.drivenew || WD1772.drivenew==1 );
-  if(!WD1772.drivenew || WD1772.drivenew==1)
-    SF314[WD1772.drivenew].newside=((psg_reg[PSGR_PORT_A]&BIT_0)==0);
-}
-#endif
 
 UDWORD TCaps::ReadWD1772(BYTE Line) {
 
@@ -315,10 +297,8 @@ void TCaps::CallbackDRQ(PCAPSFDC pc, UDWORD setting) {
 
 void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
   ASSERT(pc==&Caps.WD1772);
-#if defined(SSE_DISK_CAPS_390B)
   // function called to clear IRQ, can mess with sound (Jupiter's Masterdrive)
   if(lineout) {
-#endif
 #if defined(SSE_DEBUG)
     if(TRACE_ENABLED(LOGSECTION_FDC)) 
       Dma.UpdateRegs(true);
@@ -336,9 +316,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
 #endif
     }
 #endif
-#if defined(SSE_DISK_CAPS_390B)
   }
-#endif
 
 //  TRACE_FDC("ipf MFP_GPIP_FDC_BIT: %d\n",!(lineout&CAPSFDC_LO_INTRQ));
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));

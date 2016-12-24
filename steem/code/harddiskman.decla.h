@@ -53,9 +53,6 @@ public:
   Hard_Disk_Info Drive[MAX_HARDDRIVES];
   int nDrives;
   bool DisableHardDrives;
-#if defined(SSE_TOS_GEMDOS_RESTRICT_TOS2) // warning
-  void CheckTos();
-#endif
 #if defined(SSE_ACSI_HDMAN)
   bool acsi; // for RTTI, booh!
 #endif

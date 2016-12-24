@@ -99,8 +99,8 @@ void TSF314::UpdateAdat() {
     War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
     Demoniak -ELT...
     Part of it is because our system is simplistic.
-*/
-      &&!floppy_instant_sector_access
+*/                                           //in extremis 390vv
+      &&(!floppy_instant_sector_access || ImageType.Extension==EXT_SCP) 
 #endif
 #endif
     );

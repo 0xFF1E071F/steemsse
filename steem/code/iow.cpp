@@ -68,26 +68,6 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
     TRACE_LOG("%d PC %X write byte %X to %X\n",ACT,old_pc,io_src_b,addr);
 #endif
 
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-/*  Should round up only for RAM and Shifter (palette), not peripherals
-    that sit on the CPU bus.
-*/
-    if(MMU.Rounded && !(addr>=0xff8240 
-     && addr<(MEM_ADDRESS)(ST_TYPE==STE?0xff8266:0xff8260))
-#if defined(DEBUG_BUILD)
-     && mode==STEM_MODE_CPU // no cycles when boiler is reading
-#endif      
-     )
-  {
-    INSTRUCTION_TIME(-2);
-    MMU.Rounded=false;
-#if defined(SSE_OSD_CONTROL)
-    if((OSD_MASK_CPU&OSD_CONTROL_CPUROUNDING))
-      TRACE_OSD("W %X -2",addr);
-#endif
-   }
-#endif
-
 #ifdef DEBUG_BUILD
 #if defined(SSE_BOILER_MONITOR_IO_FIX1)
   if(!io_word_access)
@@ -109,7 +89,7 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
   
   switch (addr & 0xffff00){   //0xfffe00 SS: big switch for all byte writes
 
-#if defined(SSE_ACIA) && defined(SSE_ACIA_390) //more compact code
+#if defined(SSE_ACIA)
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_ACIA
@@ -124,7 +104,35 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           ff fc04                   |xxxxxxxx|   MIDI ACIA Control
           ff fc06                   |xxxxxxxx|   MIDI ACIA Data
 
+$FFFC00|byte |Keyboard ACIA control             BIT 7 6 5 4 3 2 1 0|W
+$FFFC04|byte |MIDI ACIA control                 BIT 7 6 5 4 3 2 1 0|W
+       |     |Rx Int enable (1 - enable) -----------' | | | | | | ||
+       |     |Tx Interrupts                           | | | | | | ||
+       |     |00 - RTS low, Tx int disable -----------+-+ | | | | ||
+       |     |01 - RTS low, Tx int enable ------------+-+ | | | | ||
+       |     |10 - RTS high, Tx int disable ----------+-+ | | | | ||
+       |     |11 - RTS low, Tx int disable,           | | | | | | ||
+       |     |     Tx a break onto data out ----------+-' | | | | ||
+       |     |Settings                                    | | | | ||
+       |     |000 - 7 bit, even, 2 stop bit --------------+-+-+ | ||
+       |     |001 - 7 bit, odd, 2 stop bit ---------------+-+-+ | ||
+       |     |010 - 7 bit, even, 1 stop bit --------------+-+-+ | ||
+       |     |011 - 7 bit, odd, 1 stop bit ---------------+-+-+ | ||
+       |     |100 - 8 bit, 2 stop bit --------------------+-+-+ | ||
+       |     |101 - 8 bit, 1 stop bit --------------------+-+-+ | ||
+       |     |110 - 8 bit, even, 1 stop bit --------------+-+-+ | ||
+       |     |111 - 8 bit, odd, 1 stop bit ---------------+-+-' | ||
+       |     |Clock divide                                      | ||
+       |     |00 - Normal --------------------------------------+-+|
+       |     |01 - Div by 16 -----------------------------------+-+|
+       |     |10 - Div by 64 -----------------------------------+-+|
+       |     |11 - Master reset --------------------------------+-'|
+
+$FFFC02|byte |Keyboard ACIA data                                   |R/W
+$FFFC06|byte |MIDI ACIA data                                       |R/W
+
 */
+
       acia[0].BusJam(addr);
       int acia_num;
       switch (addr){
@@ -263,45 +271,13 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
 
-#else//defined(SSE_ACIA_390) ?
+#else // Steem 3.2
+
     case 0xfffc00:{  //--------------------------------------- ACIAs
-/*
-          MC6850
-
-          ff fc00                   |xxxxxxxx|   Keyboard ACIA Control
-          ff fc02                   |xxxxxxxx|   Keyboard ACIA Data
-
-          ff fc04                   |xxxxxxxx|   MIDI ACIA Control
-          ff fc06                   |xxxxxxxx|   MIDI ACIA Data
-
-*/
-      // Bus "jam" when accessing ACIA
       // Only cause bus jam once per word
       DEBUG_ONLY( if (mode==STEM_MODE_CPU) )
       {
-        if (io_word_access==0 || (addr & 1)==0)
-        {
-#if defined(SSE_ACIA)
-          BYTE wait_states=6;
-#if defined(SSE_CPU_E_CLOCK)
-          if(OPTION_C1)
-          {
-            INSTRUCTION_TIME(wait_states);
-            wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
-            INSTRUCTION_TIME(wait_states);
-          }
-          else
-#endif
-          {
-/*  This is a part from Steem 3.2, but in ior.cpp.
-    With this instead of the original part iow.cpp below,
-    Spectrum 512 is fixed also without option 6301/ACIA.
-*/
-            wait_states+=(8000000-(ACT-shifter_cycle_base))%10;
-            BUS_JAM_TIME(wait_states);
-          }
-
-#else //Steem 3.2
+        if (io_word_access==0 || (addr & 1)==0){
 //          if (passed VBL or HBL point){
 //            BUS_JAM_TIME(4);
 //          }else{
@@ -312,163 +288,22 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
           rel_cycle%=10;
           BUS_JAM_TIME(rel_cycle+6);
 //          BUS_JAM_TIME(8);
-#endif
-
         }
       }
 
       switch (addr){
     /******************** Keyboard ACIA ************************/
 
-
-/*
-
-CR  Control (write $FFFC00 on the ST)
-
-$FFFC00|byte |Keyboard ACIA control             BIT 7 6 5 4 3 2 1 0|W
-       |     |Rx Int enable (1 - enable) -----------' | | | | | | ||
-       |     |Tx Interrupts                           | | | | | | ||
-       |     |00 - RTS low, Tx int disable -----------+-+ | | | | ||
-       |     |01 - RTS low, Tx int enable ------------+-+ | | | | ||
-       |     |10 - RTS high, Tx int disable ----------+-+ | | | | ||
-       |     |11 - RTS low, Tx int disable,           | | | | | | ||
-       |     |     Tx a break onto data out ----------+-' | | | | ||
-       |     |Settings                                    | | | | ||
-       |     |000 - 7 bit, even, 2 stop bit --------------+-+-+ | ||
-       |     |001 - 7 bit, odd, 2 stop bit ---------------+-+-+ | ||
-       |     |010 - 7 bit, even, 1 stop bit --------------+-+-+ | ||
-       |     |011 - 7 bit, odd, 1 stop bit ---------------+-+-+ | ||
-       |     |100 - 8 bit, 2 stop bit --------------------+-+-+ | ||
-       |     |101 - 8 bit, 1 stop bit --------------------+-+-+ | ||
-       |     |110 - 8 bit, even, 1 stop bit --------------+-+-+ | ||
-       |     |111 - 8 bit, odd, 1 stop bit ---------------+-+-' | ||
-       |     |Clock divide                                      | ||
-       |     |00 - Normal --------------------------------------+-+|
-       |     |01 - Div by 16 -----------------------------------+-+|
-       |     |10 - Div by 64 -----------------------------------+-+|
-       |     |11 - Master reset --------------------------------+-'|
-
-
-$FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
-       |     |Interrupt request --------------------' | | | | | | ||
-       |     |Parity error ---------------------------' | | | | | ||
-       |     |Rx overrun -------------------------------' | | | | ||
-       |     |Framing error ------------------------------' | | | ||
-       |     |CTS ------------------------------------------' | | ||
-       |     |DCD --------------------------------------------' | ||
-       |     |Tx data register empty ---------------------------' ||
-       |     |Rx data register full ------------------------------'|
-
-*/
-
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IKBD//SS
-
-      case 0xfffc00:  //control //SS writing ACIA IKBD control register
-
-#if defined(SSE_ACIA_REGISTERS)
-        if(OPTION_C1)
-          ACIA_IKBD.CR=io_src_b; // assign before we send to other functions
-#endif //... and we run the same functions in 6301 mode too:
+      case 0xfffc00:  //control
         if ((io_src_b & 3)==3){
           log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - ACIA reset"); 
-          ACIA_Reset(NUM_ACIA_IKBD,0); // SS = 'Master reset'
+          ACIA_Reset(NUM_ACIA_IKBD,0);
         }else{
-          // TOS sends 96: irq rx, 8bit1stop, div64
           ACIA_SetControl(NUM_ACIA_IKBD,io_src_b);
         }
         break;
-
-      case 0xfffc02:  // data //SS sending data to HD6301
-
-#if defined(SSE_IKBD_6301)
-#if defined(SSE_ACIA_380)
-        ACIA_IKBD.TDR=io_src_b;
-#endif
-        if(OPTION_C1)
-        {
-          //TRACE_LOG("%d %d %d PC %X CPU $%X -> ACIA IKDB TDR (SR $%X)\n",TIMING_INFO,old_pc,io_src_b,ACIA_IKBD.SR);
-          TRACE_LOG("%d %d %d PC %x ACIA TDR %X\n",TIMING_INFO,old_pc,io_src_b);
-
-/*  Effect of write on status register.
-    The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.
-    Writing on ACIA TDR clears the IRQ bit if IRQ for transmission
-    is enabled. Eg Hades Nebula
-*/
-          ACIA_IKBD.SR&=~BIT_1; // clear TDRE bit
-          if(ACIA_IKBD.IrqForTx())
-            ACIA_IKBD.SR&=~BIT_7; // clear IRQ bit
-          
-          //update in MFP (if needs be)
-          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-            !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
-
-
-/*  If the line is free, the byte in TDR is copied almost at once into the 
-    shifting register, and TDR is free again.
-    When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
-    (hard to follow)
-    v3.5.2:
-    If the ACIA is shifting and already has a byte in TDR, the byte in TDR
-    can be changed (High Fidelity Dreams).
-    We record the timing of 'tx' only if the line is free: Pandemonium Demos.
-
-    Brattacas "should" "work" in 6301 true emu mode.
-
-    v3.6 Grumbler by Electricity: key repeat in 6301 true emu mode
-
-*/
-
-          if(!ACIA_IKBD.LineTxBusy
-#if defined(SSE_ACIA_TDR_COPY_DELAY) // for Grumbler
-            || ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY
-#endif
-            )
-          {
-            if(ACIA_IKBD.LineTxBusy)//?
-              agenda_delete(agenda_ikbd_process);//cancel previous one...
-
-#if defined(SSE_ACIA_TDR_COPY_DELAY)
-            else  // Pandemonium!
-              ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
-#endif
-            HD6301.ReceiveByte(io_src_b);
-            ACIA_IKBD.SR|=BIT_1; // TDRE free (see ior: can be "cancelled")
-            // rare case when IRQ is enabled for transmit
-            if( (ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
-            {
-              TRACE_LOG("ACIA IKBD TX IRQ\n");            
-              ACIA_IKBD.SR|=BIT_7; 
-              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
-            }
-          }
-          else
-          {
-#if defined(SSE_DEBUG)
-            if(!ACIA_IKBD.ByteWaitingTx) // TDR was free 
-              TRACE_LOG("ACIA IKBD byte waiting $%X\n",io_src_b);
-            else
-              TRACE_LOG("ACIA IKBD new byte waiting $%X (instead of $%X)\n",io_src_b,ACIA_IKBD.TDR);
-#endif
-#if defined(SSE_ACIA_380)
-#if defined(SSE_ACIA_TDR_COPY_DELAY) // for Grumbler
-            if(ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY)
-              ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // replaces
-            else
-#endif
-#else
-            ACIA_IKBD.TDR=io_src_b; // replaces
-#endif
-            ACIA_IKBD.ByteWaitingTx=true;
-          }
-
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IO//SS
-
-          break;
-        }
-#endif // Steem 3.2
-        {
+      case 0xfffc02:  //data
+      {
         bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_IKBD)>=0);
         if (TXEmptyAgenda==0){
           if (ACIA_IKBD.tx_irq_enabled){
@@ -484,7 +319,7 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           int n=agenda_get_queue_pos(agenda_ikbd_process);
           if (n>=0){
             log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
-              HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+                                      HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
             agenda[n].param=io_src_b;
           }
         }else{
@@ -492,179 +327,33 @@ $FFFC00|byte |Keyboard ACIA status              BIT 7 6 5 4 3 2 1 0|R
           ACIA_IKBD.last_tx_write_time=ABSOLUTE_CPU_TIME;
           agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
         }
-        }
         break;
+      }
 
     /******************** MIDI ACIA *********************************/
-/*
-
-               The Musical Instrument Digital Interface (MIDI)  allows
-          the  integration of the ST with music synthesizers, sequenc-
-          ers, drum boxes, and other devices  possessing  MIDI  inter-
-          faces.   High  speed  (31.25  Kbaud) serial communication of
-          keyboard and program information is provided by  two  ports,
-          MIDI  OUT  and  MIDI IN (MIDI OUT also supports the optional
-          MIDI THRU port).
-
-               The MIDI bus permits up to 16 channels in one of  three
-          network  addressing modes:  Omni (all units addressed simul-
-          taneously, power up  default),  Poly  (each  unit  addressed
-          separately),   and   Mono   (each   unit   voice   addressed
-          separately).  Information is communicated via five types  of
-          data  format  (data  bytes, most significant bit:  status 1,
-          data 0) which are prioritized from  highest  to  lowest  as:
-          System  Reset  (default  conditions,  should  not be sent on
-          power up to avoid deadlock), System Exclusive  (manufacturer
-          unique  data:   Sequential  Circuits,  Kawai,  Roland, Korg,
-          Yamaha), System Real Time (synchronization),  System  Common
-          (broadcast),  and  Channel  (note  selections, program data,
-          etc).
-
-               The ST MIDI interface provides current  loop  asynchro-
-          nous  serial communication controlled by an MC6850 ACIA sup-
-          plied with transmit and receive clock  inputs  of  500  KHz.
-          The  data  transfer rate is a constant 31.25 Kbaud which can
-          be generated by setting the ACIA Counter  Divide  Select  to
-          divide  by 16.  The MIDI specification calls for serial data
-          to consist of eight data bits preceded by a  start  bit  and
-          followed by one stop bit.
-
-
-          ----- MIDI Port Pin Assignments ---------------
-
-             MIDI OUT/THRU
-             ST           Circular DIN 5S
-                          ----                                    ----
-          MIDI IN           1 |---- THRU Transmit Data --------->|
-                            2 |---- Shield Ground ---------------|
-                            3 |<--- THRU Loop Return ------------|
-          MIDI ACIA         4 |---- OUT Transmit Data ---------->|
-                            5 |<--- OUT Loop Return -------------|
-                          ----                                    ----
-
-             MIDI IN
-             ST           Circular DIN 5S
-                          ----                                    ----
-          MIDI ACIA         4 |<--- IN Receive Data -------------|
-                            5 |---- IN Loop Return ------------->|
-                          ----                                    ----
-
-
-
-          Signal Characteristics
-
-                  current loop            5 ma, zero is current on.
-
-
-
-
-
-MIDI beat clock defines the following real time messages:
- clock (decimal 248, hex 0xF8)
- start (decimal 250, hex 0xFA)
- continue (decimal 251, hex 0xFB)
- stop (decimal 252, hex 0xFC)
-
-system exclusive start and end messages (F0 and F7).
-
-
-*/
-
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_MIDI//SS
 
       case 0xfffc04:  //control
-
-#if defined(SSE_ACIA_REGISTERS)
-        ACIA_MIDI.CR=io_src_b; 
-#endif
         if ((io_src_b & 3)==3){ // Reset
           log_to(LOGSECTION_IKBD,Str("MIDI: ")+HEXSl(old_pc,6)+" - ACIA reset");
           ACIA_Reset(NUM_ACIA_MIDI,0);
         }else{
-          TRACE_LOG("%X -> ACIA MIDI CR\n",io_src_b); 
-          // TOS sends 95: irq rx, 8bit1stop, div16
-          ACIA_SetControl(NUM_ACIA_MIDI,io_src_b); 
+          ACIA_SetControl(NUM_ACIA_MIDI,io_src_b);
         }
         break;
-
       case 0xfffc06:  //data
       {
-#if defined(SSE_ACIA_REGISTERS)
-        if(OPTION_C1)
-        {
-          if( (ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6) )// IRQ transmit enabled
-            ACIA_MIDI.SR&=~BIT_7; // clear IRQ bit
-          ASSERT( ACIA_MIDI.SR&2 ); //asserts?
-          ACIA_MIDI.SR&=~BIT_1; // clear TDRE bit
-
-        //update in MFP (if needs be)
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-          !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
-        }
-#endif
-        bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)
-#if defined(SSE_MIDI)
-          <0
-#else
-          >=0
-#endif
-          );
-
-#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
-        if(OPTION_C1)
-        TXEmptyAgenda=(abs(ACT-ACIA_MIDI.last_tx_write_time)
-          >=ACIA_MIDI_OUT_CYCLES);
-#endif
-
-#if defined(SSE_DEBUG)
-        if(TXEmptyAgenda)
-        {
-#if defined(SSE_MIDI_TRACE_BYTES_OUT)
-          TRACE_LOG("%X -> ACIA MIDI TDR\n",io_src_b);
-#endif
-        }
-        else
-        {
-#if defined(SSE_MIDI_TRACE_BYTES_OUT_OVR)
-          TRACE_LOG("ACIA MIDI TX OVR, can't send %X?\n",io_src_b);
-#endif
-        }
-#endif
-
-        if (TXEmptyAgenda
-#if !defined(SSE_MIDI)
-          ==0
-#endif
-          ){
-#if defined(SSE_IKBD_6301) //what was it?
-          if(!OPTION_C1)
-#endif
+        bool TXEmptyAgenda=(agenda_get_queue_pos(agenda_acia_tx_delay_MIDI)>=0);
+        if (TXEmptyAgenda==0){
           if (ACIA_MIDI.tx_irq_enabled){
             ACIA_MIDI.irq=false;
             mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
           }
-
-#if defined(SSE_MIDI)
-#if defined(SSE_ACIA_MIDI_SR02_CYCLES)
-          ACIA_MIDI.last_tx_write_time=ACT; // record timing
-          if(!OPTION_C1) //beta bugfix, was if(OPTION_C1)...
-#endif
-          agenda_add(agenda_acia_tx_delay_MIDI,ACIAClockToHBLS(ACIA_MIDI.clock_divide),0);
-          MIDIPort.OutputByte(io_src_b); //SS timing?
-#else
           agenda_add(agenda_acia_tx_delay_MIDI,2 /*ACIAClockToHBLS(ACIA_MIDI.clock_divide)*/,0);
-#endif
-
         }
         ACIA_MIDI.tx_flag=true;  //flag for transmitting
-
-#if !defined(SSE_MIDI)
-        MIDIPort.OutputByte(io_src_b); //SS timing?
-#endif
+        MIDIPort.OutputByte(io_src_b);
         break;
       }
-
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed
@@ -672,10 +361,7 @@ system exclusive start and end messages (F0 and F7).
     }
     break;
 
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_IO//SS
-
-#endif//defined(SSE_ACIA_390) 
+#endif
 
     case 0xfffa00:  //--------------------------------------- MFP
     {
@@ -1846,7 +1532,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
   
       else if (addr>=0xff8240 && addr<0xff8260){  //palette
 
-#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+#if defined(SSE_MMU_ROUNDING_BUS)
         cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_390B)
@@ -1898,14 +1584,10 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
  bypassing the stock MMU with a replacement unit and the additional
  chips on a separate board fitting over it."
 */
-          if (mem_len<=FOUR_MEGS
-#if defined(SSE_TOS_GEMDOS_EM_382) && !defined(SSE_TOS_GEMDOS_EM_390)//oops
-            && !extended_monitor
-#endif
-            ) 
+          if (mem_len<=FOUR_MEGS) 
             io_src_b&=b00111111;
           DWORD_B_2(&xbios2)=io_src_b;
-#if defined(SSE_STF_VBASELO)
+#if defined(SSE_STF)
           if(ST_TYPE==STE) 
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_390)
@@ -1925,7 +1607,7 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 #endif
             DWORD_B_1(&xbios2)=io_src_b;
 
-#if defined(SSE_STF_VBASELO)
+#if defined(SSE_STF)
           if(ST_TYPE==STE) 
 #endif
             DWORD_B_0(&xbios2)=0; 
@@ -2007,7 +1689,7 @@ Last bit always cleared (we must do it).
             FrameEvents.Add(scan_y,LINECYCLES,'v',io_src_b); 
 #endif
 
-#if defined(SSE_STF_VBASELO)
+#if defined(SSE_STF)
           if(ST_TYPE!=STE)
           {
             TRACE_VID("STF write %X to %X\n",io_src_b,addr);
@@ -2058,7 +1740,7 @@ must NOT be skipped using the Line Offset Register.
             FrameEvents.Add(scan_y,LINECYCLES,'L',io_src_b); 
 #endif
 
-#if defined(SSE_STF_LINEWID)
+#if defined(SSE_STF)
           if(ST_TYPE!=STE)
           {
             TRACE_VID("STF write %X to %X\n",io_src_b,addr);
@@ -2067,7 +1749,7 @@ must NOT be skipped using the Line Offset Register.
 #endif
 
 #if defined(SSE_SHIFTER) 
-          Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo
+          Shifter.Render(LINECYCLES,DISPATCHER_LINEWIDTH); // eg Beat Demo //TODO
 #else
           draw_scanline_to(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl); // Update sdp if off right  
 #endif
@@ -2124,7 +1806,7 @@ rasterline to allow horizontal fine-scrolling.
           if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)
             FrameEvents.Add(scan_y,LINECYCLES,(addr==0xff8264)?'h':'H',io_src_b); 
 #endif
-#if defined(SSE_STF_HSCROLL)
+#if defined(SSE_STF)
           if(ST_TYPE!=STE) 
           {
             TRACE_VID("STF write %X to %X\n",io_src_b,addr); //ST-CNX
@@ -2149,8 +1831,6 @@ rasterline to allow horizontal fine-scrolling.
     TODO: what is exact threshold ?
 */
             if(cycles_in<=Glue.CurrentScanline.StartCycle+24) {
-#elif defined(SSE_VID_BORDERS)
-            if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-BORDER_SIDE){
 #else
             if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
 #endif           // eg Coreflakes hidden screen //SS:which one?...
@@ -2173,8 +1853,6 @@ rasterline to allow horizontal fine-scrolling.
 #else
                 if (left_border>=SideBorderSize){ // Don't do this if left border removed!
 #endif
-#elif defined(SSE_SHIFTER_HSCROLL_380)
-                if (left_border>0){ // Don't do this if left border removed!
 #endif
                   left_border=BORDER_SIDE;
                   if (HSCROLL)
@@ -2462,13 +2140,6 @@ rasterline to allow horizontal fine-scrolling.
           mmu_confused=false;
           if (bank_length[0]) if (mmu_bank_length[0]!=bank_length[0]) mmu_confused=true;
           if (bank_length[1]) if (mmu_bank_length[1]!=bank_length[1]) mmu_confused=true;
-#if defined(SSE_MMU_WRITE_MEM_CONF) && !defined(SSE_MMU_RAM_TEST2)
-          if(old_pc<FOURTEEN_MEGS) // the write doesn't "confuse" the MMU
-          {
-            TRACE_LOG("Cancel MMU testing\n");
-            mmu_confused=false; // fixes Super Neo Demo Show (1MB) (hack)
-          }
-#endif
 #if !defined(SSE_MMU_RAM_TEST3)
           himem=(MEM_ADDRESS)(mmu_confused ? 0:mem_len);
 #else
@@ -2540,7 +2211,11 @@ rasterline to allow horizontal fine-scrolling.
        if(ST_TYPE!=STE)
        {
          TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
+#if defined(SSE_STF_PADDLES_390) // as for read
+         exception(BOMBS_BUS_ERROR,EA_WRITE,addr); 
+#else
          break;  // or bombs?
+#endif
        }
 #endif
       if (addr==0xff9202){ // Doesn't work for high byte
@@ -2589,7 +2264,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
   if (addr>=0xff8240 && addr<0xff8260){  //palette
 
-#if defined(SSE_MMU_ROUNDING_BUS2_SHIFTER)
+#if defined(SSE_MMU_ROUNDING_BUS)
     cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
 #if defined(SSE_BLT_390B)

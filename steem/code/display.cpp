@@ -2097,11 +2097,7 @@ HRESULT SteemDisplay::SaveScreenShot()
   {
     if(pNeoFile)
     {
-#if defined(SSE_VID_SAVE_NEO_390)
       pNeoFile->resolution=change_endian(screen_res);
-#else
-      pNeoFile->resolution=screen_res;
-#endif
       // palette was already copied (sooner=better)
       for(int i=0;i<16000;i++)
         pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
@@ -3239,7 +3235,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
       320:200 = 1.6 (useful picture)
       416:281 = 1.480 (plasma)
 */
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     if(OPTION_ST_ASPECT_RATIO)
 #endif
       sty*=ST_ASPECT_RATIO_DISTORTION; // "reserve" more pixels
@@ -3283,7 +3279,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #endif
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     if(OPTION_ST_ASPECT_RATIO)
 #endif
 #ifdef SSE_VID_D3D_WINDOW

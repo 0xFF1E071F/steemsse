@@ -1591,7 +1591,7 @@ int GetComLineArgType(char *Arg,EasyStr &Path)
 
     char *dot=strrchr(GetFileNameFromPath(Path),'.');
     if (dot){
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
       if (ExtensionIsDisk(dot)){
 #else
       if (ExtensionIsDisk(dot,false)){

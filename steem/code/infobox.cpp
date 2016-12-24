@@ -374,8 +374,8 @@ void TGeneralInfo::CreateAboutPage()
   EasyStr Text=EasyStr("Steem Engine v")+(char*)stem_version_text+" (built " __DATE__" " +"- "__TIME__")\n";
 #endif
   Text+="Written by Anthony && Russell Hayward\n";
-#if defined(SSE_GUI_INFOBOX_390)
 
+#if defined(SSE_GUI_INFOBOX_390)
 #if defined(SSE_X64_MISC)
   Text+="x64 ";
 #elif defined(WIN32)
@@ -399,45 +399,6 @@ void TGeneralInfo::CreateAboutPage()
   Text+="GCC";
 #endif
   Text+="\n";
-
-
-#elif defined(SSE_GUI_INFOBOX)
-  Text+="Copyright 2000-2015\n"; // if that means anything
-  /*
-   MSVC++ 11.0 _MSC_VER = 1700 (Visual Studio 2012)
-  MSVC++ 10.0 _MSC_VER = 1600 (Visual Studio 2010)
-  MSVC++ 9.0  _MSC_VER = 1500 (Visual Studio 2008)
-  MSVC++ 8.0  _MSC_VER = 1400 (Visual Studio 2005)
-  MSVC++ 7.1  _MSC_VER = 1310 (Visual Studio 2003)
-  MSVC++ 7.0  _MSC_VER = 1300 (Visual Studio 2002)
-  MSVC++ 6.0  _MSC_VER = 1200
-  MSVC++ 5.0  _MSC_VER = 1100
-  */
-#ifdef SSE_X64_MISC
-  Text+="x64 ";
-#endif
-#ifdef SSE_NO_D3D
-  Text+="DD ";
-#endif
-#if _MSC_VER == 1200
-  Text+="SSE VC6 build\n";
-#elif (_MSC_VER>1200) && (_MSC_VER <1400)
-  Text+="SSE VC 2002/3 build\n";
-#elif _MSC_VER == 1400
-  Text+="SSE VC 2005 build\n";
-#elif _MSC_VER == 1500
-  Text+="SSE VC 2008 build\n";
-#elif _MSC_VER == 1600
-  Text+="SSE VC 2010 build\n";
-#elif _MSC_VER == 1700
-  Text+="SSE VC 2012 build\n";
-#elif defined(BCC_BUILD)
-  Text+="SSE Borland C++ build\n";
-#elif defined(MINGW_BUILD)
-  Text+="SSE MinGW build\n";
-#elif defined(SSE_UNIX)
-  Text+="SSE Linux GCC build\n";
-#endif
 #else
   Text+="Copyright 2000-2004\n";
 #endif

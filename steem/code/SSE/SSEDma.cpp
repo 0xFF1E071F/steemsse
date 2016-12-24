@@ -1070,10 +1070,6 @@ void TDma::TransferBytes() {
 #endif
       DMA_INC_ADDRESS; // use Steem's existing routine (?)
   }
-#if defined(SSE_DMA_COUNT_CYCLES)
-  if(ADAT)//3.6.1 condition
-    INSTRUCTION_TIME(8); 
-#endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if(TRACE_MASK3 & TRACE_CONTROL_FDCBYTES)
     TRACE_LOG("\n");

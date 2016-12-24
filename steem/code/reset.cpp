@@ -203,11 +203,7 @@ void power_on()
 #endif
 
 #if defined(SSE_STF)
-#if defined(SSE_STF_390)
   SSEConfig.SwitchSTType(ST_TYPE);
-#else
-  SwitchSTType(ST_TYPE);
-#endif
 #endif
 
 #if defined(SSE_INT_MFP_TxDR_RESET)

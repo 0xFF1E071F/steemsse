@@ -680,11 +680,7 @@ void event_hbl()   //just HBL, don't draw yet
     }
   }
 #endif
-  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(SSE_INT_HBL_IACK_FIX)
-    -12 // 28-12 = 16 = IACK cycles
-#endif
-    ){
+  if (abs_quick(cpu_timer_at_start_of_hbl-time_of_last_hbl_interrupt)>CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED){
     hbl_pending=true;
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
@@ -1057,9 +1053,6 @@ void event_scanline()
     >iack_latency
 #else
     >CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED
-#if defined(SSE_INT_HBL_IACK_FIX)
-    -12 //this was for BBC52, useless now
-#endif
 #endif
     ){
     hbl_pending=true;

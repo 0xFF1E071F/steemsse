@@ -147,7 +147,7 @@ int TImageSCP::UnitsToNextFlux(int position) {
   ASSERT( time2>time1 );
   int units_to_next_flux=time2-time1; 
 #if defined(SSE_DISK_SCP_DRIVE_WOBBLE) // this takes care of weak bits (?)
-  int wobble=(rand()%4)-2;
+  int wobble=(rand()%4)-2; // a bit simplistic? 
   units_to_next_flux+=wobble;
 #endif
   return units_to_next_flux;    

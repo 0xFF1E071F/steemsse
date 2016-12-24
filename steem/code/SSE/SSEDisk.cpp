@@ -48,7 +48,7 @@ WORD TDisk::BytePositionOfFirstId() { // with +7 for reading ID //no!
   return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );
 }
 
-#if defined(SSE_FDC_390_HBL_DRIFT)
+#if defined(SSE_DISK_HBL_DRIFT)
 
 WORD TDisk::BytesToID(BYTE &num) {
 /*  Compute distance in bytes between current byte and desired ID
@@ -157,7 +157,7 @@ void TDisk::NextID(BYTE &RecordIdx,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     return;
 
-#if defined(SSE_FDC_390_HBL_DRIFT) // use debugged BytesToID
+#if defined(SSE_DISK_HBL_DRIFT) // use debugged BytesToID
 
   WORD BytesToRun=BytesToID(RecordIdx);
   if(RecordIdx)

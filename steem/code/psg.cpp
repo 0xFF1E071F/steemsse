@@ -32,10 +32,8 @@ EXT BYTE sound_bytes_per_sample INIT(1);
 #else
 EXT int sound_bytes_per_sample INIT(1);
 #endif
-#if defined(SSE_SOUND_VOL_LOGARITHMIC_3)//v3.7.1
+#if defined(SSE_SOUND_VOL_LOGARITHMIC)
 EXT int MaxVolume INIT(10000);
-#elif defined(SSE_SOUND_VOL_LOGARITHMIC_2)
-EXT int MaxVolume INIT(0xffff);
 #else
 EXT DWORD MaxVolume INIT(0xffff);
 #endif
@@ -183,29 +181,7 @@ const //const must be removed for linker
 
 #if defined(SSE_SOUND_390)
 inline bool playing_samples() {
-#if defined(SSE_SOUND_FILTER_STF3)
-/*  This test is more complicated but will work with
-    eg My socks are weapons.
-*/
-//  ASSERT( PSG_FILTER_FIX );
-  int yes=((psg_reg[PSGR_MIXER]&b00111111)==b00111111);
-  if(!yes)
-  {
-    int freqs=0;
-    for(int i=0;i<7;i++)
-      freqs+=psg_reg[i]; // all zero?
-    if(!freqs)
-      yes=2;
-    //yes=!psg_reg[PSGR_ENVELOPE_SHAPE];
-  }
-#if defined(SSE_BOILER_TRACE_CONTROL)
-  if(yes&&(SOUND_CONTROL_MASK & SOUND_CONTROL_OSD))
-    TRACE_OSD("DIGI%d",yes);
-#endif
-  return (bool) yes;
-#else
   return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
-#endif
 }
 #endif//#if defined(SSE_SOUND_390)
 
@@ -1016,11 +992,8 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
 
-    val=v;//3.6.3, was it missing???
-#if defined(SSE_SOUND_DMA_360)
-    if(dma_sound_on_this_screen) //bugfix v3.6
-#endif
-      val+= (**lp_dma_sound_channel);    
+    val=v;
+    val+= (**lp_dma_sound_channel);    
 
 #if defined(SSE_SOUND_MICROWIRE)
     Microwire(0,val);
@@ -1041,10 +1014,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 
     if(sound_num_channels==2){    
-#if defined(SSE_SOUND_DMA_360)
-      if(dma_sound_on_this_screen) //bugfix v3.6
-#endif
-        val+= (*(*lp_dma_sound_channel+1)); 
+      val+= (*(*lp_dma_sound_channel+1)); 
 
 #if defined(SSE_SOUND_MICROWIRE)
       Microwire(1,val);
@@ -1536,13 +1506,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
               dma_sound_output_countdown-=dma_sound_freq;
             }
           }
-          
-#if defined(SSE_SOUND_DMA_CLOCK)
-          dma_sound_samples_countdown-=STE_DMA_CLOCK;
-#else
           dma_sound_samples_countdown-=n_cpu_cycles_per_second;
-#endif
-            
         }
       }
       dma_sound_on_this_screen=1;
@@ -1731,13 +1695,7 @@ void dma_sound_fetch()
         dma_sound_output_countdown-=dma_sound_freq;
       }
     }
-
-#ifdef SSE_SOUND_DMA_CLOCK
-    dma_sound_samples_countdown-=STE_DMA_CLOCK;
-#else
     dma_sound_samples_countdown-=n_cpu_cycles_per_second; 
-#endif
-
   }//while (dma_sound_samples_countdown>=0)
 
   if (Playing==0) return;

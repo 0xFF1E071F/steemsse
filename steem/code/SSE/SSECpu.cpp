@@ -33,9 +33,6 @@ void TM68000::Reset(bool Cold) {
   if(Cold)
     nExceptions=nInstr=0;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS0A)
-  MMU.Unrounded = false;
-#endif
 #if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_390D)
   IackCycle=false; 
 #endif

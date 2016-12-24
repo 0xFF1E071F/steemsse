@@ -249,94 +249,52 @@ inline void InstructionTime(int t) {
 
 #define INSTRUCTION_TIME(t)  InstructionTime(t)
 
-#if !(defined(SSE_MMU_ROUNDING_BUS2_EXCEPTION)&&defined(SSE_MMU_ROUNDING_BUS2_BLITTER))
-inline void InstructionTimeRound(int t) {
-  InstructionTime(t);
+#endif //cpu
 
-#ifdef SSE_MMU_ROUNDING_BUS0A
-#if defined(SSE_VC_INTRINSICS_390D) && defined(SSE_MMU_ROUNDING_BUS) // great optimisation
-  MMU.Rounded=_bittestandreset((LONG*)&cpu_cycles,1);
-#else//390?
 
 #if defined(SSE_MMU_ROUNDING_BUS)
-#if defined(SSE_VC_INTRINSICS_382)
-  MMU.Rounded=BITTEST(cpu_cycles,1); // causes inlining anyway
-#else
-  MMU.Rounded=(cpu_cycles&2);
-#endif
-#endif
-  cpu_cycles&=-4;
 
-#endif//390?
-#else
-#if defined(SSE_VC_INTRINSICS_390D)
-  _bittestandreset((LONG*)&cpu_cycles,1); //?
-#else
-  cpu_cycles&=-4;
-#endif
-#endif//0A
-}
-
-#define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
-
-#endif
-
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS2)
+inline void FetchTiming();
+inline void FetchTimingL();
+#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
+#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
 inline void ReadBusTiming();
 inline void ReadBusTimingL();
 #define CPU_ABUS_ACCESS_READ  ReadBusTiming()
 #define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
-
 #define BLT_ABUS_ACCESS_READ  ReadBusTiming()
-
-#else
-
-#define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
-
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS2_STACK)
 inline void StackTiming();
 inline void StackTimingL();
 #define CPU_ABUS_ACCESS_READ_POP StackTiming()
 #define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
 #define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
 #define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
-#else
-#define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
-#define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS) 
-inline void FetchTiming();
-inline void FetchTimingL();
-#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
-#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
-#else
-#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ //so we can directly replace macros
-#define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L //so we can directly replace macros
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS2)
 inline void WriteBusTiming();
 inline void WriteBusTimingL();
-
 #define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
 #define CPU_ABUS_ACCESS_WRITE_L  WriteBusTimingL()
-
 #define BLT_ABUS_ACCESS_WRITE  WriteBusTiming()
 
 #else
 
+inline void InstructionTimeRound(int t) {
+  InstructionTime(t);
+  cpu_cycles&=-4;
+}
+
+#define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
+#define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
+#define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
+#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ
+#define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L
+#define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
+#define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
+#define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
 #define CPU_ABUS_ACCESS_WRITE  INSTRUCTION_TIME_ROUND(4)
 #define CPU_ABUS_ACCESS_WRITE_L  INSTRUCTION_TIME_ROUND(8) //for performance
 
-#endif
+#endif //mmu rounding
 
 #if !(defined(SSE_CPU))
 #define M68K_UNSTOP                         \
@@ -422,8 +380,6 @@ EXT MEM_ADDRESS line_a_base;
 EXT MEM_ADDRESS vdi_intout;
 
 #endif
-
-//#endif//emu
 
 #undef EXT
 #undef INIT

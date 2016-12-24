@@ -834,11 +834,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if SSE_VERSION>=382
     if(LoadOrSave==LS_LOAD)
 #endif
-#if defined(SSE_STF_390)
     SSEConfig.SwitchSTType(ST_TYPE);
-#else
-    SwitchSTType(ST_TYPE);
-#endif
 #endif
     int dummy=0; // dummy for former Program ID
     ReadWrite(dummy);
@@ -1197,10 +1193,8 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 #if defined(SSE_CPU_E_CLOCK) // keep E-Clock synced on loading a snapshot
     ReadWrite(M68000.cycles_for_eclock); 
-#if defined(SSE_CPU_E_CLOCK_390)
     if(LoadOrSave==LS_SAVE)
       M68000.cycles_for_eclock+=ioaccess; // restore
-#endif
 #endif
 
   }

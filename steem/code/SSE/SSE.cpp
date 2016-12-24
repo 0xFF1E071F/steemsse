@@ -11,14 +11,6 @@
 #include "SSEParameters.h"
 #include "SSEDebug.h"
 
-#if ! defined(SSE_SSE_CONFIG_STRUCT)
-extern "C" int iDummy=0;
-#endif
-
-#if defined(SSE_HACKS)
-extern "C" int SS_signal=0;//used??
-#endif
-
 BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 
 #if defined(SSE_VID_RECORD_AVI) 
@@ -42,7 +34,6 @@ FARPROC WINAPI MyLoadFailureHook(dliNotification dliNotify,DelayLoadInfo * pdli)
 TOsdControl OsdControl;
 
 extern bool osd_show_scrollers,osd_shown_scroller;
-//extern DWORD timer,osd_scroller_finish_time;
 extern long timer,osd_scroller_finish_time;
 extern long col_yellow[2],col_blue,col_red,col_green,col_white;
 
@@ -58,9 +49,5 @@ void TOsdControl::StartScroller(EasyStr text) {
 }
 
 #endif
-
-
-
-
 
 #endif

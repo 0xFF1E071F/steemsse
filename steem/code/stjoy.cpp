@@ -886,7 +886,7 @@ void TJoystickConfig::Show()
     y+=30;
 
     EasyStr Text=T("Or any button on");
-#if defined(SSE_JOYSTICK_JUMP_BUTTON_390) //116 is for 2nd jump button
+#if defined(SSE_JOYSTICK_390) //116 is for 2nd jump button
     CreateWindow("Static",Text,WS_CHILD | WS_VISIBLE | int(NumJoysticks==0 ? WS_DISABLED:0),
                   x+10,y+4,GetTextSize(Font,Text).Width,23,Handle,(HMENU)(1160+p*100),HInstance,NULL);
 #else
@@ -1137,7 +1137,7 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
         InvalidateRect(GetDlgItem(Handle,n),NULL,0);
       }
     }
-#if defined(SSE_JOYSTICK_JUMP_BUTTON_390) // hide "Or any button on" for joypad
+#if defined(SSE_JOYSTICK_390) // hide "Or any button on" for joypad
     ShowWindow(GetDlgItem(Handle,1160),false);
 #endif
   }
@@ -1226,7 +1226,7 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
         {
           int Port=BasePort+(LOWORD(wPar)/100 - 1);
           Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=GetWindowWord(HWND(lPar),0);
-#if defined(SSE_GUI_JOYSTICK_390)
+#if defined(SSE_JOYSTICK_390)
           if(Joy[Port].DirID[(LOWORD(wPar) % 100)-10]==VK_DELETE)
           {
             Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=0; // assign nothing

@@ -68,7 +68,7 @@ void TOptionBox::CreateMachinePage()
   SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
 #endif
 #endif
-  SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
+  SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
@@ -305,7 +305,7 @@ void TOptionBox::MachineUpdateIfVisible()
 #if defined(SSE_STF)
   HWND Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
-    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
+    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
 #endif
 #if defined(SSE_MMU_WU)
   Win=GetDlgItem(Handle,212); //WU
@@ -1151,10 +1151,6 @@ void TOptionBox::CreateDisplayPage()
 	  page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 #endif
   mask=WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST;
-#if defined(SSE_GUI_390B_)
-  if(runstate!=RUNSTATE_STOPPED)
-    mask|=WS_DISABLED;
-#endif
 #if defined(SSE_VID_BORDERS_GUARD_EM)
   if(NewMonitorSel==-1 && (extended_monitor 
 #if defined(SSE_VID_BORDERS_GUARD_R2)
@@ -1695,7 +1691,7 @@ void TOptionBox::CreateFullscreenPage()
   Wid+=w;
 #endif
   
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO_OPTION) && !defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_D3D_STRETCH_AR_OPTION) && !defined(SSE_VID_STRETCH_ASPECT_RATIO)
   // option has been moved
   y-=LineHeight;
 #if defined(SSE_VID_D3D_CRISP_OPTION)
@@ -3275,7 +3271,7 @@ void TOptionBox::SSEUpdateIfVisible() {
 #if defined(SSE_STF)
   Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
-    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,SSE_STF_ST_MODELS-1),0);
+    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
 #endif
 #if defined(SSE_MMU_WU)
   Win=GetDlgItem(Handle,212); //WU
