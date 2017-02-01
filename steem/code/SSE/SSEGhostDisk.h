@@ -5,7 +5,6 @@
 /*
     Version 1.0
     Version 1.0 of GhostDisk was written to manage STG files in v1.0 format.
-    This feature should be available in Steem 3.7.
 
 Interface:
 
@@ -20,7 +19,7 @@ Interface:
 
     Opens the file specified in path.
     If the file didn't exist, it creates it.
-    Returns false on failure (not a STW file).
+    Returns false on failure (not a STG file).
 
     ReadSector(TWD1772IDField *IDField)
 

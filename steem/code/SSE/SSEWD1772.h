@@ -187,31 +187,26 @@ struct TWD1772 {
   TWD1772AmDetector Amd; // not the processor
   TWD1772MFM Mfm;
 #endif
-#if defined(SSE_WD1772_REGS)
   BYTE CR;  // command
   BYTE STR; // status
   BYTE TR;  // track
   BYTE SR;  // sector
   BYTE DR;  // data
   BYTE DSR; // shift register - official
-#endif
 #if defined(SSE_WD1772_EMU)
 #if defined(SSE_WD1772_F7_ESCAPE) //keep a switch because I'm not sure of this
   bool F7_escaping;
 #endif
   BYTE n_format_bytes; // to examine sequences before ID
 #endif
-#if defined(SSE_WD1772_REGS)
   BYTE StatusType; // guessed
   BYTE InterruptCondition; // guessed
   BYTE IndexCounter; // guessed
-#endif
 
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
     TODO put them all in then (fun)
 */
-#if defined(SSE_WD1772_LINES)
   struct {
     unsigned int drq:1;
     unsigned int irq:1;
@@ -228,7 +223,6 @@ struct TWD1772 {
     unsigned int CommandWasIntercepted:1; // pseudo
 #endif
   }Lines;
-#endif
 
   //FUNCTIONS
 
@@ -238,23 +232,8 @@ struct TWD1772 {
   BYTE CommandType(int command=-1); // I->IV
   BYTE IORead(BYTE Line);
   void IOWrite(BYTE Line,BYTE io_src_b);
-#if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
-/*  This is useful for OSD: if we're writing then we need to display a red
-    light (green when reading). This is used by pasti & IPF.
-*/
-#if defined(SSE_VS2008_WARNING_390)
   bool WritingToDisk();
-#else
-  int WritingToDisk();
-#endif
-#endif
-#if defined(SSE_WD1772_RESET)
-#if defined(SSE_VS2008_WARNING_390)
   void Reset();
-#else
-  void Reset(bool Cold);
-#endif
-#endif
 #if defined(SSE_DEBUG)
   void TraceStatus();
 #endif
@@ -271,10 +250,11 @@ struct TWD1772 {
   void WriteCR(BYTE io_src_b); //horrible TODO
   void OnUpdate();
   // called by drive or by image
-#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
-  void OnIndexPulse(bool image_triggered); 
+
+#if defined(SSE_DEBUG)
+  void OnIndexPulse(int Id, bool image_triggered); 
 #else
-  void OnIndexPulse(int id,bool image_triggered); 
+  void OnIndexPulse(bool image_triggered); 
 #endif
 #if defined(SSE_WD1772_BIT_LEVEL)
   bool ShiftBit(int bit);

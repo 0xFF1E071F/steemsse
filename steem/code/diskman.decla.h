@@ -8,8 +8,6 @@
 //SS this should be improved
 #if defined(SSE_DRIVE_IPF1)
 #define DISK_IPF 4
-#endif
-#if defined(SSE_DISK_CAPS_CTRAW)
 #define DISK_CTR 5
 #endif
 #if defined(SSE_DISK_SCP)

@@ -615,7 +615,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4003)
       OPTION_HACKS=b->checked;
 #endif
-#if defined(SSE_EMU_DETECT)
+#if defined(SSE_VAR_EMU_DETECT)
     else if(b->id==4004)
       //STEALTH_MODE=!b->checked;
       OPTION_EMU_DETECT=b->checked;

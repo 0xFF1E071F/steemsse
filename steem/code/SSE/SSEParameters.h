@@ -40,41 +40,20 @@ The ACIA master clock is 500kHz.
 
 */
 
-#if defined(SSE_ACIA_390)
-
 #define HD6301_TO_ACIA_IN_CYCLES (acia[0].TransmissionTime())
 #define ACIA_TO_HD6301_IN_CYCLES (acia[0].TransmissionTime())
 //TODO:
 #define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12)) //is a mod??
 
-#elif defined(SSE_IKBD_6301)
 
-#define HD6301_TO_ACIA_IN_CYCLES (HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR)
-#define ACIA_TO_HD6301_IN_CYCLES (HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR)
-#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12))
-
-#else //that was not correct, for older versions (?)
-
-#define HD6301_TO_ACIA_IN_CYCLES (7200) // from WinSTon
-#define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
-
-#endif
 
 #if defined(SSE_ACIA_TDR_COPY_DELAY)
 //#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
 #define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
-#if defined(SSE_ACIA_390)
 #define ACIA_MIDI_OUT_CYCLES (acia[1].TransmissionTime())
 #define ACIA_MIDI_IN_CYCLES (acia[1].TransmissionTime())
-#elif defined(SSE_ACIA_MIDI_SR02_CYCLES)
-//#define ACIA_MIDI_OUT_CYCLES (1280*cpu_cycles_multiplier*HD6301_CYCLE_DIVISOR/2)
-#define ACIA_MIDI_OUT_CYCLES (HD6301_TO_ACIA_IN_CYCLES/4)
-#define ACIA_MIDI_IN_CYCLES ACIA_MIDI_OUT_CYCLES
-//1280*HD6301_CYCLE_DIVISOR/2//(HD6301_TO_ACIA_IN_CYCLES/4) //temp
-#endif
-
 
 #else //!ACIA
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
@@ -86,25 +65,11 @@ The ACIA master clock is 500kHz.
 /////////////
 
 #if defined(SSE_BLITTER)
-#if defined(SSE_BLT_BLIT_MODE_CYCLES) 
-/*  It's not so clear in the doc, but the 64 shared bus cycles are not in CPU
-    cycles but in NOP units (4 cycles). 
-    It could be deduced from the example program and the mention restarting 
-    the blitter takes "7 cycles". The timing table is also in NOP.
-*/
-#if defined(SSE_BLT_390)
-#define BLITTER_BLIT_MODE_CYCLES ((64*4)) // is it 63 or 64??
-#elif defined(SSE_BLT_381)
-#define BLITTER_BLIT_MODE_CYCLES ((63*4)) // hack of 380 removed in 381
-#elif defined(SSE_BLT_380)
-#define BLITTER_BLIT_MODE_CYCLES (OPTION_HACKS?(160):(64*4))//160 hack for AC2011, Down TLN (not good), SmokeTown
-#else
-#define BLITTER_BLIT_MODE_CYCLES ((65-1)*4) // 'NOP' x 4 = cycles //63?
+
+#if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_MAIN_LOOP)
+#define BLITTER_BLIT_MODE_CYCLES (256) //not used in v3.9.1
 #endif
-#if !defined(SSE_BLT_380)
-#define SSE_BLT_BLIT_MODE_IRQ_CHK (64) // when we check for IRQ, in cycles
-#endif
-#endif
+
 #endif
 
 
@@ -262,7 +227,7 @@ Some STFs                32.02480    8.0071
 /////////
 
 
-#if defined(SSE_GLUE_THRESHOLDS)
+#if defined(SSE_GLUE)
 // extremely important parameters, modified according to ST model and wakestate
 enum {
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
@@ -279,10 +244,6 @@ enum {
 
 #endif
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-#define HBL_FOR_STE (444)
-#define HBL_FOR_STF (444+4)
-#endif
 
 ////////
 //GUI //
@@ -340,7 +301,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MAX_DIS_INSTR 2000 
 #endif
 
-#if defined(SSE_IKBD_6301_EVENT)//380
+#if defined(SSE_ACIA_EVENT)//380 //TODO
 //#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
 #define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
@@ -360,16 +321,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #if defined(SSE_INTERRUPT)
 
-#if defined(SSE_INT_ROUNDING)
+#if !defined(SSE_MMU_ROUNDING_BUS)
 #define SSE_INT_MFP_TIMING (54)
 #define SSE_INT_HBL_TIMING (54)
 #define SSE_INT_VBL_TIMING (54)
-#else
-#define SSE_INT_MFP_TIMING (56) 
-#define SSE_INT_HBL_TIMING (56)
-#define SSE_INT_VBL_TIMING (56)
 #endif
-
 #define HBL_IACK_LATENCY 28 // 10-28 ?
 #define VBL_IACK_LATENCY 28
 
@@ -497,7 +453,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // VERSION //
 /////////////
 
-#define SSE_VERSION 390
+#define SSE_VERSION 391
 
 
 ///////////

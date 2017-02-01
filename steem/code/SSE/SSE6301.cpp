@@ -278,26 +278,18 @@ void THD6301::ReceiveByte(BYTE data) {
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
   ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
   ACIA_IKBD.LineTxBusy=true;
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
   if(OPTION_C1)
     time_of_event_acia=ACIA_IKBD.time_of_event_outgoing=ACT+ACIA_TO_HD6301_IN_CYCLES;
-  else
-#elif defined(SSE_IKBD_6301_EVENT)
-  if(OPTION_C1)
-  {
-    time_of_event_ikbd2=ACT+ACIA_TO_HD6301_IN_CYCLES;
-    EventStatus|=2;
-  }
   else
 #endif
     agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
 
-#if defined(SSE_ACIA_REGISTERS) && !defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA) && !defined(SSE_ACIA_EVENT)
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // shift register
   ACIA_IKBD.LineTxBusy=true;
 #endif
 }
-
 
 
 void THD6301::ResetChip(int Cold) {

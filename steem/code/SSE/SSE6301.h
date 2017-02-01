@@ -58,12 +58,9 @@ struct THD6301 {
   BYTE rdr,rdrs,tdr,tdrs; 
 #endif
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
   char LineRxFreeTime; // cycles in (0-63)
   char LineTxFreeTime; // cycles in (0-63)
-#if !defined(SSE_ACIA_390)
-  BYTE EventStatus; // bit0 event1 bit1 event2
-#endif
 #endif
 
 #if defined(SSE_DEBUG) 

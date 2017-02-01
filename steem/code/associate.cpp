@@ -34,8 +34,8 @@ char key_location[]="Software\\Classes\\"; // where we put the extensions
 //#include <strsafe.h>
 
 HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
-#if defined(SSE_VS2008_WARNING_390)
-  strncpy(pszDest,pszSrc,cchDest);
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_ASSOCIATE_391)
+  strncpy(pszDest,pszSrc,cchDest);//crash on deassociating
 #else
   strcpy(pszDest,pszSrc);
 #endif
@@ -350,6 +350,7 @@ void AssociateSteem(EasyStr Exts,EasyStr FileClass,bool Force,char *TypeDisplayN
 */
   if(WasAlreadyAssociated)
     RegDelnode (HKEY_CURRENT_USER, Exts.c_str() );
+    //RegDelnode (HKEY_CURRENT_USER, Exts.Text );
   else
 #endif
   {

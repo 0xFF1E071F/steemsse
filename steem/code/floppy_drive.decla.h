@@ -33,10 +33,7 @@ private:
 public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
 #if defined(SSE_DISK_CAPS)    
-    IPFDisk=
-#ifdef SSE_DISK_CAPS_CTRAW
-    CTRDisk=
-#endif
+    IPFDisk=CTRDisk=
 #endif
 #if defined(SSE_DISK_SCP)
     SCPDisk=
@@ -62,10 +59,7 @@ public:
   void RemoveDisk(bool LoseChanges=0);
   bool DiskInDrive() { return f!=NULL || PastiDisk 
 #if defined(SSE_DISK_CAPS)
-    || IPFDisk
-#ifdef SSE_DISK_CAPS_CTRAW
-    || CTRDisk
-#endif
+    || IPFDisk || CTRDisk
 #endif    
 #if defined(SSE_DISK_SCP)
     || SCPDisk
@@ -100,10 +94,7 @@ public:
   int PastiBufLen;
   bool STT_File,PastiDisk;
 #if defined(SSE_DISK_CAPS)
-  bool IPFDisk;
-#ifdef SSE_DISK_CAPS_CTRAW
-  bool CTRDisk;
-#endif
+  bool IPFDisk,CTRDisk;
 #endif
 #if defined(SSE_DISK_SCP)
   bool SCPDisk;

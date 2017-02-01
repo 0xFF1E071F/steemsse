@@ -85,9 +85,7 @@ On STE there's no latency, DL=3, WS=1.
 struct TMMU {
 
   //DATA
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   MEM_ADDRESS VideoCounter; // to separate from rendering
-#endif
 #if defined(SSE_MMU_WU)
   BYTE WU[6]; // 0, 1, 2
   BYTE WS[6]; // 0 + 4 + panic
@@ -96,17 +94,13 @@ struct TMMU {
 #if defined(SSE_MMU_LINEWID_TIMING)
   BYTE Linewid0;
 #endif
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   BYTE WordsToSkip; // for HSCROLL
-#endif
 
   // FUNCTIONS
   MEM_ADDRESS ReadVideoCounter(int CyclesIn);
   void ShiftSDP(int shift);  
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
   void UpdateVideoCounter(int CyclesIn);
-#endif
 #if defined(SSE_MMU_LOW_LEVEL)
   WORD ReadRAM(); // abus as parameter?
   void WriteRAM(); // abus, dbus as parameters?

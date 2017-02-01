@@ -53,10 +53,8 @@ EXT WORD pasti_store_byte_access;
 EXT bool pasti_active INIT(0);
 #endif
 
-#if !defined(SSE_WD1772_REGS)
+#if !defined(SSE_WD1772_REGS_FOR_FDC)
 BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
-#endif
-#if !defined(SSE_WD1772_LINES)
 bool fdc_last_step_inwards_flag;
 #endif
 
@@ -67,7 +65,6 @@ BYTE floppy_access_ff_counter=0;
 BYTE floppy_irq_flag=0;
 BYTE fdc_step_time_to_hbls[4]={94,188,32,47};
 #if !defined(SSE_DMA_OBJECT)
-
 #if !defined(SSE_DMA_FIFO_READ_ADDRESS)
 BYTE fdc_read_address_buffer_len=0;
 #endif
@@ -307,7 +304,7 @@ void floppy_fdc_command(BYTE cm)
 {
   dbg_log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(SSE_FDC_IGNORE_WHEN_NO_DRIVE_SELECTED) && defined(SSE_YM2149_OBJECT)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) && defined(SSE_YM2149_OBJECT)
 /*  This was missing in Steem up to now but was in Hatari.
     Commands are ignored if no drive is currently selected, except
     for command Interrupt, which shouldn't need any drive.
@@ -326,7 +323,7 @@ void floppy_fdc_command(BYTE cm)
 
   if (fdc_str & FDC_STR_BUSY){
     
-#if defined(SSE_FDC_CHANGE_COMMAND_DURING_SPINUP)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
   The doc states:
   "Command Register (CR)
@@ -372,8 +369,8 @@ void floppy_fdc_command(BYTE cm)
 #endif
   fdc_cr=cm;
 
-  agenda_delete(agenda_fdc_motor_flag_off); //SS it's safe as we set it ourselve
-#if defined(SSE_FDC_CHANGE_COMMAND_DURING_SPINUP)
+  agenda_delete(agenda_fdc_motor_flag_off);
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*  No need to start the motor, it should already be spinning up
     (Noughts and Mad Crosses STE)
     But we need to start the motor if command interrupt (Froggies). 
@@ -602,12 +599,12 @@ and ends the command.
 #endif
           }else{
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
-#if defined(SSE_FDC_RESTORE) && defined(SSE_FDC_SEEK)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
             if(!ADAT)
 #endif            
             floppy_head_track[floppyno]=0;
           }
-#if defined(SSE_FDC_RESTORE)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
 If the head is not at track zero, the FDDC steps the head carriage
 until the head arrives at track 0.  The 177x then sets its Track
@@ -620,7 +617,7 @@ and ends the command.
           {
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
-            agenda_add(agenda_floppy_seek,2,0);
+            agenda_add(agenda_floppy_seek,2-1,0); //1 scanline
           }
           else
 #endif
@@ -668,15 +665,8 @@ cycles before the first stepping pulse.
 */
       default: //step, step in, step out
       {
-#if defined(SSE_DRIVE_SOUND_SEEK2)
-      if(SSEOption.DriveSound 
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-        && !DRIVE_SOUND_SEEK_SAMPLE
-#endif
-#if !defined(SSE_FDC_390C)//tested in function
-        && SF314[DRIVE].Sound_Buffer[TSF314::STEP] 
-#endif
-      )
+#if defined(SSE_DRIVE_SOUND)
+      if(SSEOption.DriveSound /*&& !OPTION_DRIVE_SOUND_SEEK_SAMPLE*/)
         SF314[DRIVE].Sound_Step();
 #endif
 
@@ -1388,19 +1378,8 @@ void agenda_fdc_finished(int)
 #endif
 
 #if defined(SSE_DRIVE_SOUND) 
-  if(SSEOption.DriveSound)
-#if defined(SSE_DRIVE_SOUND_SEEK2) && !defined(SSE_DRIVE_SOUND_SEEK3)
-    if(!ADAT
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-      || DRIVE_SOUND_SEEK_SAMPLE
-#endif
-      )
-#endif
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+  if(SSEOption.DriveSound && (!ADAT || OPTION_DRIVE_SOUND_SEEK_SAMPLE)) //TODO
     SF314[DRIVE].Sound_CheckIrq();
-#else
-    SF314[0].Sound_CheckIrq();
-#endif
 #endif//snd
 
   dbg_log("FDC: Finished command, GPIP bit low.");
@@ -1454,7 +1433,7 @@ void agenda_fdc_finished(int)
 void agenda_floppy_seek(int)
 {
   int floppyno=floppy_current_drive();
-#if defined(SSE_FDC_SEEK)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
 "SEEK
 This command assumes that the track register contains the track number of the
@@ -1483,12 +1462,8 @@ issued."
     }
     else 
     {
-#if defined(SSE_DRIVE_SOUND_SEEK2)
-      if(SSEOption.DriveSound
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-        && !DRIVE_SOUND_SEEK_SAMPLE
-#endif
-        )
+#if defined(SSE_DRIVE_SOUND)
+      if(SSEOption.DriveSound && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
         SF314[DRIVE].Sound_Step();
 #endif
       if(fdc_tr>fdc_dr)
@@ -1513,8 +1488,8 @@ issued."
     }
   }
   else // !ADAT or not defined
-  {
 #endif
+  {//SS scope
 /*  In Steem 3.2, seek was directly using disk track instead of TR
     It still works that way in fast mode.
     It was already using an agenda for each step.
@@ -1523,11 +1498,7 @@ issued."
       dbg_log(Str("FDC: Finished seeking to track ")+fdc_dr+" hbl_count="+hbl_count);
       fdc_tr=fdc_dr;
       fdc_type1_check_verify();
-#if defined(SSE_FDC_VERIFY_AGENDA)
-      if(!ADAT)
-#endif
       agenda_fdc_finished(0);
-
       return;
     }
     if (floppy_head_track[floppyno]>fdc_dr){
@@ -1535,9 +1506,7 @@ issued."
     }else if (floppy_head_track[floppyno]<fdc_dr){
       floppy_head_track[floppyno]++;
     }
-#if defined(SSE_FDC_SEEK)
-  }
-#endif
+  }//SS scope
   int hbls_to_interrupt=fdc_step_time_to_hbls[fdc_cr & (BIT_0 | BIT_1)];
   if (floppy_instant_sector_access) hbls_to_interrupt>>=5;
 #if !defined(SSE_FDC_PRECISE_HBL)
@@ -1839,7 +1808,7 @@ void agenda_floppy_read_address(int idx)
     fdc_str&=BYTE(~FDC_STR_WRITE_PROTECT);
     fdc_str|=FDC_STR_MOTOR_ON;
 
-#if defined(SSE_FDC_READ_ADDRESS_UPDATE_SR)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*  The Track Address of the ID field is written into the sector register so 
     that a comparison can be made by the user.
     This happens after eventual DMA transfer, so the value should be correct.
@@ -1877,7 +1846,7 @@ void agenda_floppy_read_address(int idx)
 void agenda_floppy_read_track(int part)
 {
   ASSERT((fdc_cr&0xF0)==0xE0); //we see $E0, $E4, $E8
-#if defined(SSE_VAR_RESIZE_390) && defined(SSE_WD1772_EMU)
+#if defined(SSE_VAR_RESIZE) && defined(SSE_WD1772_CRC)
   static short BytesRead;
 #define CRC WD1772.CrcLogic.crc
 #else
@@ -1960,11 +1929,6 @@ void agenda_floppy_read_track(int part)
       if (TrackBytes>DDBytes){
         TrackBytes=DDBytes*2;
       }else{
-#if defined(SSE_FDC_390A__) // forgot this before, it was > 6256 //don't work with 11
-        if(ADAT)
-          TrackBytes=Disk[DRIVE].TrackBytes; // should be 6256
-        else
-#endif
         TrackBytes=DDBytes;
       }
 #if defined(SSE_FDC_390A)
@@ -2440,14 +2404,8 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
-//#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
-//#else
       if(SSEOption.DriveSound)
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[DRIVE].Sound_CheckIrq();
-#else
-        SF314[0].Sound_CheckIrq();
-#endif
 #endif
 
     }

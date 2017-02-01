@@ -14,8 +14,6 @@ intercepting ST OS calls and translating them to PC OS calls.
 #define EXT
 #define INIT(s) =s
 
-
-
 EXT bool mount_flag[26];
 EXT EasyStr mount_path[26];
 EXT bool stemdos_comline_read_is_rb INIT(0);
@@ -32,14 +30,17 @@ int stemdos_rte_action;
 stemdos_file_struct stemdos_file[46];
 stemdos_file_struct stemdos_new_file;
 
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 BYTE stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
 #else
 int stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
 #endif
 
 stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE_391)
+int stemdos_command;
+BYTE stemdos_attr;
+#elif defined(SSE_VAR_RESIZE)
 BYTE stemdos_command;
 BYTE stemdos_attr;
 #else
@@ -53,7 +54,7 @@ EasyStr PC_filename;
 
 FILE *stemdos_Pexec_file=NULL;
 MEM_ADDRESS stemdos_Pexec_com,stemdos_Pexec_env;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 BYTE stemdos_Pexec_mode;
 #else
 int stemdos_Pexec_mode;
@@ -65,7 +66,7 @@ bool stemdos_ignore_next_pexec4=0;
 //const char* PC_file_mode[3]={"rb","r+b","r+b"};
 
 MEM_ADDRESS stemdos_dfree_buffer;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 WORD stemdos_Fattrib_flag; //maybe byte
 #else
 int stemdos_Fattrib_flag;
@@ -73,7 +74,7 @@ int stemdos_Fattrib_flag;
 MEM_ADDRESS stemdos_dta;
 
 short stemdos_save_sr;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
 BYTE stemdos_current_drive;
 #else
 int stemdos_current_drive;
@@ -1158,6 +1159,7 @@ void stemdos_intercept_trap_1()
   if (Invalid) return;
 
   stemdos_command=m68k_dpeek(sp);
+//  ASSERT((stemdos_command&0xFF)==stemdos_command); //asserts...
 
   switch (stemdos_command){
 /*
@@ -1611,14 +1613,9 @@ void stemdos_intercept_trap_1()
 
     }case 0x4B:{   // EXEC(mode,fil,com,env)
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK2) 
-#if defined(SSE_SOUND_KEYBOARD_CLICK2B) 
-/*  Don't enable keyboard click if a program disabled it 
-    (Pump ab das Bier by The Confederacy)
-*/
-      if(!OPTION_KEYBOARD_CLICK)
-#endif
-      Tos.CheckKeyboardClick(); // check sys variable at each exec
+#if defined(SSE_SOUND_KEYBOARD_CLICK) 
+      if(!OPTION_KEYBOARD_CLICK) //see Pump ab das Bier by The Confederacy
+        Tos.CheckKeyboardClick(); 
 #endif    
 
       //modes - 0=Load n' go
@@ -2088,7 +2085,7 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
 
 #endif//ux382
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK2)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
 
 void TTos::CheckKeyboardClick() {
   if(OPTION_KEYBOARD_CLICK) // pathetic, there must be a better way
@@ -2103,20 +2100,11 @@ void TTos::CheckKeyboardClick() {
 
 void TTos::HackMemoryForExtendedMonitor() {
   TRACE_INIT("EM mem_len %X xbios2 %X phystop %X _memtop %X\n",mem_len,xbios2,LPEEK(0x42E),LPEEK(0x436));
-#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS bytes_needed=max((em_width*em_height*em_planes)/8,0x8000);
   ASSERT(bytes_needed>0x8000);
   MEM_ADDRESS xbios2a=mem_len-(bytes_needed+256);
-#else
-  int bytes_needed=max((em_width*em_height*em_planes)/8,0x8000);
-  int xbios2a=mem_len-(bytes_needed+256);
-#endif
 #if defined(SSE_TOS_GEMDOS_EM_382)
-#if defined(SSE_VS2008_WARNING_390)
   MEM_ADDRESS xbios2b=(xbios2a+255)&-256;
-#else
-  int xbios2b=(xbios2a+255)&-256;
-#endif
   if(xbios2b+bytes_needed<mem_len) // should add minimum
     xbios2=xbios2b;
 #else

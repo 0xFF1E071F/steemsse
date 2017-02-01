@@ -16,7 +16,7 @@ handled here, in event_scanline and event_vbl_interrupt.
 
 #define EXT
 #define INIT(s) =s
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE runstate;
 #else
 EXT int runstate;
@@ -35,7 +35,7 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
 #else
@@ -47,7 +47,7 @@ EXT int frameskip_count INIT(1);
 EXT bool flashlight_flag INIT(false);
 
 DEBUG_ONLY(EXT int mode);
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE mixed_output INIT(0);
 #else
 EXT int mixed_output INIT(0);
@@ -56,7 +56,7 @@ EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
 EXT int cpu_timer_at_start_of_hbl;
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
 // no more plans!
 #else
 screen_event_struct event_plan_50hz[313*2+2],event_plan_60hz[263*2+2],event_plan_70hz[600*2+2],
@@ -75,7 +75,7 @@ int time_of_last_hbl_interrupt;
 #if defined(SSE_INT_VBL_IACK)
 int time_of_last_vbl_interrupt;
 #endif
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 BYTE screen_res_at_start_of_vbl;
 BYTE shifter_freq_at_start_of_vbl;
 #else
@@ -108,7 +108,6 @@ extern HWND  StemWin;
 //---------------------------------------------------------------------------
 void exception(int exn,exception_action ea,MEM_ADDRESS a)
 {
-  //ASSERT(!Blit.HasBus); // boiler update
   io_word_access=0;
   ioaccess=0;
   ExceptionObject.init(exn,ea,a);
@@ -215,7 +214,9 @@ void run()
   DEBUG_ONLY( prepare_next_event(); )
 
   ioaccess=0;
+
   if (Blit.Busy) Blitter_Draw();
+
   do{
     ExcepHappened=0;
 #if defined(SSE_VAR_MAIN_LOOP1)//undef 390, see main.cpp
@@ -239,6 +240,20 @@ void run()
           m68k_PROCESS 
 #undef LOGSECTION
 
+#if defined(SSE_BLT_MAIN_LOOP)
+/*  "Little" drawback of our blitter refactoring, the run function has
+    one more test... :)
+    TOS restarts the blitter, but interrupts don't stop it, so it can
+    go on during one. 
+    Precise timing of this doesn't appear vital, so we check the blitter
+    only between instructions.
+*/
+          if(Blit.Busy && !(ioaccess&IOACCESS_FLAG_DO_BLIT))
+          {
+            if((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0) 
+              Blitter_Draw();
+          }
+#endif
           DEBUG_ONLY( debug_first_instruction=0; )
           CHECK_BREAKPOINT
         }//while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING)
@@ -400,7 +415,7 @@ void inline prepare_event_again() //might be an earlier one
   //  in the plan is to be postponed, we need to compare the next screen event
   //  as well as all the timer timeouts to work out which one is due next.  That's
   //  why the time_of_next_event is reset here.
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.GetNextScreenEvent();
 #else
   time_of_next_event=cpu_time_of_start_of_event_plan+(screen_event_pointer->time);
@@ -429,10 +444,8 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
     PREPARE_EVENT_CHECK_FOR_ACIA;
-#elif defined(SSE_IKBD_6301_EVENT)
-    PREPARE_EVENT_CHECK_FOR_IKBD;
 #endif
 
   // cpu_timer must always be set to the next 4 cycle boundary after time_of_next_event
@@ -453,7 +466,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 #endif
 {
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.GetNextScreenEvent();
 #else
   time_of_next_event=cpu_time_of_start_of_event_plan + screen_event_pointer->time;
@@ -482,10 +495,8 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
     PREPARE_EVENT_CHECK_FOR_ACIA;
-#elif defined(SSE_IKBD_6301_EVENT)
-    PREPARE_EVENT_CHECK_FOR_IKBD; // two events: both directions
 #endif
 
   // It is safe for events to be in past, whatever happens events
@@ -642,37 +653,21 @@ void event_timer_b()
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
 
 void event_hbl()   //just HBL, don't draw yet
 {
-/* 
-  SS: It seems this function is called only once per frame before first line
-  is drawn, event_scanline is called for each line and takes over this hbl's
-  tasks, including hbl_pending (the interrupts are triggered in mfp.cpp).
-  IPL 2 - note usual level=3, so HBL isn't executed; if it is, it is triggered
-  in check_for_interrupts_pending() (mfp.cpp).
-  For 50hz, 313 lines, 1 call to event_hbl, 312 calls to event_scanline
-*/
-
 #define LOGSECTION LOGSECTION_AGENDA
   CHECK_AGENDA
 #undef LOGSECTION
 
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: Event HBL at end of line ")+scan_y+", cycle "+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl));
-#if !defined(SSE_VAR_RESIZE_370) 
   right_border_changed=0;
-#endif
   scanline_drawn_so_far=0;
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-  cpu_timer_at_start_of_hbl=time_of_next_event; // SS as defined in draw.cpp
-
-#if defined(SSE_SHIFTER)
-  Shifter.IncScanline();
-  ASSERT(scan_y==-32 || scan_y==-62 || scan_y==-33);
-#else
+  cpu_timer_at_start_of_hbl=time_of_next_event;
   scan_y++;
-#endif
+
 #ifdef DEBUG_BUILD
   if (debug_run_until==DRU_SCANLINE){
     if (debug_run_until_val==scan_y){
@@ -684,22 +679,20 @@ void event_hbl()   //just HBL, don't draw yet
     hbl_pending=true;
   }
   if (dma_sound_on_this_screen) dma_sound_fetch();//,dma_sound_fetch();
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_pointer++;  
-#endif
 #if defined(SSE_IKBD_6301)
   // we run some 6301 cycles at the end of each scanline (x1)
   if(OPTION_C1 && !HD6301.Crashed)
   {
     ASSERT(HD6301_OK);
     int n6301cycles;
-#if defined(SSE_SHIFTER)
-    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
     ASSERT(n6301cycles);
+#if defined(SSE_ACIA_EVENT)
+    if(hd6301_run_cycles(n6301cycles)==-1)
+#else
     if(!hd6301_run_cycles(n6301cycles))
+#endif
     {
 #define LOGSECTION LOGSECTION_IKBD
       TRACE_LOG("6301 emu is hopelessly crashed!\n");
@@ -717,7 +710,7 @@ void event_hbl()   //just HBL, don't draw yet
 #endif
 //---------------------------------------------------------------------------
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if defined(SSE_GLUE)
 /*  We take some tasks out of event_scanline(), so we can execute them from
     event_vbl_interrupt().
 */
@@ -732,7 +725,7 @@ void event_scanline_sub() {
   {
     ASSERT(HD6301_OK);
     int n6301cycles;
-#if defined(SSE_SHIFTER)
+#if defined(SSE_GLUE)
     ASSERT(Glue.CurrentScanline.Cycles>=224);
     n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
@@ -741,11 +734,7 @@ void event_scanline_sub() {
     ASSERT(n6301cycles);
     if(hd6301_run_cycles(n6301cycles)==-1)
     {
-#define LOGSECTION LOGSECTION_IKBD
-      TRACE_LOG("6301 emu is hopelessly crashed!\n");
-#undef LOGSECTION
-      //TRACE2("6301 emu crash\n");
-      TRACE2("6301 CRASH\n"); // more dramatic
+      TRACE("6301 CRASH\n");
       HD6301.Crashed=1; 
     }
   }
@@ -771,7 +760,7 @@ void event_scanline_sub() {
 
 void event_scanline()
 {
-#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if defined(SSE_GLUE)
 
   event_scanline_sub();
 
@@ -786,12 +775,7 @@ void event_scanline()
   {
     ASSERT(HD6301_OK);
     int n6301cycles;
-#if defined(SSE_SHIFTER)
-    ASSERT(Glue.CurrentScanline.Cycles>=224);
-    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
     ASSERT(n6301cycles);
     if(hd6301_run_cycles(n6301cycles)==-1)
     {
@@ -876,10 +860,8 @@ void event_scanline()
 
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: Event Scanline at end of line ")+scan_y+" sdp is $"+HEXSl(shifter_draw_pointer,6));
   
-#if defined(SSE_SHIFTER) || defined(SSE_GLUE)
-#if defined(SSE_VAR_OPT_390)
+#if defined(SSE_GLUE)
   if(Glue.FetchingLine())
-#endif
     Glue.EndHBL(); // check for +2 -2 errors + unstable Shifter
 
   if((scan_y==-30||scan_y==shifter_last_draw_line-1&&scan_y<245)
@@ -960,7 +942,7 @@ void event_scanline()
       draw_line_off=0;
     }
   }
-#if !defined(SSE_VAR_RESIZE_370) 
+#if !defined(SSE_VIDEO_CHIPSET) 
   right_border_changed=0;
 #endif
   scanline_drawn_so_far=0;
@@ -973,7 +955,7 @@ void event_scanline()
     shifter_draw_pointer&=0x3FFFFE;
 #endif
 
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+#if defined(SSE_GLUE)
 /*  Refactoring of "add extra".
     We don't use variable overscan_add_extra to adjust SDP anymore.
     Too many interferences with rendering when writing to GLU and MMU registers,
@@ -984,7 +966,7 @@ void event_scanline()
 */
   if(!emudetect_falcon_mode && Glue.FetchingLine())
   {
-#if 0 
+#if 0 && defined(SSE_MMU)
     //looks nice but guess it takes more CPU power? (another CheckSideOverscan round)
     MMU.UpdateVideoCounter(LINECYCLES);
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line=MMU.VideoCounter;
@@ -1003,14 +985,14 @@ void event_scanline()
   else 
 #endif
     shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+#if defined(SSE_MMU)
   MMU.VideoCounter=shifter_draw_pointer_at_start_of_line;
 #endif
   /////// SS as defined in draw.cpp,
   /////// and relative to cpu_time_of_last_vbl:
   cpu_timer_at_start_of_hbl=time_of_next_event; 
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if !defined(SSE_GLUE)
 #if defined(SSE_DISK_CAPS)
   if(Caps.Active==1)
     Caps.Hbl();
@@ -1067,10 +1049,10 @@ void event_scanline()
 #endif
   }
 #endif
-#if !defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if !defined(SSE_GLUE)
   if (dma_sound_on_this_screen) dma_sound_fetch(); 
 #endif
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
   screen_event_pointer++;
 #endif
 #if !defined(SSE_VID_D3D_3BUFFER)
@@ -1083,7 +1065,7 @@ void event_scanline()
     Disp.BlitIfVBlank();
 #endif
 #endif//#if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.Status.hbi_done=false;
   ASSERT(!Glue.Status.scanline_done);
   Glue.Status.scanline_done=true;
@@ -1096,19 +1078,8 @@ void event_scanline()
 
 void event_start_vbl()
 {
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.Status.sdp_reload_done=true; // checked this line
-#if !defined(SSE_GLUE_390E1A4)
-/*  This emulates several "reloads" just in case, but we use # line cycles to
-    avoid spurious "reloads", because we don't even know the exact timing,
-    nor how the GLU decides (Closure multi-scroll triggered reload if checking
-    shifter_freq)
-*/
-  if(Glue.scanline==310&&Glue.CurrentScanline.Cycles!=512
-    ||Glue.scanline==260&&Glue.CurrentScanline.Cycles!=508
-    ||Glue.scanline==494&&Glue.CurrentScanline.Cycles!=224)
-    return;
-#endif
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_VIDEOBASE)
@@ -1118,8 +1089,7 @@ void event_start_vbl()
   // This happens about 60 cycles into scanline 247 (50Hz) //SS but the timing in frame event plan was different
   //TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
 
-
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+#if defined(SSE_MMU)
   MMU.VideoCounter=
 #endif
   shifter_draw_pointer=xbios2; // SS: reload SDP
@@ -1129,11 +1099,10 @@ void event_start_vbl()
   overscan_add_extra=0;
 #endif
   left_border=BORDER_SIDE;right_border=BORDER_SIDE;
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-  screen_event_pointer++;
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.Status.vbl_done=false;
+#else
+  screen_event_pointer++;
 #endif
 }
 
@@ -1167,20 +1136,16 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }//if
 #endif
-#if defined(SSE_GLUE_FRAME_TIMINGS_HBL)
+#if defined(SSE_GLUE)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
     with some HBL-dependent tasks: DMA sound, HD6301 & CAPS emu.
     Important for Relapse DMA sound
 */
   event_scanline_sub(); 
-#endif
-#if defined(SSE_GLUE_390E)
-#if defined(SSE_GLUE_390E1B)
   ASSERT(Glue.VCount);
-#endif
-  if(Glue.VCount)
-    Glue.VCount--; //? points to some problem...
+  if(Glue.VCount)//? points to some problem...
+    Glue.VCount--; 
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
   bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
@@ -1198,19 +1163,12 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_SHIFTER)
       if(!bad_drawing) 
         Shifter.DrawScanlineToEnd();
-      scanline_drawn_so_far=0;
-      shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-#if defined(SSE_GLUE_390E) //it's just to fill up the window
-      scan_y++;
-#else
-      Glue.IncScanline();
-#endif
 #else
       if (bad_drawing==0) draw_scanline_to_end();
+#endif
       scanline_drawn_so_far=0;
       shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
-      scan_y++;
-#endif
+      scan_y++;//SS it's just to fill up the window
     }
     scanline_drawn_so_far=0;
     shifter_draw_pointer_at_start_of_line=shifter_draw_pointer;
@@ -1243,7 +1201,7 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
 
   //----------- VBL interrupt ---------
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
 /*  
     VBI isn't set pending now but in 64 or so cycles.
     TODO: implement SSE_INT_VBL_IACK in the vbi event
@@ -1277,7 +1235,7 @@ void event_vbl_interrupt() //SS misleading name?
     vbl_pending=true;
   }
 */
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
   scan_y=-scanlines_above_screen[shifter_freq_idx];
 #endif
   if (floppy_mediach[0]) floppy_mediach[0]--;  //counter for media change
@@ -1302,7 +1260,7 @@ void event_vbl_interrupt() //SS misleading name?
           }
         }else if (FullScreen){ //finish fudging
           WIN_ONLY( draw_fs_topgap=40; )
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
           draw_grille_black=max((int)draw_grille_black,4);
 #else
           draw_grille_black=max(draw_grille_black,4);
@@ -1627,7 +1585,7 @@ void event_vbl_interrupt() //SS misleading name?
   event_start_vbl(); // Reset SDP again!
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.Vbl();
 #endif
 
@@ -1643,7 +1601,7 @@ void event_vbl_interrupt() //SS misleading name?
 // /////                                 CPU_CYCLES_FROM_LINE_RETURN_TO_HBL_INTERRUPT;
 //  cpu_time_of_next_hbl_interrupt=cpu_time_of_last_vbl; ///// HBL happens immediately after VBL
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
   screen_event_pointer++;
   if (screen_event_pointer->event==NULL){
     cpu_time_of_start_of_event_plan=cpu_time_of_last_vbl;
@@ -1706,7 +1664,7 @@ void event_vbl_interrupt() //SS misleading name?
 void prepare_cpu_boosted_event_plans()
 {
   n_millions_cycles_per_sec=n_cpu_cycles_per_second/1000000;
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
   screen_event_struct *source,*dest;
 #endif
   int factor=n_millions_cycles_per_sec; //SS TODO optimise away
@@ -1718,7 +1676,7 @@ void prepare_cpu_boosted_event_plans()
     SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
   for (int idx=0;idx<3;idx++){ //3 frequencies
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
     source=event_plan[idx];
     dest=event_plan_boosted[idx];
     for (;;){
@@ -1780,12 +1738,10 @@ void event_pasti_update()
 //---------------------------------------------------------------------------
 // SSE added events
 //---------------------------------------------------------------------------
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
 
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
-#if defined(SSE_GLUE_FRAME_TIMINGS)
   ASSERT(!Glue.Status.vbi_done);
-#endif
 #if defined(SSE_MMU_RELOAD_SDP_380)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
@@ -1798,7 +1754,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     Beyond/Universal Coders
 */
 
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+#if defined(SSE_MMU)
   MMU.VideoCounter=
 #endif
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
@@ -1813,51 +1769,31 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 #endif
       vbl_pending=true;
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-  screen_event_pointer++;
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS)
   Glue.Status.vbi_done=true;
-#endif
-#if defined(SSE_GLUE_390E)
+
 /*  Our hypothesis: the GLUE reloads a counter with a value depending on 
     frequency each time it runs out, then updates it each scanline.
     Not sure it's right, but it could be, and it makes emulation more simple
     and robust compared with v382 (though there was no problem).
+    This would be similar to the HSYNC_COUNTER of the comment for Glue.Update(),
+    and allow external sync.
+    There would be another counter for DE (scan_y in Steem), that is reset at 
+    each VBLANK.
     In our implementation, the counter is loaded with the # scanlines, then
     decremented until 0.
     This means that once a frame is started, it won't change # scanlines even
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
-  #if defined(SSE_GLUE_390E1B)
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
-#endif
-#if defined(SSE_GLUE_390ED) // can't count on shifter_freq_idx TODO
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
     Glue.VCount=501; // not 500
   else if (Glue.m_SyncMode&2) // 50hz
     Glue.VCount=313;
   else // 60hz
     Glue.VCount=263;
-#else
-  switch(shifter_freq_idx)
-  {
-  case 0: // 50hz
-    Glue.VCount=313;
-    break;
-  case 1: // 60hz
-    Glue.VCount=263;
-    break;
-  case 2: // 72hz (monochrome)
-    Glue.VCount=501; // not 500
-    break;
-  default:
-    ASSERT(0);
-  }
-#endif
-#endif
 }
+
 #endif
 
 
@@ -1893,7 +1829,7 @@ void event_driveB_ip() {
 
 #endif//wd
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
 //  ACIA events to handle IO with both 6301 and MIDI
 
 int time_of_event_acia=0;
@@ -1932,30 +1868,7 @@ void event_acia() {
   }
 }
 
-#elif defined(SSE_IKBD_6301_EVENT)
-
-int time_of_event_ikbd,time_of_event_ikbd2;
-
-void event_ikbd() {
-  time_of_event_ikbd=time_of_next_event+n_cpu_cycles_per_second; 
-  if(OPTION_C1 && (HD6301.EventStatus&1))
-  {
-    HD6301.EventStatus&=0xFE;
-    agenda_keyboard_replace(0);
-  }
-}
-
-
-void event_ikbd2() {
-  time_of_event_ikbd2=time_of_next_event+n_cpu_cycles_per_second; 
-  if(OPTION_C1 && (HD6301.EventStatus&2))
-  {
-    HD6301.EventStatus&=0xFD;
-    agenda_ikbd_process(ACIA_IKBD.TDRS);
-  }
-}
-
-#endif//ikbd
+#endif//acia
 
 #if defined(SSE_INT_MFP)
 
@@ -1977,7 +1890,6 @@ void event_mfp_write() {
   }
   time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
 }
-
 
 #endif//mfp
 

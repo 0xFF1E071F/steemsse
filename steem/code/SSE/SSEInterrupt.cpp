@@ -1,12 +1,6 @@
 // note: this is part of emu.cpp module
 #if defined(SSE_INTERRUPT)
-
-#if defined(SSE_INT_VBL_STF)
-  int HblTiming=HBL_FOR_STE; // default STE
-#endif
-
-#endif
-
+  
 #if defined(SSE_CPU_MFP_RATIO) // need no SSE_STF
 DWORD CpuNormalHz=CPU_STF_PAL;
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
@@ -102,10 +96,6 @@ void ASMCALL check_for_interrupts_pending() {
           ASSERT(MFP_IRQ);
 //          TRACE_MFP("%d Start IACK for irq %d\n",MC68901.IackTiming,MC68901.NextIrq);
 #if defined(SSE_INT_MFP_SPURIOUS) 
-#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_390D)
-          ASSERT(!M68000.IackCycle);
-          M68000.IackCycle=true;
-#endif
           bool no_real_irq=false; // if irq wasn't really set, there can be no spurious
 #endif
 #ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
@@ -228,9 +218,6 @@ void ASMCALL check_for_interrupts_pending() {
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
-#if defined(SSE_CPU) && !defined(SSE_VAR_OPT_390D)
-          M68000.IackCycle=false;
-#endif
 #endif//spurious
         }//MC68901.Irq
       }//precise
@@ -274,17 +261,15 @@ void ASMCALL check_for_interrupts_pending() {
     if (vbl_pending){ //SS IPL4
       if ((sr & SR_IPL)<SR_IPL_4){
         VBL_INTERRUPT
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
         if(Glue.Status.hbi_done)
           hbl_pending=false;
 #endif
       }
     }
-#if defined(SSE_INTERRUPT) && !defined(SSE_INTERRUPT_390)
-    else  //looks like a bug...
-#endif
+
     if (hbl_pending
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
       && !Glue.Status.hbi_done
 #endif      
       ){ 
@@ -356,7 +341,7 @@ void HBLInterrupt() {
   }
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.Status.hbi_done=true;
 #endif
 #if defined(SSE_MMU_ROUNDING_BUS)
@@ -437,3 +422,5 @@ void VBLInterrupt() {
 #endif
 
 #undef LOGSECTION
+
+#endif//#if defined(SSE_INTERRUPT)

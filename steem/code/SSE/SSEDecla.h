@@ -266,6 +266,7 @@ int ChangeBorderSize(int size); // gui.cpp
   ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
 #endif
 
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 #if defined(SSE_VID_FREEIMAGE4)
 #ifdef _MSC_VER
 #if defined(SSE_X64_LIBS)
@@ -281,22 +282,12 @@ int ChangeBorderSize(int size); // gui.cpp
 #pragma comment(lib,"../../3rdparty/FreeImage/bcclib/FreeImage.lib")
 // Borland: delay load DLL in makefile
 #endif
-
+#endif
 
 #endif
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-#define SCANLINES_INTERPOLATED \
- (SSE_INTERPOLATE/*&&draw_win_mode[screen_res]==DWM_GRILLE*/&&!mixed_output&&screen_res<2)
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
-#define SCANLINES_INTERPOLATED \
- (draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES&&!mixed_output&&screen_res<2)
-#else
-// note draw_win_mode[2] doesn't exist!
-#define SCANLINES_INTERPOLATED (!screen_res && !mixed_output\
-  &&draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES) 
-#endif
+#define SCANLINES_INTERPOLATED (SSE_INTERPOLATE&&!mixed_output&&screen_res<2)
 #else
 #define SCANLINES_INTERPOLATED (false) //unix
 #endif

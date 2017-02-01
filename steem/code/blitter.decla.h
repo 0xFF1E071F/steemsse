@@ -8,6 +8,9 @@
 /*  SS The following structure was named _BLITTER_STRUCT in Steem 3.2.
     We changed the name into TBlitter.
 */
+// TODO padding... why only for "SSE" objects? but then trouble again with old snapshots 
+
+//#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TBlitter{ 
   WORD HalfToneRAM[16];
@@ -52,20 +55,33 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 
   bool NeedDestRead; //from Op
 
-
-  bool InBlitter_Draw; //are we in the routine?
+#if defined(SSE_BLT_COPY_LOOP)
+  BYTE BlittingPhase; // to follow 'state-machine' phase R-W...
+  enum {PRIME,READ_SOURCE,READ_DEST,WRITE_DEST};
+#else
+  bool InBlitter_Draw; //are we in the routine? //SS not used
+#endif
 #if defined(SSE_BLT_390B)
   int TimeAtBlit,BlitCycles;
 #endif
+#if defined(SSE_BLT_COPY_LOOP)
+  WORD SrcDat,DestDat,NewDat;  //internal data registers - now persistent 
+#endif
+#if defined(SSE_BLT_RESTART)
+  bool Restarted; // flag - cheat
+#endif
 };
+
+//#pragma pack(pop)
 
 extern TBlitter Blit;
 
-BYTE Blitter_IO_ReadB(MEM_ADDRESS);
-void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 extern "C" void ASMCALL Blitter_Start_Now();
+
 extern void Blitter_Draw();
 
+BYTE Blitter_IO_ReadB(MEM_ADDRESS);
+void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 
 #undef EXT
 #undef INIT

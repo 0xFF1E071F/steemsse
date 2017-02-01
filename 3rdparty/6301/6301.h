@@ -48,7 +48,7 @@ extern int mousek;
 // variables that Steem must see
 extern int hd6301_completed_transmission_to_MC6850; // for sync
 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
 extern int cycles_run; 
 #endif
 

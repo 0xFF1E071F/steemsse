@@ -107,7 +107,11 @@ extern struct TOption SSEOption;
 #define SSE_OPTION_D3D (SSEOption.Direct3D)
 #define OPTION_SAMPLED_YM (SSEOption.SampledYM)
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
-#define DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
+#define OPTION_DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
+#else
+#define OPTION_DRIVE_SOUND_SEEK_SAMPLE (0) // depends - edit if necessary
+#endif
 #define SSE_TEST_ON (SSEOption.TestingNewFeatures)//use macro only for actual tests
 #define OPTION_BLOCK_RESIZE (SSEOption.BlockResize)
 #define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)

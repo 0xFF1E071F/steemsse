@@ -58,16 +58,13 @@ struct TImageType {
    Current track and side are drive's
 */
 
-#if defined(SSE_DISK1)
 
 struct TDisk {
   enum {TRACK_BYTES=DRIVE_BYTES_ROTATION};
   WORD current_byte;
   WORD TrackBytes;
-#if defined(SSE_DISK2)
   BYTE current_side; //of the image
   BYTE current_track; //of the image
-#endif
   BYTE Id; //0,1, same as drive
   TDisk();
   void Init();
@@ -91,8 +88,6 @@ struct TDisk {
   WORD TrackGap();
 
 };
-
-#endif
 
 #endif//#if defined(SSE_DISK)
 

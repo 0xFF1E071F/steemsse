@@ -568,8 +568,15 @@ void TOptionBox::CreatePortsPage()
   HWND Win;
   int y=10,Wid;
   int GroupHeight=(OPTIONS_HEIGHT-10)/3-10;
+#if defined(SSE_DONGLE_PORT_391)
+  GroupHeight-=15;
+#endif
   int GroupMiddle=20+30+(GroupHeight-20-30)/2;
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT_391)
+  for (int p=0;p<4;p++){
+    if(p==3)
+      GroupHeight-=45;
+#elif defined(SSE_DONGLE_PORT3)
   for (int p=0;p<4;p++){
     if(p==1)
       GroupHeight/=2;
@@ -599,8 +606,11 @@ void TOptionBox::CreatePortsPage()
 #endif
 
     y+=GroupHeight;
+#if defined(SSE_DONGLE_PORT_391)
+    y+=0;
+#else
     y+=10;
-
+#endif
     Wid=get_text_width(T("Connect to"));
     CreateWindow("Static",T("Connect to"),WS_CHILD | WS_VISIBLE,
                           10,24,Wid,23,CtrlParent,HMENU(base+1),HInstance,NULL);
@@ -662,11 +672,19 @@ void TOptionBox::CreatePortsPage()
 
     // MIDI
     Wid=get_text_width(T("Output device"));
+#if defined(SSE_DONGLE_PORT_391)
+    CreateWindow("Static",T("Output device"),WS_CHILD,
+                  10,54-5,Wid,23,CtrlParent,HMENU(base+10),HInstance,NULL);
+
+    Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
+                      15+Wid,50-5,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+11),HInstance,NULL);
+#else
     CreateWindow("Static",T("Output device"),WS_CHILD,
                   10,54,Wid,23,CtrlParent,HMENU(base+10),HInstance,NULL);
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                       15+Wid,50,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+11),HInstance,NULL);
+#endif
 #if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None"));
 #else
@@ -685,11 +703,19 @@ void TOptionBox::CreatePortsPage()
     SendMessage(Win,CB_SETCURSEL,STPort[p].MIDIOutDevice+2,0);
 
     Wid=get_text_width(T("Input device"));
+#if defined(SSE_DONGLE_PORT_391)
+    CreateWindow("Static",T("Input device"),WS_CHILD,
+                            10,80+4-10,Wid,23,CtrlParent,HMENU(base+12),HInstance,NULL);
+
+    Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
+                            15+Wid,80-10,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+13),HInstance,NULL);
+#else
     CreateWindow("Static",T("Input device"),WS_CHILD,
                             10,80+4,Wid,23,CtrlParent,HMENU(base+12),HInstance,NULL);
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
                             15+Wid,80,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+13),HInstance,NULL);
+#endif
 #if defined(SSE_X64_390)
     SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None"));
 #else
@@ -709,25 +735,51 @@ void TOptionBox::CreatePortsPage()
 
     //Parallel
     Wid=get_text_width(T("Select port"));
+#if defined(SSE_DONGLE_PORT_391)
+    CreateWindow("Static",T("Select port"),WS_CHILD,
+                            page_w/2-(Wid+105)/2,GroupMiddle-15+4-5,Wid,23,CtrlParent,HMENU(base+20),HInstance,NULL);
+
+    Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
+                            page_w/2-(Wid+105)/2+Wid+5,GroupMiddle-15-5,100,200,CtrlParent,HMENU(base+21),HInstance,NULL);
+#else
     CreateWindow("Static",T("Select port"),WS_CHILD,
                             page_w/2-(Wid+105)/2,GroupMiddle-15+4,Wid,23,CtrlParent,HMENU(base+20),HInstance,NULL);
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                             page_w/2-(Wid+105)/2+Wid+5,GroupMiddle-15,100,200,CtrlParent,HMENU(base+21),HInstance,NULL);
+#endif
     for (int n=1;n<10;n++) SendMessage(Win,CB_ADDSTRING,0,long((EasyStr("LPT")+n).Text));
     SendMessage(Win,CB_SETCURSEL,STPort[p].LPTNum,0);
 
     //COM
     Wid=get_text_width(T("Select port"));
+#if defined(SSE_DONGLE_PORT_391)
+    CreateWindow("Static",T("Select port"),WS_CHILD,
+                            page_w/2-(Wid+105)/2,GroupMiddle-15+4-5,Wid,23,CtrlParent,HMENU(base+30),HInstance,NULL);
+
+    Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
+                            page_w/2-(Wid+105)/2+Wid+5,GroupMiddle-15-5,100,200,CtrlParent,HMENU(base+31),HInstance,NULL);
+#else
     CreateWindow("Static",T("Select port"),WS_CHILD,
                             page_w/2-(Wid+105)/2,GroupMiddle-15+4,Wid,23,CtrlParent,HMENU(base+30),HInstance,NULL);
 
     Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                             page_w/2-(Wid+105)/2+Wid+5,GroupMiddle-15,100,200,CtrlParent,HMENU(base+31),HInstance,NULL);
+#endif
     for (int n=1;n<10;n++) SendMessage(Win,CB_ADDSTRING,0,long((EasyStr("COM")+n).Text));
     SendMessage(Win,CB_SETCURSEL,STPort[p].COMNum,0);
 
     //File
+#if defined(SSE_DONGLE_PORT_391)
+    CreateWindowEx(512,"Steem Path Display",STPort[p].File,WS_CHILD,
+                    10,GroupMiddle-30-2,page_w-20,22,CtrlParent,HMENU(base+40),HInstance,NULL);
+
+    CreateWindow("Button",T("Change File"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  10,GroupMiddle-5-2,page_w/2-15,23,CtrlParent,HMENU(base+41),HInstance,NULL);
+
+    CreateWindow("Button",T("Reset Current File"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                  page_w/2+5,GroupMiddle-5-2,page_w/2-15,23,CtrlParent,HMENU(base+42),HInstance,NULL);
+#else
     CreateWindowEx(512,"Steem Path Display",STPort[p].File,WS_CHILD,
                     10,GroupMiddle-30,page_w-20,22,CtrlParent,HMENU(base+40),HInstance,NULL);
 
@@ -736,12 +788,18 @@ void TOptionBox::CreatePortsPage()
 
     CreateWindow("Button",T("Reset Current File"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_w/2+5,GroupMiddle,page_w/2-15,23,CtrlParent,HMENU(base+42),HInstance,NULL);
-
+#endif
     // Disabled (parallel only)
     if (p==1){
+#if defined(SSE_DONGLE_PORT_391)
+      CreateWindow("Steem Path Display",T("Disabled due to parallel joystick"),
+                    WS_CHILD | PDS_VCENTRESTATIC,
+                    10,20,page_w-20,GroupHeight-30-5,CtrlParent,HMENU(99),HInstance,NULL);
+#else
       CreateWindow("Steem Path Display",T("Disabled due to parallel joystick"),
                     WS_CHILD | PDS_VCENTRESTATIC,
                     10,20,page_w-20,GroupHeight-30,CtrlParent,HMENU(99),HInstance,NULL);
+#endif
     }
     SetWindowAndChildrensFont(CtrlParent,Font);
   }
@@ -783,7 +841,11 @@ void TOptionBox::PortsMakeTypeVisible(int p)
   // Redraw the groupbox
   RECT rc;
   GetWindowRect(CtrlParent,&rc);
+#if defined(SSE_DONGLE_PORT_391)
+  rc.left+=8;rc.right-=8;rc.top+=20+25-5;rc.bottom-=5;
+#else
   rc.left+=8;rc.right-=8;rc.top+=20+25;rc.bottom-=5;
+#endif
   POINT pt={0,0};
   ClientToScreen(Handle,&pt);
   OffsetRect(&rc,-pt.x,-pt.y);
@@ -1332,15 +1394,10 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-  CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
-  CBAddString(Win,T("Double Size")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
-#else
 #if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
 #else
   CBAddString(Win,T("Double Size")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
-#endif
 #endif
 
   CBAddString(Win,T("Treble Size"),2);
@@ -1356,17 +1413,10 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Normal Size"),0);
   CBAddString(Win,T("Double Height")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Height")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
-
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED) \
-  && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-  CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE)); //2
-  CBAddString(Win,T("Double Height")+" - "+T("Scanlines interpolated"),MAKELONG(1,DWM_STRETCH_SCANLINES)); //3
-#else
 #if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
 #else
   CBAddString(Win,T("Double Height")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
-#endif
 #endif
 
   CBAddString(Win,T("Double Size"),2);
@@ -1387,7 +1437,7 @@ void TOptionBox::CreateDisplayPage()
 
   EasyStringList format_sl;
   Disp.ScreenShotGetFormats(&format_sl);
-  bool FIAvailable=format_sl.NumStrings>2;
+  bool FIAvailable=format_sl.NumStrings>2;//SS wrong ... since NEO was added?
 
   int h=20+30+30+30+25+3;
   CreateWindow("Button",T("Screenshots"),WS_CHILD | BS_GROUPBOX,
@@ -1430,16 +1480,19 @@ void TOptionBox::CreateDisplayPage()
   }
   if (n>=c){
     Disp.ScreenShotFormat=FIF_BMP;
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     Disp.ScreenShotFormatOpts=0;
+#endif
     n=1;    
   }
   SendMessage(Win,CB_SETCURSEL,n,0);
-
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   if (FIAvailable){
     CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                             l+w+5,y,w,200,Handle,(HMENU)1052,HInstance,NULL);
     FillScreenShotFormatOptsCombo();
   }
+#endif
   y+=30;
 
   Wid=GetCheckBoxSize(Font,T("Minimum size screenshots")).Width;
@@ -1456,6 +1509,7 @@ void TOptionBox::CreateDisplayPage()
   ShowPageControls();
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 void TOptionBox::FillScreenShotFormatOptsCombo()
 {
   HWND Win=GetDlgItem(Handle,1052);
@@ -1464,7 +1518,6 @@ void TOptionBox::FillScreenShotFormatOptsCombo()
   EasyStringList sl;
   sl.Sort=eslNoSort;
   Disp.ScreenShotGetFormatOpts(&sl);
-
   SendMessage(Win,CB_RESETCONTENT,0,0);
   if (sl.NumStrings){
     EnableWindow(Win,true);
@@ -1477,14 +1530,13 @@ void TOptionBox::FillScreenShotFormatOptsCombo()
     SendMessage(Win,CB_SETCURSEL,0,0);
   }
 }
+#endif
 //---------------------------------------------------------------------------
 void TOptionBox::UpdateWindowSizeAndBorder()
 {
   if (BorderOption==NULL) return;
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
-#elif defined(SSE_VAR_RESIZE_370)
-  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,2),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);
 #endif
@@ -2270,12 +2322,7 @@ void TOptionBox::CreateSoundPage()
   Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
   Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
-#if defined(SSE_SOUND_KEYBOARD_CLICK2)
   SendMessage(Win,BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
-#else
-  BOOL keyboard_click=( PEEK(0x484)&1 ); // get current setting
-  SendMessage(Win,BM_SETCHECK,keyboard_click,0);
-#endif
   y+=LineHeight;
 #endif  
 
@@ -2441,9 +2488,7 @@ void TOptionBox::CreateSoundPage()
   y+=30;
   y+=5;
 
-
 #if defined(SSE_GUI_OPTIONS_DRIVE_SOUND)
-
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX  ;
   EasyStr path=RunDir+SLASH+DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
   if(!Exists(path.Text))
@@ -2458,26 +2503,16 @@ void TOptionBox::CreateSoundPage()
   ToolAddWindow(ToolTip,Win,
     T("Epson SMD-480L sound sampled by Stefan jL, thx dude!"));
   mask&=~BS_CHECKBOX;
-#if defined(SSE_DISK_GHOST)//ridiculous, due to all the switches
   Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
      page_l+15+Wid,y,150-50,20,Handle,(HMENU)7311,HInstance,NULL);
-#else
-  Win=CreateWindow(TRACKBAR_CLASS,"",mask | TBS_HORZ,
-     page_l+15+Wid,y,150,20,Handle,(HMENU)7311,HInstance,NULL);
-#endif
   SendMessage(Win,TBM_SETRANGE,0,MAKELPARAM(0,100));
   db=SF314[0].Sound_Volume;
-#if defined(SSE_VS2008)
   position= pow(10, log10((float)101)*(db + 10000)/10000 )-1 ;
-#else
-  position= pow(10, log10(101)*(db + 10000)/10000 )-1 ;
-#endif
   SendMessage(Win,TBM_SETPOS,1,position);
   SendMessage(Win,TBM_SETLINESIZE,0,1);
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
   y+=LineHeight;
 #endif
-
 
   CreateWindow("Button",T("Record"),WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,80,Handle,(HMENU)7200,HInstance,NULL);
@@ -3018,7 +3053,7 @@ void TOptionBox::CreateSSEPage() {
   ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
 #endif
 
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
   Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
@@ -3029,7 +3064,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif  
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
   Offset=0;
   Wid=GetCheckBoxSize(Font,T("Interpolated scanlines")).Width;
   Win=CreateWindow("Button",T("Interpolated scanlines"),
@@ -3101,11 +3136,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_IKBD_6301) 
-#if defined(SSE_ACIA_390) 
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
-#else
-  Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/MIDI/E-Clock")).Width;
-#endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
   {
@@ -3120,30 +3151,20 @@ Windows 2000	5.0
   }
 #endif
 
-#if defined(SSE_ACIA_390) // it's more ACIA than MIDI
+
   Win=CreateWindow("Button",T("C1: 6850/6301/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
-#else
-  Win=CreateWindow("Button",T("C1: 6850/6301/MIDI/E-Clock"),mask,page_l,y,Wid,23,Handle,
-    (HMENU)1029,HInstance,NULL);
-#endif
 
   if(!HD6301_OK)
     SendMessage(Win,BN_DISABLE,0,0);
   else
     SendMessage(Win,BM_SETCHECK,OPTION_C1,0);
 
-#if defined(SSE_ACIA_390)
+
   ToolAddWindow(ToolTip,Win,
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock and ACIA timings.\
  Note: important for MIDI emulation too."));
-#else
-  ToolAddWindow(ToolTip,Win,
-  T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
- the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock, as well as ACIA and MIDI \
- improvements or bugs"));
-#endif
   y+=LineHeight;
 #endif
 

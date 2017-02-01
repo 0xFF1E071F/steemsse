@@ -17,7 +17,7 @@
 #include "SSEMMU.h"
 #include "SSEShifter.h"
 
-#if  defined(SSE_SHIFTER_HSCROLL_380)
+#if  defined(SSE_SHIFTER_HSCROLL)
 #define HSCROLL0 hscroll0
 #else
 #define HSCROLL0 HSCROLL
@@ -62,9 +62,6 @@ void TShifter::DrawScanlineToEnd()  {
           if (in_pic){
             nsdp=shifter_draw_pointer + pic*emudetect_falcon_mode;
             draw_scanline(bord,pic,bord,HSCROLL);
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-            Glue.AddExtraToShifterDrawPointerAtEndOfLine(nsdp);
-#endif
             shifter_draw_pointer=nsdp;
           }else{
             draw_scanline(bord+pic+bord,0,0,0);
@@ -193,11 +190,8 @@ void TShifter::DrawScanlineToEnd()  {
           DPEEK(i)=new_value;
         }
       }
-#else
-#if !defined(SSE_VAR_RESIZE) // useless line
-      shifter_pixel=HSCROLL; //start by drawing this pixel
 #endif
-#endif
+
 #ifdef SSE_SHIFTER_HIRES_RASTER
       if(Scanline2[112]) // apply raster effect!
       {
@@ -291,8 +285,6 @@ void TShifter::IncScanline() {
     correct emulation. On the ST, the left border is larger than the right
     border. By directly changing left_border and right_border, we can get
     the right timing for palette effects.
-    As SSE_GLUE_REFACTOR_OVERSCAN_EXTRA is defined too, we don't need
-    many hacks to correct the picture.
     Cases: Backlash -TEX, Appendix 4pix plasma, Gobliins II -ICS...
 */
   if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
@@ -300,7 +292,7 @@ void TShifter::IncScanline() {
 #endif  
   if(HSCROLL) 
     left_border+=16;
-#if defined(SSE_SHIFTER_HSCROLL_380)
+#if defined(SSE_SHIFTER_HSCROLL)
   hscroll0=HSCROLL; // save
 #endif
   if(shifter_hscroll_extra_fetch) 
@@ -569,30 +561,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
           }
 #endif
 
-#if defined(SSE_SHIFTER_390)
-          if(nsdp<=mem_len) // Antiques
-#elif defined(SSE_SHIFTER_382)
-          //ASSERT(nsdp<=mem_len);
-          if(nsdp<mem_len) // potential crash, possibly also when changing size life
-#endif
-
           // call to appropriate ASSEMBLER routine!
           ///////////////// RENDER VIDEO /////////////////
-          draw_scanline(border1,picture,border2,hscroll); 
+          if(nsdp<=mem_len) // safety
+            draw_scanline(border1,picture,border2,hscroll); 
         }
       }
       shifter_draw_pointer=nsdp;
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-      // adjust SDP according to Shifter tricks
-      if(!Glue.ExtraAdded // only once - kind of silly variable
-        && ( dispatcher==DISPATCHER_DSTE || 
-         dispatcher!=DISPATCHER_WRITE_SDP  && 
-         pixels_in>=picture_right_edge 
-        && scanline_drawn_so_far<picture_right_edge
-        || dispatcher==DISPATCHER_WRITE_SDP // fixes flicker in Cool STE 
-        && cycles_since_hbl>Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY))
-        Glue.AddExtraToShifterDrawPointerAtEndOfLine(shifter_draw_pointer);
-#endif
     }
     // overscan lines = a big "left border"
     else if(scan_y>=draw_first_scanline_for_border 
@@ -815,7 +790,7 @@ FF825E
 #endif
         Shifter.Render(CyclesIn,DISPATCHER_SET_PAL);
 
-#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_GLUE_THRESHOLDS)
+#if defined(SSE_SHIFTER_HIRES_RASTER) && defined(SSE_GLUE)
 /*  v3.8.0 
     Record when palette is changed during display, so that we apply effect
     at rendering time (there's no real-time rendering for HIRES).

@@ -81,7 +81,7 @@ typedef struct{
 }stemdos_file_struct;
 EXT stemdos_file_struct stemdos_file[46];
 EXT stemdos_file_struct stemdos_new_file;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE stemdos_std_handle_forced_to[6];//h>=6 && h<46
 #else
 EXT int stemdos_std_handle_forced_to[6];
@@ -97,7 +97,10 @@ typedef struct{
 }stemdos_fsnext_struct_type;
 EXT stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
 //---------------------------------------------------------------------------
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE_391)
+EXT int stemdos_command; // NVDI
+EXT BYTE stemdos_attr;
+#elif defined(SSE_VAR_RESIZE)
 EXT BYTE stemdos_command;
 EXT BYTE stemdos_attr;
 #else
@@ -112,7 +115,7 @@ EXT EasyStr PC_filename;
 
 EXT FILE *stemdos_Pexec_file;
 EXT MEM_ADDRESS stemdos_Pexec_com,stemdos_Pexec_env;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE stemdos_Pexec_mode;
 #else
 EXT int stemdos_Pexec_mode;
@@ -129,7 +132,7 @@ EXT bool stemdos_ignore_next_pexec4;
 //const char* PC_file_mode[3]={"rb","r+b","r+b"};
 
 EXT MEM_ADDRESS stemdos_dfree_buffer;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT WORD stemdos_Fattrib_flag;
 #else
 EXT int stemdos_Fattrib_flag;
@@ -156,7 +159,7 @@ void stemdos_parse_path(); //remove \..\ etc.
 EXT MEM_ADDRESS stemdos_dta;
 
 EXT short stemdos_save_sr;
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
 EXT BYTE stemdos_current_drive;
 #else
 EXT int stemdos_current_drive;
@@ -214,7 +217,7 @@ struct TTos {
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK2)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
   void CheckKeyboardClick();
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_381B)

@@ -59,10 +59,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #ifdef SSE_DISK_EXT
   if (MatchesAnyString_I(Ext,DISK_EXT_ST,DISK_EXT_STT,DISK_EXT_DIM,DISK_EXT_MSA,
 #if defined(SSE_DISK_CAPS)
-    DISK_EXT_IPF,
-#ifdef SSE_DISK_CAPS_CTRAW
-    DISK_EXT_CTR,
-#endif
+    DISK_EXT_IPF, DISK_EXT_CTR,
 #endif    
 #if defined(SSE_DISK_SCP)
     DISK_EXT_SCP,
@@ -1536,7 +1533,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
                 | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING,
                 2024,T("Configuration"));
-#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
+#if defined(SSE_GUI_DM_PASTI_ONLY_STX)
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
                 (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
 #endif
@@ -1548,7 +1545,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
 //                                    2024,T("Use Pasti For All Compatible Images"));
 
-#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3) //option moved from 'SSE' page
+#if defined(SSE_GUI_DM_PASTI_ONLY_STX) //option moved from 'SSE' page
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
                 (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
 #endif
@@ -1731,7 +1728,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           This->ShowDiskDiag();
           break;
 #if defined(SSE_GUI_DM_STW) && defined(SSE_GUI_DM_HFE)
-// when both are defined (should be the case), we save a couple of bytes
         case 1003: // STW
         case 1004: // HFE
         {
@@ -1746,36 +1742,6 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             This->RefreshDiskView(STName,true);
           else
             Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
-          return 0;
-        }
-#elif defined(SSE_GUI_DM_STW)
-        case 1003:  // STW
-        {
-          EasyStr STName=This->DisksFol+"\\"+T("STW Disk")+".STW";
-          int n=2;
-          while (Exists(STName)){
-            STName=This->DisksFol+"\\"+T("STW Disk")+" ("+(n++)+").STW";
-          }
-          if(ImageSTW[0].Create(STName)) {
-            This->RefreshDiskView(STName,true);
-          }else{
-            Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
-          }
-          return 0;
-        }
-#elif defined(SSE_GUI_DM_HFE)
-        case 1004:  // HFE
-        {
-          EasyStr STName=This->DisksFol+"\\"+T("HFE Disk")+".HFE";
-          int n=2;
-          while (Exists(STName)){
-            STName=This->DisksFol+"\\"+T("HFE Disk")+" ("+(n++)+").HFE";
-          }
-          if(ImageHFE[0].Create(STName)) {
-            This->RefreshDiskView(STName,true);
-          }else{
-            Alert(EasyStr(T("Could not create the disk image "))+STName,T("Error"),MB_ICONEXCLAMATION);
-          }
           return 0;
         }
 #endif
@@ -1797,10 +1763,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
           PostMessage(Win,WM_USER,1234,2);
           break;
 
-#if defined(SSE_DRIVE_SOUND_SEEK5)
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
         case 1044:
         case 1045:
-          DRIVE_SOUND_SEEK_SAMPLE=!DRIVE_SOUND_SEEK_SAMPLE;
+          OPTION_DRIVE_SOUND_SEEK_SAMPLE=!OPTION_DRIVE_SOUND_SEEK_SAMPLE;
           break;
 #endif
 
@@ -2136,11 +2102,9 @@ That will toggle bit x.
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
           InvalidateRect(GetDlgItem(Win,99),NULL,0);
           CheckResetDisplay();
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
+#if defined(SSE_DRIVE)
           SF314[0].UpdateAdat();
           SF314[1].UpdateAdat();
-#elif defined(SSE_GUI_STATUS_BAR_ADAT)
-          GUIRefreshStatusBar();
 #endif
           break;
         case 2014:
@@ -2214,7 +2178,7 @@ That will toggle bit x.
 
           break;
 
-#if defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
+#if defined(SSE_GUI_DM_PASTI_ONLY_STX)
         case 2026:
           PASTI_JUST_STX=!PASTI_JUST_STX;
           TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
@@ -3169,11 +3133,10 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
           1046+This->MenuTarget,T("Stop motor"));
       }
 
-#if defined(SSE_DRIVE_SOUND_SEEK5)
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
       if(SSEOption.DriveSound)
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
-          //1044+This->MenuTarget,T("Seek sound"));
           1044+This->MenuTarget,T("Toggle seek sound"));
       }
 #endif

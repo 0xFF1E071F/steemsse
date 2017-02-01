@@ -10,7 +10,7 @@
 #define BORDER_TOP 30
 #endif
 
-#if !(defined(SSE_VID_BORDERS))
+#if !defined(SSE_VID_BORDERS)
 #define BORDER_SIDE 32 // redefined as variables! check SSEDecla.h
 #define BORDER_BOTTOM 40
 #endif
@@ -40,21 +40,19 @@ EXT void change_window_size_for_border_change(int oldborder,int newborder);
 
 EXT void res_change();
 
-#if !(defined(SSE_VAR_RESIZE))
-EXT int stfm_b_timer INIT(0);//tmp
-#endif
 
-
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE bad_drawing INIT(0);
 #if !defined(SSE_VID_D3D_ONLY)
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 #endif
+
 #if defined(SSE_VID_D3D_ONLY)
-EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
+EXT BYTE draw_grille_black INIT(6);
 #else
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
 #endif
+
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
 EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
@@ -82,9 +80,6 @@ EXT RECT draw_blit_source_rect;
 #define DWM_STRETCH 0
 #define DWM_NOSTRETCH 1
 #define DWM_GRILLE 2
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-#define DWM_STRETCH_SCANLINES 3
-#endif
 
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
@@ -111,7 +106,7 @@ EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #if !defined(SSE_VID_D3D_ONLY)
 EXT void get_fullscreen_rect(RECT *);
 #endif
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_VAR_RESIZE)
 EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
@@ -131,7 +126,7 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 
 
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_VAR_RESIZE)
 EXT short cpu_cycles_from_hbl_to_timer_b;
 #else
 EXT int cpu_cycles_from_hbl_to_timer_b;
@@ -147,15 +142,8 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define SCANLINE_TIME_IN_CPU_CYCLES_50HZ 512
 #define SCANLINE_TIME_IN_CPU_CYCLES_60HZ 508
 #define SCANLINE_TIME_IN_CPU_CYCLES_70HZ 224
-
-#if defined(SSE_INT_VBL_STF)
-#define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ (HblTiming)
-#define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ (HblTiming)
-#else // Steem 3.2
 #define CYCLES_FOR_VERTICAL_RETURN_IN_50HZ 444
 #define CYCLES_FOR_VERTICAL_RETURN_IN_60HZ 444
-#endif
-
 #define CYCLES_FOR_VERTICAL_RETURN_IN_70HZ 200
 #define CYCLES_FROM_START_VBL_TO_INTERRUPT 1544 //SS same for all freqs?
 #define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84 //SS 84 = 56+28
@@ -174,7 +162,7 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)
 
 
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_VAR_RESIZE)
 EXT const BYTE scanlines_above_screen[4];
 
 EXT const WORD scanline_time_in_cpu_cycles_8mhz[4];
@@ -202,7 +190,7 @@ EXT int scanline_drawn_so_far;
 EXT int cpu_cycles_when_shifter_draw_pointer_updated;
 
 EXT int left_border,right_border;
-#if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
+#if !defined(SSE_VIDEO_CHIPSET)
 EXT bool right_border_changed;
 #endif
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)

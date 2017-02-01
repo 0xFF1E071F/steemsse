@@ -1150,7 +1150,7 @@ FF8240 - FF827F   palette, res
         case 0xffc11b: ior_byte= emudetect_falcon_mode; break;
         case 0xffc11c: ior_byte= BYTE((emudetect_falcon_mode_size-1) + (emudetect_falcon_extra_height ? 2:0)); break;
         case 0xffc11d: ior_byte= emudetect_overscans_fixed; break;
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
         default: ior_byte= 0;
 #endif
         }//sw

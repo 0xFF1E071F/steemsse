@@ -51,7 +51,6 @@ DESCRIPTION: Completely random accessory functions.
 #if defined(SSE_DEBUG_LOG_OPTIONS)
 #if !defined(SSE_BOILER_TRACE_CONTROL)
                                     {"Floppy data",LOGSECTION_FDC_BYTES},
-//                                    {"IPF sector info",LOGSECTION_IPF_LOCK_INFO},
 #endif
                                     {"Image info",LOGSECTION_IMAGE_INFO},
                                     {"Gemdos",LOGSECTION_STEMDOS},
@@ -388,8 +387,11 @@ void stop_cpu_log()
 //---------------------------------------------------------------------------
 void log_os_call(int trap)
 {
+#if defined(SSE_BOILER_TRAP)
+  if (logging_suspended && !USE_TRACE_FILE) return;
+#else
   if (logging_suspended) return;
-
+#endif
   EasyStr l="",a="";
 #if defined(SSE_VS2008_WARNING_390)
   long lpar=0;
@@ -448,6 +450,9 @@ void log_os_call(int trap)
       }
     }
   }
+#if defined(SSE_BOILER_TRAP)
+  if (!logging_suspended)
+#endif
   log_write(l);
   TRACE("Trap #%d %s\n",trap,l.Text); // section trap is enabled
 }

@@ -33,9 +33,6 @@ void TM68000::Reset(bool Cold) {
   if(Cold)
     nExceptions=nInstr=0;
 #endif
-#if defined(SSE_INT_MFP_SPURIOUS) && !defined(SSE_VAR_OPT_390D)
-  IackCycle=false; 
-#endif
   tpend=false; //guess so
 #if defined(SSE_CPU_E_CLOCK)
   if(Cold)

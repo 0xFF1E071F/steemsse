@@ -324,10 +324,6 @@ FC2 FC1 FC0 Address Space
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
     M68000.tpend=false;
-#if !defined(SSE_INT_ROUNDING)
-    //SS:never quite understood this rounding for interrupts thing
-    INSTRUCTION_TIME_ROUND(0); //Round first for interrupts 
-#endif
     if(bombs==BOMBS_ILLEGAL_INSTRUCTION || bombs==BOMBS_PRIVILEGE_VIOLATION)
     {
 /*
@@ -386,6 +382,14 @@ Bus error           | 50(4/7)  |     nn ns nS ns ns ns nS ns nV nv np np
 WinUAE:             | 50(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n  np
 ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np 
 */
+#if defined(SSE_CPU_BUS_ERROR_TIMING)
+/*  BUSERRT1.TOS
+    The GLU keeps trying to access the address for a while
+    before asserting bus error.
+*/
+      if(bombs==BOMBS_BUS_ERROR)
+        INSTRUCTION_TIME(70); // timing on STE
+#endif
       INSTRUCTION_TIME(4); //nn
       if(!SUPERFLAG) 
         change_to_supervisor_mode();
@@ -424,6 +428,7 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
         CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS
         m68k_PUSH_L((address & 0x00ffffff) | pc_high_byte); 
         // status
+        // strangely, status word is based on the opcode
         WORD x=WORD(_ir & 0xffe0); 
         if(action!=EA_WRITE) x|=B6_010000;
         if(action==EA_FETCH)
@@ -591,10 +596,16 @@ inline void handle_ioaccess() {
       CHECK_STOP_USER_MODE_NO_INTR 
     }                                             
     DEBUG_CHECK_IOACCESS; 
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
     if (ioaccess & IOACCESS_FLAG_DO_BLIT) 
       Blitter_Start_Now(); 
+#endif
     // These flags stay until the next instruction to stop interrupts
-    ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2);                                   
+    ioaccess=ioaccess & (IOACCESS_FLAG_DELAY_MFP | IOACCESS_INTERCEPT_OS2
+#if defined(SSE_BLT_BUS_ARBITRATION_391B)
+      |IOACCESS_FLAG_DO_BLIT // keep it
+#endif
+    );                                   
   }
 }
 
@@ -2927,10 +2938,18 @@ Dn :              |                 |               |
     m68k_src_w=m68k_fetchW();pc+=2; 
     MEM_ADDRESS ad=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
+#if defined(SSE_BLT_BUS_ARBITRATION_391B)
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+#else
 #if defined(SSE_VC_INTRINSICS_390F)
     short bit=0,BlitterStart=0;
 #else
     short mask=1,BlitterStart=0;
+#endif
 #endif
     for (int n=0;n<16;n++){
 #if defined(SSE_VC_INTRINSICS_390F)
@@ -2941,6 +2960,10 @@ Dn :              |                 |               |
         ad-=2;
         CPU_ABUS_ACCESS_WRITE; // (nw)*
         m68k_dpoke(ad,LOWORD(r[15-n]));
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
+/*  Notice that this was potentially buggy in blit mode, though I know
+    no case: we execute other instructions then we come back here?
+*/
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
           if ((++BlitterStart)==2){
@@ -2948,6 +2971,7 @@ Dn :              |                 |               |
             BlitterStart=0;
           }
         }
+#endif
       }
 #if defined(SSE_VC_INTRINSICS_390F)
       bit++;
@@ -3064,10 +3088,18 @@ Dn :              |                 |               |
       NODEFAULT;
 #endif
     }
+#if defined(SSE_BLT_BUS_ARBITRATION_391B)
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+#else
 #if defined(SSE_VC_INTRINSICS_390F)
     short bit=0,BlitterStart=0;
 #else
     short mask=1,BlitterStart=0;
+#endif
 #endif
     for (int n=0;n<16;n++){
 #if defined(SSE_VC_INTRINSICS_390F)
@@ -3078,6 +3110,7 @@ Dn :              |                 |               |
         CPU_ABUS_ACCESS_WRITE; // (nw)*
         m68k_dpoke(ad,LOWORD(r[n]));
         ad+=2;
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
         if (ioaccess & IOACCESS_FLAG_DO_BLIT){
           // After word that starts blitter must write one more word, then blit
           if ((++BlitterStart)==2){
@@ -3085,6 +3118,7 @@ Dn :              |                 |               |
             BlitterStart=0;
           }
         }
+#endif
       }
 #if defined(SSE_VC_INTRINSICS_390F)
       bit++;
@@ -3153,8 +3187,10 @@ R --> M           |                 |
         ad-=4;
         CPU_ABUS_ACCESS_WRITE_L; // (nw nW)*
         m68k_lpoke(ad,r[15-n]);
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
         if (ioaccess & IOACCESS_FLAG_DO_BLIT) 
           Blitter_Start_Now();
+#endif
       }
 #if defined(SSE_VC_INTRINSICS_390F)
       bit++;
@@ -3432,18 +3468,12 @@ void                              m68k_movem_l_to_regs(){
 #if defined(SSE_DEBUG)
     default:
       ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_390__)
-    default:
-      NODEFAULT;
 #endif
     }
     break;
 #if defined(SSE_DEBUG)
   default:
     ASSERT(0);
-#elif defined(SSE_VS2008_WARNING_390__)
-  default:
-    NODEFAULT;
 #endif
   }
   CPU_ABUS_ACCESS_READ; //nR 390
@@ -4076,7 +4106,7 @@ void                              m68k_line_4_stuff(){
 }
 
 
-#define LOGSECTION LOGSECTION_TRAP
+//#define LOGSECTION LOGSECTION_TRAP
 void                              m68k_trap(){
   MEM_ADDRESS Vector=LPEEK( 0x80+((ir & 0xf)*4) );
   switch (ir & 0xf){
@@ -4098,7 +4128,7 @@ void                              m68k_trap(){
   intercept_os();
   debug_check_break_on_irq(BREAK_IRQ_TRAP_IDX);
 }
-#undef LOGSECTION
+//#undef LOGSECTION
 
 
 void                              m68k_link(){
@@ -7896,7 +7926,15 @@ void m68k_0001() {  // move.b
         // other:                 np    nw np np 
         CPU_ABUS_ACCESS_READ_FETCH; // np
         if(SOURCE_IS_REGISTER_OR_IMMEDIATE)
+        {
           CPU_ABUS_ACCESS_READ_FETCH; // np
+#if defined(SSE_CPU_EXCEPTION_TRUE_PC_391)
+/*  While using BUSERRT1.TOS to check bus error timing, I realised there
+    were bugs in some MOVE cases!
+*/
+          TRUE_PC+=2; // move.b #0,0
+#endif
+        }
         else
           PREFETCH_CLASS(2);
         abus=m68k_fetchL() & 0xffffff;
@@ -8023,7 +8061,12 @@ void m68k_0010() { //move.l
         // other:                  np nW nw np np (refetch IR)
         CPU_ABUS_ACCESS_READ_FETCH; // np
         if (SOURCE_IS_REGISTER_OR_IMMEDIATE) 
+        {
           CPU_ABUS_ACCESS_READ_FETCH; // np
+#if defined(SSE_CPU_EXCEPTION_TRUE_PC_391)
+          TRUE_PC+=2; // move.l #0,0
+#endif
+        }
         else
           PREFETCH_CLASS(2);
         abus=m68k_fetchL()&0xffffff;
@@ -8145,7 +8188,12 @@ void m68k_0011() { //move.w
         // other:                 np    nw np np (refetch IR)
         CPU_ABUS_ACCESS_READ_FETCH;
         if (SOURCE_IS_REGISTER_OR_IMMEDIATE) 
+        {
           CPU_ABUS_ACCESS_READ_FETCH;
+#if defined(SSE_CPU_EXCEPTION_TRUE_PC_391)
+          TRUE_PC+=2; // move.w #0,0
+#endif
+        }
         else
           PREFETCH_CLASS(2);
         abus=m68k_fetchL()&0xffffff;

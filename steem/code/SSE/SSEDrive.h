@@ -55,11 +55,6 @@ struct TSF314 {
   }State;
   // FUNCTIONS
   TSF314();
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
-  void UpdateAdat();
-#else
-  bool Adat(); // accurate disk access times
-#endif
   WORD BytePosition(); //this has to do with IP and rotation speed
   WORD BytesToHbls(int bytes);
 #if defined(SSE_DISK_GHOST)
@@ -71,7 +66,7 @@ struct TSF314 {
   WORD HblsToBytes(int hbls);
   void Init();
   BYTE Track();
-
+  void UpdateAdat();
 #if defined(SSE_WD1772)
   int CyclesPerByte();
   void IndexPulse(bool image_triggered=false);
@@ -82,20 +77,14 @@ struct TSF314 {
 #endif
 
 #if defined(SSE_DRIVE_SOUND)
-#ifdef WIN32
   void Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMATEX *wfx);
-#endif
   void Sound_ReleaseBuffers();
   void Sound_StopBuffers();
   void Sound_CheckCommand(BYTE cr);
   void Sound_CheckIrq();
   void Sound_CheckMotor();
-#if defined(SSE_DRIVE_SOUND_VOLUME)
   void Sound_ChangeVolume();
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK2)
   void Sound_Step();
-#endif
 #endif//sound
 
 };

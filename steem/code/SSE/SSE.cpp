@@ -1,7 +1,3 @@
-// This file is compiled as a distinct module (resulting in an OBJ file)
-
-// Don't look for anything important here, it's a trash can
-
 #include "SSE.h"
 
 #if defined(SSE_BUILD)
@@ -51,3 +47,5 @@ void TOsdControl::StartScroller(EasyStr text) {
 #endif
 
 #endif
+
+

@@ -55,6 +55,11 @@ bool TYM2149::LoadFixedVolTable() {
     if(nwords==16*16*16)
       ok=true;
     fclose(fp);
+#if defined(SSE_SOUND_391)
+    // move the zero to make it match DMA's (tentative)
+    for(int i=0;i<16*16*16;i++)
+      p_fixed_vol_3voices[i]+=128;
+#endif
     SSEConfig.ym2149_fixed_vol=true;
     TRACE_LOG("PSG %s loaded %d words in ram %p\n",filename.Text,nwords,p_fixed_vol_3voices);
   }

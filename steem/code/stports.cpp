@@ -25,7 +25,7 @@ TDongle Dongle;
 //---------------------------------------------------------------------------
 void agenda_midi_replace(int)
 {
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
 #define LOGSECTION LOGSECTION_MIDI
   if(OPTION_C1)
   {
@@ -36,7 +36,7 @@ void agenda_midi_replace(int)
 #if defined(SSE_MIDI_TRACE_BYTES_IN)
       TRACE_LOG("Midi in %X\n",midi_in);
 #endif
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
       ASSERT(ACIA_MIDI.LineRxBusy);
 #endif
       if(ACIA_MIDI.SR&BIT_0) {
@@ -59,7 +59,7 @@ void agenda_midi_replace(int)
       ACIA_MIDI.LineRxBusy=false;
 
       if(MIDIPort.AreBytesToCome()) 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
       {
         time_of_event_acia=ACIA_MIDI.time_of_event_incoming
           =time_of_next_event+ACIA_MIDI_IN_CYCLES;
@@ -97,7 +97,7 @@ void agenda_midi_replace(int)
 void MidiInBufNotEmpty()
 {
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
   if(OPTION_C1)
   {
     ASSERT(!ACIA_MIDI.LineRxBusy);//or we got a problem

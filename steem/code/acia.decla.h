@@ -22,10 +22,10 @@ extern "C" {  // necessary for VC6
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct ACIA_STRUCT{ // removed _ ..
-#if defined(SSE_VAR_RESIZE_390A) // problem is memory snapshots, structure: more complicated
+#if defined(SSE_VAR_RESIZE) // problem is memory snapshots, structure: more complicated
   int last_tx_write_time;
   int last_rx_read_time;
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
   int time_of_event_incoming, time_of_event_outgoing;
 #endif
   BYTE clock_divide;
@@ -60,7 +60,7 @@ struct ACIA_STRUCT{ // removed _ ..
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
 
 
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   BYTE CR,  // control 
     SR,     // status
     RDR,    // receive data 
@@ -68,11 +68,10 @@ struct ACIA_STRUCT{ // removed _ ..
     RDRS,   // receive data shift
     TDRS;   // transmit data shift
 #ifdef __cplusplus
+  // FUNCTIONS
   inline bool IrqForTx() { return ((CR&BIT_5)&&!(CR&BIT_6)); }
-#if defined(SSE_ACIA_390)
   void BusJam(unsigned long addr);
   int TransmissionTime();
-#endif
 #endif
 #endif
 };

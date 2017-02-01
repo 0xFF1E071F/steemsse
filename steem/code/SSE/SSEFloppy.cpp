@@ -19,13 +19,6 @@
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
-#if defined(SSE_DRIVE_IPF1_)
-#include <stemdialogs.decla.h>//temp...
-#include <diskman.decla.h>
-#endif
-#if !defined(SSE_CPU)
-#include <mfp.decla.h>
-#endif
 
 #include "SSEDecla.h"
 #include "SSEDebug.h"
@@ -33,10 +26,10 @@
 #include "SSEOption.h"
 
 #if defined(SSE_DMA_OBJECT)
-TDma Dma;
+TDma Dma; //singleton
 #endif
 #if defined(SSE_WD1772)
-TWD1772 WD1772;
+TWD1772 WD1772; //singleton
 #endif
 #if defined(SSE_YM2149_OBJECT)
 TYM2149 YM2149; //singleton
@@ -44,7 +37,7 @@ TYM2149 YM2149; //singleton
 #if defined(SSE_DRIVE_OBJECT)
 TSF314 SF314[2]; // cool!
 #endif
-#if defined(SSE_DISK1)
+#if defined(SSE_DISK)
 TDisk Disk[2];
 #endif
 #if defined(SSE_DISK_CAPS) 

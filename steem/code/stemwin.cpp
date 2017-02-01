@@ -32,7 +32,7 @@ void StemWinResize(int xo,int yo)
 #else
     int FrameWidth=0;
 #endif
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     SetStemWinSize(min(em_width,(WORD)(GetScreenWidth()-4-FrameWidth)),
                     min(em_height,(WORD)(GetScreenHeight()-5-MENUHEIGHT-4-30)),
                     0,0);
@@ -359,8 +359,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           OptionBox.ChangeScreenShotFormat(format_sl[LOWORD(wPar)-400].Data[0],format_sl[LOWORD(wPar)-400].String);
         }else if (LOWORD(wPar)<440){ // Change screenshot format options
           EasyStringList format_sl;
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
           Disp.ScreenShotGetFormatOpts(&format_sl);
           OptionBox.ChangeScreenShotFormatOpts(format_sl[LOWORD(wPar)-420].Data[0]);
+#endif
         }else if (LOWORD(wPar)==440){ // Change folder
           OptionBox.ChooseScreenShotFolder(Win);
         }else if (LOWORD(wPar)==441){ // Open folder
@@ -660,8 +662,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           OptionBox.UpdateWindowSizeAndBorder();
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
-#elif defined(SSE_VAR_RESIZE_370)
-          CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
           CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
@@ -1424,6 +1424,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
     {
       if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2){
         HMENU Pop=CreatePopupMenu();
+
         EasyStringList format_sl;
         Disp.ScreenShotGetFormats(&format_sl);
 
@@ -1441,15 +1442,28 @@ void HandleButtonMessage(UINT Id,HWND hBut)
         CheckMenuRadioItem(Pop,400,400+format_sl.NumStrings,sel,MF_BYCOMMAND);
 
         format_sl.DeleteAll();
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
         Disp.ScreenShotGetFormatOpts(&format_sl);
         if (format_sl.NumStrings){
           AppendMenu(Pop,MF_SEPARATOR,0,NULL);
           for (int n=0;n<format_sl.NumStrings;n++){
             AppendMenu(Pop,MF_STRING,420+n,format_sl[n].String);
           }
+         
+#if defined(SSE_VID_DD_SCREENSHOT_391)
+/*  Bug for JPG quality: it's 0x80, 0x100, 0x200, 0x400, 0x800, don't know a
+    more trivial way
+*/
+          CheckMenuRadioItem(Pop,420,420+format_sl.NumStrings,
+            ((Disp.ScreenShotFormat==FIF_JPEG)? 420+ (Disp.ScreenShotFormatOpts>>
+            (8+(Disp.ScreenShotFormatOpts==0x800)))-(Disp.ScreenShotFormatOpts==0x400)
+            : 420+Disp.ScreenShotFormatOpts),
+            MF_BYCOMMAND);
+#else
           CheckMenuRadioItem(Pop,420,420+format_sl.NumStrings,420+Disp.ScreenShotFormatOpts,MF_BYCOMMAND);
+#endif
         }
-
+#endif
         RECT rc;
         GetWindowRect(hBut,&rc);
 

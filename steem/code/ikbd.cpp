@@ -36,13 +36,13 @@ EXT bool mouse_change_since_last_interrupt;
 EXT int mousek;
 #endif
 #ifndef CYGWIN
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE no_set_cursor_pos INIT(0);
 #else
 EXT int no_set_cursor_pos INIT(0);
 #endif
 #else
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE no_set_cursor_pos INIT(true);
 #else
 EXT int no_set_cursor_pos INIT(true);
@@ -578,7 +578,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     ASSERT(ACIA_IKBD.TDRS==src);
     HD6301.rdrs=ACIA_IKBD.TDRS;
 #endif
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
     int cycles=LINECYCLES;
     ASSERT(cycles>=0);
     HD6301.LineRxFreeTime=cycles/8;
@@ -595,7 +595,7 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
     if(ACIA_IKBD.ByteWaitingTx) 
       HD6301.ReceiveByte(ACIA_IKBD.TDR);
 
-#if !defined(SSE_IKBD_6301_EVENT)
+#if !defined(SSE_ACIA_EVENT)
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_receive_byte(src);// send byte to 6301 emu
 #endif
@@ -1353,7 +1353,7 @@ or FIRE BUTTON MONITORING mode.
                                       ikbd.abs_mouse_scale_y,
                                       0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_390)// we want it to hit default
+#if !defined(SSE_VAR_OPT_390)// we want it to hit default
       case 0x8d: /*DEAD*/ break;
       case 0x8e: /*DEAD*/ break;
 #endif
@@ -1366,7 +1366,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_390)
+#if !defined(SSE_VAR_OPT_390)
       case 0x91: /*DEAD*/ break;
 #endif
       case 0x92:  //is mouse off?
@@ -1378,7 +1378,7 @@ or FIRE BUTTON MONITORING mode.
         }
         keyboard_buffer_write_string(0,0,0,0,0,0,(-1));
         break;
-#if !defined(SSE_VAR_RESIZE_390)
+#if !defined(SSE_VAR_OPT_390)
       case 0x93: /*DEAD*/ break;
 #endif
       case 0x94:case 0x95:case 0x99:
@@ -1395,7 +1395,7 @@ or FIRE BUTTON MONITORING mode.
         }
         break;
       }
-#if !defined(SSE_VAR_RESIZE_390)
+#if !defined(SSE_VAR_OPT_390)
       case 0x96: /*DEAD*/ break;
       case 0x97: /*DEAD*/ break;
       case 0x98: /*DEAD*/ break;
@@ -1439,7 +1439,7 @@ void agenda_keyboard_replace(int) {
       ASSERT( keyboard_buffer_length<2 );
       ASSERT( ACIA_IKBD.LineRxBusy );
       ACIA_IKBD.LineRxBusy=false;
-#ifdef SSE_IKBD_6301_EVENT
+#ifdef SSE_ACIA_EVENT
       int cycles=LINECYCLES;
       ASSERT(cycles>=0);
       HD6301.LineTxFreeTime=cycles/8;
@@ -1490,18 +1490,13 @@ void agenda_keyboard_replace(int) {
     // More to process?
     if(keyboard_buffer_length) 
     {
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
       if(OPTION_C1)
       {
         HD6301.tdrs=HD6301.tdr;
         TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
-#if defined(SSE_ACIA_390)
         time_of_event_acia=ACIA_IKBD.time_of_event_incoming
           =time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
-#else
-        time_of_event_ikbd=time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
-        HD6301.EventStatus|=1;
-#endif
       }
       else
 #endif
@@ -1594,40 +1589,28 @@ void keyboard_buffer_write(BYTE src) {
       if(keyboard_buffer_length)
         memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
       else
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
       {
+        ASSERT(OPTION_C1);
         TRACE_LOG("IKBD TDRS %X\n",src);
-#if defined(SSE_ACIA_390)
-        ASSERT(OPTION_C1); //fool!
-#else
-        if(OPTION_C1)
-        {
-#endif
-#if defined(SSE_ACIA_390)
         time_of_event_acia=ACIA_IKBD.time_of_event_incoming
           =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
           + ACIA_TO_HD6301_IN_CYCLES;
-#else
-          time_of_event_ikbd=cpu_timer_at_start_of_hbl
-            + cycles_run*HD6301_CYCLE_DIVISOR + ACIA_TO_HD6301_IN_CYCLES;
-          HD6301.EventStatus|=1;
-        }
-        else 
-          agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
-#endif
       }
 #else
-        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
+      agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
 #endif
       keyboard_buffer_length++;
       keyboard_buffer[0]=src;
       //TRACE_LOG("IKBD +$%X (%d)\n",src,keyboard_buffer_length);
       
     }
+#ifdef SSE_DEBUG
     else
       TRACE_LOG("IKBD: Keyboard buffer overflow\n");
+#endif
     return;
-  }
+  }//C1
 #endif // Steem 3.2:
 
   if (keyboard_buffer_length<MAX_KEYBOARD_BUFFER_SIZE){
@@ -1778,7 +1761,7 @@ void ikbd_reset(bool Cold)
       TRACE_LOG("6301 reset ikbd.cpp part\n");
       HD6301.Crashed=0;
       ikbd.mouse_upside_down=false;
-#ifdef SSE_IKBD_6301_EVENT
+#ifdef SSE_ACIA_EVENT
       HD6301.LineRxFreeTime=HD6301.LineTxFreeTime=0;
 #endif
       return;

@@ -348,11 +348,6 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
 #endif
       if (Failed==0){
         Failed=int((EasyUncompressToMem(Mem+MEM_EXTRA_BYTES,mem_len,f)!=0) ? 2:0);
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_390E1)
-        // This is a hack to make the first screen work
-        if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff))
-          Glue.Status.hbi_done=Glue.Status.vbi_done=true;
-#endif
 #ifdef SSE_TOS_GEMDOS_EM_381B
         if(extended_monitor)
           Tos.HackMemoryForExtendedMonitor();

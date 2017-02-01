@@ -264,14 +264,15 @@ void osd_draw()
 #endif
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-  if(SSE_INTERPOLATE && FullScreen && !screen_res
+#if defined(SSE_VID_D3D_391)
+  if(FullScreen && !screen_res 
+    && (SSE_INTERPOLATE || draw_win_mode[screen_res]==DWM_GRILLE))
+#else
+  if(SSE_INTERPOLATE && !screen_res && FullScreen
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
 #endif    
     )
-#else
-  if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES && FullScreen)
 #endif
     x1/=2;
 #endif

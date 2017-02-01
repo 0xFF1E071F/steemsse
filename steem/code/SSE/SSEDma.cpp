@@ -39,6 +39,8 @@
 #include <harddiskman.decla.h>
 #endif
 
+#include "SSESTF.h"
+
 #if defined(SSE_DMA_OBJECT)
 
 #if defined(SSE_BOILER_390_LOG2)
@@ -81,7 +83,7 @@ void TDma::AddToFifo(BYTE data) {
 #endif
 
 
-#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772_EMU)
+#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772)
 
 /*  This just transfers one byte between controller's DR and Fifo at request.
     Direction depends on control register, function checks it itself.
@@ -280,11 +282,7 @@ is ignored and when reading the 8 upper bits consistently reads 1."
 #if defined(SSE_ACSI)
       ASSERT(MCR&CR_DRQ_FDC_OR_HDC);
       if(ACSI_EMU_ON)
-#if defined(SSE_VS2008_WARNING_382)
         ior_byte=AcsiHdc[acsi_dev].IORead();
-#else
-        ior_byte=AcsiHdc[acsi_dev].IORead( (MCR&(CR_A1|CR_A0))/2 );
-#endif
 #endif
 
 

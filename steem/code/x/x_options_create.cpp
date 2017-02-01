@@ -1341,7 +1341,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
   stealth_mode_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Emu detect"),4004,BkCol);
   //stealth_mode_but.set_check(!STEALTH_MODE);
