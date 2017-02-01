@@ -24,35 +24,18 @@ struct  TImageHFE {
   ~TImageHFE();
   int ComputeIndex();
   void ComputePosition(WORD position);
-#if defined(SSE_COMPILER_382)
   void IncPosition();
-#else
-  inline void IncPosition();
-#endif
   void Init();
   WORD MirrorMFM(WORD mfm_word);
   // variables
-#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
   FILE *fCurrentImage; // use FloppyDrive's
-#endif
   WORD *TrackData;
   BYTE *ImageData;
-#if defined(SSE_DISK_HFE_DYNAMIC_HEADER) //spare some memory
   picfileformatheader *file_header;
   pictrack *track_header;
-#else
-  picfileformatheader file_header;
-  pictrack track_header[84]; // should be enough
-#endif
   int image_size;
   WORD Position;
-#if !(defined(SSE_VAR_RESIZE_372) && defined(SSE_DISK1))
-  WORD nBytes; // track data, not image
-#endif
   BYTE Id; //0,1, same as drive
-#if !defined(SSE_DISK2)
-  BYTE current_side;//in Disk
-#endif
 };
 #pragma pack(pop)
 

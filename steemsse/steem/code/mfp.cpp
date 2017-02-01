@@ -18,7 +18,7 @@ the ST.
 EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 BYTE mfp_gpip_input_buffer=0;
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 const WORD mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,
                                         65535,4,10,16,50,64,100,200};
 const BYTE mfp_timer_irq[4]={13,8,5,4};
@@ -172,6 +172,16 @@ bool mfp_set_pending(int irq,int when_set) {
     bool was_already_pending=(mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]&mfp_interrupt_i_bit(irq));
 #endif
     mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]|=mfp_interrupt_i_bit(irq); // Set pending
+
+#if defined(SSE_BLT_MAIN_LOOP)
+/*  It's a blitter switch because with our loop change, we want to make
+    sure that MFP timer IRQ is checked after the instruction where the
+    blit occurred. 
+    In previous versions of Steem, this flag was set for GPIP interrupts
+    but not timers, because interrupts were checked at all events anyway.
+*/
+    ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; 
+#endif
 
     if(OPTION_C2)
     {
@@ -904,11 +914,7 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
 #endif
 
 
-#if defined(SSE_VS2008_WARNING_390)
 void TMC68901::Reset() {
-#else
-void TMC68901::Reset(bool Cold) {
-#endif
   Irq=false;
   IrqSetTime=ACT;
 }

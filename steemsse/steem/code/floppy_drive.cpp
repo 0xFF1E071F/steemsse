@@ -40,10 +40,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   TRACE_LOG("%c: SetDisk %s\n",'A'+drive,File.c_str());
 #endif
 
-#if defined(SSE_DISK1)
-//  Disk[drive].Init(); //seriously bugged
-#endif
-
   // SS: note that the drive may still be spinning when a floppy is removed
   // or inserted -> that state mustn't be changed (Braindamage)
 
@@ -57,12 +53,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 
 #ifndef SSE_VAR_RESET_SAME_DISK //390
   if (IsSameStr_I(File,ImageFile) && IsSameStr_I(CompressedDiskName,DiskInZip)) 
-  {//SS
-    TRACE_LOG("Same file %s, exit SetDisk\n",File.Text);
-//#ifndef SSE_VAR_RESET_SAME_DISK
     return 0;
-//#endif
-  }//SS
 #endif
 
   if (Exists(File)==0) 
@@ -82,36 +73,22 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
   if (dot) Ext=dot+1;
 
 #if defined(SSE_DISK_EXT)
+  // notice we test everything, not optimal
   MSA=IsSameStr_I(Ext,DISK_EXT_MSA);
   STT=IsSameStr_I(Ext,DISK_EXT_STT);
   DIM=IsSameStr_I(Ext,DISK_EXT_DIM);
+  bool IPF=IsSameStr_I(Ext,DISK_EXT_IPF);
+  bool CTR=IsSameStr_I(Ext,DISK_EXT_CTR);
+  bool SCP=IsSameStr_I(Ext,DISK_EXT_SCP);
+  bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
+  bool PRG=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,DISK_EXT_PRG);
+  bool TOS=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,DISK_EXT_TOS);
+  bool HFE=IsSameStr_I(Ext,DISK_EXT_HFE);
+  bool ST=IsSameStr_I(Ext,DISK_EXT_ST);
 #else
   MSA=IsSameStr_I(Ext,"MSA");
   STT=IsSameStr_I(Ext,"STT");
   DIM=IsSameStr_I(Ext,"DIM");
-#endif
-
-#if defined(SSE_DISK_CAPS)
-  bool IPF=IsSameStr_I(Ext,DISK_EXT_IPF);
-#ifdef SSE_DISK_CAPS_CTRAW
-  bool CTR=IsSameStr_I(Ext,DISK_EXT_CTR);
-#endif
-#endif
-#if defined(SSE_DISK_SCP)
-  bool SCP=IsSameStr_I(Ext,DISK_EXT_SCP);
-#endif
-#if defined(SSE_DISK_STW)
-  bool STW=IsSameStr_I(Ext,DISK_EXT_STW);
-#endif
-#if defined(SSE_TOS_PRG_AUTORUN)
-  bool PRG=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,DISK_EXT_PRG);
-  bool TOS=OPTION_PRG_SUPPORT && IsSameStr_I(Ext,DISK_EXT_TOS);
-#endif
-#if defined(SSE_DISK_HFE)
-  bool HFE=IsSameStr_I(Ext,DISK_EXT_HFE);
-#endif  
-#if defined(SSE_DISK_ST)
-  bool ST=IsSameStr_I(Ext,DISK_EXT_ST);
 #endif
 
   // NewDiskInZip will be blank for default disk, RealDiskInZip will be the
@@ -135,10 +112,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
             // Blank DiskInZip name means default disk (first in zip)
-#ifdef SSE_DISK_MSA
+#ifdef SSE_DISK_EXT
             MSA=has_extension(fn,DISK_EXT_MSA);
-#endif
-#ifdef SSE_DISK_ST
             ST=has_extension(fn,DISK_EXT_ST);
 #endif
             if (Type==DISK_PASTI){
@@ -149,16 +124,16 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
                 TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);
 
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
-#ifdef SSE_DISK_ST
                 if(ST)
                   SF314[drive].ImageType.Extension=EXT_ST;
-#ifdef SSE_DISK_MSA
                 else if(MSA)
                   SF314[drive].ImageType.Extension=EXT_MSA;
-#endif
                 else
-#endif
                   SF314[drive].ImageType.Extension=EXT_STX;
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH_391)
+                if(ST||MSA)
+                  PASTI_JUST_STX=false; //temp, TODO
+#endif
               }
 #endif
               f_PastiDisk=true;
@@ -167,27 +142,23 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               //TRACE_LOG("pasti_active %d\n",pasti_active);
 #endif
             }else{
-#ifndef SSE_DISK_MSA
-              MSA=has_extension(fn,"MSA");
-#endif
 #ifdef SSE_DISK_EXT
               STT=has_extension(fn,DISK_EXT_STT);
               DIM=has_extension(fn,DISK_EXT_DIM);
 #else
+              MSA=has_extension(fn,"MSA");
               STT=has_extension(fn,"STT");
               DIM=has_extension(fn,"DIM");
 #endif
 #if defined(SSE_DISK_CAPS)
               IPF=has_extension(fn,DISK_EXT_IPF);
-#ifdef SSE_DISK_CAPS_CTRAW
               CTR=has_extension(fn,DISK_EXT_CTR);
-#endif
 #endif
 #if defined(SSE_DISK_SCP)
               SCP=has_extension(fn,DISK_EXT_SCP);
 #endif
 #if defined(SSE_DISK_STW)
-              STW=has_extension(fn,DISK_EXT_STW); // in archive, makes less sense
+              STW=has_extension(fn,DISK_EXT_STW);
 #endif
 #if defined(SSE_DISK_HFE)
               HFE=has_extension(fn,DISK_EXT_HFE);
@@ -262,29 +233,19 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if (drive>=0 && hPasti){
       RemoveDisk();
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-//      TRACE_LOG("Activate pasti 2\n");
       pasti_active=true; //3.6.1, because RemoveDisk clears it
-      //TRACE_LOG("pasti_active %d\n",pasti_active);
-#endif
-      
-#if defined(SSE_DISK_PASTI_ONLY_STX)
       ASSERT(drive!=-1);
       if(drive!=-1)
       {
-        //TRACE_LOG("Disk in %c is STX\n",'A'+drive);
-
         SF314[drive].ImageType.Manager=MNGR_PASTI;
-#ifdef SSE_DISK_ST
         if(ST)
           SF314[drive].ImageType.Extension=EXT_ST;
         else if(MSA)
           SF314[drive].ImageType.Extension=EXT_MSA;
         else
-#endif                
           SF314[drive].ImageType.Extension=EXT_STX;
       }
 #endif
-
 
       FILE *nf=fopen(File,"rb");
       if (nf){
@@ -327,97 +288,54 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
 #if defined(SSE_DISK_CAPS)
-  }else if(CAPSIMG_OK &&
-#if defined(SSE_DISK_CAPS_CTRAW)
-    (CTR||IPF))
-#else
-    IPF) 
-#endif
-  { 
-
-#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
+  }else if(CAPSIMG_OK &&(CTR||IPF)){ 
     RemoveDisk();
-#endif
-
-#if defined(SSE_DISK_CAPS_CTRAW)
     SF314[drive].ImageType.Manager=MNGR_CAPS;
     SF314[drive].ImageType.Extension=IPF?EXT_IPF:EXT_CTR;
-#endif
     CapsImageInfo img_info;
     int Ret=Caps.InsertDisk(drive,File,&img_info);
     if(Ret==FIMAGE_WRONGFORMAT)
     {
-#if defined(SSE_DISK_CAPS_CTRAW) //wrong switch TODO
       ZeroMemory(&SF314[drive].ImageType,sizeof(SF314[drive].ImageType));
-#endif
       return Ret;
     }
     // for properties box
     BytesPerSector=SectorsPerTrack=0; 
     Sides=img_info.maxhead+1;
     TracksPerSide=img_info.maxcylinder;
-#endif
+#endif//caps
 //SS this horror needs to be refactored of course
 #if defined(SSE_DISK_SCP)
   }else if(SCP) { 
     ASSERT(!(this==&FloppyDrive[0] && drive!=0));
     ASSERT(!(this==&FloppyDrive[1] && drive!=1));
-#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
     RemoveDisk();
-#endif
     ASSERT(!(this==&FloppyDrive[0] && drive!=0));
     ASSERT(!(this==&FloppyDrive[1] && drive!=1));
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-
 #if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
+    Disk[drive].TrackBytes=ImageSCP[drive].nBytes;
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_SCP;
-
-#if defined(SSE_DISK1)
-    Disk[drive].TrackBytes=ImageSCP[drive].nBytes;
-#endif
     SF314[drive].State.reading=SF314[drive].State.writing=0;
-
-#endif
+#endif//scp
 
 #if defined(SSE_DISK_STW)
   }else if(STW) { 
-
-#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
     RemoveDisk();
-#endif
-
     if(drive==-1  || !ImageSTW[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-
 #if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_STW;
-
-#if defined(SSE_DISK1)
-#if !defined(SSE_VAR_RESIZE_372)
-    Disk[drive].TrackBytes=ImageSTW[drive].nBytes;
-#if defined(SSE_DISK_STW2) // HxC converter track is too big...
-    //hack works but not when we save space (Disk[drive].TrackBytes==ImageSTW[drive].nBytes)
-    //the problem is in hxc software, if we don't like that we need to 
-    //create our own STW images... see below; this code isn't compiled
-    if(OPTION_HACKS && Disk[drive].TrackBytes-DRIVE_BYTES_ROTATION_STW>50
-      && ImageSTW[drive].Version==0x100)
-      Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; 
-    ASSERT(Disk[drive].TrackBytes==DRIVE_BYTES_ROTATION_STW);
-#endif
-#endif
-
-#endif
     SF314[drive].State.reading=SF314[drive].State.writing=0;
-
 #if defined(SSE_DISK_HFE_TO_STW) 
     // using Steem to convert, because HxC software counts too many bytes
     // see just above
@@ -440,30 +358,20 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
         ImageSTW[1].Close();
     }
 #endif
-
 #endif//stw
-
 
 #if defined(SSE_DISK_HFE)
   }else if(HFE) { 
-
-#if defined(SSE_DISK_REMOVE_DISK_ON_SET_DISK)
     RemoveDisk();
-#endif
-
     if(drive==-1  || !ImageHFE[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-#if defined(SSE_DISK1)
-    Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; //default
-#endif
-
 #if USE_PASTI
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
+    Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; //default
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_HFE;
-
     SF314[drive].State.reading=SF314[drive].State.writing=0;
 #endif//hfe
   }
@@ -508,7 +416,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     else
       HardDiskMan.DisableHardDrives=old_DisableHardDrives;
   }
-#endif  
+#endif//prg  
 
   else
   {
@@ -520,21 +428,19 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       HardDiskMan.DisableHardDrives=true; // we guess
     }
 #endif
-    SF314[drive].ImageType.Manager=MNGR_STEEM;
+    
 #if defined(SSE_FDC_390A)
     Disk[drive].TrackBytes=TDisk::TRACK_BYTES; 
 #endif
-#ifdef SSE_OSD_DRIVE_INFO_EXT //gotta be a smarter way...
+#ifdef SSE_DRIVE
+    SF314[drive].ImageType.Manager=MNGR_STEEM;
     if(MSA)
       SF314[drive].ImageType.Extension=EXT_MSA;
     else if (DIM)
       SF314[drive].ImageType.Extension=EXT_DIM;
     else
       SF314[drive].ImageType.Extension=EXT_ST;
-#else
-    SF314[drive].ImageType.Extension=MSA?EXT_MSA:EXT_ST; //DIM?
 #endif
-
 
     // Open for read for an MSA (going to convert to ST and write to that)
     // and if the file is read-only, otherwise open for update
@@ -880,9 +786,7 @@ Header:
 
 #if defined(SSE_DISK_CAPS)
   IPFDisk=IPF;
-#ifdef SSE_DISK_CAPS_CTRAW
   CTRDisk=CTR;
-#endif
 #endif
 #if defined(SSE_DISK_SCP)
   SCPDisk=SCP;
@@ -913,14 +817,15 @@ Header:
   dbg_log(Str("     TracksPerSide=")+TracksPerSide+", ReadOnly="+ReadOnly);
   dbg_log("");
 
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
+#if defined(SSE_DRIVE)
   SF314[drive].UpdateAdat();
 #endif
 
-
+#if defined(SSE_DEBUG) && defined(SSE_FLOPPY)
   TRACE_LOG("Ext %s Manager %d Sides %d Tracks %d Sectors %d adat %d\n",
 //dot_ext(SF314[drive].ImageType.Extension),SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack);
 extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack,SF314[drive].State.adat);
+#endif
 
   return 0;
 }
@@ -930,10 +835,7 @@ bool TFloppyImage::ReinsertDisk()
 {
   if (Empty() || PastiDisk
 #if defined(SSE_DISK_CAPS)
-    || IPFDisk
-#ifdef SSE_DISK_CAPS_CTRAW
-    || CTRDisk
-#endif
+    || IPFDisk || CTRDisk
 #endif
 #if defined(SSE_DISK_STW) //390
     || STWDisk //
@@ -966,10 +868,7 @@ bool TFloppyImage::OpenFormatFile()
 {
   if (f==NULL || ReadOnly || Format_f || STT_File || PastiDisk
 #if defined(SSE_DISK_CAPS)
-    || IPFDisk
-#ifdef SSE_DISK_CAPS_CTRAW
-    || CTRDisk
-#endif
+    || IPFDisk || CTRDisk
 #endif 
 #if defined(SSE_DISK_SCP)
     || SCPDisk
@@ -1015,10 +914,7 @@ bool TFloppyImage::ReopenFormatFile()
 {
   if (Format_f==NULL || f==NULL || ReadOnly || PastiDisk
 #if defined(SSE_DISK_CAPS)
-    || IPFDisk
-#ifdef SSE_DISK_CAPS_CTRAW
-    || CTRDisk
-#endif
+    || IPFDisk || CTRDisk
 #endif    
 #if defined(SSE_DISK_SCP)
     || SCPDisk
@@ -1549,11 +1445,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(SSE_DISK_CAPS)
   if(CAPSIMG_OK && drive!=-1 && SF314[drive].ImageType.Manager==MNGR_CAPS)
     Caps.RemoveDisk(drive);
-  IPFDisk=
-#ifdef SSE_DISK_CAPS_CTRAW
-    CTRDisk=
-#endif
-    0;
+  IPFDisk=CTRDisk=0;
 #endif
 
 #if defined(SSE_DISK_STW)
@@ -1589,8 +1481,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(SSE_DISK) 
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
   SF314[drive].ImageType.Extension=0;
-#endif
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
   SF314[drive].UpdateAdat();
 #endif
 #if defined(SSE_DISK_GHOST)
@@ -1609,8 +1499,8 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
   ImageFile="";MSATempFile="";ZipTempFile="";FormatTempFile="";
   DiskName="";
-#if !defined(SSE_DISK_CAPS_390C)
-  ReadOnly=true; // there's nothing to read
+#if !defined(SSE_DISK_CAPS_390C)// there's nothing to read
+  ReadOnly=true; 
 #endif
   BytesPerSector=0;Sides=0;SectorsPerTrack=0;TracksPerSide=0;
   ZeroMemory(TrackIsFormatted,sizeof(TrackIsFormatted));

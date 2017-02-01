@@ -5,7 +5,8 @@
     Steem (disk manager, FDC commands...) is straightforward.
     Remarkably few changes are necessary in the byte-level WD1772 emu to have
     some SCP images loading.
-    For some others, however, we had to graft bit-level algorithms.
+    For some others, however, we had to graft bit-level algorithms (3rd party
+    -inspired).
     Up to date it seems Steem SSE can run all SCP images, with some difficulties
     on weak bit protections.
 */
@@ -15,33 +16,21 @@
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <iorw.decla.h>
+#include <mfp.decla.h>
 #include <psg.decla.h>
 #include <run.decla.h>
+
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
 #include "SSEShifter.h"
-#if defined(WIN32)
-#include <pasti/pasti.h>
-#endif
-#if !defined(SSE_CPU)
-#include <mfp.decla.h>
-#endif
-
 #include "SSEDecla.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
 #include "SSEScp.h"
 
-#if defined(SSE_VAR_RESIZE_372)
-#if !defined(SSE_VAR_RESIZE_382)
-#define fCurrentImage FloppyDrive[Id].f
-#endif
-#define nSides FloppyDrive[Id].Sides
-#define nTracks FloppyDrive[Id].TracksPerSide
-#endif
-
-#define LOGSECTION LOGSECTION_IMAGE_INFO
+#define N_SIDES FloppyDrive[Id].Sides
+#define N_TRACKS FloppyDrive[Id].TracksPerSide
 
 #if !defined(BIG_ENDIAN_PROCESSOR)
 #include <acc.decla.h>
@@ -61,14 +50,13 @@ TImageSCP::~TImageSCP() {
 }
 
 
+#define LOGSECTION LOGSECTION_IMAGE_INFO
+
+
 void TImageSCP::Close() {
   if(fCurrentImage)
   {
-#if defined(SSE_DISK_STW2)
     TRACE_LOG("SCP %d close image\n",Id);
-#else
-    TRACE_LOG("SCP close image\n");
-#endif
     fclose(fCurrentImage);
     if(TimeFromIndexPulse)
       free(TimeFromIndexPulse);
@@ -77,22 +65,22 @@ void TImageSCP::Close() {
 }
 
 
-void  TImageSCP::ComputePosition(WORD position) {
+void  TImageSCP::ComputePosition() {
+  // when we start reading/writing, where on the disk?
+  
+  ASSERT(TimeFromIndexPulse);
   if(!TimeFromIndexPulse)
     return; //safety
-
-  // when we start reading/writing, where on the disk?
-  position=position%nBytes; // 0-6256, safety
-  Position=0; // safety
-
-  // ignore "position", compute using IP timing and ACT //? TODO
-  int cycles=time_of_next_event-SF314[DRIVE].time_of_last_ip;
-  DWORD units=cycles*5;
-  for(DWORD i=0;i<nBits;i++)
+  
+  int cycles=time_of_next_event-SF314[DRIVE].time_of_last_ip;// CPU cycles since IP
+  DWORD units=cycles*5; // in SCP units
+  
+  Position=0;
+  for(DWORD i=0;i<nBits;i++) // slow search
   {
     if(TimeFromIndexPulse[i]>=units)
     {
-      Position=i;
+      Position=i; // can be 0
       break;
     }
   }
@@ -106,17 +94,20 @@ void  TImageSCP::ComputePosition(WORD position) {
    TODO test if it breaks other SCP games?
 */
   if(!Position)
-    Position=rand()%4;
+    Position=rand()%4; // IP + non-synchronisation
 #endif
 
 #if defined(SSE_WD1772_BIT_LEVEL)
   WD1772.Dpll.Reset(ACT); 
 #endif
 
+  ASSERT(SF314[DRIVE].CyclesPerByte());
+#if defined(SSE_DISK_SCP_391) // just informative? TODO
+  Disk[DRIVE].current_byte=(time_of_next_event-SF314[DRIVE].time_of_last_ip)
+    /SF314[DRIVE].CyclesPerByte();
+#else
   Disk[DRIVE].current_byte=(ACT-SF314[DRIVE].time_of_last_ip)/SF314[DRIVE].CyclesPerByte();
-
-//  TRACE_LOG("Compute new position IP %d ACT %d cycles in %d units %d Position %d units %d byte %d\n",
-  //  SF314[DRIVE].time_of_last_ip,ACT,ACT-SF314[DRIVE].time_of_last_ip,units,Position,TimeFromIndexPulse[Position],Disk[DRIVE].current_byte);
+#endif
 }
 
 #if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
@@ -131,11 +122,8 @@ BYTE TImageSCP::GetDelay(int position) {
 
 #endif
 
-#if defined(SSE_VS2008_WARNING_382)
+
 int TImageSCP::UnitsToNextFlux(DWORD position) {
-#else
-int TImageSCP::UnitsToNextFlux(int position) {
-#endif
   // 1 unit = 25 nanoseconds = 1/40 ms
   ASSERT(position<nBits);
   ASSERT(position>=0);
@@ -184,7 +172,7 @@ WORD TImageSCP::GetMfmData(WORD position) {
 
   // must compute new starting point?
   if(position!=0xFFFF)
-    ComputePosition(position);
+    ComputePosition();
 
 #if defined(SSE_WD1772_BIT_LEVEL)
 
@@ -231,6 +219,7 @@ WORD TImageSCP::GetMfmData(WORD position) {
     WD1772.update_time=ACT+SF314[DRIVE].cycles_per_byte;
   }
 #endif
+
   ASSERT(!mfm_data); // see note at top of function
   mfm_data=WD1772.Mfm.encoded; // correct?
   return mfm_data;
@@ -269,6 +258,9 @@ void TImageSCP::IncPosition() {
       // we step revs 0->1 each IP, we'll reload 0 during rev
       // works with Turrican, I Ludicrus, Leavin' Teramis
       // and you can see that it's simpler
+      // Notice we do no computing, the first bit of the new rev
+      // is relative to last bit of previous rev, or we are very
+      // lucky.
       LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
 #else
       // We step revs only if there's reading over the IP
@@ -295,8 +287,8 @@ void TImageSCP::IncPosition() {
 void TImageSCP::Init() {
   fCurrentImage=NULL;
   TimeFromIndexPulse=NULL;
-  nSides=2;
-  nTracks=83; //max
+  N_SIDES=2;
+  N_TRACKS=83; //max
   nBytes=DRIVE_BYTES_ROTATION_STW; //not really pertinent (TODO?)
 }
 
@@ -368,29 +360,27 @@ void TImageSCP::InterpretFlux() {
 bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
   bool ok=false;
 
-  ASSERT( side<2 && track<nTracks ); // unique side may be 1
-  if(side>=2 || track>=nTracks)
+  ASSERT( side<2 && track<N_TRACKS ); // unique side may be 1
+  if(side>=2 || track>=N_TRACKS)
     return ok; //no crash
   BYTE trackn=track;
-  if(nSides==2) // general case
+  if(N_SIDES==2) // general case
     trackn=track*2+side; 
-#if defined(SSE_DISK_SCP2B)
-  if(!rev) // if on 2nd rev we reload 1st rev during "idle"
-#endif
-  if(! reload && track_header.TDH_TRACKNUM==trackn) //already loaded
+
+  // if on 2nd rev we reload 1st rev during "idle"
+  if(!rev &&! reload && track_header.TDH_TRACKNUM==trackn) //already loaded
     return true;
 
   if(TimeFromIndexPulse) 
     free(TimeFromIndexPulse);
   TimeFromIndexPulse=NULL;
 
-  int offset= file_header.IFF_THDOFFSET[trackn]; // base = start of file
+  int offset=file_header.IFF_THDOFFSET[trackn]; // base = start of file
 
   if(fCurrentImage) // image exists
   {  
     fseek(fCurrentImage,offset,SEEK_SET);
     int size=sizeof(TSCP_track_header);
-//      -( (5-file_header.IFF_NUMREVS)*sizeof(TSCP_TDH_TABLESTART));
     fread(&track_header,size,1,fCurrentImage);
 
 /*  Determine which track rev to load.
@@ -429,7 +419,7 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
 
       int units_from_ip=0;
       nBits=0;
-      // reverse endianess and convert to time after IP, one data per bit
+      // reverse endianess and convert to time after IP, one data per bit (SLOW)
       for(DWORD i=0;i<track_header.TDH_TABLESTART[rev].TDH_LENGTH;i++)
       {
         SWAP_WORD( &flux_to_flux_units_table_16bit[i] );
@@ -455,10 +445,10 @@ track_header.TDH_TABLESTART[rev].TDH_DURATION,
 (float)track_header.TDH_TABLESTART[rev].TDH_DURATION*25/1000000,
 track_header.TDH_TABLESTART[rev].TDH_LENGTH, nBits,TimeFromIndexPulse[nBits-1],
 track_header.TDH_TABLESTART[rev].TDH_OFFSET,track_header.track_data_checksum);
-#if defined(SSE_DISK2)
+
     Disk[Id].current_side=side;
     Disk[Id].current_track=track;
-#endif
+
 #if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
     InterpretFlux();
 #endif
@@ -479,19 +469,19 @@ bool TImageSCP::Open(char *path) {
     {
       if(!strncmp(DISK_EXT_SCP,(char*)&file_header.IFF_ID,3)) // it's SCP
       {
-        // compute nSides and nTracks
+        // compute N_SIDES and N_TRACKS
         if(file_header.IFF_HEADS)
         {
-          nSides=1;
-          nTracks=file_header.IFF_END-file_header.IFF_START+1;
+          N_SIDES=1;
+          N_TRACKS=file_header.IFF_END-file_header.IFF_START+1;
         }
         else
-          nTracks=(file_header.IFF_END-file_header.IFF_START+1)/2;
+          N_TRACKS=(file_header.IFF_END-file_header.IFF_START+1)/2;
 
 #if defined(SSE_DEBUG) && defined(SSE_DISK_STW2)
 TRACE_LOG("SCP %d sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
 IFF_START %d IFF_END %d IFF_FLAGS %d IFF_ENCODING %d IFF_HEADS %d \
-IFF_RSRVED %X IFF_CHECKSUM %X\n",Id,nSides,nTracks,file_header.IFF_VER,
+IFF_RSRVED %X IFF_CHECKSUM %X\n",Id,N_SIDES,N_TRACKS,file_header.IFF_VER,
 file_header.IFF_DISKTYPE,file_header.IFF_NUMREVS,file_header.IFF_START,
 file_header.IFF_END,file_header.IFF_FLAGS,file_header.IFF_ENCODING,
 file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
@@ -512,10 +502,11 @@ file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
 #pragma warning(disable:4100)//unreferenced formal parameter
 
 void TImageSCP::SetMfmData(WORD position, WORD mfm_data) {
-
+  // :) TODO
 }
 
 #pragma warning(default:4100)
+
 #undef LOGSECTION
 
 #endif//SCP

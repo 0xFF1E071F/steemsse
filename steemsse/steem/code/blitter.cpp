@@ -13,9 +13,9 @@ TBlitter Blit;
 #endif
 
 #if defined(SSE_BLT_390)
-#define BLITTER_START_WAIT 4
-#define BLITTER_END_WAIT 4
-#define GRAB_BUS_TIMING 4
+#define BLITTER_START_WAIT (4)
+#define BLITTER_END_WAIT (4)
+#define GRAB_BUS_TIMING (4)
 #else // Steem 3.2
 #define BLITTER_START_WAIT 8//8
 #define BLITTER_END_WAIT 0//0
@@ -108,6 +108,17 @@ inline void Blitter_ReadSource(MEM_ADDRESS SrcAdr)
 void Blitter_Start_Line()
 {
   if (Blit.YCounter<=0){ // Blit finished?
+
+#if defined(SSE_BLT_RESTART)
+/*  When it has been restarted, the blitter seems to need more time to surrender
+    bus control to the CPU after the blit is over.
+    BLITT03K.TOS last lines... (suspicious fix...)
+*/
+    if(!Blit.Hog && Blit.Restarted)
+      INSTRUCTION_TIME(4); 
+    Blit.Restarted=false;
+#endif
+
 #if defined(SSE_BLT_380) 
 //BLTBENCH.TOS, http://www.atari-forum.com/viewtopic.php?f=25&t=28424 (1st version)
     Blit.Hog=Blit.Busy=Blit.HasBus=false; 
@@ -127,6 +138,7 @@ void Blitter_Start_Line()
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
 #endif
+
 #if defined(SSE_BLT_390B)
 /*  Record # blit cycles during which the CPU could work without
     accessing the bus. More like real emulation, but it has a cost.
@@ -148,30 +160,39 @@ void Blitter_Start_Line()
 
     Blit.Last=0;
 
-    if (Blit.FXSR
-#if defined(SSE_BLT_380) //same rule as for normal fetches
-      && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge)))
-#endif
-      ){
 /*
   FXSR stands  for Force  eXtra Source Read.  When this bit is set one extra
   source read is performed at the  start  of  each  line  to  initialize the
   remainder portion source data latch. The  FXSR (aka.  pre-fetch) bit in
   the SKEW register indicates, when set, that an extra source read should be
   performed at the beginning of each  line  to  "prime"  the  source buffer.
-*/      
-      Blitter_ReadSource(Blit.SrcAdr); //ss prefetch
+*/ 
+#if defined(SSE_BLT_COPY_LOOP) // do the prefetch in the regular copy loop
+    Blit.BlittingPhase= (Blit.FXSR
+      && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))))
+    ? TBlitter::PRIME : TBlitter::READ_SOURCE;
+#else
+    if (Blit.FXSR
+#if defined(SSE_BLT_380) //same rule as for normal fetches
+      && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge)))
+#endif
+      ){
+      abus=Blit.SrcAdr;
+      BLT_ABUS_ACCESS_READ; 
+      Blitter_ReadSource(Blit.SrcAdr);
 #if defined(SSE_BLT_381)
-      INSTRUCTION_TIME(4); // don't round, because "start" cycle weren't counted yet TODO
+      INSTRUCTION_TIME(4);
 #endif
       Blit.SrcAdr+=Blit.SrcXInc;       
     }
+#endif
   }
 }
+
 //---------------------------------------------------------------------------
 void ASMCALL Blitter_Start_Now()
 {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_390B) && !defined(SSE_BLT_MAIN_LOOP)
   Blit.TimeAtBlit=ACT;
 #endif
   ioaccess=0;
@@ -183,7 +204,7 @@ void ASMCALL Blitter_Start_Now()
   /*Only want to start the line if not in the middle of one.*/
   if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
 
-#if defined(SSE_BOILER_BLIT_IN_HISTORY)
+#if defined(SSE_BOILER_BLIT_IN_HISTORY) && !defined(SSE_BLT_MAIN_LOOP)
 #if defined(SSE_BOILER_BLIT_IN_HISTORY2)
 #if defined(SSE_BOILER_HISTORY_TIMING)
   pc_history_y[pc_history_idx]=scan_y;
@@ -195,10 +216,171 @@ void ASMCALL Blitter_Start_Now()
 #endif
 
   Blitter_Draw();
+#if !defined(SSE_BLT_MAIN_LOOP)
+  // DON'T check interrupts, we're in the middle of an instruction!
   check_for_interrupts_pending();
+#endif
 }
+
 //---------------------------------------------------------------------------
-void Blitter_Blit_Word() //SS Data is blitted word by word
+
+#if defined(SSE_BLT_COPY_LOOP)
+/*  BLITT03I.TOS: In blit mode, the blit can apparently be interrupted before
+    the write.
+    Data is kept in internal register, as well as current phase.
+    This function will leave after 'read source', if there are still cycles, 
+    the main loop will call again it at once.
+    'Read destination' and 'write destination' are still done in one go.
+*/
+
+
+void Blitter_Blit_Word()
+{
+  ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
+
+  switch(Blit.BlittingPhase)
+  {
+  case TBlitter::PRIME:
+    ASSERT( Blit.FXSR && Blit.XCount==Blit.XCounter //should be just assert
+      &&((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))) );
+    abus=Blit.SrcAdr;
+    BLT_ABUS_ACCESS_READ;
+    Blitter_ReadSource(abus); //ss prefetch
+    Blit.SrcAdr+=Blit.SrcXInc;     
+    Blit.BlittingPhase++;
+    break;
+
+  case TBlitter::READ_SOURCE:
+    if (Blit.XCounter==1) // last word
+    {  
+      Blit.Last=true;
+      if (Blit.XCount>1) 
+        Blit.Mask=Blit.EndMask[2]; 
+    }
+    if ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
+      if (Blit.NFSR && Blit.Last){
+        if (Blit.SrcXInc>=0){
+          Blit.SrcBuffer<<=16;
+        }else{
+          Blit.SrcBuffer>>=16;
+        }
+      }else{
+        abus=Blit.SrcAdr;
+        BLT_ABUS_ACCESS_READ;
+        Blitter_ReadSource(Blit.SrcAdr);
+      }
+      if (Blit.Last){ 
+        Blit.SrcAdr+=Blit.SrcYInc;
+      }else{ 
+        if ((Blit.NFSR && Blit.XCounter==2)==0){
+          Blit.SrcAdr+=Blit.SrcXInc;
+        }
+      }
+    }
+
+    switch (Blit.Hop){
+      case 0:
+        Blit.SrcDat=WORD(0xffff); //SS fill
+        break;
+      case 1: 
+        if (Blit.Smudge){  //SS strange but as documented
+          Blit.SrcDat=Blit.HalfToneRAM[WORD(Blit.SrcBuffer >> Blit.Skew) & (BIT_0 | BIT_1 | BIT_2 | BIT_3)];
+        }else{
+          Blit.SrcDat=Blit.HalfToneRAM[int(Blit.LineNumber)];
+        }
+        break;
+      default:
+        ASSERT(Blit.Skew<16);
+        Blit.SrcDat=WORD( Blit.SrcBuffer >> Blit.Skew);
+        if (Blit.Hop==3){
+          if (Blit.Smudge==0){
+            Blit.SrcDat&=Blit.HalfToneRAM[int(Blit.LineNumber)];
+          }else{
+            Blit.SrcDat&=Blit.HalfToneRAM[Blit.SrcDat & (BIT_0 | BIT_1 | BIT_2 | BIT_3)];
+          }
+        }
+    }//sw
+    Blit.BlittingPhase++;
+    break;
+  
+  case TBlitter::READ_DEST:
+    Blit.DestDat=0;
+    if (Blit.NeedDestRead || Blit.Mask!=0xffff){
+      abus=Blit.DestAdr;
+      BLT_ABUS_ACCESS_READ;
+      Blit.DestDat=Blitter_DPeek(Blit.DestAdr);
+      Blit.NewDat=Blit.DestDat & WORD(~(Blit.Mask));
+    }else{
+      Blit.NewDat=0;
+    }
+    switch (Blit.Op){   // 3 shows the shit in white
+      case 0: // 0 0 0 0    - Target will be zeroed out (blind copy)
+        Blit.NewDat|=WORD(0) & Blit.Mask; break;
+      case 1: // 0 0 0 1    - Source AND Target         (inverse copy)
+        Blit.NewDat|=WORD(Blit.SrcDat & Blit.DestDat) & Blit.Mask; break;
+      case 2: // 0 0 1 0    - Source AND NOT Target     (mask copy)
+        Blit.NewDat|=WORD(Blit.SrcDat & ~Blit.DestDat) & Blit.Mask; break;
+      case 3: // 0 0 1 1    - Source only               (replace copy)
+        Blit.NewDat|=Blit.SrcDat & Blit.Mask; break;
+      case 4: // 0 1 0 0    - NOT Source AND Target     (mask copy)
+        Blit.NewDat|=WORD(~Blit.SrcDat & Blit.DestDat) & Blit.Mask; break;
+      case 5: // 0 1 0 1    - Target unchanged          (null copy)
+        Blit.NewDat|=Blit.DestDat & Blit.Mask; break;
+      case 6: // 0 1 1 0    - Source XOR Target         (xor copy)
+        Blit.NewDat|=WORD(Blit.SrcDat ^ Blit.DestDat) & Blit.Mask; break;
+      case 7: // 0 1 1 1    - Source OR Target          (combine copy)
+        Blit.NewDat|=WORD(Blit.SrcDat | Blit.DestDat) & Blit.Mask; break;
+      case 8: // 1 0 0 0    - NOT Source AND NOT Target (complex mask copy)
+        Blit.NewDat|=WORD(~Blit.SrcDat & ~Blit.DestDat) & Blit.Mask; break;
+      case 9: // 1 0 0 1    - NOT Source XOR Target     (complex combine copy)
+        Blit.NewDat|=WORD(~Blit.SrcDat ^ Blit.DestDat) & Blit.Mask; break;
+      case 10: // 1 0 1 0    - NOT Target                (reverse, no copy)
+        Blit.NewDat=Blit.DestDat^Blit.Mask; break;  // ~DestAdr & Blit.Mask
+      case 11: // 1 0 1 1    - Source OR NOT Target      (mask copy)
+        Blit.NewDat|=WORD(Blit.SrcDat | ~Blit.DestDat) & Blit.Mask; break;
+      case 12: // 1 1 0 0    - NOT Source                (reverse direct copy)
+        Blit.NewDat|=WORD(~Blit.SrcDat) & Blit.Mask; break;
+      case 13: // 1 1 0 1    - NOT Source OR Target      (reverse combine)
+        Blit.NewDat|=WORD(~Blit.SrcDat | Blit.DestDat) & Blit.Mask; break;
+      case 14: // 1 1 1 0    - NOT Source OR NOT Target  (complex reverse copy)
+        Blit.NewDat|=WORD(~Blit.SrcDat | ~Blit.DestDat) & Blit.Mask; break;
+      case 15: // 1 1 1 1    - Target is set to "1"      (blind copy)
+        Blit.NewDat|=WORD(0xffff) & Blit.Mask; break;
+    }//sw
+    Blit.BlittingPhase++;
+    // no break (eg Lethal Xcess)
+
+  case TBlitter::WRITE_DEST:
+    abus=Blit.DestAdr;
+    BLT_ABUS_ACCESS_WRITE; 
+    Blitter_DPoke(Blit.DestAdr,Blit.NewDat);
+
+    if (Blit.Last){
+      Blit.DestAdr+=Blit.DestYInc;
+    }else{
+      Blit.DestAdr+=Blit.DestXInc;
+    }
+    Blit.Mask=Blit.EndMask[1];
+
+    if((--Blit.XCounter) <= 0){
+      Blit.LineNumber+=char((Blit.DestYInc>=0) ? 1:-1);
+      Blit.LineNumber&=15;
+      Blit.YCounter--;
+      Blit.YCount=(WORD)Blit.YCounter;
+      Blit.XCounter=int(Blit.XCount ? Blit.XCount:65536);  //init blitter for line
+      Blitter_Start_Line();
+    }
+    if(Blit.BlittingPhase!=TBlitter::PRIME)
+      Blit.BlittingPhase=TBlitter::READ_SOURCE;
+    break;
+  }//sw
+}
+
+
+#else
+
+
+void Blitter_Blit_Word()
 {
   ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
 #if !defined(SSE_VAR_OPT_390E)
@@ -420,31 +602,120 @@ void Blitter_Blit_Word() //SS Data is blitted word by word
   }
 }
 
+#endif
+
+
+#if defined(SSE_BLT_MAIN_LOOP)
+/*  Blitter_Draw() took care of the blit mode by running its own process
+    loop for the CPU cycles.
+    In this version, after the blit cycles we leave, and it must be checked
+    in run's process loop if it's time to restart the blitter.
+*/
+
+
+void Blitter_Draw() {
+  ioaccess&=~IOACCESS_FLAG_DO_BLIT;
+
+  if (Blit.YCount==0){ // NO BLIT/BLIT FINISHED
+    Blit.Busy=Blit.Hog=false; 
+    dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Draw YCount==0 changing GPIP bit from "+
+         bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
+    mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
+    return;
+  }
+
+#if defined(SSE_BLT_390B) 
+  Blit.TimeAtBlit=ACT; // to record #blit cycles
+#endif
+  INSTRUCTION_TIME(BLITTER_START_WAIT);
+  Blit.YCounter=Blit.YCount;
+#ifdef DEBUG_BUILD
+  dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING NOW --------------");
+  dbg_log(EasyStr("SrcAdr=$")+HEXSl(Blit.SrcAdr,6)+", SrcXInc="+Blit.SrcXInc+", SrcYInc="+Blit.SrcYInc);
+  dbg_log(EasyStr("DestAdr=$")+HEXSl(Blit.DestAdr,6)+", DestXInc="+Blit.DestXInc+", DestYInc="+Blit.DestYInc);
+  dbg_log(EasyStr("XCount=")+int(Blit.XCount ? Blit.XCount:65536)+", YCount="+Blit.YCount);
+  dbg_log(EasyStr("Skew=")+Blit.Skew+", NFSR="+(int)Blit.NFSR+", FXSR="+(int)Blit.FXSR);
+  dbg_log(EasyStr("Hog=")+Blit.Hog+", Op="+Blit.Op+", Hop="+Blit.Hop);
+#endif
+  Blit.HasBus=true;
+  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+252;
+#if defined(SSE_BLT_RESTART)
+/*  BLIT03I.TOS
+    When it is first started in blit mode, the blitter will run for 252 cycles.
+    When it is restarted after that, it will get 256 cycles. Reason unknown.
+*/
+  if(Blit.Restarted)
+    Blit.TimeToSwapBus+=4; 
+#endif
+
+#if defined(SSE_BOILER_BLIT_IN_HISTORY3) 
+  // write the BLiT in history
+  pc_history_y[pc_history_idx]=scan_y;
+  pc_history_c[pc_history_idx]=LINECYCLES;
+  pc_history[pc_history_idx++]=0x98764321; 
+  if (pc_history_idx>=HISTORY_SIZE) 
+    pc_history_idx=0;
+#endif
+
+  while(runstate==RUNSTATE_RUNNING && Blit.HasBus){
+
+    while(cpu_cycles>0 && runstate==RUNSTATE_RUNNING && Blit.HasBus){
+      Blitter_Blit_Word();
+      if(Blit.Busy)
+      {
+        // time to stop?
+        if(!Blit.Hog && ((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0))
+        {
+          INSTRUCTION_TIME(BLITTER_END_WAIT); //arbitration
+          ASSERT(Blit.HasBus);
+          Blit.HasBus=false;
+          Blit.TimeToSwapBus=ACT+258; // CPU has more cycles...
+        }
+      }
+      else // finished
+      {
+        Blit.HasBus=false;  
+        break;
+      }
+    }
+
+    while (cpu_cycles<=0){
+#if defined(SSE_BOILER_TRACE_CONTROL)
+      if(TRACE_MASK2&TRACE_CONTROL_EVENT)
+        TRACE_EVENT(screen_event_vector);        
+#endif
+      // run the events but...
+      screen_event_vector();
+      prepare_next_event();
+      // DON'T check interrupts, we're in the middle of an instruction!
+    }
+  } 
+}
+
+
+#else //!main loop
+
+
 void Blitter_Draw()
 {
+
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
-#if !defined(SSE_BLT_381) // not if there's no blit anyway
-  INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
+#if !defined(SSE_BLT_381)
+  INSTRUCTION_TIME(BLITTER_START_WAIT);
 #endif
   if (Blit.YCount==0){  //see note in Blitter.txt - trying to restart with a ycount of zero results in no restart
-/*
-     * If the BUSY flag is
-     * reset when the Y_Count is zero, the flag will remain clear
-     * indicating BLiTTER completion and the BLiTTER won't be restarted.
-*/
 #if defined(SSE_BLT_380)
     Blit.Busy=Blit.Hog=false; 
 #else
     Blit.Busy=false; 
 #endif
-
     dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Draw YCount==0 changing GPIP bit from "+
          bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
     return;
   }else{
-#if defined(SSE_BLT_390)
+#if defined(SSE_BLT_390) //381?
     INSTRUCTION_TIME(BLITTER_START_WAIT);
 #endif
     Blit.YCounter=Blit.YCount;
@@ -467,6 +738,7 @@ void Blitter_Draw()
 //#endif
 
   Blit.HasBus=true;
+
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
 #else
@@ -492,16 +764,13 @@ void Blitter_Draw()
 #endif
         DEBUG_ONLY( pc_history[pc_history_idx++]=pc; )
         DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
-
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU
         m68k_PROCESS
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_BLITTER
-
         CHECK_BREAKPOINT
-
-#if defined(SSE_BOILER_BLIT_IN_HISTORY3)
+#if defined(SSE_BOILER_BLIT_IN_HISTORY3) 
         if(Blit.HasBus) //eg in a TAS loop (TOS)
         {
           pc_history_y[pc_history_idx]=scan_y;
@@ -519,7 +788,7 @@ void Blitter_Draw()
 #if defined(SSE_BLT_390)
             INSTRUCTION_TIME(GRAB_BUS_TIMING);
 #endif
-#if defined(SSE_BLT_381) // BLIT03C, experimental but true feature
+#if defined(SSE_BLT_381) // BLIT03C, experimental but true feature //no, minsinterpretation :)
             if(OPTION_HACKS && !Blit.HasBus
               &&(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)
               && ((ir&0xf0c0)==0xc0c0 || (ir&0xf100)==0xd000))
@@ -553,13 +822,13 @@ void Blitter_Draw()
               dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
             }
 #endif
+
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
 #if defined(SSE_BLT_380)
             Blit.TimeToSwapBus=ACT+BLITTER_BLIT_MODE_CYCLES; // + delay
 #else
             Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
 #endif
-              ;
 #else
             Blit.TimeToSwapBus+=64;
 #endif
@@ -619,6 +888,9 @@ the Blitter is active - Not even for interrupts. "
 //  Blit.YCount=0;
 //  if (Blit.Hog) INSTRUCTION_TIME_ROUND(Cycles);
 }
+
+#endif //main loop?
+
 //---------------------------------------------------------------------------
 BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
 {
@@ -1025,6 +1297,13 @@ Byte instructions can not be used to read or write this register.
       Blit.Smudge=bool(Val & BIT_5); //SS persistent
       Blit.Hog=bool(Val & BIT_6); //SS volatile
 
+#ifdef TEST01___ //detect cases
+      if(!Blit.Hog && pc<0xe00000) TRACE_OSD("BLTM");
+#endif
+
+#if defined(SSE_BLT_RESTART)
+      Blit.Restarted=false;
+#endif
       if (Blit.Busy==0){
         if (Val & BIT_7){ //start new
 #if defined(SSE_DEBUG)
@@ -1042,7 +1321,8 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
             TRACE_OSD("BLT %X %dx%d",Val,Blit.XCount,Blit.YCount);
 #endif
 #endif//dbg
-          if (Blit.YCount) ioaccess|=IOACCESS_FLAG_DO_BLIT;
+          if (Blit.YCount)
+            ioaccess|=IOACCESS_FLAG_DO_BLIT;
         }
       }else{ //there's already a blit in progress
 /*
@@ -1066,6 +1346,9 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
      * during execution time critical sections by clearing the BUSY flag.
      * The original BUSY flag state must be restored however, before
      * termination of the interrupt service routine.)
+
+   SS: busy bit was already set, but by setting it again the blitter starts
+   blitting at once. 
 */
         if (Val & BIT_7){ // Restart
 #if defined(SSE_DEBUG)
@@ -1073,15 +1356,27 @@ TRACE_LOG("PC %X F%d y%d c%d ReBlt %X Hop%d Op%X %dx%d from %X (%d, %d) to %X (%
 old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit.SrcXInc,Blit.SrcYInc,Blit.DestAdr,Blit.DestXInc,Blit.DestYInc,Blit.NFSR,Blit.FXSR,Blit.Skew,Blit.EndMask[0],Blit.EndMask[1],Blit.EndMask[2]);
 #endif
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
+
+#if defined(SSE_BLT_MAIN_LOOP)
+#if defined(SSE_BLT_RESTART)
+          Blit.Restarted=true; // trick; changes #blit cycles and arbitration cycles
+#endif
+#if defined(SSE_BLT_RESTART2)//no...
+          if (Blit.YCount)
+            ioaccess|=IOACCESS_FLAG_DO_BLIT;
+#else
+          Blitter_Draw(); // includes start delay
+#endif
+#else//!main loop
           Blit.HasBus=true;
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
-
 #if defined(SSE_BLT_BLIT_MODE_CYCLES)
           INSTRUCTION_TIME(BLITTER_START_WAIT);
           Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
 #else
           Blit.TimeToSwapBus+=64;
 #endif
+#endif//? main loop
         }else{ // Stop
           Blit.Busy=false;
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter clear busy changing GPIP bit from "+

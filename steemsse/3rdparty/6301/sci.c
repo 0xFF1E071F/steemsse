@@ -346,9 +346,7 @@ tdr_putb (offs, value)
     TRACE("6301 TDRS %X\n",HD6301.tdrs);
 #endif
     keyboard_buffer_write_n_record(value); // call Steem's ikbd function
-#if defined(SSE_ACIA_390)
     txinterrupts=1;
-#endif
   }
   return 0;//warning
 }

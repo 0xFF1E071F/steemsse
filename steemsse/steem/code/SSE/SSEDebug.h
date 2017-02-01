@@ -247,7 +247,6 @@ enum logsection_enum_tag {
 #endif
 #if !defined(SSE_BOILER_TRACE_CONTROL)
  LOGSECTION_FDC_BYTES, // was DIV
-// LOGSECTION_IPF_LOCK_INFO,
 #endif
  LOGSECTION_IMAGE_INFO, //was Pasti
  LOGSECTION_OPTIONS, 
@@ -285,9 +284,7 @@ enum logsection_enum_tag {
 #define OSD_MASK3 (Debug.ControlMask[5])
 #define OSD_CONTROL_DMASND                  (1<<15)
 #define OSD_CONTROL_STEBLT                  (1<<14)
-//#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 #define OSD_CONTROL_WRITESDP                (1<<13)
-//#endif//osdcontrol
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
 /*  We use this to better control trace output, log section is still
@@ -634,9 +631,7 @@ enum logsection_enum_tag {
 enum { // to pass compilation
  LOGSECTION_FDC_BYTES, // was DIV
  LOGSECTION_IMAGE_INFO, //was Pasti
-// LOGSECTION_IPF_LOCK_INFO,
  LOGSECTION_OPTIONS,
- //NUM_LOGSECTIONS,
  };
 #endif
 

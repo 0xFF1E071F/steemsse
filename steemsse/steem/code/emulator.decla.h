@@ -42,7 +42,7 @@ EXT WORD tos_version;
 
 EXT int interrupt_depth INIT(0);
 
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 EXT WORD em_width INIT(480);
 EXT WORD em_height INIT(480);
 EXT BYTE em_planes INIT(4);
@@ -73,7 +73,7 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
-#if defined(SSE_VAR_RESIZE_390B)
+#if defined(SSE_VAR_RESIZE)
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 #if defined(MINGW_BUILD) || defined(SSE_UNIX)
 extern "C"{ EXT BYTE shifter_freq INIT(60); }
@@ -95,7 +95,7 @@ EXT int shifter_freq INIT(60);
 #endif
 #endif
 
-#if defined(SSE_VAR_RESIZE_390B)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq_idx INIT(1); //1 for 60hz
 #else
 EXT int shifter_freq_idx INIT(1);
@@ -227,83 +227,16 @@ void agenda_acia_tx_delay_IKBD(int),agenda_acia_tx_delay_MIDI(int);
 
 EXT MEM_ADDRESS on_rte_return_address;
 
-/////////////////////
-// Counting cycles //
-/////////////////////
 
-#ifdef SSE_CPU
+#ifndef SSE_CPU
 
-extern "C" int cpu_cycles; // defined in emu.cpp
-
-inline void InstructionTime(int t) {
-#if defined(SSE_BLT_390B)
-/*  As we can see, this feature costs a lot in overhead, but that's the price
-    of "correct" emulation.
-*/
-  if(Blit.BlitCycles>t && t>0)
-    Blit.BlitCycles-=(t);
-  else
-#endif
-  cpu_cycles-=(t);
-}
-
-#define INSTRUCTION_TIME(t)  InstructionTime(t)
-
-#endif //cpu
-
-
-#if defined(SSE_MMU_ROUNDING_BUS)
-
-inline void FetchTiming();
-inline void FetchTimingL();
-#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
-#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
-inline void ReadBusTiming();
-inline void ReadBusTimingL();
-#define CPU_ABUS_ACCESS_READ  ReadBusTiming()
-#define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
-#define BLT_ABUS_ACCESS_READ  ReadBusTiming()
-inline void StackTiming();
-inline void StackTimingL();
-#define CPU_ABUS_ACCESS_READ_POP StackTiming()
-#define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
-#define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
-inline void WriteBusTiming();
-inline void WriteBusTimingL();
-#define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
-#define CPU_ABUS_ACCESS_WRITE_L  WriteBusTimingL()
-#define BLT_ABUS_ACCESS_WRITE  WriteBusTiming()
-
-#else
-
-inline void InstructionTimeRound(int t) {
-  InstructionTime(t);
-  cpu_cycles&=-4;
-}
-
-#define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
-#define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
-#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L
-#define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
-#define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
-#define CPU_ABUS_ACCESS_WRITE  INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_WRITE_L  INSTRUCTION_TIME_ROUND(8) //for performance
-
-#endif //mmu rounding
-
-#if !(defined(SSE_CPU))
 #define M68K_UNSTOP                         \
   if (cpu_stopped){ \
                    \
                   cpu_stopped=false;     \
                   SET_PC((pc+4) | pc_high_byte);          \
   }
-#endif
+#endif//cpu
 
 // This list is used to reinit the agendas after loading a snapshot
 // add any new agendas to the end of the list, replace old agendas

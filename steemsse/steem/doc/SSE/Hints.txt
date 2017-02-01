@@ -242,9 +242,9 @@ Many Automation CDs were redone for the STE, they're not mentioned here.
 - Fuzion 078: DI
 - Fuzion 150: No B
 - Fuzion 155: DI
+- Lemmings 40: STF
 - Medway 001, ...: <4MB because of the stupid antivirus by you guess who!
 This antivirus ('Protector') can be found on other disks. 
-- Lemmings 40: STF
 - Pyromaniacs 08: STF WU2
 - Ripped Off 14, 56, 60, etc.: STF because of the stupid antivirus
 - Speedy Pack #02 -HMD: enable Sound/Keyboard click

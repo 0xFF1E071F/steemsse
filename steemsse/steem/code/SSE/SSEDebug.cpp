@@ -83,15 +83,14 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_CPU ] = 0;
   logsection_enabled[ LOGSECTION_INIFILE ] = 0;
   logsection_enabled[ LOGSECTION_GUI ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 1;
   // no PASTI, no DIV
 // additions
 #if !defined(SSE_BOILER_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
-  //logsection_enabled[ LOGSECTION_IPF_LOCK_INFO ] = 0; //remove option
 #endif
   logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
-//  logsection_enabled[ LOGSECTION_OPTIONS ] = 1;
 #endif
 
 #if defined(SSE_DEBUG_TRACE_FILE)
@@ -232,7 +231,9 @@ void TDebug::Vbl(){
 #if defined(SSE_TRACE_FOR_RELEASE_390)
 
 void TDebug::TraceInit() {
-  trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
+  EasyStr trace_file=RunDir+SLASH+SSE_TRACE_FILE_NAME; // make sure we run in Steem dir...
+  trace_file_pointer=freopen(trace_file, "w", stdout );
+  //trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
 #ifdef SSE_DEBUG
   if(!trace_file_pointer)
 //    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
@@ -806,7 +807,7 @@ void TDebug::TraceEvent(void* pointer) {
     TRACE("event_start_vbl");
   else if(pointer==event_vbl_interrupt)
     TRACE("event_vbl_interrupt");
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   else if(pointer==event_trigger_vbi)
     TRACE("event_trigger_vbi");
 #endif
@@ -818,14 +819,9 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_driveB_ip)
     TRACE("event_driveB_ip");
 #endif
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
   else if(pointer==event_acia)
     TRACE("event_acia");
-#elif defined(SSE_IKBD_6301_EVENT)
-  else if(pointer==event_ikbd)
-    TRACE("event_ikbd");
-  else if(pointer==event_ikbd2)
-    TRACE("event_ikbd2");
 #endif
 #if defined(SSE_INT_MFP)
   else if(pointer==event_mfp_write)

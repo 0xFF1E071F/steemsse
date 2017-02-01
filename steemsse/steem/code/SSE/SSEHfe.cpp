@@ -19,22 +19,10 @@
 
 #define IMAGE_SIZE image_size //member variable
 #define NUM_SIDES 2
-#if defined(SSE_DISK_HFE_DYNAMIC_HEADER)
 #define NUM_TRACKS file_header->number_of_track
-#else
-#define NUM_TRACKS file_header.number_of_track
-#endif
 #define BLOCK_SIZE 512
 #define MFM_SIDE_BLOCK_SIZE 128
-
-#if defined(SSE_VAR_RESIZE_372)
-#if !defined(SSE_VAR_RESIZE_382)
-#define fCurrentImage FloppyDrive[Id].f
-#endif
-#if defined(SSE_DISK1)
-#define nBytes Disk[Id].TrackBytes
-#endif
-#endif
+#define TRACKBYTES Disk[Id].TrackBytes
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
@@ -106,21 +94,20 @@ Bit 0-> Bit 1-> Bit 2-> Bit 3-> Bit 4-> Bit 5-> Bit 6-> Bit 7->(next byte)"
     256 (MFM) bytes for side 0 then 256 bytes for side 1...
     Each MFM word (clock + data) is reversed : Bit 0-> ... -> Bit 15
 */
-#if defined(SSE_DISK2)
+
     BYTE &current_side=Disk[Id].current_side;
-#endif
     //ASSERT(MFM_SIDE_BLOCK_SIZE);
     int block=(Position/MFM_SIDE_BLOCK_SIZE)*2+current_side;
     int index=(Position%MFM_SIDE_BLOCK_SIZE)+block*MFM_SIDE_BLOCK_SIZE;
-    ASSERT( index>=0 && index< nBytes*2+128*current_side );
+    ASSERT( index>=0 && index< TRACKBYTES*2+128*current_side );
     return index;
 }
 
 
 void  TImageHFE::ComputePosition(WORD position) {
   // when we start reading/writing, where on the disk?
-  ASSERT(nBytes); // good old div /0 crashes the PC like it did the ST
-  position=position%nBytes; // 0-~6256, safety
+  ASSERT(TRACKBYTES); // good old div /0 crashes the PC like it did the ST
+  position=position%TRACKBYTES; // 0-~6256, safety
   TRACE_LOG("HFE old position %d new position %d\n",Position,position);
   Position=Disk[DRIVE].current_byte=position;
 }
@@ -143,8 +130,8 @@ WORD TImageHFE::GetMfmData(WORD position) {
 
 
 void TImageHFE::IncPosition(){
-  ASSERT(nBytes);
-  Position=(Position+1)%nBytes;
+  ASSERT(TRACKBYTES);
+  Position=(Position+1)%TRACKBYTES;
 #if defined(SSE_DISK_HFE_TRIGGER_IP)
   if(!Position)
     SF314[Id].IndexPulse(true);
@@ -166,21 +153,17 @@ bool TImageHFE::LoadTrack(BYTE side,BYTE track) {
   if(side<NUM_SIDES && track<NUM_TRACKS && ImageData)  
   {
     int position= track_header[track].offset*BLOCK_SIZE;
-    nBytes=track_header[track].track_len/4; // same for both sides
-    ASSERT(nBytes>=0 && nBytes<6500);
+    TRACKBYTES=track_header[track].track_len/4; // same for both sides
+    ASSERT(TRACKBYTES>=0 && TRACKBYTES<6500);
     ASSERT(Id==DRIVE);
-    Disk[Id].TrackBytes=nBytes; // for HFE it's track-dependent
+    Disk[Id].TrackBytes=TRACKBYTES; // for HFE it's track-dependent
 #ifdef SSE_DEBUG
     if(TrackData!=(WORD*)(ImageData+position)) //only once
-      TRACE_LOG("HFE LoadTrack side %d track %d offset %d position %d len %d bytes %d\n", side,track,track_header[track].offset,position,track_header[track].track_len,nBytes);
+      TRACE_LOG("HFE LoadTrack side %d track %d offset %d position %d len %d bytes %d\n", side,track,track_header[track].offset,position,track_header[track].track_len,TRACKBYTES);
 #endif
     TrackData=(WORD*)(ImageData+position);
-#if defined(SSE_DISK2)
     Disk[Id].current_side=side;
     Disk[Id].current_track=track;
-#else
-    current_side=side;
-#endif
     ok=true;
   }
 #ifdef SSE_DEBUG
@@ -225,7 +208,7 @@ bool TImageHFE::Open(char *path) {
     if(ImageData)
     {
       fread(ImageData,1,IMAGE_SIZE,fCurrentImage); // read all in memory (2MB OK)
-#if defined(SSE_DISK_HFE_DYNAMIC_HEADER)
+
       file_header=(picfileformatheader*)ImageData;
       if(!strncmp("HXCPICFE",(char*)file_header->HEADERSIGNATURE,8))  // it's HFE
       {
@@ -240,30 +223,7 @@ TRACE_LOG("RPM %d  WP %d WA %X offset %d step %X TR0/1 %X%X TR1/1 %X%X\n",
   file_header->track0s0_encoding,file_header->track0s1_altencoding,file_header->track0s1_encoding);
 #endif
 
-#else
-      memcpy(&file_header,ImageData,sizeof(picfileformatheader));
-      if(!strncmp("HXCPICFE",(char*)file_header.HEADERSIGNATURE,8))  // it's HFE
-      {
-
-#ifdef SSE_DEBUG //lots of info
-        TRACE_LOG("Open HFE size %d v%d sides %d tracks %d encoding %X mode %X bitRate %d\n",
-  IMAGE_SIZE,file_header.formatrevision,file_header.number_of_side,
-  file_header.number_of_track,file_header.track_encoding,
-  file_header.floppyinterfacemode,file_header.bitRate);
-TRACE_LOG("RPM %d  WP %d WA %X offset %d step %X TR0/1 %X%X TR1/1 %X%X\n",
-  file_header.floppyRPM,file_header.write_protected,file_header.write_allowed,
-  file_header.track_list_offset,file_header.single_step,file_header.track0s0_altencoding,
-  file_header.track0s0_encoding,file_header.track0s1_altencoding,file_header.track0s1_encoding);
-#endif
-
-#endif
-
-#if defined(SSE_DISK_HFE_DYNAMIC_HEADER)
         track_header=(pictrack*)(ImageData+file_header->track_list_offset*BLOCK_SIZE);
-#else
-        memcpy( &track_header,ImageData+file_header.track_list_offset*BLOCK_SIZE,
-          sizeof(pictrack)*84); // don't care about #tracks in file
-#endif
         ok=true;
       }
     }

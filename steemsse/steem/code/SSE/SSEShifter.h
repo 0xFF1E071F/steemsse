@@ -54,7 +54,7 @@ struct TShifter {
 #ifdef SSE_SHIFTER_HIRES_RASTER
   BYTE Scanline2[112+1]; // element 112 holds # raster bytes
 #endif
-#if defined(SSE_SHIFTER_HSCROLL_380)
+#if defined(SSE_SHIFTER_HSCROLL)
   BYTE hscroll0; // what is/was HSCROLL at start of line
 #endif
   BYTE HblStartingHscroll; // saving true hscroll in MED RES (no use)

@@ -77,7 +77,7 @@ extern void draw_init_resdependent();
 
 extern "C"
 {
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE BytesPerPixel INIT(2),rgb32_bluestart_bit INIT(0);
 EXT bool rgb555 INIT(0);
 EXT WORD monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
@@ -94,13 +94,16 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #define DISP_MAX_FREQ_LEEWAY 5
 
 #if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE HzIdxToHz[NUM_HZ];
 #else
 EXT int HzIdxToHz[NUM_HZ];
 #endif
 #endif
 //---------------------------------------------------------------------------
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)//391
+
 class SteemDisplay
 {
 private:
@@ -244,7 +247,7 @@ public:
   bool BorderPossible();
   int Method,UseMethods[5],nUseMethod;
   bool RunOnChangeToWindow;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
   WORD SurfaceWidth,SurfaceHeight;
 #else
   int SurfaceWidth,SurfaceHeight;
@@ -256,18 +259,26 @@ public:
   bool DoAsyncBlit;
 
 #ifdef WIN32
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   void ScreenShotCheckFreeImageLoad();
-#ifdef IN_MAIN
-  bool ScreenShotIsFreeImageAvailable();
-  void ScreenShotGetFormats(EasyStringList*);
-  void ScreenShotGetFormatOpts(EasyStringList*);
 #endif
-
+#ifdef IN_MAIN
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  bool ScreenShotIsFreeImageAvailable();
+#endif
+  void ScreenShotGetFormats(EasyStringList*);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  void ScreenShotGetFormatOpts(EasyStringList*);
   HINSTANCE hFreeImage;
-#if defined(SSE_VAR_RESIZE_382)
-  BYTE ScreenShotFormatOpts;
+#endif
+#endif
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
+// argh! caused options ignored + crash on taking JPG screenshot before changing format
+  BYTE ScreenShotFormatOpts; 
 #else
   int ScreenShotFormatOpts;
+#endif
 #endif
   Str ScreenShotExt;
 
@@ -301,6 +312,7 @@ public:
 
 };
 
+#pragma pack(pop)//391
 
 EXT SteemDisplay Disp;
 
@@ -315,8 +327,9 @@ UNIX_ONLY( EXT bool TrySHM; )
 #define IF_TOCLIPBOARD 0xfff0
 
 #ifdef WIN32
-
-#if defined(SSE_VID_FREEIMAGE4) //3.6.4 use official header
+#if defined(SSE_VID_D3D_NO_FREEIMAGE)
+enum {FIF_BMP=D3DXIFF_BMP,FIF_JPEG=D3DXIFF_JPG,FIF_PNG=D3DXIFF_PNG,IF_NEO}; //0 1 3
+#elif defined(SSE_VID_FREEIMAGE4) //3.6.4 use official header
 
 #include <FreeImage/FreeImage.h>
 

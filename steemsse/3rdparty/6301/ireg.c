@@ -301,7 +301,7 @@ static unsigned int mouse_y_counter=MOUSE_MASK;
 
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-#if defined(SSE_VAR_RESIZE_390B)
+#if defined(SSE_VAR_RESIZE)
 extern BYTE shifter_freq;
 #else
 extern int shifter_freq;

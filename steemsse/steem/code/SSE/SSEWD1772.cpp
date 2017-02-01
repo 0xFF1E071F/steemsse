@@ -32,17 +32,8 @@
 
 #define LOGSECTION LOGSECTION_FDC
 
-#if defined(SSE_WD1772_RESET)
-
-#if defined(SSE_VS2008_WARNING_390)
 
 void TWD1772::Reset() {
-
-#else
-
-void TWD1772::Reset(bool Cold) {
-
-#endif
   STR=2; // funny, like ACIA
 #ifdef SSE_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
@@ -56,7 +47,6 @@ void TWD1772::Reset(bool Cold) {
   StatusType=1;
 }
 
-#endif//reset
 
 //////////////////////////////// GHOST DISK ///////////////////////////////////
 
@@ -248,7 +238,6 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
 
 BYTE TWD1772::IORead(BYTE Line) {
   
-#if defined(SSE_WD1772_390)
   ASSERT( Line<=3 );
   BYTE drive=DRIVE;
 #ifdef _DEBUG
@@ -256,16 +245,6 @@ BYTE TWD1772::IORead(BYTE Line) {
 #else
   BYTE ior_byte;  
 #endif
-#else
-#ifdef SSE_DEBUG
-  ASSERT( Line<=3 );
-  BYTE drive=DRIVE;
-#else
-#define drive DRIVE
-#endif
-  BYTE ior_byte;  
-#endif
-  
 
   // Steem handling
 
@@ -345,9 +324,7 @@ WD doc:
         mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
 #endif
       }
-#if defined(SSE_WD1772_LINES)
       Lines.irq=0;
-#endif
       ior_byte=STR;
     }
 #if defined(SSE_BOILER_TRACE_CONTROL)
@@ -390,17 +367,8 @@ WD doc:
 
 void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 
-#if defined(SSE_WD1772_390)
   ASSERT( Line<=3 );
   BYTE drive=DRIVE;
-#else
-#ifdef SSE_DEBUG
-  ASSERT( Line<=3 );
-  BYTE drive=DRIVE;
-#else
-#define drive DRIVE
-#endif
-#endif
 
   switch(Line)
   {
@@ -458,11 +426,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         Dma.UpdateRegs();
 #endif
         SF314[drive].TrackAtCommand=SF314[drive].Track(); //record
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
         SF314[drive].Sound_CheckCommand(io_src_b);
-#else
-        SF314[0].Sound_CheckCommand(io_src_b);
-#endif
       }
 #endif//sound
 
@@ -483,7 +447,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       TRACE_FDC("FDC TR W %d PC %X\n",io_src_b,old_pc);
 #endif
     if (!(STR&FDC_STR_BUSY)
-#if defined(SSE_FDC_CHANGE_TRACK_WHILE_BUSY)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) // from Hatari or Kryoflux
       ||ADAT
 #endif
       ){
@@ -500,7 +464,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       TRACE_FDC("FDC SR W %d PC %X\n",io_src_b,old_pc);
 #endif
     if (!(STR & FDC_STR_BUSY)
-#if defined(SSE_FDC_CHANGE_SECTOR_WHILE_BUSY)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) // from Hatari or Kryoflux
       ||ADAT // fixes Delirious 4 loader without Pasti
 #endif
       ){
@@ -564,16 +528,10 @@ BYTE TWD1772::CommandType(int command) {
 }
 
 
-#if defined(SSE_DEBUG) || defined(SSE_OSD_DRIVE_LED)
-#if defined(SSE_VS2008_WARNING_390)
-bool TWD1772::WritingToDisk() {
-#else
-int TWD1772::WritingToDisk() { // could do this at DMA level?
-#endif
+bool TWD1772::WritingToDisk() {// could do this at DMA level?
   return((CR&0xF0)==0xF0 || (CR&0xE0)==0xA0 || (CR&0xE0)==0xB0) ;
 }
 
-#endif
 
 ///////////////////////////////// Debug ///////////////////////////////////////
 
@@ -879,7 +837,9 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
 
   while(ctime-latest_transition>=0)
   {
+#if defined(SSE_DISK_SCP) // add formats here ;)
     aa=ImageSCP[drive].GetNextTransition(timing_in_us); // cycles to next 1
+#endif
     TRACE_MFM("(%d)",timing_in_us);
 
     latest_transition+=aa;
@@ -912,7 +872,6 @@ int TWD1772Dpll::GetNextBit(int &tm, BYTE drive) {
 
     slot++;
     tm = etime;
-    //ASSERT( 128*16==0x800 );
     if(counter & 0x800)
       break;
   }
@@ -1059,23 +1018,14 @@ void TWD1772::Irq(bool state) {
     if(CommandType()==2 || CommandType()==3)
       STR&=~STR_DRQ;
 
-#if defined(SSE_DRIVE_SOUND) && (!defined(SSE_DRIVE_SOUND_SEEK2)\
-  ||defined(SSE_DRIVE_SOUND_SEEK5))
-    if(SSEOption.DriveSound
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-      && DRIVE_SOUND_SEEK_SAMPLE
-#endif
-      )
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
+#if defined(SSE_DRIVE_SOUND)
+    if(SSEOption.DriveSound && OPTION_DRIVE_SOUND_SEEK_SAMPLE)
       SF314[DRIVE].Sound_CheckIrq();
-#else
-      SF314[0].Sound_CheckIrq();
 #endif
-#endif
-#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
-    Dma.UpdateRegs();
-#else
+#if defined(SSE_DEBUG)
     Dma.UpdateRegs(true);
+#else
+    Dma.UpdateRegs();
 #endif
   }
   Lines.irq=state;
@@ -1100,7 +1050,6 @@ void TWD1772::Motor(bool state) {
     STR&=~STR_MO;
   // only on currently selected drive, if any:
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-//    SF314[YM2149.SelectedDrive].Motor(state); 
     SF314[DRIVE].Motor(state); 
 #ifdef SSE_DEBUG
   else TRACE_LOG("WD motor %d: no drive\n",state);
@@ -1109,8 +1058,8 @@ void TWD1772::Motor(bool state) {
 
 
 int TWD1772::MsToCycles(int ms) {
-#if defined(SSE_CPU_MFP_RATIO) 
-  return ms*CpuNormalHz/1000; // *8000
+#if defined(SSE_CPU_MFP_RATIO) && ! defined(SSE_WD1772_391) 
+  return ms*CpuNormalHz/1000;// No, the WD won't count more cycles to compensate!
 #else
   return ms*8000;
 #endif
@@ -1159,14 +1108,10 @@ void TWD1772::NewCommand(BYTE command) {
       Motor(true); // but does it make sense?
       prg_phase=WD_TYPEI_SPUNUP;
       STR|=STR_SU; // eg ST NICCC 2
-#if defined(SSE_WD1772_390B) 
 /*  Add a delay, not only for RESTORE (My Socks Are Weapons), but also
     SEEK (Suretrip II), while being fast enough for MPS Golf-ELT!
 */
       update_time=ACT + 256; // don't know the exact value for this, if any
-#else
-      OnUpdate(); //go direct, no delay
-#endif
     }
     break;
 
@@ -1259,12 +1204,13 @@ void TWD1772::NewCommand(BYTE command) {
 }
 
 /*  Drive calls this function at IP if it's selected.
-    Whether the WD1772 is waiting for it or not.
+    Whether the WD1772 is waiting for it or not. 
+    The WD1772 doesn't know which drive (id) it is operating.
 */
-#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
-void TWD1772::OnIndexPulse(bool image_triggered) {
-#else
+#if defined(SSE_DEBUG)
 void TWD1772::OnIndexPulse(int id,bool image_triggered) {
+#else
+void TWD1772::OnIndexPulse(bool image_triggered) { 
 #endif
 
   IndexCounter--; // We set counter then decrement until 0
@@ -1408,17 +1354,8 @@ void TWD1772::OnUpdate() {
         if(Lines.track0)
           TR=0;
         DR=0;
-#if !defined(SSE_WD1772_390B) //done before now
-        // imitate Steem native, eg My Socks are Weapons
-        // not documented; only restore?
-        update_time=time_of_next_event+1024;
-#endif
       }    
-#if !defined(SSE_WD1772_390B)
-      else
-#endif
        OnUpdate(); // some recursion is always cool   
-      
     }
     break;
 
@@ -2105,7 +2042,6 @@ r1       r0            1772
   }//sw
 }
 
-//#endif//event
 
 void TWD1772::Read() {
   if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
@@ -2202,7 +2138,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     Fluxes -> DPLL -> data separator -> DSR
 
     Thx to Istvan Fabian for some inspiration otherwise Steem would have lower
-    caps to read disk images (like those that use the $C2 sync mark, such as 
+    CAPS to read disk images (like those that use the $C2 sync mark, such as 
     Albedo and Jupiter's Masterdrive).
     Note: my comments in this function marked by SS
 */

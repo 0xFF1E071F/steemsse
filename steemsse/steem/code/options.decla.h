@@ -160,7 +160,9 @@ public:
 
   void LoadIcons();
   void ChangeScreenShotFormat(int,Str);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   void ChangeScreenShotFormatOpts(int);
+#endif
   void ChooseScreenShotFolder(HWND);
 
   static BOOL CALLBACK EnumDateFormatsProc(char *);
@@ -174,7 +176,9 @@ public:
   void SetBorder(int);
 #endif
   void UpdateForDSError();
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   void FillScreenShotFormatOptsCombo();
+#endif
   void UpdateParallel();
 
   HWND BorderOption;
@@ -207,7 +211,7 @@ public:
   hxc_button specific_hacks_but;
 #endif
 
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
   hxc_button stealth_mode_but;
 #endif
 
@@ -297,7 +301,7 @@ EXT
 #if !defined(SSE_VID_EXT_FS2)
 const
 #endif
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 WORD
 #else
 int 
@@ -306,7 +310,7 @@ int
 
 /*
 #if defined(SSE_VID_EXT_FS2)
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT WORD
 #else
 EXT int 

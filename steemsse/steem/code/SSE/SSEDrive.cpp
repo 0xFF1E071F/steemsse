@@ -9,16 +9,14 @@
 #include <psg.decla.h>
 #include <run.decla.h>
 #include <gui.decla.h>
-#include "SSECpu.h"
-#include "SSEInterrupt.h"
-#include "SSEOption.h"
-//#include "SSEShifter.h"
-#include "SSEVideo.h"
-
 #if defined(WIN32)
 #include <pasti/pasti.h>
 #endif
 
+#include "SSECpu.h"
+#include "SSEInterrupt.h"
+#include "SSEOption.h"
+#include "SSEVideo.h"
 #include "SSEDebug.h"
 #include "SSEDrive.h"
 #include "SSEFloppy.h"
@@ -56,9 +54,7 @@ void TSF314::Init() {
 #if defined(SSE_DRIVE_SOUND)
   for(int i=0;i<NSOUNDS;i++)
     Sound_Buffer[i]=NULL;
-#if defined(SSE_DRIVE_SOUND_VOLUME)
   Sound_Volume=5000; 
-#endif
 #endif//sound
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
   SectorChecksum=0;
@@ -72,9 +68,6 @@ BYTE TSF314::Track() {
 }
 
 ////////////////////////////////////// ADAT ///////////////////////////////////
-
-#if defined(SSE_FLOPPY_ADAT_UPDATE) // not sure it's that smart
-
 void TSF314::UpdateAdat() {
 /*  ADAT=accurate disk access times
     This is defined so: Steem slow (original ADAT) or Pasti or Caps 
@@ -109,42 +102,6 @@ void TSF314::UpdateAdat() {
 #endif
 }
 
-
-#else
-
-bool TSF314::Adat() {
-/*  ADAT=accurate disk access times
-    This is defined so: Steem slow (original ADAT) or Pasti or Caps 
-    or Steem WD1772 slow.
-*/
-  bool is_adat= (
-    !floppy_instant_sector_access && ImageType.Manager==MNGR_STEEM
-#if USE_PASTI
-    || pasti_active && ImageType.Manager==MNGR_PASTI
-#endif
-#if defined(SSE_DISK_CAPS)
-    || ImageType.Manager==MNGR_CAPS
-#endif
-#if defined(SSE_DISK_STW)
-    ||ImageType.Manager==MNGR_WD1772
-#if defined(SSE_DISK_STW_FAST) 
-/*  To help our MFM disk image format, we finally add a fast mode for 
-    STW (and HFE, since we test the image manager).
-    It works with "normal" images (so most of them), but fails in cases 
-    where floppy disk timing is more important, or if there's a READ TRACK
-    or WRITE TRACK command:
-    War Heli, MPS Golf, Jupiter's Masterdrive, Union Demo, Fantasia (megademo),
-    Demoniak -ELT...
-    Part of it is because our system is simplistic.
-*/
-      &&!floppy_instant_sector_access
-#endif
-#endif
-    );
-  return is_adat;
-}
-
-#endif
 
 WORD TSF314::BytePosition() {
   WORD position=0;
@@ -295,7 +252,7 @@ void TSF314::IndexPulse(bool image_triggered) {
 #if defined(SSE_WD1772_EMU)
   // send pulse to WD1772
   if(DRIVE==Id)
-#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_DEBUG)
+#if !defined(SSE_DEBUG)
     WD1772.OnIndexPulse(image_triggered); // transmitting image_triggered
 #else
     WD1772.OnIndexPulse(Id,image_triggered); // transmitting image_triggered
@@ -357,7 +314,7 @@ void TSF314::Read() {
   ASSERT(!State.writing);
   ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
-#if defined(SSE_DISK2) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK) && defined(SSE_DISK_STW)
   //it works but side could change again in the interval
   if(Disk[Id].current_side!=CURRENT_SIDE && (IMAGE_STW||IMAGE_HFE|IMAGE_SCP))
   {
@@ -436,13 +393,9 @@ void TSF314::Read() {
 
 
 void TSF314::Step(int direction) {
-  
-#if defined(SSE_DRIVE_SOUND_SEEK2)
-  if(SSEOption.DriveSound
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-    && !DRIVE_SOUND_SEEK_SAMPLE
-#endif
-    )
+
+#if defined(SSE_DRIVE_SOUND)
+  if(SSEOption.DriveSound && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
     Sound_Step();
 #endif
 
@@ -454,12 +407,10 @@ void TSF314::Step(int direction) {
   {
     floppy_head_track[Id]--;
   }
-#if defined(SSE_WD1772_LINES)
+#if defined(SSE_WD1772)
   WD1772.Lines.track0=(floppy_head_track[Id]==0);
-#if defined(SSE_WD1772_EMU)
   if(WD1772.Lines.track0)
     WD1772.STR|=TWD1772::STR_T00; // doing it here?
-#endif
 #endif
   CyclesPerByte();  // compute - should be the same every track but...
   //TRACE_LOG("Drive %d Step d%d new track: %d\n",Id,direction,floppy_head_track[Id]);
@@ -469,10 +420,8 @@ void TSF314::Step(int direction) {
 void TSF314::Write() {
   ASSERT(IMAGE_STW||IMAGE_SCP||IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
-#if defined(SSE_DISK2)
   ASSERT(Disk[Id].current_side==CURRENT_SIDE);
   ASSERT(Disk[Id].current_track==Track());
-#endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.writing;
@@ -530,8 +479,8 @@ void TSF314::Write() {
     DirectSound makes it rather easy, you just load your samples
     in secondary buffers and play as needed, one shot or loop,
     the mixing is done by the system.
-    Each drive can have its own soundset, but for the moment it
-    is shared.
+    Each drive can have its own soundset, but for the moment they both
+    use the same samples.
 */
 
 #include "../../../3rdparty/various/sound.h" //struct TWavFileFormat
@@ -539,22 +488,16 @@ void TSF314::Write() {
 #if defined(SSE_DRIVE_SOUND_EPSON) // already better
 
 char* drive_sound_wav_files[]={ "drive_startup_Epson.wav",
-"drive_spin_Epson.wav","drive_click_Epson.wav",
-#if defined(SSE_DRIVE_SOUND_SEEK3)
-"drive_seek_edit.wav"
-#else
-"drive_seek_Epson.wav"
-#endif
- };
+"drive_spin_Epson.wav","drive_click_Epson.wav","drive_seek_Epson.wav"};
 
 #else // Amiga + my seek
 
 char* drive_sound_wav_files[]={ "drive_startup.wav","drive_spin.wav",
-"drive_click.wav","drive_seek.wav" };
+"drive_click.wav","drive_seek_edit.wav" };
+//"drive_click.wav","drive_seek.wav" };
 
 #endif
 
-#if defined(SSE_DRIVE_SOUND_VOLUME)
 
 void TSF314::Sound_ChangeVolume() {
 /*  Same volume for each buffer
@@ -564,15 +507,10 @@ void TSF314::Sound_ChangeVolume() {
   for(int i=0;i<NSOUNDS;i++)
   {
     if(Sound_Buffer[i])
-      Sound_Buffer[i]->SetVolume(
-#if defined(SSE_DRIVE_SOUND_SEEK3)
-      i==SEEK?Sound_Volume/2:
-#endif
-      Sound_Volume);
+      Sound_Buffer[i]->SetVolume(Sound_Volume);
   }
 }
 
-#endif
 
 void TSF314::Sound_CheckCommand(BYTE cr) {
 /*  Called at each WD1772 command.
@@ -585,36 +523,15 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
     if(Sound_Buffer[START])
       Sound_Buffer[START]->Play(0,0,0);
   }
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
-  if( State.adat &&
-#else
-  if( Adat() &&
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK2) && !defined(SSE_DRIVE_SOUND_SEEK3) 
-    (
-#if !defined(SSE_DRIVE_SOUND_SEEK_PASTI)
-    ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS||
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-       DRIVE_SOUND_SEEK_SAMPLE
-#endif
-    )&&
-#endif
 
+  if(OPTION_DRIVE_SOUND_SEEK_SAMPLE &&
     ( (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x00 
       && Track()>DRIVE_SOUND_BUZZ_THRESHOLD // RESTORE
     || (cr&(BIT_7+BIT_6+BIT_5+BIT_4))==0x10 
-      &&abs(Track()-fdc_dr)>DRIVE_SOUND_BUZZ_THRESHOLD  ) // SEEK
-    )
+      &&abs(Track()-fdc_dr)>DRIVE_SOUND_BUZZ_THRESHOLD ) ) // SEEK
   {
-
-#if DRIVE_SOUND_BUZZ_THRESHOLD <5
-    if(FloppyDrive[DRIVE].Empty())
-      ; // wouldn't sound right
-    else 
-#endif
     if(Sound_Buffer[SEEK])
-      Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING);
+      Sound_Buffer[SEEK]->Play(0,0,DSBPLAY_LOOPING); // start SEEK loop
   }
 }
 
@@ -623,32 +540,17 @@ void TSF314::Sound_CheckIrq() {
 /*  Called at the end of each FDC command (native, pasti, caps, stw).
     Stop SEEK loop.
     Emit a "STEP" click noise if we were effectively seeking.
-    We don't come here if ADAT and SSE_DRIVE_SOUND_SEEK2.
 */
   if(Sound_Buffer[SEEK])
   {
     Sound_Buffer[SEEK]->Stop();
 #if defined(SSE_WD1772) 
-    if(WD1772.CommandType()==1 && TrackAtCommand!=Track()
-#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
-////      && (DRIVE_SOUND_SEEK_SAMPLE /*|| (WD1772.CR&0xE0)*/) // for step
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK3)    
-      && (!Adat()|| ImageType.Manager!=MNGR_STEEM && ImageType.Manager!=MNGR_WD1772)
-#endif
-      )
+    if(WD1772.CommandType()==1 && TrackAtCommand!=Track() )
     {
       DWORD dwStatus ;
       Sound_Buffer[STEP]->GetStatus(&dwStatus);
-#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
       if(!(dwStatus&DSBSTATUS_PLAYING))
         Sound_Buffer[STEP]->Play(0,0,0);
-#else
-      if( (dwStatus&DSBSTATUS_PLAYING) )
-        Sound_Buffer[STEP]->Stop();
-      Sound_Buffer[STEP]->SetCurrentPosition(0);
-      Sound_Buffer[STEP]->Play(0,0,0);
-#endif
     }
 #endif
   }
@@ -675,16 +577,12 @@ void TSF314::Sound_CheckMotor() {
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
   else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
-#if defined(SSE_DRIVE_SOUND_SEEK_PASTI)
-  //TRACE_OSD("%d",fdc_tr);
-  //TRACE("at command %d now %d\n",TrackAtCommand,fdc_tr); // we don't get them all
-  if(motor_on && (fdc_str&1) && !DRIVE_SOUND_SEEK_SAMPLE 
-    &&(ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)
-    //&& WD1772.CommandType()==1 && TrackAtCommand!=Track())
-    //&& !(WD1772.CR&0xE0) && TrackAtCommand!=Track()) // restore, seek, not step
+  // step sound at vbl (this method misses some steps)
+  if(motor_on && (fdc_str&1) 
+    && !OPTION_DRIVE_SOUND_SEEK_SAMPLE 
+    &&((ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)||!ADAT)
     && !(WD1772.CR&0xE0) && abs(TrackAtCommand-Track())>1) // restore, seek, not step
     Sound_Step();
-#endif
 }
 
 
@@ -733,10 +631,7 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
     else TRACE("DriveSound. Can't load sample file %s\n",pathplusfile.Text);
 #endif
   }//nxt
-
-#if defined(SSE_DRIVE_SOUND_VOLUME)
   Sound_ChangeVolume();
-#endif
 }
 
 
@@ -759,28 +654,12 @@ void TSF314::Sound_ReleaseBuffers() {
 }
 
 
-#if defined(SSE_DRIVE_SOUND_SEEK2)
-/*  The idea is that Seek uses the same sample as Step.
-    Maybe some motor noise is missing.
-    It's possible to do this only when we are informed of each step.
-    For the moment, only native and WD1772 emulations.
-*/
-
 void TSF314::Sound_Step() {
   if(!Sound_Buffer[STEP])
     return;
-
-#if !defined(SSE_DRIVE_SOUND_SEEK4) //don't bother stopping
-  DWORD dwStatus ;
-  Sound_Buffer[STEP]->GetStatus(&dwStatus);
-  if( (dwStatus&DSBSTATUS_PLAYING) )
-    Sound_Buffer[STEP]->Stop();
-#endif
   Sound_Buffer[STEP]->SetCurrentPosition(0);
   Sound_Buffer[STEP]->Play(0,0,0);
 }
-
-#endif
 
 
 void TSF314::Sound_StopBuffers() {

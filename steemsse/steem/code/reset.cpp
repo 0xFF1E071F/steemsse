@@ -185,7 +185,7 @@ void power_on()
     SF314[floppyno].Id=floppyno;
     SF314[floppyno].State.motor=false;
 #endif
-#ifdef SSE_WD1772_LINES
+#ifdef SSE_WD1772
     WD1772.Lines.motor=false;
 #endif
   }
@@ -218,8 +218,8 @@ void power_on()
 
   init_screen();
   init_timings();
-#if !defined(SSE_GLUE_FRAME_TIMINGS_INIT)
-  hbl_pending=false; // sure?
+#if !defined(SSE_GLUE)// sure?
+  hbl_pending=false; 
 #endif
   disable_input_vbl_count=50*3; // 3 seconds
 
@@ -264,19 +264,19 @@ void reset_peripherals(bool Cold)
   if (extended_monitor){
     if (em_planes==1){
       screen_res=2;
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE)
     shifter_freq=72;
     shifter_freq_idx=2;
 #endif
     }else{
       screen_res=0;
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE)
       screen_res=Shifter.m_ShiftMode;
       shifter_freq=50;
       shifter_freq_idx=0;
 #endif
     }
-#if !defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if !defined(SSE_GLUE)
     shifter_freq=50;
     shifter_freq_idx=0;
 #endif
@@ -299,25 +299,14 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_CPU)
   M68000.Reset(Cold);
 #endif
-
 #if defined(SSE_SHIFTER)
   Shifter.Reset(Cold);
 #endif
-
-#if defined(SSE_WD1772_RESET)
-#if defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_WD1772)
   WD1772.Reset();
-#else
-  WD1772.Reset(Cold);
 #endif
-#endif
-
 #if defined(SSE_INT_MFP)
-#if defined(SSE_VS2008_WARNING_390)
   MC68901.Reset();
-#else
-  MC68901.Reset(Cold);
-#endif
 #endif
 
   shifter_hscroll=0;
@@ -360,13 +349,8 @@ void reset_peripherals(bool Cold)
 
 #if defined(SSE_ACSI) 
   if(ACSI_EMU_ON)
-#if defined(SSE_VS2008_WARNING_382)
     for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
       AcsiHdc[i].Reset();
-#else
-    for(int i=0;i<TAcsiHdc::MAX_ACSI_DEVICES;i++)
-      AcsiHdc[i].Reset(Cold);
-#endif
 #endif
 
 #if defined(SSE_INT_MFP_TxDR_RESET)
@@ -414,6 +398,11 @@ void reset_peripherals(bool Cold)
   dma_sound_r_volume=20;
   dma_sound_l_top_val=128;
   dma_sound_r_top_val=128;
+#if defined(SSE_SOUND_DMA_391B)
+  old_dma_sound_l_top_val=dma_sound_l_top_val;
+  old_dma_sound_r_top_val=dma_sound_r_top_val;
+#endif
+
   dma_sound_mixer=1;
 
 #if defined(SSE_SOUND_MICROWIRE)
@@ -455,10 +444,15 @@ void reset_peripherals(bool Cold)
 
 #if defined(SSE_DRIVE_SOUND)
   if(Cold)
+  {
     SF314[0].Sound_StopBuffers();
+#if defined(SSE_DRIVE_SOUND_391)
+    SF314[1].Sound_StopBuffers();
+#endif
+  }
 #endif
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE)
   Glue.Reset(Cold);
 #endif
 #if defined(SSE_BLT_390B)

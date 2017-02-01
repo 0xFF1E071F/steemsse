@@ -23,7 +23,7 @@ EXT BYTE *Mem INIT(NULL),*Rom INIT(NULL);
 EXT WORD tos_version;
 
 EXT int interrupt_depth INIT(0);
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 EXT WORD em_width INIT(480);
 EXT WORD em_height INIT(480);
 EXT BYTE em_planes INIT(4);
@@ -53,7 +53,7 @@ EXT int shifter_pixel;
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 extern "C" 
 #endif
-#if defined(SSE_VAR_RESIZE_390B)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq INIT(60);
 EXT BYTE shifter_freq_idx INIT(1);
 #else
@@ -187,7 +187,7 @@ void init_timings()
 
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
 
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
 #if defined(SSE_CPU_MFP_RATIO)
   if (n_cpu_cycles_per_second>CpuNormalHz){
 #else
@@ -198,12 +198,11 @@ void init_timings()
     screen_event_pointer=event_plan[shifter_freq_idx];
   }
 #endif
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
   Glue.GetNextScreenEvent();
   Glue.CurrentScanline.Cycles=scanline_time_in_cpu_cycles_at_start_of_vbl;
   ASSERT(Glue.CurrentScanline.Cycles>=224);
-#endif
-#if !defined(SSE_VAR_OPT_390)
+#elif !defined(SSE_VAR_OPT_390)
   screen_event_vector=screen_event_pointer->event;
 #endif
   time_of_next_event=cpu_time_of_start_of_event_plan+(screen_event_pointer->time);
@@ -225,9 +224,11 @@ void init_timings()
 #endif
   shifter_cycle_base=ABSOLUTE_CPU_TIME;
 
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
-  // Now the hack is placed where we load the snapshot
-#else
+#if !defined(SSE_GLUE)
+
+#ifndef INSTRUCTION_TIME_ROUND
+#define INSTRUCTION_TIME_ROUND INSTRUCTION_TIME //temp
+#endif
   // This is a hack to make the first screen work
   if (pc==(MEM_ADDRESS)(LPEEK(0x0070) & 0xffffff)){
     // Stopped at VBL
@@ -250,7 +251,7 @@ void init_timings()
   overscan_add_extra=0;
 #endif
   scanline_drawn_so_far=0;
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT)
+#if defined(SSE_GLUE)
   cpu_timer_at_start_of_hbl=0; // the -444 was a Steem hack we can now remove
 #else
   cpu_timer_at_start_of_hbl=cpu_time_of_last_vbl-(scanline_time_in_cpu_cycles_at_start_of_vbl-(screen_event_pointer->time));
@@ -404,7 +405,7 @@ void intercept_xbios()
     log_os_call(14);
   }
 #endif
-#if defined(SSE_EMU_DETECT)
+#if defined(SSE_VAR_EMU_DETECT)
   //if (!STEALTH_MODE 
   if(OPTION_EMU_DETECT
     && m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
@@ -500,7 +501,7 @@ void ACIA_Reset(int nACIA,bool Cold)
   LOG_ONLY( if (nACIA==0 && acia[nACIA].irq) log_to_section(LOGSECTION_IKBD,EasyStr("IKBD: ACIA reset - Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 0"); )
   acia[nACIA].irq=false;
 
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   if(OPTION_C1)
   {
     if(Cold) 
@@ -525,7 +526,7 @@ void ACIA_Reset(int nACIA,bool Cold)
       acia[nACIA].TDR=0;
     }
   }
-#endif//6301
+#endif
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
 //---------------------------------------------------------------------------
@@ -535,9 +536,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].tx_irq_enabled=    (Val & b01100000)==BIT_5;
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
-
-#if defined(SSE_ACIA_REGISTERS)
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA)
   if(OPTION_C1)
   {
     if((acia[nACIA].IrqForTx()) && !acia[nACIA].ByteWaitingTx)
@@ -548,20 +547,6 @@ void ACIA_SetControl(int nACIA,BYTE Val)
       || (ACIA_MIDI.SR&BIT_7)));
     return;
   }
-#else
-  if(OPTION_C1)
-  {
-    if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6) 
-      && !ACIA_IKBD.ByteWaitingTx
-      )
-      ACIA_IKBD.SR|=BIT_7; 
-    else
-      ACIA_IKBD.SR&=~BIT_7; 
-    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
-      || (ACIA_MIDI.SR&BIT_7)));
-    return;
-  }
-#endif
 #endif
   if (acia[nACIA].tx_irq_enabled){
     acia[nACIA].irq=true;
@@ -572,7 +557,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
 }
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA)
 
 void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
 // one function, used by io_read_b() and io_write_b() 
@@ -608,7 +593,7 @@ SS1 SS0                  Speed (bit/s)
  1   0    Div by 64         7812.5 (ST: IKBD)
 MIDI transmission is 4 times faster than IKBD
 */
-  int cycles=n_cpu_cycles_per_second*( (CR&1)?16:64 );  // one or the other
+  int cycles=n_cpu_cycles_per_second*( (CR&1)?16:64 );  // one or the other on ST
   cycles/=50000; // not 500000, compensation 10 bit/byte
   if(OPTION_HACKS&& LPEEK(0x18)==0xFEE74)
     cycles+=(1345-1280)*8; // hack for froggies menu
@@ -617,8 +602,6 @@ MIDI transmission is 4 times faster than IKBD
 }
 
 #endif
-
-
 
 //---------------------------------------------------------------------------  Agenda
 #define LOGSECTION LOGSECTION_AGENDA
@@ -713,7 +696,7 @@ void agenda_acia_tx_delay_IKBD(int)
 void agenda_acia_tx_delay_MIDI(int)
 {
   ACIA_MIDI.tx_flag=0; //finished transmitting
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   if(OPTION_C1)
   {
     ACIA_MIDI.SR|=BIT_1; // TDRE
@@ -726,10 +709,8 @@ void agenda_acia_tx_delay_MIDI(int)
     return;
   }
 #endif
-
   if (ACIA_MIDI.tx_irq_enabled) ACIA_MIDI.irq=true;
   mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-
 }
 #undef LOGSECTION
 //-------------------------------------------------- MMU Confused

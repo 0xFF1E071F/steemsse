@@ -95,7 +95,9 @@ const char *Credits[40]={
 
 #ifdef WIN32
   "Christian Ghisler for his unzip library",
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   "Floris van den Berg and everyone else who helped create the FreeImage library",
+#endif
 #endif
 
   "Christian Scheurer and Johannes Winkelmann for the UniquE RAR File Library",

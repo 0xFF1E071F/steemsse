@@ -12,7 +12,7 @@
 #include <mfp.decla.h>
 #include <run.decla.h>
 #include <mymisc.h> //GetFileLength()
-#if defined(SSE_ACSI_LED) && defined(SSE_OSD_DRIVE_LED)
+#if defined(SSE_ACSI_LED)
 #include <osd.decla.h>
 #endif
 #if defined(SSE_ACSI_TIMING)
@@ -50,6 +50,7 @@ void TAcsiHdc::CloseImageFile() {
   Active=false;
 }
 
+
 #if defined(SSE_ACSI_FORMAT)
 
 void TAcsiHdc::Format() { 
@@ -69,10 +70,11 @@ void TAcsiHdc::Format() {
 
 #endif
 
+
 bool TAcsiHdc::Init(int num, char *path) {
   ASSERT(num<MAX_ACSI_DEVICES);
   CloseImageFile();
-#if defined(SSE_ACSI_INQUIRY2)
+#if defined(SSE_ACSI_INQUIRY)
   ASSERT(inquiry_string);
   memset(inquiry_string,0,32);
 #endif
@@ -84,7 +86,7 @@ bool TAcsiHdc::Init(int num, char *path) {
     nSectors=l/BLOCK_SIZE;
    //ASSERT(!(l%BLOCK_SIZE) && nSectors>=20480 && device_num>=0 && device_num<MAX_ACSI_DEVICES); // but we take it?
     device_num=num&7;
-#if defined(SSE_ACSI_INQUIRY2)
+#if defined(SSE_ACSI_INQUIRY)
     char *filename=GetFileNameFromPath(path);
     char *dot=strrchr(filename,'.');
     int nchars=dot?(dot-filename):23;
@@ -92,23 +94,15 @@ bool TAcsiHdc::Init(int num, char *path) {
     ASSERT(inquiry_string);
     strncpy(inquiry_string+8,filename,nchars);
     TRACE_HDC("ACSI %d init %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
-    //TRACE2("ACSI %d %s %d sectors %d MB\n",device_num,inquiry_string+8,nSectors,nSectors/(2*1024));
 #endif
     acsi_dev=device_num;
   }
   //TRACE_INIT("ACSI %d open %s %d sectors %d MB\n",device_num,path,nSectors,nSectors/(2*1024));
-#if defined(SSE_VS2008_WARNING_390)
   return (Active!=0);
-#else
-  return (bool)Active;
-#endif
 }
 
-#if defined(SSE_VS2008_WARNING_382)
+
 BYTE TAcsiHdc::IORead() {
-#else
-BYTE TAcsiHdc::IORead(BYTE Line) {
-#endif
   BYTE ior_byte=0;
   if((Dma.MCR&0xFF)==0x8a) // "read status"
     ior_byte=STR;
@@ -219,7 +213,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
     cmd_ctr++;
     ASSERT(cmd_ctr<8);
-#if defined(SSE_OSD_DRIVE_LED_HD) && defined(SSE_ACSI_LED)
+#if defined(SSE_ACSI_LED)
     HDDisplayTimer=timer+HD_TIMER; // simplistic
 #endif
 #if defined(SSE_ACSI_TIMING) // some delay... 1MB/s 512bytes/ 0.5ms
@@ -227,7 +221,7 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
     {
       time_of_irq=ACT+cmd_block[4]*4000;
       Active=2; // signal for ior
-#if defined(SSE_OSD_DRIVE_LED_HD) && defined(SSE_ACSI_LED)
+#if defined(SSE_ACSI_LED)
       HDDisplayTimer+=cmd_block[4]/2;
 #endif
     }
@@ -240,25 +234,18 @@ void TAcsiHdc::IOWrite(BYTE Line,BYTE io_src_b) {
 }
 
 
+#if defined(SSE_ACSI_INQUIRY) 
+
 void TAcsiHdc::Inquiry() {//drivers display this so we have a cool name
-#if !defined(SSE_ACSI_INQUIRY2)
-  const char inquiry_string[]="STEEM_ACSI";
-  TRACE_HDC("Inquiry: %s\n",inquiry_string);
-  DR=0; //?
-#else
   TRACE_HDC("Inquiry: %s\n",inquiry_string+8); //strange...
-#endif
   for(int i=0;i<32;i++)
   {
-#if !defined(SSE_ACSI_INQUIRY2)
-    if(i>7 && i<=7+11) // 6 strange...
-      DR=inquiry_string[i-8];
-#else
     DR=inquiry_string[i];
-#endif
     Dma.Drq();
   }
 }
+
+#endif
 
 
 void TAcsiHdc::Irq(bool state) {
@@ -269,13 +256,7 @@ void TAcsiHdc::Irq(bool state) {
 void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
   ASSERT(block_count);
   TRACE_HDC("%s sectors %d-%d (%d)\n",write?"Write":"Read",SectorNum(),SectorNum()+block_count-1,block_count);
-#if defined(SSE_VS2008_WARNING_390)//!
   size_t ok=Seek();
-#elif defined(SSE_VS2008_WARNING_382)
-  bool ok=Seek(); // read/write implies seek
-#else
-  int ok=Seek(); // read/write implies seek
-#endif
   for(int i=0;ok&&i<block_count;i++)
   {
     for(int j=0;ok&&j<BLOCK_SIZE;j++)
@@ -294,11 +275,8 @@ void TAcsiHdc::ReadWrite(bool write,BYTE block_count) {
     STR=2;
 }
 
-#if defined(SSE_VS2008_WARNING_382)
+
 void TAcsiHdc::Reset() {
-#else
-void TAcsiHdc::Reset(bool Cold) {
-#endif
   cmd_ctr=7; // "ready"; we don't restore
 }
 

@@ -24,7 +24,7 @@ EasyStringList DSDriverModuleList;
 #if !defined(SSE_VID_EXT_FS2)
 const
 #endif
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 WORD
 #else
 int 
@@ -89,8 +89,6 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   bool proceed=true;
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   if (min((int)border,1)==min(newval,1)){
-#elif defined(SSE_VAR_RESIZE_370)
-  if (min((int)border,2)==min(newval,2)){
 #else
   if (min(border,2)==min(newval,2)){
 #endif
@@ -671,25 +669,28 @@ void TOptionBox::ChangeScreenShotFormat(int NewFormat,Str Ext)
     if (dot) *dot=0;
   }
   Disp.ScreenShotExt=Ext.LowerCase();
-
+  ASSERT(Disp.ScreenShotExt.Text!=NULL);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   Disp.ScreenShotFormatOpts=0;
   Disp.ScreenShotCheckFreeImageLoad();
   FillScreenShotFormatOptsCombo();
-
+#endif
   if (Handle){
     if (GetDlgItem(Handle,1051)) CBSelectItemWithData(GetDlgItem(Handle,1051),NewFormat);
   }
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 void TOptionBox::ChangeScreenShotFormatOpts(int NewOpt)
 {
+  //TRACE("NewOpt %X\n",NewOpt);
   Disp.ScreenShotFormatOpts=NewOpt;
   Disp.ScreenShotCheckFreeImageLoad();
-
   if (Handle){
     if (GetDlgItem(Handle,1052)) CBSelectItemWithData(GetDlgItem(Handle,1052),NewOpt);
   }
 }
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 //---------------------------------------------------------------------------
 void TOptionBox::ChooseScreenShotFolder(HWND Win)
 {
@@ -879,8 +880,6 @@ void TOptionBox::EnableBorderOptions(bool enable)
   }
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
-#elif defined(SSE_VAR_RESIZE_370)
-  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
@@ -889,8 +888,6 @@ void TOptionBox::EnableBorderOptions(bool enable)
   EnableWindow(BorderOption,enable);
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
-#elif defined(SSE_VAR_RESIZE_370)
-  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,2),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);
 #endif
@@ -977,8 +974,6 @@ void TOptionBox::SetBorder(int newborder)
   }
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
-#elif defined(SSE_VAR_RESIZE_370)
-  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
@@ -1078,13 +1073,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 204:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
-
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-            if(new_mode!=DFSM_STRETCHBLIT 
-              && draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
-              draw_win_mode[screen_res]--;
-#endif
-
             if (new_mode!=draw_fs_blit_mode){
               if (FullScreen){
                 if (new_mode==DFSM_LAPTOP){
@@ -1331,10 +1319,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw_win_mode[Res]=HIWORD(dat);
                 redraw=true;
               }
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
-              if(draw_win_mode[screen_res]==DWM_STRETCH_SCANLINES)
-                draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
-#endif
             }
             if (Res==int(mixed_output ? 1:screen_res)){
               if (redraw && FullScreen==0){
@@ -1416,7 +1400,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_EMU_DETECT) // Option Emu detect
+#if defined(SSE_VAR_EMU_DETECT) // Option Emu detect
         case 1031:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1430,7 +1414,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE) // option Interpolate scanlines
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) // option Interpolate scanlines
         case 1032:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1480,7 +1464,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               SSE_WIN_VSYNC=false;
 #endif
             TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
-//            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0); //was disabled in 390?
 #if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
 #endif
@@ -1512,8 +1496,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-
-
         case 1051://SS screenshot format
           if (HIWORD(wPar)==CBN_SELENDOK){
             Str Ext;
@@ -1522,12 +1504,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             This->ChangeScreenShotFormat(CBGetSelectedItemData(HWND(lPar)),Ext);
           }
           break;
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
         case 1052:
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->ChangeScreenShotFormatOpts(CBGetSelectedItemData(HWND(lPar)));
           }
           break;
-
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
         case 1030:
           if (HIWORD(wPar)==BN_CLICKED){
             HighPriority=!HighPriority;
@@ -1657,7 +1640,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN) //TODO
               case 5108: Ext=dot_ext(EXT_PRG);AssociateSteem(Ext,"st_atari_prg_executable"); break;
+              //case 5109:Ext=dot_ext(EXT_TOS); AssociateSteem(Ext,"st_atari_tos_executable"); break;
               case 5109:Ext=dot_ext(EXT_TOS); AssociateSteem(Ext,"st_atari_prg_executable"); break;
+
 #endif
 #else////////////
               case 5100: Ext=".ST";AssociateSteem(Ext,"st_disk_image",true,T("ST Disk Image"),DISK_ICON_NUM,0); break;
@@ -1849,26 +1834,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_SOUND_KEYBOARD_CLICK)
         case 7301: // Keyboard click on/off
           if (HIWORD(wPar)==BN_CLICKED){
-#if defined(SSE_SOUND_KEYBOARD_CLICK2)
             OPTION_KEYBOARD_CLICK=!OPTION_KEYBOARD_CLICK;
             TRACE_LOG("Option Keyboard click %d\n",OPTION_KEYBOARD_CLICK);
             if(LPEEK(0x44E)==xbios2) // not perfect, at least it's a check
               Tos.CheckKeyboardClick(); // immediate effect
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
-#else
-            BOOL keyboard_click=( PEEK(0x484)&1 ); // current bit
-            keyboard_click=!keyboard_click; // reverse bit
-            if(keyboard_click) // pathetic, there must be a better way
-            {
-              PEEK(0x484)|=0x0001;
-            }
-            else
-            {
-              PEEK(0x484)&=0xFFFE;
-            }
-            TRACE_LOG("Option Keyboard click $464 %X\n",PEEK(0x484));
-            SendMessage(HWND(lPar),BM_SETCHECK,keyboard_click,0);
-#endif
           }
           break; 
 #endif
@@ -1940,28 +1910,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-#if !defined(SSE_DISK_PASTI_ONLY_STX_OPTION3)
-        case 7305: // Pasti only STX
-          if (HIWORD(wPar)==BN_CLICKED){
-            PASTI_JUST_STX=!PASTI_JUST_STX;
-            SendMessage(HWND(lPar),BM_SETCHECK,PASTI_JUST_STX,0);
-            TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
-            for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
-            {
-              if(FloppyDrive[i].NotEmpty())
-              {
-                EasyStr name=FloppyDrive[i].DiskName;
-                EasyStr path=FloppyDrive[i].GetImageFile(); 
-                DiskMan.EjectDisk(i);
-                DiskMan.InsertDisk(i,name,path,0,0,"",true);
-              }
-            }            
-          }
-          break; 
-#endif
-#endif
-
 #if defined(SSE_GUI_STATUS_BAR)
         case 7307: // status bar
           if (HIWORD(wPar)==BN_CLICKED){
@@ -1982,7 +1930,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_DRIVE_SOUND)
+#if defined(SSE_GUI_OPTIONS_DRIVE_SOUND)
 /*  The option can be changed while running but buffers are built only when
     emulation is starting.
 */
@@ -2967,7 +2915,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           SoundChangeVolume();
           break;
 
-#if defined(SSE_DRIVE_SOUND)
+#if defined(SSE_GUI_OPTIONS_DRIVE_SOUND)
         case 7311:
           {
             int position=SendMessage(HWND(lPar),TBM_GETPOS,0,0);

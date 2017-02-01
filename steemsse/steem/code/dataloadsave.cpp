@@ -246,7 +246,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
       InsertDisk(1,pCSF->GetStr("Disks","Disk_B_Name",""),pCSF->GetStr("Disks","Disk_B_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_B_DiskInZip",""),true);
     }
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
+#if defined(SSE_DRIVE) && !defined(SSE_VAR_OPT_391) // setdisk updates
     SF314[0].UpdateAdat();
     SF314[1].UpdateAdat();
 #endif
@@ -868,7 +868,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       OPTION_C1=1;
 #endif
 #endif
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
     //STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
     OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
 #endif
@@ -909,7 +909,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     PASTI_JUST_STX=pCSF->GetInt("Pasti","PastiJustStx",PASTI_JUST_STX);
 #endif
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
     SSE_INTERPOLATE=pCSF->GetInt("Display","InterpolatedScanlines",SSE_INTERPOLATE);
 #endif
 #if defined(SSE_GUI_STATUS_BAR)
@@ -926,16 +926,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_DRIVE_SOUND)
     SSEOption.DriveSound=pCSF->GetInt("Disks","DriveSound",SSEOption.DriveSound);
-#if defined(SSE_DRIVE_SOUND_VOLUME)
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) 
-    SF314[1].Sound_Volume=
-#endif
-    SF314[0].Sound_Volume=pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
+    SF314[0].Sound_Volume=SF314[1].Sound_Volume
+      =pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
     SF314[0].Sound_ChangeVolume();
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) 
     SF314[1].Sound_ChangeVolume();
-#endif
-#endif
 #endif
 #if defined(SSE_DISK_GHOST)
     SSE_GHOST_DISK=pCSF->GetInt("Disks","GhostDisk",SSE_GHOST_DISK);
@@ -947,8 +941,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
 #endif
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-    DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",DRIVE_SOUND_SEEK_SAMPLE);
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
+    OPTION_DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",OPTION_DRIVE_SOUND_SEEK_SAMPLE);
 #endif
 #if defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
 /*  Request
@@ -1019,7 +1013,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SSEOption.Acsi=pCSF->GetInt("HardDrives","Acsi",SSEOption.Acsi);
   SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEOption.Acsi,0);
 #endif//acsi
-#if defined(SSE_SOUND_KEYBOARD_CLICK2) // option is persistent
+#if defined(SSE_SOUND_KEYBOARD_CLICK) // option is persistent
   OPTION_KEYBOARD_CLICK=pCSF->GetInt("Sound","KeyboardClick",OPTION_KEYBOARD_CLICK);
 #endif
 #if defined(SSE_VID_FS_GUI_OPTION)
@@ -1166,8 +1160,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     Disp.ScreenShotFormat=pCSF->GetInt("Options","ScreenShotFormat",Disp.ScreenShotFormat);
 #ifdef WIN32
     Disp.ScreenShotExt=pCSF->GetStr("Options","ScreenShotExt",Disp.ScreenShotExt);
+    ASSERT(Disp.ScreenShotExt.Text!=NULL);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     Disp.ScreenShotFormatOpts=pCSF->GetInt("Options","ScreenShotFormatOpts",Disp.ScreenShotFormatOpts);
     Disp.ScreenShotCheckFreeImageLoad();
+#endif
 #endif
 
     FSQuitAskFirst=pCSF->GetInt("Options","FSQuitAskFirst",FSQuitAskFirst);
@@ -1372,8 +1369,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #ifdef WIN32
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
-#elif defined(SSE_VAR_RESIZE_370)
-  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,2),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
@@ -1430,7 +1425,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_IKBD_6301)
   pCSF->SetStr("Options","Chipset1",EasyStr(OPTION_C1));
 #endif
-#if defined(SSE_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) 
   //pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
   pCSF->SetStr("Options","EmuDetect",EasyStr(OPTION_EMU_DETECT));
 #endif
@@ -1458,7 +1453,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_DISK_PASTI_ONLY_STX)
   pCSF->SetStr("Pasti","PastiJustStx",EasyStr(PASTI_JUST_STX));  
 #endif
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_SSE)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
   pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(SSE_INTERPOLATE));  
 #endif
 #if defined(SSE_GUI_STATUS_BAR)
@@ -1475,9 +1470,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_DRIVE_SOUND)
   pCSF->SetStr("Disks","DriveSound",EasyStr(SSEOption.DriveSound));
-#if defined(SSE_DRIVE_SOUND_VOLUME) //one for both drives
   pCSF->SetStr("Disks","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
-#endif
 #endif
 #if defined(SSE_DISK_GHOST)
   pCSF->SetStr("Disks","GhostDisk",EasyStr(SSE_GHOST_DISK)); 
@@ -1488,8 +1481,8 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
 #endif
-#if defined(SSE_DRIVE_SOUND_SEEK5)
-  pCSF->SetStr("Disks","DriveSoundSeekSample",EasyStr(DRIVE_SOUND_SEEK_SAMPLE));
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
+  pCSF->SetStr("Disks","DriveSoundSeekSample",EasyStr(OPTION_DRIVE_SOUND_SEEK_SAMPLE));
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
   pCSF->SetStr("Options","TestingNewFeatures",EasyStr(SSEOption.TestingNewFeatures));
@@ -1515,7 +1508,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_ACSI_OPTION)
   pCSF->SetStr("HardDrives","Acsi",EasyStr(SSEOption.Acsi));
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK2)
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
   pCSF->SetStr("Sound","KeyboardClick",EasyStr(OPTION_KEYBOARD_CLICK));
 #endif
 #if defined(SSE_VID_FS_GUI_OPTION)
@@ -1674,7 +1667,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetInt("Options","ScreenShotFormat",Disp.ScreenShotFormat);
 #ifdef WIN32
   pCSF->SetStr("Options","ScreenShotExt",Disp.ScreenShotExt);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   pCSF->SetInt("Options","ScreenShotFormatOpts",Disp.ScreenShotFormatOpts);
+#endif
 #endif
   pCSF->SetInt("Options","ScreenShotMinSize",Disp.ScreenShotMinSize);
 

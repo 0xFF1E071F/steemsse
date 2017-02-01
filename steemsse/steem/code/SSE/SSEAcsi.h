@@ -11,18 +11,10 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
   ~TAcsiHdc();
   // interface
   bool Init(int num,char *path);
-#if defined(SSE_VS2008_WARNING_382)
   BYTE IORead();
-#else
-  BYTE IORead(BYTE Line);
-#endif
   void IOWrite(BYTE Line,BYTE io_src_b);
   void Irq(bool state);
-#if defined(SSE_VS2008_WARNING_382)
   void Reset();
-#else
-  void Reset(bool Cold);
-#endif
   // other functions
   void CloseImageFile();
   void ReadWrite(bool write,BYTE block_count);
@@ -39,7 +31,7 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
 #if defined(SSE_ACSI_TIMING)
   int time_of_irq;
 #endif
-#if defined(SSE_ACSI_INQUIRY2)
+#if defined(SSE_ACSI_INQUIRY)
   char inquiry_string[32];
 #endif
   FILE *hard_disk_image;

@@ -398,13 +398,13 @@ bool Initialise()
 #if defined(SSE_DISK) // do it before disks are reinserted!
   for(int id=0;id<2;id++)
   {
-#if defined(SSE_DISK_STW2)
+#if defined(SSE_DISK_STW)
     ImageSTW[id].Id=id;
 #endif
 #if defined(SSE_DISK_HFE)
     ImageHFE[id].Id=id;
 #endif
-#if defined(SSE_DISK_SCP2A)
+#if defined(SSE_DISK_SCP)
     ImageSCP[id].Id=id;
 #endif
     Disk[id].Id=id;

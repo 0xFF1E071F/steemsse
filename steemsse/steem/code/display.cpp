@@ -10,6 +10,10 @@ SSE: Direct3D code is here too
 #pragma message("Included for compilation: display.cpp")
 #endif
 
+#ifdef SSE_DEBUG_D3D
+char *GetTextFromD3DError(HRESULT);
+#endif
+
 #if defined(SSE_STRUCTURE_DECLA)
 
 #define EXT
@@ -17,7 +21,7 @@ SSE: Direct3D code is here too
 
 extern "C"
 {
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE BytesPerPixel INIT(2),rgb32_bluestart_bit INIT(0);
 EXT bool rgb555 INIT(0);
 EXT WORD monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
@@ -28,7 +32,7 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #endif
 }
 #if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 BYTE HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
 #else
 int HzIdxToHz[NUM_HZ]={0,50,60,MONO_HZ,100,120};
@@ -44,6 +48,7 @@ UNIX_ONLY( bool TrySHM=true; )
 #endif
 
 #ifdef WIN32
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 // definition part of SteemFreeImage.h
 
 #if defined(SSE_VID_FREEIMAGE4)
@@ -59,6 +64,7 @@ FI_SAVEPROC FreeImage_Save;
 FI_FREEPROC FreeImage_Free;
 FI_SUPPORTBPPPROC FreeImage_FIFSupportsExportBPP;
 #endif
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 #endif
 
 #undef EXT
@@ -78,12 +84,49 @@ DEFINE_GUID( IID_IDirectDraw7,0x15e65ec0,0x3b9c,0x11d2,0xb9,0x2f,0x00,0x60,0x97,
 
 
 //SS: the singleton object is Disp
-#if defined(SSE_BOILER_390_LOG2)
+#if 1//defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
 #define LOGSECTION LOGSECTION_INIT
 #endif
 
+//---------------------------------------------------------------------------
+#ifdef SSE_DEBUG_D3D //stolen somewhere
+char *GetTextFromD3DError(HRESULT hr){  
+  char *text="Undefined error";     
+  switch (hr)  {    
+  case D3D_OK:      text="D3D_OK";break;    
+  case D3DOK_NOAUTOGEN:      text="D3DOK_NOAUTOGEN";break;    
+  case D3DERR_CONFLICTINGRENDERSTATE:      text="D3DERR_CONFLICTINGRENDERSTATE";break;    
+  case D3DERR_CONFLICTINGTEXTUREFILTER:      text="D3DERR_CONFLICTINGTEXTUREFILTER";break;    
+  case D3DERR_CONFLICTINGTEXTUREPALETTE:      text="D3DERR_CONFLICTINGTEXTUREPALETTE";break;    
+  case D3DERR_DEVICELOST:      text="D3DERR_DEVICELOST";break;    
+  case D3DERR_DEVICENOTRESET:      text="D3DERR_DEVICENOTRESET";break;    
+  case D3DERR_DRIVERINTERNALERROR:      text="D3DERR_DRIVERINTERNALERROR";break;    
+  case D3DERR_INVALIDCALL:      text="D3DERR_INVALIDCALL";break;    
+  case D3DERR_INVALIDDEVICE:      text="D3DERR_INVALIDDEVICE";break;    
+  case D3DERR_MOREDATA:      text="D3DERR_MOREDATA";break;    
+  case D3DERR_NOTAVAILABLE:      text="D3DERR_NOTAVAILABLE";break;    
+  case D3DERR_NOTFOUND:      text="D3DERR_NOTFOUND";break;    
+  case D3DERR_OUTOFVIDEOMEMORY:      text="D3DERR_OUTOFVIDEOMEMORY";break;    
+  case D3DERR_TOOMANYOPERATIONS:      text="D3DERR_TOOMANYOPERATIONS";break;    
+  case D3DERR_UNSUPPORTEDALPHAARG:      text="D3DERR_UNSUPPORTEDALPHAARG";break;    
+  case D3DERR_UNSUPPORTEDALPHAOPERATION:      text="D3DERR_UNSUPPORTEDALPHAOPERATION";break;    
+  case D3DERR_UNSUPPORTEDCOLORARG:      text="D3DERR_UNSUPPORTEDCOLORARG";break;    
+  case D3DERR_UNSUPPORTEDCOLOROPERATION:      text="D3DERR_UNSUPPORTEDCOLOROPERATION";break;    
+  case D3DERR_UNSUPPORTEDFACTORVALUE:      text="D3DERR_UNSUPPORTEDFACTORVALUE";break;    
+  case D3DERR_UNSUPPORTEDTEXTUREFILTER:      text="D3DERR_UNSUPPORTEDTEXTUREFILTER";break;    
+  case D3DERR_WRONGTEXTUREFORMAT:      text="D3DERR_WRONGTEXTUREFORMAT";break;    
+  case E_FAIL:      text="E_FAIL";break;    
+  case E_INVALIDARG:      text="E_INVALIDARG";break;    
+  case E_OUTOFMEMORY:      text="E_OUTOFMEMORY";break;  
+  }   
+  return text;
+}
+#define REPORT_D3D_ERR(function,d3derr) TRACE(function" %s\n",GetTextFromD3DError(d3derr))
+#else
+#define REPORT_D3D_ERR 
+#endif
 //---------------------------------------------------------------------------
 SteemDisplay::SteemDisplay()
 {
@@ -103,9 +146,10 @@ SteemDisplay::SteemDisplay()
 #endif//#if !defined(SSE_VID_D3D_ONLY)
   GDIBmp=NULL;
   GDIBmpMem=NULL;
-
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   hFreeImage=NULL;
   ScreenShotFormatOpts=0;
+#endif
   ScreenShotExt="bmp";
 
   DrawToVidMem=true;
@@ -1063,11 +1107,9 @@ bool SteemDisplay::Blit()
             get_fullscreen_rect(&Dest);
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
             if(SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
               if(screen_res==1)
                 draw_blit_source_rect.right--; // and another hack...
               else
-#endif
                 draw_blit_source_rect.right/=2; 
 #endif
 
@@ -1094,11 +1136,9 @@ bool SteemDisplay::Blit()
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
             if(SCANLINES_INTERPOLATED) //restore!
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
               if(screen_res==1)
                 draw_blit_source_rect.right++;
               else
-#endif
                 draw_blit_source_rect.right*=2; 
 #endif
             break;
@@ -1195,7 +1235,7 @@ bool SteemDisplay::Blit()
       }
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_MED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
       if(screen_res==1&&SCANLINES_INTERPOLATED)
         draw_blit_source_rect.right--; // and another hack...
 #endif
@@ -1582,11 +1622,9 @@ void SteemDisplay::ChangeToFullScreen()
 
   TRACE_LOG("Going fullscreen...\n");
 
-#if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_D3D_ONLY)
     if(SCANLINES_INTERPOLATED)
       draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
-#endif
 #endif
 
   draw_end();
@@ -1972,6 +2010,7 @@ void SteemDisplay::DrawWaveform()
 }
 #endif
 //---------------------------------------------------------------------------
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 void SteemDisplay::ScreenShotCheckFreeImageLoad()
 {
 
@@ -2024,6 +2063,7 @@ void SteemDisplay::ScreenShotCheckFreeImageLoad()
     TRACE_LOG("FreeImage.dll loaded\n");
 #endif
 }
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 //---------------------------------------------------------------------------
 #endif //WIN32
 #pragma warning (disable: 4701) //SurLineLen
@@ -2038,8 +2078,13 @@ HRESULT SteemDisplay::SaveScreenShot()
     DWORD Attrib=GetFileAttributes(ScreenShotFol);
     if (Attrib==0xffffffff || (Attrib & FILE_ATTRIBUTE_DIRECTORY)==0) return DDERR_GENERIC;
 
+#if defined(SSE_VID_D3D_SCREENSHOT_391C)
+    Str Exts=ScreenShotExt;
+#else
     Str Exts="bmp";
-    WIN_ONLY( if (hFreeImage) Exts=ScreenShotExt; )//SS only when needed
+    ASSERT(ScreenShotExt.Text!=NULL);
+    WIN_ONLY( if (hFreeImage) Exts=ScreenShotExt; )
+#endif
 #if defined(SSE_VID_SAVE_NEO)
     if(ScreenShotFormat==IF_NEO)
       Exts="NEO";
@@ -2076,7 +2121,11 @@ HRESULT SteemDisplay::SaveScreenShot()
   int w,h;
 
 #ifdef WIN32
+
 #if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_SCREENSHOT_391B)
+  IDirect3DSurface9 *BackBuff=NULL;
+#endif
   IDirect3DSurface9 *SaveSur=NULL;
 #else
 #if defined(SSE_VID_DD7)
@@ -2097,7 +2146,7 @@ HRESULT SteemDisplay::SaveScreenShot()
   {
     if(pNeoFile)
     {
-      pNeoFile->resolution=change_endian(screen_res);
+      pNeoFile->resolution=change_endian(screen_res);//bugfix v...
       // palette was already copied (sooner=better)
       for(int i=0;i<16000;i++)
         pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));
@@ -2113,6 +2162,7 @@ HRESULT SteemDisplay::SaveScreenShot()
     }
   }
 #endif
+
   if (Method==DISPMETHOD_DD){
 #if defined(SSE_VID_D3D_ONLY)
 /*  If we want a D3D-only build, we must offer a screenshot facility as well.
@@ -2123,8 +2173,11 @@ HRESULT SteemDisplay::SaveScreenShot()
     HRESULT hRet;
     UINT Adapter=D3DADAPTER_DEFAULT;
     D3DDISPLAYMODE d3ddm;
-    if((hRet=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm))!=0)
+    if((hRet=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm))!=D3D_OK)
+    {
+      REPORT_D3D_ERR("GetAdapterDisplayMode",hRet);
       return hRet;
+    }
 #if defined(SSE_VID_D3D_SCREENSHOT_390) // bugfix stretch mode
     w=draw_blit_source_rect.right-draw_blit_source_rect.left;
     h=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
@@ -2133,20 +2186,74 @@ HRESULT SteemDisplay::SaveScreenShot()
     h=SurfaceHeight;
 #endif
     ASSERT((w) && (h));
+
+#if defined(SSE_VID_D3D_SCREENSHOT_391B)
+/*  Source = BackBuff, Destination = SaveSur
+    We just get a pointer to the back buffer.
+*/
+    if((hRet=pD3DDevice->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&BackBuff))!=0)
+    {
+      REPORT_D3D_ERR("GetBackBuffer",hRet);
+      return hRet;
+    }
+/*  If the target surface is a plain surface, we can't use StretchRect on it,
+    so we use CreateRenderTarget() instead.
+    TRUE for lockable, necessary for FreeImage.
+*/
+    if((hRet=pD3DDevice->CreateRenderTarget(w,h,d3ddm.Format,D3DMULTISAMPLE_NONE,
+      0,TRUE,&SaveSur,NULL))!=D3D_OK)
+    {
+      REPORT_D3D_ERR("CreateRenderTarget",hRet);
+      return hRet;
+    }
+#else
     if((hRet=pD3DDevice->CreateOffscreenPlainSurface(w,h,d3ddm.Format,
       D3DPOOL_SYSTEMMEM,&SaveSur,NULL))!=0)//390
+    {
+      REPORT_D3D_ERR("CreateOffscreenPlainSurface1",hRet);
       return hRet;
+    }
     if((hRet=pD3DDevice->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&SaveSur))!=0)//390
     {
       SaveSur->Release();
       return hRet;
     }
-
+#endif
+#if defined(SSE_VID_D3D_SCREENSHOT_391B)
+    RECT rcDest={0,0,0,0};
+    rcDest.right=w;
+    rcDest.bottom=h;
+    if(ScreenShotMinSize) // option
+    {
+      if (border & 1){
+        rcDest.right=WinSizeBorder[screen_res][0].x;
+        rcDest.bottom=WinSizeBorder[screen_res][0].y;
+      }else{
+        rcDest.right=WinSize[screen_res][0].x;
+        rcDest.bottom=WinSize[screen_res][0].y;
+      }
+    }
+    // copy source->destination
+    if((hRet=pD3DDevice->StretchRect(BackBuff,&draw_blit_source_rect,SaveSur,&rcDest,D3DTEXF_NONE))!=DS_OK)
+    {
+      REPORT_D3D_ERR("StretchRect",hRet);
+      // fall back on making SaveSur the back buffer
+      if((hRet=pD3DDevice->GetBackBuffer(0,0,D3DBACKBUFFER_TYPE_MONO,&SaveSur))!=D3D_OK)
+      {
+        REPORT_D3D_ERR("StretchRect",hRet);
+      }
+    }
+    if(BackBuff)
+      BackBuff->Release();
+    w=rcDest.right;h=rcDest.bottom;
+#endif
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     if(hFreeImage)
     {
       D3DLOCKED_RECT LockedRect;
       if((hRet=SaveSur->LockRect(&LockedRect,NULL,0))!=0)//390
       {
+        REPORT_D3D_ERR("LockRect",hRet);
         SaveSur->Release();
         return hRet;
       }
@@ -2156,8 +2263,33 @@ HRESULT SteemDisplay::SaveScreenShot()
       ASSERT(SurMem);
     }
     else
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     {
+#if defined(SSE_VID_D3D_SCREENSHOT_391C) // PNG, JPG available natively now...
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+      D3DXIMAGE_FILEFORMAT fileformat=D3DXIFF_BMP;
+      switch(ScreenShotFormat)
+      { //note the function can't save in tga or ppm format
+      case FIF_JPEG:
+        fileformat=D3DXIFF_JPG;
+        break;
+      case FIF_PNG:
+        fileformat=D3DXIFF_PNG;
+        break;
+      }
+      hRet=D3DXSaveSurfaceToFile(ShotFile,fileformat,SaveSur,NULL,&rcDest);
+#else
+      hRet=D3DXSaveSurfaceToFile(ShotFile,(D3DXIMAGE_FILEFORMAT)ScreenShotFormat,
+        SaveSur,NULL,&rcDest);
+#endif
+      TRACE_LOG("Save screenshot %s %dx%d native ERR%d\n",ShotFile.Text,w,h,hRet);
+#elif defined(SSE_VID_D3D_SCREENSHOT_391B) 
+      hRet=D3DXSaveSurfaceToFile(ShotFile,D3DXIFF_BMP,SaveSur,NULL,&rcDest);
+#elif defined(SSE_VID_D3D_SCREENSHOT_391) //fixes picture too big when no borders
+      hRet=D3DXSaveSurfaceToFile(ShotFile,D3DXIFF_BMP,SaveSur,NULL,&draw_blit_source_rect);
+#else
       hRet=D3DXSaveSurfaceToFile(ShotFile,D3DXIFF_BMP,SaveSur,NULL,NULL);
+#endif
       SaveSur->Release();
       return hRet;
     }
@@ -2446,6 +2578,7 @@ bitmap in the desired bit depth, FALSE otherwise.
 #endif//#if defined(SSE_VID_D3D_ONLY)
 
 #ifdef WIN32
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     if (hFreeImage){
       FIBITMAP *FIBmp;
       if (ConvertPixels==0){
@@ -2494,10 +2627,12 @@ bitmap in the desired bit depth, FALSE otherwise.
                                           0xff0000,0x00ff00,0x0000ff,true);
 #endif
       }
-      TRACE_LOG("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
+      //TRACE_LOG("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
+      TRACE_LOG("Save screenshot %s %dx%d opts %d FreeImage\n",ShotFile.Text,w,h,ScreenShotFormatOpts);
       FreeImage_Save((FREE_IMAGE_FORMAT)ScreenShotFormat,FIBmp,ShotFile,ScreenShotFormatOpts);
       FreeImage_Free(FIBmp);
     }else
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 #endif
     {
       BITMAPINFOHEADER bih;
@@ -2562,6 +2697,7 @@ bitmap in the desired bit depth, FALSE otherwise.
 //---------------------------------------------------------------------------
 #ifdef IN_MAIN
 #ifdef WIN32
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 bool SteemDisplay::ScreenShotIsFreeImageAvailable()
 {
   if (hFreeImage) return true;
@@ -2574,13 +2710,17 @@ bool SteemDisplay::ScreenShotIsFreeImageAvailable()
   if (Exists(RunDir+"\\FreeImage\\FreeImage\\FreeImage.dll")) return true;
   return 0;
 }
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 //---------------------------------------------------------------------------
 void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
 {
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   bool FIAvailable=ScreenShotIsFreeImageAvailable();
+#endif
   pSL->Sort=eslNoSort;
   pSL->Add(T("To Clipboard"),IF_TOCLIPBOARD);
   pSL->Add("BMP",FIF_BMP);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   if (FIAvailable){
     pSL->Add("JPEG (.jpg)",FIF_JPEG);
     pSL->Add("PNG",FIF_PNG);
@@ -2594,11 +2734,22 @@ void SteemDisplay::ScreenShotGetFormats(EasyStringList *pSL)
     pSL->Add("PGM",FIF_PGM);
     pSL->Add("PPM",FIF_PPM);
   }
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+#if defined(SSE_VID_D3D_SCREENSHOT_391C)
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  else 
+#endif
+  {
+    pSL->Add("JPEG (.jpg)",FIF_JPEG);
+    pSL->Add("PNG",FIF_PNG);
+  }
+#endif
 #if defined(SSE_VID_SAVE_NEO)
   pSL->Add("NEO",IF_NEO);
 #endif
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
 void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
 {
   bool FIAvailable=ScreenShotIsFreeImageAvailable();
@@ -2623,6 +2774,8 @@ void SteemDisplay::ScreenShotGetFormatOpts(EasyStringList *pSL)
       break;
   }
 }
+#endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+//---------------------------------------------------------------------------
 #if defined(SSE_VID_3BUFFER_WIN) \
  && !defined(SSE_VID_3BUFFER_NO_VSYNC)
 /*  When the option is on, this function is called a lot
@@ -2676,14 +2829,20 @@ void draw_init_resdependent()
 //TODO it's just lowres?
 int SteemDisplay::STXPixels() {
   int st_x_pixels=320+(border&1)*SideBorderSizeWin*2; //displayed
-  //st_x_pixels=320+SideBorderSizeWin*2; //test
+#if defined(SSE_VID_D3D_391B)
+  if(screen_res)
+    st_x_pixels*=2;
+#endif
   return st_x_pixels;
 }
 
 
 int SteemDisplay::STYPixels() {
   int st_y_pixels=200+(border&1)*(BORDER_TOP+BORDER_BOTTOM);
-  //st_y_pixels=200+(BORDER_TOP+BORDER_BOTTOM); //test
+#if defined(SSE_VID_D3D_391B)
+  if(screen_res)
+    st_y_pixels*=2;
+#endif
   return st_y_pixels;
 }
 #endif
@@ -2710,42 +2869,6 @@ int SteemDisplay::STYPixels() {
 
 
 
-#ifdef SSE_DEBUG_D3D //stolen somewhere
-char *GetTextFromD3DError(HRESULT hr){  
-  char *text="Undefined error";     
-  switch (hr)  {    
-  case D3D_OK:      text="D3D_OK";break;    
-  case D3DOK_NOAUTOGEN:      text="D3DOK_NOAUTOGEN";break;    
-  case D3DERR_CONFLICTINGRENDERSTATE:      text="D3DERR_CONFLICTINGRENDERSTATE";break;    
-  case D3DERR_CONFLICTINGTEXTUREFILTER:      text="D3DERR_CONFLICTINGTEXTUREFILTER";break;    
-  case D3DERR_CONFLICTINGTEXTUREPALETTE:      text="D3DERR_CONFLICTINGTEXTUREPALETTE";break;    
-  case D3DERR_DEVICELOST:      text="D3DERR_DEVICELOST";break;    
-  case D3DERR_DEVICENOTRESET:      text="D3DERR_DEVICENOTRESET";break;    
-  case D3DERR_DRIVERINTERNALERROR:      text="D3DERR_DRIVERINTERNALERROR";break;    
-  case D3DERR_INVALIDCALL:      text="D3DERR_INVALIDCALL";break;    
-  case D3DERR_INVALIDDEVICE:      text="D3DERR_INVALIDDEVICE";break;    
-  case D3DERR_MOREDATA:      text="D3DERR_MOREDATA";break;    
-  case D3DERR_NOTAVAILABLE:      text="D3DERR_NOTAVAILABLE";break;    
-  case D3DERR_NOTFOUND:      text="D3DERR_NOTFOUND";break;    
-  case D3DERR_OUTOFVIDEOMEMORY:      text="D3DERR_OUTOFVIDEOMEMORY";break;    
-  case D3DERR_TOOMANYOPERATIONS:      text="D3DERR_TOOMANYOPERATIONS";break;    
-  case D3DERR_UNSUPPORTEDALPHAARG:      text="D3DERR_UNSUPPORTEDALPHAARG";break;    
-  case D3DERR_UNSUPPORTEDALPHAOPERATION:      text="D3DERR_UNSUPPORTEDALPHAOPERATION";break;    
-  case D3DERR_UNSUPPORTEDCOLORARG:      text="D3DERR_UNSUPPORTEDCOLORARG";break;    
-  case D3DERR_UNSUPPORTEDCOLOROPERATION:      text="D3DERR_UNSUPPORTEDCOLOROPERATION";break;    
-  case D3DERR_UNSUPPORTEDFACTORVALUE:      text="D3DERR_UNSUPPORTEDFACTORVALUE";break;    
-  case D3DERR_UNSUPPORTEDTEXTUREFILTER:      text="D3DERR_UNSUPPORTEDTEXTUREFILTER";break;    
-  case D3DERR_WRONGTEXTUREFORMAT:      text="D3DERR_WRONGTEXTUREFORMAT";break;    
-  case E_FAIL:      text="E_FAIL";break;    
-  case E_INVALIDARG:      text="E_INVALIDARG";break;    
-  case E_OUTOFMEMORY:      text="E_OUTOFMEMORY";break;  
-  }   
-  return text;
-}
-#define REPORT_D3D_ERR TRACE("%s\n",GetTextFromD3DError(d3derr))
-#else
-#define REPORT_D3D_ERR 
-#endif
 
 #pragma warning( disable : 4701) //OldCur, 390
 
@@ -2777,8 +2900,16 @@ bool SteemDisplay::D3DBlit() {
 #endif
       pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
 #endif
-
-#if defined(SSE_VID_D3D_CRISP_390) 
+    
+#if defined(SSE_VID_D3D_CRISP_391) 
+   // TRACE_LOG("%d %d\n",screen_res,draw_win_mode[screen_res]);
+    //TRACE_LOG("src %d %d %d %d dst %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,SurfaceWidth,SurfaceHeight,0,0);
+    if(FullScreen && OPTION_D3D_CRISP && !SSE_INTERPOLATE
+      && (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE))
+      d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
+    else
+      d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
+#elif defined(SSE_VID_D3D_CRISP_390) 
     // there could be trash in fullscreen crisp mode when switching shift modes
     d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
 #else
@@ -2803,7 +2934,7 @@ bool SteemDisplay::D3DBlit() {
   {
     TRACE("BLIT ERROR\n");
     TRACE_LOG("Blit error %d\n",d3derr);
-    REPORT_D3D_ERR;
+    REPORT_D3D_ERR("Blit",d3derr);
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
     M68000.ProcessingState=TM68000::BLIT_ERROR;
 #if defined(SSE_VID_D3D_390B)
@@ -2877,12 +3008,12 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3derr=check_device_type(DeviceType,DisplayFormat);
   if(d3derr) // could be "alpha" in desktop format?
   {
-    REPORT_D3D_ERR;
+    REPORT_D3D_ERR("check_device_type1",d3derr);
     DisplayFormat=D3DFMT_X8R8G8B8; // try X8R8G8B8 format
     d3derr=check_device_type(DeviceType,DisplayFormat);
     if(d3derr) // no HW abilities?
     {
-      REPORT_D3D_ERR;
+      REPORT_D3D_ERR("check_device_type2",d3derr);
       TRACE_LOG("D3D: poor hardware detected, software rendering\n");
       D3DDEVTYPE DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
       d3derr=check_device_type(DeviceType,DisplayFormat);
@@ -2979,7 +3110,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
       Width=640+4* (SideBorderSizeWin);
 #endif
       Height=400+2*(BORDER_TOP+BottomBorderSize
-#if defined(SSE_VID_ADJUST_DRAWING_ZONE1)
+#if defined(SSE_VID_ADJUST_DRAWING_ZONE1) && !defined(SSE_VID_D3D_391)
         +1 // hack to fix crash on video emu panic, last 'border' scanline
 #endif
         );
@@ -3021,7 +3152,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if defined(SSE_VID_D3D_390)  && !defined(BCC_BUILD)
     goto D3DCreateSurfacesEnd;
 #else
-    REPORT_D3D_ERR;
+    REPORT_D3D_ERR("CreateSurfaces",d3derr);
     return d3derr; // lost cause
 #endif
   }
@@ -3050,7 +3181,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if defined(SSE_VID_D3D_390)  && !defined(BCC_BUILD)
     goto D3DCreateSurfacesEnd;
 #else
-    REPORT_D3D_ERR;
+    REPORT_D3D_ERR("CreateSurfaces",d3derr);
     return d3derr;
 #endif
   }
@@ -3073,7 +3204,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 D3DCreateSurfacesEnd:
   if(d3derr!=D3D_OK)
   {
-    REPORT_D3D_ERR;
+    REPORT_D3D_ERR("CreateSurfaces",d3derr);
     TRACE2("D3D_ERR %d\n",d3derr);
   }
 #endif
@@ -3127,7 +3258,7 @@ HRESULT SteemDisplay::D3DLock() {
     d3derr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
 #if defined(SSE_VID_D3D_382)
     if(d3derr)
-      REPORT_D3D_ERR;
+      REPORT_D3D_ERR("LockRect",d3derr);
     else
     {
 #endif
@@ -3206,6 +3337,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   {
     int stx=STXPixels();
     int sty=STYPixels();
+
 #ifndef NO_CRAZY_MONITOR
 #ifdef SSE_VID_EXT_FS1
     if(extended_monitor
@@ -3248,6 +3380,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #ifdef SSE_VID_D3D_WINDOW
     if(FullScreen)
 #endif
+    {
       if(SurfaceWidth>(stx*SurfaceHeight)/sty) // "16:9" - not tested
       {
         sw=sh=(float)SurfaceHeight/sty;
@@ -3258,14 +3391,14 @@ HRESULT SteemDisplay::D3DSpriteInit() {
         sh=sw= (float)SurfaceWidth/stx;
         ty=(SurfaceHeight-SurfaceWidth*sty/stx)/2;
       }
-
+    
 
 #if defined(SSE_VID_D3D_CRISP)
 /*  Trade-off, we sacrifice some screen space to have better proportions.
     v3.7.2
 */
 #if defined(SSE_VID_D3D_CRISP_OPTION)
-#ifdef SSE_VID_D3D_WINDOW
+#if defined(SSE_VID_D3D_WINDOW) && !defined(SSE_VID_D3D_391B)
     if(OPTION_D3D_CRISP && FullScreen)
 #else
     if(OPTION_D3D_CRISP)
@@ -3278,6 +3411,12 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     }
 #endif
 
+#if defined(SSE_VID_D3D_391B)
+    ASSERT(FullScreen);
+    if(screen_res>=1||mixed_output) // everything but low
+      sh*=2; // double # lines
+#endif
+  }
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) 
 #if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     if(OPTION_ST_ASPECT_RATIO)
@@ -3293,14 +3432,17 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     if(FullScreen)
 #endif
     {
+#if !defined(SSE_VID_D3D_391B)
       if(screen_res ||mixed_output)
         sw/=2;
+#endif
       if(screen_res>=2 ||SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
         || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
         )
         sh/=2;
+
 #if !defined(SSE_VID_D3D_ONLY)
       if(BORDER_40)
         tx-=16*sw; // same old trick (BPOC 400 pixels)

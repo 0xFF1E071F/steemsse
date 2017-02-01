@@ -6,12 +6,6 @@
 
 #if defined(SSE_DMA_OBJECT)
 
-//   Steem original variables are defined as the new ones.
-#define dma_sector_count Dma.Counter
-#define dma_address Dma.BaseAddress
-#define dma_bytes_written_for_sector_count Dma.ByteCount
-#define dma_mode Dma.MCR
-#define dma_status Dma.SR
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
@@ -100,7 +94,7 @@ TODO: maybe use the feature and remove #define to make code more readable?
 #endif
 #if defined(SSE_DMA_FIFO)
   void AddToFifo(BYTE data);
-#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772_EMU)
+#if defined(SSE_DMA_DRQ) && defined(SSE_WD1772)
   bool Drq(); // void?
 #endif
   BYTE GetFifoByte();

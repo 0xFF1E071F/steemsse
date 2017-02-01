@@ -15,10 +15,6 @@ extern DWORD CpuCustomHz;
 
 #if defined(SSE_INTERRUPT)
 
-#if defined(SSE_INT_VBL_STF)
-extern int HblTiming;
-#endif
-
 #if defined(SSE_INT_HBL) 
 extern void HBLInterrupt();
 #define HBL_INTERRUPT HBLInterrupt(); // called in mpf.cpp

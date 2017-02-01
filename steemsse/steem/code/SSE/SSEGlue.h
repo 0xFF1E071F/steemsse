@@ -14,7 +14,6 @@ struct TScanline {
   BYTE Bytes; // eg 160
 };
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
 
 struct TGlueStatusBYTE { 
   // necessary because GetNextScreenEvent() can be called an arbitrary
@@ -24,12 +23,9 @@ struct TGlueStatusBYTE {
   unsigned int vbl_done:1;
   unsigned int vbi_done:1;
   unsigned int hbi_done:1;
-#if defined(SSE_GLUE_390B2) //just in case
   unsigned int :11;
-#endif
 };
 
-#endif
 
 // Generalized Logic Unit
 
@@ -43,36 +39,20 @@ struct TGlue {
 
   // DATA
   int TrickExecuted; //make sure that each trick will only be applied once
-#if defined(SSE_GLUE_FRAME_TIMINGS)
   screen_event_struct screen_event;
-#endif
-#if defined(SSE_GLUE_390B2) //just in case
   TScanline PreviousScanline, CurrentScanline, NextScanline;
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS) && !defined(SSE_GLUE_390E2)
-  WORD scanline; 
-#endif
-#if defined(SSE_GLUE_390E) 
   short VCount;
-#endif
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
   BYTE m_ShiftMode,m_SyncMode; // both bits of shift mode are shadowed in GLU (ijor)
   BYTE Freq[NFREQS];
   BYTE cycle_of_scanline_length_decision; 
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-  bool ExtraAdded;
-#endif
   // we need keep info for only 3 scanlines:
-#if !defined(SSE_GLUE_390B2) //just in case
-  TScanline PreviousScanline, CurrentScanline, NextScanline;
-#endif
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+
 #ifdef UNIX
 #undef Status // ?? ux382
 #endif
   TGlueStatusBYTE Status;
-#endif
 
   // FUNCTIONS
   TGlue();
@@ -86,14 +66,10 @@ struct TGlue {
   void SetShiftMode(BYTE NewRes);
   void SetSyncMode(BYTE NewSync);
   void Update();
-#if defined(SSE_GLUE_FRAME_TIMINGS)
   void GetNextScreenEvent();
   void Reset(bool Cold);
   void Vbl();
-#endif
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-  void AddExtraToShifterDrawPointerAtEndOfLine(unsigned long &extra);
-#endif
+
 #if defined(SSE_SHIFTER_TRICKS)
   void AddFreqChange(int f);
   void AddShiftModeChange(int r);  
@@ -106,12 +82,10 @@ struct TGlue {
   int PreviousFreqChange(int cycle);
 #endif
   int NextShiftModeChange(int cycle,int value=-1); //move to shifter...
-#if defined(SSE_GLUE_390B)
   int NextChangeToHi(int cycle);
   int NextChangeToLo(int cycle); // Lo = not HI for GLU
   int PreviousChangeToHi(int cycle);
   int PreviousChangeToLo(int cycle); // Lo = not HI for GLU
-#endif
   int NextShiftModeChangeIdx(int cycle);
   int PreviousShiftModeChange(int cycle);
   int CycleOfLastChangeToShiftMode(int value);

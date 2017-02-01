@@ -45,6 +45,8 @@ Dots in WU2 (correct)
 
 -Dizzy Panic 1 player/start switching (correct)
 
+-Down TLN display issues
+
 -Dynabuster+ flicker at scores (correct)
 
 -Extended monitor hack
@@ -76,8 +78,6 @@ patched version jumping woman trash on bottom
 -Jumping Jacskon -MCA STE lower border flickers (correct)
 
 -Keyboard: sometimes won't take input anymore - quit Steem and start again
-
--Lethal Xcess: possible to lose overscan at start on STE - reboot
 
 -Lose picture at stop with 400x278 display size
 Due to DirectDraw hacks

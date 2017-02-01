@@ -3,8 +3,6 @@
 #if defined(SSE_MMU)
 
 #include "../pch.h"
-
-#include <emulator.decla.h>
 #include <cpu.decla.h>
 
 #include "SSEVideo.h"
@@ -12,7 +10,7 @@
 #include "SSEGlue.h"
 #include "SSEFrameReport.h"
 
-#if  defined(SSE_SHIFTER_HSCROLL_380)
+#if  defined(SSE_SHIFTER_HSCROLL)
 #define HSCROLL0 Shifter.hscroll0
 #else
 #define HSCROLL0 HSCROLL
@@ -54,13 +52,14 @@
 #define max(a,b) (a>b ? a:b)
 #endif
 
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
 /*  "ReadVideoCounter" has been refactored in case we would want
     to use it to recompute the video counter at each scanline (but we don't).
     Now we have a member variable VideoCounter and a function that
     updates it.
     CurrentScanline.StartCycle is mostly correct now, so it simplifies
     the function further.
+    This is an extremely important function for Atari ST emulation because a lot
+    of programs (demos essentially) synchronise on the video counter.
 */
 
 void TMMU::UpdateVideoCounter(int CyclesIn) {
@@ -77,7 +76,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
   }
   else if(Glue.FetchingLine()) // lines where the counter actually moves
   {
-    Glue.CheckSideOverscan(); // updates Bytes and StartCycle
+    Glue.CheckSideOverscan(); // this updates Bytes and StartCycle
     int bytes_to_count=Glue.CurrentScanline.Bytes;
 
     // 8 cycles latency before MMU starts prefetching
@@ -110,80 +109,30 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
   VideoCounter=vc; // update member variable
 }
 
-#endif
-
 
 MEM_ADDRESS TMMU::ReadVideoCounter(int CyclesIn) {
-
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-
   UpdateVideoCounter(CyclesIn);
   return VideoCounter;
-
-#else
-  // the function had been already greatly streamlined in v3.8.0
- 
-  MEM_ADDRESS sdp; // return value
-  if (bad_drawing){  // Fake SDP, eg extended monitor
-    if (scan_y<0)
-      sdp=xbios2;
-    else if (scan_y<shifter_y){
-      int line_len=(160/res_vertical_scale);
-      sdp=xbios2 + scan_y*line_len + min(CyclesIn/2,line_len) & ~1;
-    }else
-      sdp=xbios2+32000;
-  }
-  else if(Glue.FetchingLine()) // when counter actually moves
-  {
-    Glue.CheckSideOverscan(); // updates Bytes and StartCycle
-    int bytes_to_count=Glue.CurrentScanline.Bytes;
-    if(bytes_to_count && shifter_skip_raster_for_hscroll)
-    {
-      ASSERT(ST_TYPE==STE);
-      bytes_to_count+=SHIFTER_RASTER; // raster size depends on shift mode
-    }
-
-#if defined(SSE_GLUE_HIRES_OVERSCAN)
-    bool hires=!left_border||screen_res==2;
-#else
-    bool hires=!left_border;
-#endif
-
-    // 8 cycles latency before MMU starts prefetching
-    int starts_counting=(Glue.CurrentScanline.StartCycle+8)/2;
-
-    // can't be odd though (hires)
-    starts_counting&=-2;
-
-    // starts earlier if HSCROLL
-    if(shifter_hscroll_extra_fetch)
-      starts_counting-=(hires?2:8);
-
-    // compute sdp
-    int c=CyclesIn/2-starts_counting;
-    sdp=shifter_draw_pointer_at_start_of_line;
-    if (c>=bytes_to_count)
-      sdp+=bytes_to_count+(LINEWID*2);
-    else if (c>=0){
-      c&=-2;
-      sdp+=c;
-    }
-  }
-  else // lines witout fetching (before or after frame)
-    sdp=shifter_draw_pointer;
-
-  return sdp;
-#endif
 }
 
 
 void TMMU::ShiftSDP(int shift) { // we count on the compiler to optimise this...
   shifter_draw_pointer+=shift; 
-#if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
-  overscan_add_extra-=shift;
-#endif
 }
 
+/*  Now that video counter reckoning (MMU.VideoCounter) is separated from 
+    rendering (shifter_draw_pointer), a lot of cases that seemed complicated
+    are simplified. Most hacks could be removed.
+
+    Also, a simple test program allowed us to demystify writes to the video
+    counter. It is actually straightforward, here's the rule:
+    The byte in the MMU register is replaced with the byte on the bus, that's
+    it, even if the counter is running at the time (Display Enable), and
+    whatever words are in the Shifter.
+    It's logical after all. The video counter resides in the MMU and the
+    Shifter never sees it.
+    TODO: upper bytes could be impacted? But we had apparent cases before, not now
+*/
 
 void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
@@ -213,19 +162,6 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 
   bool fl=Glue.FetchingLine();
 
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-/*  Now that video counter reckoning (MMU.VideoCounter) is separated from 
-    rendering (shifter_draw_pointer), a lot of cases that seemed complicated
-    are simplified. Most hacks could be removed.
-
-    Also, a simple test program allowed us to demystify writes to the video
-    counter. It is actually straightforward, here's the rule:
-    The byte in the MMU register is replaced with the byte on the bus, that's
-    it, even if the counter is running at the time (Display Enable), and
-    whatever words are in the Shifter.
-    It's logical after all. The video counter resides in the MMU and the
-    Shifter never sees it.
-*/
   if(fl)
     Shifter.Render(CyclesIn,DISPATCHER_WRITE_SDP);
 
@@ -252,23 +188,6 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     && CyclesIn<Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY;
  if(!fetching)
     shifter_draw_pointer=VideoCounter;
-
-#else // this wasn't released, makes more sense!
-
-  Shifter.Render(CyclesIn,DISPATCHER_WRITE_SDP);
-  MEM_ADDRESS nsdp=shifter_draw_pointer;
-  DWORD_B(&nsdp,(0xff8209-addr)/2)=io_src_b;
-  if(addr==0xFF8209)
-    overscan_add_extra=0;
-  if((Glue.CurrentScanline.Tricks&TRICK_LINE_PLUS_44))
-    overscan_add_extra=(SideBorderSize==VERY_LARGE_BORDER_SIDE)? 20 : 28;
-
-  shifter_draw_pointer_at_start_of_line-=shifter_draw_pointer;
-  shifter_draw_pointer_at_start_of_line+=nsdp; 
-  shifter_draw_pointer=nsdp;
-
-#endif//#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
-
 }
 
 #endif//#if defined(SSE_MMU)

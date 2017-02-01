@@ -17,6 +17,8 @@ The interrupt request of the FDC is connected to an input of the MFP (68901)
  general purpose I/O port (GPIO). This allows checking when an FDC/HDC 
 command is terminated by either polling this input or by triggering an 
 interrupt."
+
+Here we declare all objects related to floppy drives.
 */
 
 #include <easystr.h>
@@ -50,13 +52,14 @@ interrupt."
 
 #if defined(SSE_FLOPPY)
 
-#if defined(SSE_FLOPPY_ADAT_UPDATE)
+#if defined(SSE_DRIVE)
 #define ADAT (SF314[floppy_current_drive()].State.adat)
-#elif defined(SSE_DRIVE_OBJECT)
-#define ADAT (SF314[floppy_current_drive()].Adat())
 #else
 #define ADAT (!floppy_instant_sector_access)
 #endif
+
+#if defined(SSE_DISK_CAPS)
+extern TCaps Caps;
 #endif
 
 #if defined(SSE_DISK_GHOST)
@@ -86,41 +89,41 @@ extern TImageHFE ImageHFE[2];
 
 #if defined(SSE_DMA_OBJECT)
 extern TDma Dma;
+#endif
+#if defined(SSE_YM2149_OBJECT)
+extern TYM2149 YM2149;
+#endif
+#if defined(SSE_WD1772)
+extern TWD1772 WD1772;
+#endif
+#if defined(SSE_DRIVE_OBJECT)
+extern TSF314 SF314[2]; // 2 double-sided drives, wow!
+#endif
+#if defined(SSE_DISK)
+extern TDisk Disk[2]; // 
+#endif
+
+/*  We created new structures for floppy disk emulation.
+    To avoid double memory use, we define the old as new.
+*/
+#if defined(SSE_DMA_OBJECT)
+extern TDma Dma;
 #define dma_sector_count Dma.Counter
 #define dma_address Dma.BaseAddress
 #define dma_bytes_written_for_sector_count Dma.ByteCount
 #define dma_mode Dma.MCR
 #define dma_status Dma.SR
 #endif//dma
-#if defined(SSE_YM2149_OBJECT)
-extern TYM2149 YM2149;
-#endif
-#if defined(SSE_DRIVE_OBJECT)
-extern TSF314 SF314[2]; // 2 double-sided drives, wow!
-#endif
-#if defined(SSE_DISK1)
-extern TDisk Disk[2]; // 
-#endif
-#if defined(SSE_WD1772)
-extern TWD1772 WD1772;
-#if defined(SSE_WD1772_REGS)
+#if defined(SSE_WD1772_REGS_FOR_FDC)
 #define fdc_cr WD1772.CR     // problem:
 #define fdc_str WD1772.STR   // not identified in VC6 debugger
 #define fdc_tr WD1772.TR
 #define fdc_sr WD1772.SR
 #define fdc_dr WD1772.DR
-#endif
-#endif //FDC
-
-#if defined(SSE_WD1772)
 #define floppy_type1_command_active WD1772.StatusType
-#if defined(SSE_WD1772_LINES)
 #define fdc_last_step_inwards_flag WD1772.Lines.direction
 #endif
-#endif
 
-#if defined(SSE_DISK_CAPS)
-extern TCaps Caps;
-#endif
+#endif//floppy
 
 #endif//SSEFLOPPY_H

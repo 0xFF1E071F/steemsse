@@ -888,7 +888,6 @@ necessary to have a multiple of 6 though since the Microwire is a 3-bit serial
 
 */
                   int nController=(dat >> 6) & b0111;
-
                   switch (nController){
                     case b0011: // Master Volume
                     case b0101: // Left Volume
@@ -943,6 +942,7 @@ bits are being ignored.
                       dma_sound_r_top_val=BYTE(128.0*rv*mv);
 #endif
                       TRACE_LOG("Microwire volume:  master %d L %d R %d\n",dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume);
+
                       log_to_section(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound set volume master="+dma_sound_volume+
                                       " l="+dma_sound_l_volume+" r="+dma_sound_r_volume);
                       break;
@@ -1620,10 +1620,8 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
 
 #if defined(SSE_VIDEO_CHIPSET)
           MMU.WriteVideoCounter(addr,io_src_b);
-#ifdef SSE_GLUE_REFACTOR_OVERSCAN_EXTRA
           log_to(LOGSECTION_VIDEO,Str("VIDEO: ")+HEXSl(old_pc,6)+" - Set Shifter draw pointer to "+
             HEXSl(MMU.VideoCounter,6)+" at "+scanline_cycle_log());
-#endif
           break;
 #else 
           {
@@ -1816,9 +1814,6 @@ rasterline to allow horizontal fine-scrolling.
 #endif
           {
             int cycles_in=(int)(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
-#if defined(SSE_SHIFTER_HSCROLL_380) && !defined(SSE_VS2008_WARNING_382)
-            BYTE former_hscroll=HSCROLL;
-#endif
             HSCROLL=io_src_b & 0xf; // limited to 4bit
 
             log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Set horizontal scroll ("+HEXSl(addr,6)+
@@ -1826,47 +1821,41 @@ rasterline to allow horizontal fine-scrolling.
             if (addr==0xff8265) 
               shifter_hscroll_extra_fetch=(HSCROLL!=0);
 
-#if defined(SSE_SHIFTER_HSCROLL_380)
+#if defined(SSE_SHIFTER_HSCROLL)
 /*  Better test, should new HSCROLL apply on current line
     TODO: what is exact threshold ?
 */
             if(cycles_in<=Glue.CurrentScanline.StartCycle+24) {
-#else
-            if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
-#endif           // eg Coreflakes hidden screen //SS:which one?...
-#if defined(SSE_SHIFTER_HSCROLL_380)
               Shifter.hscroll0=HSCROLL;
-#endif
-#if defined(SSE_SHIFTER_HSCROLL_380)
               {
-#else
-              if (left_border>0){ // Don't do this if left border removed!
-#endif
                 shifter_skip_raster_for_hscroll = (HSCROLL!=0);
-
-#if defined(SSE_SHIFTER_HSCROLL_381) //argh!
-#if defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA)
+#if defined(SSE_GLUE)
                 Glue.AdaptScanlineValues(cycles_in); // ST Magazin
 #endif
-#ifndef SSE_VID_BORDERS
-                if (left_border>=BORDER_SIDE) {//ux382
-#else
-                if (left_border>=SideBorderSize){ // Don't do this if left border removed!
-#endif
-#endif
+                if (left_border>=BORDER_SIDE) { // Don't do this if left border removed!
                   left_border=BORDER_SIDE;
                   if (HSCROLL)
                     left_border+=16;
                   if(shifter_hscroll_extra_fetch) 
                     left_border-=16;
-#if defined(SSE_SHIFTER_HSCROLL_380)
                 }
-#endif
-#if defined(SSE_SHIFTER_HSCROLL_380) // update shifter_pixel for new HSCROLL
+                // update shifter_pixel for new HSCROLL
                 shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
-#endif
               }
             }
+#else
+            if (cycles_in<=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN-32){
+              if (left_border>0){ // Don't do this if left border removed!
+               // eg Coreflakes hidden screen
+                shifter_skip_raster_for_hscroll = (HSCROLL!=0);
+                  left_border=BORDER_SIDE;
+                  if (HSCROLL)
+                    left_border+=16;
+                  if(shifter_hscroll_extra_fetch) 
+                    left_border-=16;
+              }
+            }
+#endif           
           } 
           break;
         }//sw

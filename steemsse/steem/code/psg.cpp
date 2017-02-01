@@ -27,7 +27,7 @@ EXT bool sound_internal_speaker INIT(false);
 #endif
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE sound_bytes_per_sample INIT(1);
 #else
 EXT int sound_bytes_per_sample INIT(1);
@@ -101,13 +101,11 @@ EXT MEM_ADDRESS dma_sound_start=0,next_dma_sound_start=0,
 WORD MicroWire_Mask=0x07ff;
 WORD MicroWire_Data=0;
 int MicroWire_StartTime=0;
-
-
 WORD dma_sound_internal_buf[4],dma_sound_last_word;
 MEM_ADDRESS dma_sound_fetch_address;
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE psg_reg_select;
 EXT BYTE sound_time_method INIT(0);
 EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
@@ -132,7 +130,7 @@ int dma_sound_l_top_val=128,dma_sound_r_top_val=128;
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
 #include "../../3rdparty/dsp/dsp.h"
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 BYTE dma_sound_bass=6; // 6 is neutral value
 BYTE dma_sound_treble=6;
 #else
@@ -144,6 +142,9 @@ TIirVolume MicrowireVolume[2];
 #endif
 TIirLowShelf MicrowireBass[2];
 TIirHighShelf MicrowireTreble[2];
+#if defined(SSE_SOUND_DMA_391B)
+BYTE old_dma_sound_l_top_val,old_dma_sound_r_top_val;
+#endif
 #endif//microwire
 
 int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16];
@@ -178,12 +179,6 @@ const //const must be removed for linker
  WORD fixed_vol_3voices[16][16][16]= 
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
-
-#if defined(SSE_SOUND_390)
-inline bool playing_samples() {
-  return (psg_reg[PSGR_MIXER] & b00111111)==b00111111; // 1 = disabled
-}
-#endif//#if defined(SSE_SOUND_390)
 
 #endif//SSE_YM2149_FIXED_VOL_TABLE
 
@@ -599,6 +594,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #else
     int vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
 #endif
+
     if(*(int*)(&interpolate[0]))
     {
       ASSERT( !((index[0]-interpolate[0])&0x80) );
@@ -612,9 +608,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
         [index[1]-interpolate[1]] [index[0]-interpolate[0]];
 #endif
       vol= (int) sqrt( (float) vol * (float) vol2); 
-      ASSERT(vol>=0 && vol<=65535);
     }
-
     *source_p=vol;
   }//OPTION_SAMPLED_YM
 
@@ -633,7 +627,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
 inline void Microwire(int channel,int &val) {
-#if !defined(SSE_SOUND_DMA_390C) // tested before
+#if !defined(SSE_SOUND_DMA_390C) && !defined(SSE_SOUND_DMA_391) // tested before
   if(OPTION_MICROWIRE)
 #endif
   {
@@ -654,7 +648,9 @@ inline void Microwire(int channel,int &val) {
         d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
          ,dma_sound_treble-6);
 #endif
-#if defined(SSE_SOUND_DMA_390A)
+#if defined(SSE_SOUND_DMA_391)
+      // we do it in the write loop
+#elif defined(SSE_SOUND_DMA_390A)
       // no "dsp" volume
 #else
       if(dma_sound_volume<0x28
@@ -685,6 +681,24 @@ inline void Microwire(int channel,int &val) {
 inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel) {
+
+
+#if defined(SSE_SOUND_DMA_391B)
+/*  Try to avoid clicks when a program aggressively changes microwire volume
+    (Sea of Colour).
+    Now it won't work if a program does a lot of quick changes for effect.
+*/
+    if(old_dma_sound_l_top_val<dma_sound_l_top_val)
+      old_dma_sound_l_top_val++;
+    else if(old_dma_sound_l_top_val>dma_sound_l_top_val)
+      old_dma_sound_l_top_val--;
+    if(old_dma_sound_r_top_val<dma_sound_r_top_val)
+      old_dma_sound_r_top_val++;
+    else if(old_dma_sound_r_top_val>dma_sound_r_top_val)
+      old_dma_sound_r_top_val--;
+#endif
+
+
 #if defined(SSE_SOUND_INLINE_390)
   // check size once (hopefully optimised?)
   if(Size==sizeof(BYTE)) //8bit
@@ -706,6 +720,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           v=0; // dma-only
       }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
+      //LEFT-8bit
       val=v;
 #if defined(SSE_OSD_CONTROL)
       if(dma_sound_on_this_screen&&(OSD_MASK3 & OSD_CONTROL_DMASND)) 
@@ -715,7 +730,26 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
         val+= (**lp_dma_sound_channel);                           
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_391)
+      if(OPTION_MICROWIRE)
+      { 
+        Microwire(0,val);
+#if defined(SSE_SOUND_DMA_391B)
+        if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
+#else
+        if(dma_sound_l_top_val!=128)
+#endif
+        {
+#if defined(SSE_SOUND_DMA_391B)
+          val*=old_dma_sound_l_top_val;
+          val/=128;
+#else
+          val*=dma_sound_l_top_val;
+          val/=128;
+#endif
+        }
+      }
+#elif defined(SSE_SOUND_MICROWIRE)
       Microwire(0,val);
 #endif
       if (val<VOLTAGE_FP(0))
@@ -725,13 +759,33 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
       (*(BYTE**)Out_P)++;
       // stereo: do the same for right channel
-      if(sound_num_channels==2){    
+      if(sound_num_channels==2){   
+        //RIGHT-8bit
         val=v;
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_391)
+        if(OPTION_MICROWIRE)
+        {
+          Microwire(1,val);
+#if defined(SSE_SOUND_DMA_391B)
+          if(dma_sound_r_top_val!=128 ||old_dma_sound_r_top_val!=dma_sound_r_top_val)
+#else
+          if(dma_sound_r_top_val<128)
+#endif
+          {
+#if defined(SSE_SOUND_DMA_391B)
+            val*=old_dma_sound_r_top_val;
+            val/=128;
+#else
+            val*=dma_sound_r_top_val;
+            val/=128;
+#endif
+          }
+        }
+#elif defined(SSE_SOUND_MICROWIRE)
         Microwire(1,val);
 #endif
         if(val<VOLTAGE_FP(0))
@@ -767,14 +821,34 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           v=0; // dma-only
       }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
-
+      //LEFT-16bit
       val=v; //inefficient?
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
         val+= (**lp_dma_sound_channel);                           
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_391)
+      if(OPTION_MICROWIRE)
+      {
+       // TRACE_OSD("%d %d %d",val,dma_sound_l_top_val,old_dma_sound_l_top_val);
+        Microwire(0,val);
+#if defined(SSE_SOUND_DMA_391B)
+        if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
+#else
+        if(dma_sound_l_top_val!=128)
+#endif
+        {
+#if defined(SSE_SOUND_DMA_391B)
+          val*=old_dma_sound_l_top_val;
+          val/=128;
+#else
+          val*=dma_sound_l_top_val;
+          val/=128;
+#endif
+        }
+      }
+#elif defined(SSE_SOUND_MICROWIRE)
       Microwire(0,val);
 #endif
       if (val<VOLTAGE_FP(0))
@@ -785,12 +859,33 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       (*(WORD**)Out_P)++;
       // stereo: do the same for right channel
       if(sound_num_channels==2){    
+        //RIGHT-16bit
         val=v;
+
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_391)
+        if(OPTION_MICROWIRE)
+        {
+          Microwire(1,val);
+#if defined(SSE_SOUND_DMA_391B)
+          if(dma_sound_r_top_val<128 ||old_dma_sound_r_top_val!=dma_sound_r_top_val)
+#else
+          if(dma_sound_r_top_val<128)
+#endif
+          {
+#if defined(SSE_SOUND_DMA_391B)
+            val*=old_dma_sound_r_top_val;
+            val/=128;
+#else
+            val*=dma_sound_r_top_val;
+            val/=128;
+#endif
+          }
+        }
+#elif defined(SSE_SOUND_MICROWIRE)
         Microwire(1,val);
 #endif
         if(val<VOLTAGE_FP(0))
@@ -991,14 +1086,31 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         v=0; // dma-only
     }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
-
     val=v;
-    val+= (**lp_dma_sound_channel);    
 
-#if defined(SSE_SOUND_MICROWIRE)
+    val+= (**lp_dma_sound_channel);    
+#if defined(SSE_SOUND_DMA_391)
+      if(OPTION_MICROWIRE)
+      {
+        Microwire(0,val);
+#if defined(SSE_SOUND_DMA_391B)
+        if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
+#else
+        if(dma_sound_l_top_val<128)
+#endif
+        {
+#if defined(SSE_SOUND_DMA_391B)
+          val*=old_dma_sound_l_top_val; // changed in live sound loop
+          val/=128;
+#else
+          val*=dma_sound_l_top_val;
+          val/=128;
+#endif
+        }
+      }
+#elif defined(SSE_SOUND_MICROWIRE)
     Microwire(0,val);
 #endif
-
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
     else if (val>VOLTAGE_FP(255))
@@ -1013,13 +1125,30 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       fputc(HIBYTE(val),wav_file);
     }
 
-    if(sound_num_channels==2){    
+    if(sound_num_channels==2){ // RIGHT CHANNEL
       val+= (*(*lp_dma_sound_channel+1)); 
-
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_DMA_391)
+      if(OPTION_MICROWIRE)
+      {
+        Microwire(1,val);
+#if defined(SSE_SOUND_DMA_391B)
+        if(dma_sound_r_top_val!=128||old_dma_sound_r_top_val!=dma_sound_r_top_val)
+#else
+        if(dma_sound_r_top_val<128)
+#endif
+        {
+#if defined(SSE_SOUND_DMA_391B)
+          val*=old_dma_sound_r_top_val;
+          val/=128;
+#else
+          val*=dma_sound_r_top_val;
+          val/=128;
+#endif
+        }
+      }
+#elif defined(SSE_SOUND_MICROWIRE)
       Microwire(1,val);
 #endif
-
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -1587,7 +1716,7 @@ void dma_sound_fetch()
    mono samples can be played. 
 
    This function is called by event_hbl() & event_scanline(), which matches the
-   hblank timing.
+   hblank timing. [TODO: when DE ends?]
    It sends some samples to the rendering buffer, then fill up the FIFO buffer.
 
    A possible problem in Steem (vs. Hatari) is that there's no independent clock
@@ -2550,12 +2679,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     When user tries to mute PSG channels, we give up this rendering system
     because it's all or nothing.
 */
-#if defined(SSE_SOUND_390)
       if(OPTION_SAMPLED_YM
-#else
-      if(SSEOption.PSGFixedVolume && playing_samples()
-#endif
-      
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         &&! ((d2_dpeek(FAKE_IO_START+20)>>12)&7)
 #endif

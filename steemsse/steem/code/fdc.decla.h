@@ -96,10 +96,8 @@ EXT WORD dma_mode;
 EXT BYTE dma_status;
 #endif
 
-#if !defined(SSE_WD1772_REGS) // still in doubt about this... made it uselessly compicated?
-EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr; // made struct
-#endif
-#if !(defined(SSE_WD1772_LINES))
+#if !defined(SSE_WD1772_REGS_FOR_FDC)
+EXT BYTE fdc_cr,fdc_tr,fdc_sr,fdc_str,fdc_dr;
 EXT bool fdc_last_step_inwards_flag;
 #endif
 

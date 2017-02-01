@@ -133,7 +133,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(on_rte);          //4
   ReadWrite(on_rte_interrupt_depth); //4
   ReadWrite(shifter_draw_pointer); //4
-#if defined(SSE_VAR_RESIZE_390B)
+#if defined(SSE_VAR_RESIZE)
   int shifter_freq_int=shifter_freq;
   ReadWrite(shifter_freq_int);         //4
   shifter_freq=shifter_freq_int;
@@ -188,7 +188,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   ReadWrite(mfp_gpip_no_interrupt); //1
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
   int i_psg_reg_select=psg_reg_select;
   ReadWrite(i_psg_reg_select);      //4
   psg_reg_select=i_psg_reg_select;
@@ -227,7 +227,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_sr);            //1
   ReadWrite(fdc_str);           //1
   ReadWrite(fdc_dr);                     //1
-#if defined(SSE_WD1772_LINES)
+#if defined(SSE_WD1772_REGS_FOR_FDC)
   BYTE dummy_byte;
   ReadWrite(dummy_byte);
 #else
@@ -254,7 +254,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   ReadWrite(stemdos_Pexec_list_ptr);  //4
   ReadWriteArray(stemdos_Pexec_list); //SS 304
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
   int stemdos_current_drive_int=stemdos_current_drive;
   ReadWrite(stemdos_current_drive_int);
   stemdos_current_drive=stemdos_current_drive_int;
@@ -301,7 +301,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=5) ReadWriteArray(ST_Key_Down);
 
-#if defined(SSE_VAR_RESIZE_390A) // problem is memory snapshots, structure: more complicated
+#if defined(SSE_VAR_RESIZE) // problem is memory snapshots, structure: more complicated
   struct {
     int clock_divide;
     int rx_delay__unused;
@@ -335,7 +335,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   old_acia[NUM_ACIA_IKBD].ByteWaitingRx=ACIA_IKBD.ByteWaitingRx;
   old_acia[NUM_ACIA_IKBD].ByteWaitingTx=ACIA_IKBD.ByteWaitingTx;
   old_acia[NUM_ACIA_IKBD].LineTxBusy=ACIA_IKBD.LineTxBusy;
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   old_acia[NUM_ACIA_IKBD].CR=ACIA_IKBD.CR;
   old_acia[NUM_ACIA_IKBD].SR=ACIA_IKBD.SR;
   old_acia[NUM_ACIA_IKBD].RDR=ACIA_IKBD.RDR;
@@ -360,7 +360,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ACIA_IKBD.ByteWaitingRx=old_acia[NUM_ACIA_IKBD].ByteWaitingRx;
   ACIA_IKBD.ByteWaitingTx=old_acia[NUM_ACIA_IKBD].ByteWaitingTx;
   ACIA_IKBD.LineTxBusy=old_acia[NUM_ACIA_IKBD].LineTxBusy;
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   ACIA_IKBD.CR=old_acia[NUM_ACIA_IKBD].CR;
   ACIA_IKBD.SR=old_acia[NUM_ACIA_IKBD].SR;
   ACIA_IKBD.RDR=old_acia[NUM_ACIA_IKBD].RDR;
@@ -373,7 +373,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
  
 
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   if(Version<44 && LoadOrSave==LS_LOAD) //v3.5.1
   {
     ACIA_IKBD.CR=0x96; // usually
@@ -490,7 +490,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool old_em=bool(extended_monitor);
   if (Version>=24){
 
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     // what we win in pure size, we lose in code, but this function could be paged
     int em_ints[4];
     em_ints[0]=em_width;
@@ -567,7 +567,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=30){
     ReadWrite(MicroWire_Mask);
     ReadWrite(MicroWire_Data);
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     int i_dma_sound_volume=dma_sound_volume;
     int i_dma_sound_l_volume=dma_sound_l_volume;
     int i_dma_sound_r_volume=dma_sound_r_volume;
@@ -628,17 +628,18 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     BYTE fdc_read_address_buffer_len=0;
 #endif
 
-#if defined(SSE_VAR_RESIZE)
-    {
-      int floppy_type1_command_active_tmp=floppy_type1_command_active;
-      ReadWrite(floppy_type1_command_active_tmp);
-      floppy_type1_command_active=floppy_type1_command_active_tmp;
-      int fdc_read_address_buffer_len_tmp=fdc_read_address_buffer_len;
-      ReadWrite(fdc_read_address_buffer_len_tmp);
-      fdc_read_address_buffer_len=fdc_read_address_buffer_len_tmp;
-    }
+#if defined(SSE_WD1772_REGS_FOR_FDC)
+    int floppy_type1_command_active_tmp=floppy_type1_command_active;
+    ReadWrite(floppy_type1_command_active_tmp);
+    floppy_type1_command_active=floppy_type1_command_active_tmp;
 #else
     ReadWrite(floppy_type1_command_active);
+#endif
+#if defined(SSE_VAR_RESIZE)
+    int fdc_read_address_buffer_len_tmp=fdc_read_address_buffer_len;
+    ReadWrite(fdc_read_address_buffer_len_tmp);
+    fdc_read_address_buffer_len=fdc_read_address_buffer_len_tmp;
+#else
     ReadWrite(fdc_read_address_buffer_len);
 #endif
 
@@ -732,7 +733,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=39){
     ReadWriteArray(dma_sound_internal_buf);
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     int i_dma_sound_internal_buf_len=dma_sound_internal_buf_len;
     ReadWrite(i_dma_sound_internal_buf_len);
     dma_sound_internal_buf_len=i_dma_sound_internal_buf_len;
@@ -847,7 +848,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWrite(SampleRate); // global of 3rd party
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     int i_dma_sound_bass=dma_sound_bass;
     ReadWrite(i_dma_sound_bass);
     dma_sound_bass=dma_sound_bass;
@@ -856,7 +857,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
     if(dma_sound_bass<0 || dma_sound_bass>=0xC)
       dma_sound_bass=6;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
     int i_dma_sound_treble=dma_sound_treble;
     ReadWrite(i_dma_sound_treble);
     dma_sound_treble=dma_sound_treble;
@@ -915,8 +916,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     if(!HD6301_OK)
       OPTION_C1=0;
 #endif
-#if defined(SSE_ACIA_REGISTERS)
-#if defined(SSE_VAR_RESIZE_390A)
+#if defined(SSE_ACIA)
+#if defined(SSE_VAR_RESIZE)
   old_acia[NUM_ACIA_MIDI].clock_divide=ACIA_MIDI.clock_divide;
   old_acia[NUM_ACIA_MIDI].rx_irq_enabled=ACIA_MIDI.rx_irq_enabled;
   old_acia[NUM_ACIA_MIDI].rx_not_read=ACIA_MIDI.rx_not_read;
@@ -931,7 +932,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   old_acia[NUM_ACIA_MIDI].ByteWaitingRx=ACIA_MIDI.ByteWaitingRx;
   old_acia[NUM_ACIA_MIDI].ByteWaitingTx=ACIA_MIDI.ByteWaitingTx;
   old_acia[NUM_ACIA_MIDI].LineTxBusy=ACIA_MIDI.LineTxBusy;
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   old_acia[NUM_ACIA_MIDI].CR=ACIA_MIDI.CR;
   old_acia[NUM_ACIA_MIDI].SR=ACIA_MIDI.SR;
   old_acia[NUM_ACIA_MIDI].RDR=ACIA_MIDI.RDR;
@@ -956,7 +957,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ACIA_MIDI.ByteWaitingRx=old_acia[NUM_ACIA_MIDI].ByteWaitingRx;
   ACIA_MIDI.ByteWaitingTx=old_acia[NUM_ACIA_MIDI].ByteWaitingTx;
   ACIA_MIDI.LineTxBusy=old_acia[NUM_ACIA_MIDI].LineTxBusy;
-#if defined(SSE_ACIA_REGISTERS)
+#if defined(SSE_ACIA)
   ACIA_MIDI.CR=old_acia[NUM_ACIA_MIDI].CR;
   ACIA_MIDI.SR=old_acia[NUM_ACIA_MIDI].SR;
   ACIA_MIDI.RDR=old_acia[NUM_ACIA_MIDI].RDR;
@@ -1002,7 +1003,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=352
   if(Version>=45) //3.5.2
   {
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 
 #if defined(SSE_DRIVE_SOUND)
     TSF314 SF314Copy=SF314[0];
@@ -1027,25 +1028,15 @@ Steem SSE will reset auto.sts and quit\nSorry!",
         SF314[drive].Id=drive;
       }
       SF314[drive].ImageType=image_type;
-#if defined(SSE_FLOPPY_ADAT_UPDATE) // really? or just update adat +GUI?
-      //SF314[drive].State.adat=SF314Copy[drive].State.adat;
       SF314[drive].UpdateAdat();
-#endif
     }
 #endif
 
 #if defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
-#if defined(SSE_DRIVE_SOUND_VOLUME)
-    SF314[0].Sound_Volume=SF314Copy.Sound_Volume;
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
-    SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
-#endif
-#endif
+    SF314[0].Sound_Volume=SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
     for(int i=0;i<TSF314::NSOUNDS;i++)
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
-      SF314[1].Sound_Buffer[i]=
-#endif
-      SF314[0].Sound_Buffer[i]=SF314Copy.Sound_Buffer[i];
+      SF314[0].Sound_Buffer[i]=SF314[1].Sound_Buffer[i]
+        =SF314Copy.Sound_Buffer[i];
 #endif
 
 #endif
@@ -1059,39 +1050,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_GUI_STATUS_BAR)
     GUIRefreshStatusBar();//overkill
 #endif
-#if defined(SSE_GLUE_THRESHOLDS)    
+#if defined(SSE_GLUE)    
     Glue.Update();
 #endif
 #endif
   }
 #endif
-#if SSE_VERSION>=361
-  if(Version>=48) // 3.6.1
-  {
-#if defined(SSE_DISK_CAPS_RESUME_____)//3.6.1
-/*  This just restore registers, not internal state.
-    Funny to see how the "drive" then finds back its track,
-    in some cases it will work, in other fail.
-    v3.6.2: do it only for load ...
-    v3.6.3: check that Caps is loaded before ...
-*/
-    if(LoadOrSave==LS_LOAD //3.6.2
-      && CAPSIMG_OK //3.6.3
-      && Caps.Active
-      ) 
-    {
-      Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
-      Caps.WriteWD1772(0,fdc_cr);
-      Caps.WriteWD1772(1,fdc_tr);
-      Caps.WriteWD1772(2,fdc_sr);
-      Caps.WriteWD1772(3,fdc_dr);
-    }
-#endif
-  }
-  else
-  {
-  }
-#endif
+
 #if SSE_VERSION>=370
   if(Version>=49) // 3.7.0
   {
@@ -1104,10 +1069,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     v3.6.3: check that Caps is loaded...
     v3.7.0: check that Caps was active...
 */
-    if(LoadOrSave==LS_LOAD //3.6.2
-      && CAPSIMG_OK //3.6.3
-//////      && Caps.Active //3.7.0
-      ) 
+    if(LoadOrSave==LS_LOAD && CAPSIMG_OK) 
     {
       Caps.WritePsgA(psg_reg[PSGR_PORT_A]);
       Caps.WriteWD1772(0,fdc_cr);
@@ -1155,18 +1117,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
 #endif
 
-#if SSE_VERSION>=372
-  if(Version>=51) 
-  {
-  }
-#endif
-
 #if SSE_VERSION>=380
   if(Version>=52) 
   {
-#if defined(SSE_GLUE_FRAME_TIMINGS_INIT) && !defined(SSE_GLUE_390E2)
-    Glue.scanline=0; // Steem is always stopped at the start of a frame
-#endif
 #if defined(SSE_IKBD_6301_380) 
     BYTE HD6301_Initialised=HD6301.Initialised;
     ReadWriteStruct(HD6301); // registers... 
@@ -1210,9 +1163,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     ReadWrite(NewROMCountry);
 #endif
   }
-#if defined(SSE_GLUE_390E)
-  //Glue.VCount=0;  
 #endif
+
+#if defined(SSE_BLT_390B) && defined(SSE_BLT_391)
+  Blit.BlitCycles=0;
 #endif
 
 #endif//sse_build

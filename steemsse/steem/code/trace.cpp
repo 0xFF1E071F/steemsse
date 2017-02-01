@@ -49,7 +49,7 @@ void trace()
   runstate=RUNSTATE_STOPPED;
   runstate_why_stop="";
   debug_in_trace=true;
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
+#if !defined(SSE_GLUE)
   debug_trace_event_plan_init();
 #endif
   int old_cpu_time=ABSOLUTE_CPU_TIME;
@@ -71,9 +71,11 @@ void trace()
 
     draw_begin();
     debug_update_drawing_position();
+
+#if !defined(SSE_BLT_MAIN_LOOP)
 #if defined(SSE_BOILER_BLIT_WHEN_TRACING)
 #if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
-    ASSERT(!Blit.HasBus);
+   // ASSERT(!Blit.HasBus);
 #endif
     if (Blit.Busy && !Blit.HasBus && (ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
     {
@@ -81,6 +83,8 @@ void trace()
       Blitter_Start_Now();
     }
 #endif
+#endif
+
     m68k_process();
 
     cpu_cycles_this_instruction=ABSOLUTE_CPU_TIME-old_cpu_time;

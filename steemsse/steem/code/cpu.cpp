@@ -9,6 +9,7 @@ instruction and cpu_routines_init in cpuinit.cpp.
 SS: this is compiled only if STEVEN_SEAGAL or SSE_CPU isn't defined.
 ---------------------------------------------------------------------------*/
 
+#if !defined(SSE_CPU)
 
 #if defined(SSE_STRUCTURE_DECLA)
 
@@ -4659,4 +4660,4 @@ extern "C" void m68k_1111(){  //line-f emulator
 
 #include "cpuinit.cpp"
 
-
+#endif//#if !defined(SSE_CPU)

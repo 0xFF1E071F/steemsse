@@ -1906,7 +1906,7 @@ EasyStr Translation(char *s)
 }
 
 //---------------------------------------------------------------------------
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 #define FileTypes ansi_string //no problem as it's used for modal fileselect
 #else
 char FileTypes[512];
@@ -1915,7 +1915,7 @@ char FileTypes[512];
 char *FSTypes(int Type,...)
 {
   char *tp=FileTypes;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
   ZeroMemory(FileTypes,256);
 #else
   ZeroMemory(FileTypes,512);
@@ -1967,7 +1967,7 @@ char *FSTypes(int Type,...)
   }
   ASSERT(strlen(FileTypes)<256); //512 was overkill (maybe...)
   return FileTypes;
-#if defined(SSE_VAR_RESIZE_390)
+#if defined(SSE_VAR_RESIZE)
 #undef FileTypes
 #endif
 }

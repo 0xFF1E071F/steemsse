@@ -31,7 +31,7 @@ BYTE ST_Key_Down[128];
 int mousek;
 // our variables that Steem must see
 int hd6301_completed_transmission_to_MC6850; // for sync
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
 int cycles_run=0; 
 #endif
 
@@ -170,7 +170,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #endif
   // Called by Steem to run some cycles, generally 64/scanline
   int pc;
-#if !defined(SSE_IKBD_6301_EVENT)
+#if !defined(SSE_ACIA_EVENT)
   int cycles_run=0;
 #endif
 #ifndef SSE_VS2008_WARNING_382
@@ -212,7 +212,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
     cycles_to_run-=cycles_given_back;
     cycles_to_give_back-=cycles_given_back;
 
-#ifdef SSE_IKBD_6301_EVENT
+#ifdef SSE_ACIA_EVENT
     if(HD6301.LineRxFreeTime>cycles_given_back)
       HD6301.LineRxFreeTime-=cycles_given_back;
     else if(HD6301.LineRxFreeTime)
@@ -230,12 +230,12 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     || ExecutingInt==EXECUTING_INT 
 #endif
-#ifdef SSE_IKBD_6301_EVENT
+#ifdef SSE_ACIA_EVENT
     || HD6301.LineRxFreeTime || HD6301.LineTxFreeTime
 #endif
   ))
   {
-#ifdef SSE_IKBD_6301_EVENT
+#ifdef SSE_ACIA_EVENT
     if(HD6301.LineTxFreeTime && cycles_run>=HD6301.LineTxFreeTime)
     {
       TRACE("6301 sending $%X %d cycles in\n",ACIA_IKBD.RDRS,cycles_run);
@@ -278,7 +278,7 @@ hd6301_run_cycles(u_int cycles_to_run) {
   hd6301_vbl_cycles+=cycles_run;
 #endif
  // return (Crashed6301) ? 0 : cycles_run; 
-#if defined(SSE_IKBD_6301_EVENT)
+#if defined(SSE_ACIA_EVENT)
   cycles_run=0;
 #endif
   return (Crashed6301) ? -1 : cycles_run; //v3.7.3

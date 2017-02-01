@@ -3,15 +3,11 @@
 #if defined(SSE_DISK_STW)
 /*  We really go for it here as this simplistic interface knows nothing but
     the side, track and words on the track. MFM encoding/decoding, timing and
-    all the rest is for the distinct WD1772 emulator.
+    all the rest is for the distinct drive and WD1772 emulators.
 */
 
 #include "../pch.h"
 
-#include "SSESTW.h"
-#include "SSEDebug.h"
-#include "SSEParameters.h"
-#include "SSEFloppy.h"
 #if !defined(BIG_ENDIAN_PROCESSOR)
 #include <acc.decla.h>
 #define SWAP_WORD(val) *val=change_endian(*val);
@@ -19,32 +15,21 @@
 #define SWAP_WORD(val)
 #endif
 
-#include <fdc.decla.h> //DRIVE
-#if defined(SSE_DISK_STW_READONLY) //3.7.1
-#include <floppy_drive.decla.h> //FloppyDrive[]
-#endif
+#include <fdc.decla.h>
+#include <floppy_drive.decla.h>
+
+#include "SSESTW.h"
+#include "SSEDebug.h"
+#include "SSEParameters.h"
+#include "SSEFloppy.h"
  
-
-#define HEADER_SIZE (4+2+1+1+2) //STW Version nSides nTracks nBytes
-
-#define NUM_SIDES nSides//2
-#define NUM_TRACKS nTracks//84
-#define NUM_BYTES nBytes//6256 //DRIVE_BYTES_ROTATION_STW 
-
+#define N_SIDES FloppyDrive[Id].Sides
+#define N_TRACKS FloppyDrive[Id].TracksPerSide
+#define TRACKBYTES Disk[Id].TrackBytes
+#define HEADER_SIZE (4+2+1+1+2) //STW Version N_SIDES N_TRACKS TRACKBYTES
 #define TRACK_HEADER_SIZE (3+2) //"TRK" side track
-#define IMAGE_SIZE (HEADER_SIZE+NUM_SIDES*NUM_TRACKS*\
-(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD)))
-
-#if defined(SSE_VAR_RESIZE_372) // saves space, complicates debugging...
-#if !defined(SSE_VAR_RESIZE_382)
-#define fCurrentImage FloppyDrive[Id].f
-#endif
-#define nSides FloppyDrive[Id].Sides
-#define nTracks FloppyDrive[Id].TracksPerSide
-#if defined(SSE_DISK1)
-#define nBytes Disk[Id].TrackBytes
-#endif
-#endif
+#define IMAGE_SIZE (HEADER_SIZE+N_SIDES*N_TRACKS*\
+(TRACK_HEADER_SIZE+TRACKBYTES*sizeof(WORD)))
 
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 
@@ -66,18 +51,16 @@ void TImageSTW::Close() {
     TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
 #endif
     fseek(fCurrentImage,0,SEEK_SET); // rewind
-    //ASSERT(ImageData);
-    if(ImageData)
-#ifdef SSE_DISK_STW2
-      if(FloppyDrive[Id].WrittenTo)
-#endif
-        fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
+    if(ImageData && FloppyDrive[Id].WrittenTo)
+      fwrite(ImageData,1,IMAGE_SIZE,fCurrentImage);
     fclose(fCurrentImage);
     free(ImageData);
   }
-  Init();
+  Init(); // zeroes variables
 }
 
+
+#if defined(SSE_GUI_DM_STW)
 
 bool TImageSTW::Create(char *path) {
   // utility called by Disk manager
@@ -91,16 +74,16 @@ bool TImageSTW::Create(char *path) {
     SWAP_WORD(&Version);
     fwrite(&Version,sizeof(WORD),1,fCurrentImage);
     SWAP_WORD(&Version);
-    fwrite(&nSides,sizeof(BYTE),1,fCurrentImage);
-    fwrite(&nTracks,sizeof(BYTE),1,fCurrentImage);
-    SWAP_WORD(&nBytes);
-    fwrite(&nBytes,sizeof(WORD),1,fCurrentImage);
-    SWAP_WORD(&nBytes);
+    fwrite(&N_SIDES,sizeof(BYTE),1,fCurrentImage);
+    fwrite(&N_TRACKS,sizeof(BYTE),1,fCurrentImage);
+    SWAP_WORD(&TRACKBYTES);
+    fwrite(&TRACKBYTES,sizeof(WORD),1,fCurrentImage);
+    SWAP_WORD(&TRACKBYTES);
 
     // init all tracks with random bytes (unformatted disk) 
-    for(BYTE track=0;track<NUM_TRACKS;track++)
+    for(BYTE track=0;track<N_TRACKS;track++)
     {
-      for(BYTE side=0;side<NUM_SIDES;side++)
+      for(BYTE side=0;side<N_SIDES;side++)
       {
         // this can be seen as "metaformat"
         fwrite("TRK",1,3,fCurrentImage);
@@ -108,7 +91,7 @@ bool TImageSTW::Create(char *path) {
         fwrite(&track,1,1,fCurrentImage);
 
         WORD data; // MFM encoding = clock byte and data byte mixed
-        for(int byte=0;byte<NUM_BYTES;byte++)
+        for(int byte=0;byte<TRACKBYTES;byte++)
         {
           data=(WORD)rand();
           fwrite(&data,sizeof(data),1,fCurrentImage); 
@@ -122,10 +105,12 @@ bool TImageSTW::Create(char *path) {
   return ok;
 }
 
+#endif
+
 
 WORD TImageSTW::GetMfmData(WORD position) {
   WORD mfm_data=0;
-  if(TrackData && position<NUM_BYTES)
+  if(TrackData && position<TRACKBYTES)
   {
     mfm_data=TrackData[position];
     SWAP_WORD(&mfm_data);
@@ -146,20 +131,20 @@ void TImageSTW::Init() {
   fCurrentImage=NULL;
   ImageData=NULL;
   TrackData=NULL;
-  nSides=2;
-  nTracks=84;
-  nBytes=DRIVE_BYTES_ROTATION_STW;//6256;
+  N_SIDES=2;
+  N_TRACKS=84;
+  TRACKBYTES=DRIVE_BYTES_ROTATION_STW;
 }
 
 
 bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
   bool ok=false;
-  if(side<NUM_SIDES && track<NUM_TRACKS && ImageData)  
+  if(side<N_SIDES && track<N_TRACKS && ImageData)  
   {
     int position=HEADER_SIZE
-      +track*NUM_SIDES*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD))
-      +side*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD));
-#if defined(SSE_DISK_STW2) //runtime format check
+      +track*N_SIDES*(TRACK_HEADER_SIZE+TRACKBYTES*sizeof(WORD))
+      +side*(TRACK_HEADER_SIZE+TRACKBYTES*sizeof(WORD));
+    //runtime format check
     if( !strncmp("TRK",(char*)ImageData+position,3) 
       && *(ImageData+position+3)==side && *(ImageData+position+4)==track)
     {
@@ -167,26 +152,11 @@ bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
       if(TrackData!=(WORD*)(ImageData+position+TRACK_HEADER_SIZE)) //only once
         TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
 #endif
-#if defined(SSE_DISK2)
       Disk[Id].current_side=side;
       Disk[Id].current_track=track;
-#endif      
       TrackData=(WORD*)(ImageData+position+TRACK_HEADER_SIZE);
       ok=true;
     }
-#else
-    ASSERT( !strncmp("TRK",(char*)ImageData+position,3) );
-    ASSERT( *(ImageData+position+3)==side );
-    ASSERT( *(ImageData+position+4)==track );
-
-    TrackData=(WORD*)(ImageData+position+TRACK_HEADER_SIZE);
-    TRACE_LOG("STW LoadTrack %c: side %d track %d\n",'A'+DRIVE,side,track);  
-    ok=true;
-#if defined(SSE_DISK2)
-      Disk[Id].current_side=side;
-      Disk[Id].current_track=track;
-#endif
-#endif//stw2?
   }
 #ifdef SSE_DEBUG
   else
@@ -217,21 +187,21 @@ bool TImageSTW::Open(char *path) {
         if(Version>=0x100 && Version <0x200)
           ok=true;
 
-        nSides=*(BYTE*)(ImageData+6);
-        nTracks=*(BYTE*)(ImageData+7);
-        nBytes=*(WORD*)(ImageData+8);
-        SWAP_WORD(&nBytes);
-        if(nSides>2 || nTracks>88 || nBytes>6800)
+        N_SIDES=*(BYTE*)(ImageData+6);
+        N_TRACKS=*(BYTE*)(ImageData+7);
+        TRACKBYTES=*(WORD*)(ImageData+8);
+        SWAP_WORD(&TRACKBYTES);
+        if(N_SIDES>2 || N_TRACKS>88 || TRACKBYTES>6800)
           ok=false;
 #ifdef SSE_DEBUG
         // check meta-format
-        else for(BYTE track=0;track<NUM_TRACKS;track++)
+        else for(BYTE track=0;track<N_TRACKS;track++)
         {
-          for(BYTE side=0;side<NUM_SIDES;side++)
+          for(BYTE side=0;side<N_SIDES;side++)
           {
             int position=HEADER_SIZE
-              +track*NUM_SIDES*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD))
-              +side*(TRACK_HEADER_SIZE+NUM_BYTES*sizeof(WORD));
+              +track*N_SIDES*(TRACK_HEADER_SIZE+TRACKBYTES*sizeof(WORD))
+              +side*(TRACK_HEADER_SIZE+TRACKBYTES*sizeof(WORD));
             if(strncmp("TRK",(char*)ImageData+position,3)
               ||  *(ImageData+position+3)!=side 
               ||  *(ImageData+position+3)!=side )
@@ -239,7 +209,7 @@ bool TImageSTW::Open(char *path) {
           }//nxt side
         }//nxt track
         ASSERT(ok);
-        TRACE_LOG("Open STW %s, V%X S%d T%d B%d OK%d\n",path,Version,nSides,nTracks,nBytes,ok); 
+        TRACE_LOG("Open STW %s, V%X S%d T%d B%d OK%d\n",path,Version,N_SIDES,N_TRACKS,TRACKBYTES,ok); 
 #endif
       }
     }
@@ -251,7 +221,7 @@ bool TImageSTW::Open(char *path) {
 
 
 void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
-  if(TrackData && position<NUM_BYTES)
+  if(TrackData && position<TRACKBYTES)
   {
     TrackData[position]=mfm_data;
     SWAP_WORD(&TrackData[position]);

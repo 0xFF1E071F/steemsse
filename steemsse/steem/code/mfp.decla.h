@@ -165,11 +165,7 @@ struct TMC68901 {
   // FUNCTIONS
   TMC68901();
   void Init();
-#if defined(SSE_VS2008_WARNING_390)
   void Reset();
-#else
-  void Reset(bool Cold);
-#endif
   int UpdateNextIrq(int at_time=-1);
 #if defined(SSE_INT_MFP_TIMER_B_AER)
 #if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
@@ -199,7 +195,7 @@ extern TMC68901 MC68901; // declaring the singleton
 
 inline BYTE mfp_get_timer_control_register(int);
 
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 EXT const WORD mfp_timer_8mhz_prescale[16];
 EXT const BYTE mfp_timer_irq[4];
 EXT const BYTE mfp_gpip_irq[8];

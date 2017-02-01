@@ -26,9 +26,6 @@ char *dot_ext(int i) { // is it ridiculous? do we reduce or add overhead?
 #include "SSEFloppy.h"
 
 
-
-#if defined(SSE_DISK1)
-
 TDisk::TDisk() {
 #ifdef SSE_DEBUG
   Id=0xFF;
@@ -42,7 +39,6 @@ void TDisk::Init() {
   TrackBytes=TRACK_BYTES;
 }
 
-#endif
 
 WORD TDisk::BytePositionOfFirstId() { // with +7 for reading ID //no!
   return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );

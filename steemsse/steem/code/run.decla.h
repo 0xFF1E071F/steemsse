@@ -14,7 +14,7 @@
 EXT void run();
 EXT void prepare_cpu_boosted_event_plans();
 
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE runstate;
 #else
 EXT int runstate;
@@ -33,7 +33,7 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 #define AUTO_FRAMESKIP 8
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
 #else
@@ -51,7 +51,7 @@ EXT bool flashlight_flag INIT(false);
 
 DEBUG_ONLY(EXT int mode);
 
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE mixed_output INIT(0);
 #else
 EXT int mixed_output INIT(0);
@@ -237,7 +237,7 @@ typedef struct{
   EVENTPROC event;
 }screen_event_struct;
 
-#if defined(SSE_GLUE_FRAME_TIMINGS)
+#if defined(SSE_GLUE)
 void event_trigger_vbi();
 #define screen_event_pointer (&Glue.screen_event)
 #else
@@ -272,7 +272,7 @@ EXT int time_of_last_hbl_interrupt;
 #if defined(SSE_INT_VBL_IACK)
 EXT int time_of_last_vbl_interrupt;
 #endif
-#if defined(SSE_VAR_RESIZE_382)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE screen_res_at_start_of_vbl;
 EXT BYTE shifter_freq_at_start_of_vbl;
 #else
@@ -311,7 +311,7 @@ void event_driveA_ip();
 void event_driveB_ip();
 #endif
 
-#if defined(SSE_ACIA_390)
+#if defined(SSE_ACIA_EVENT)
 extern int time_of_event_acia;
 void event_acia();
 
@@ -335,22 +335,7 @@ void event_acia();
   } \
   }
 
-#elif defined(SSE_IKBD_6301_EVENT)
-
-extern int time_of_event_ikbd,time_of_event_ikbd2;
-void event_ikbd(),event_ikbd2();
-
-#define PREPARE_EVENT_CHECK_FOR_IKBD       \
-  if ((time_of_next_event-time_of_event_ikbd) >= 0){                 \
-    time_of_next_event=time_of_event_ikbd;  \
-    screen_event_vector=event_ikbd;                    \
-  } \
-  if ((time_of_next_event-time_of_event_ikbd2) >= 0){                 \
-    time_of_next_event=time_of_event_ikbd2;  \
-    screen_event_vector=event_ikbd2;                    \
-  }
-
-#endif//ikbdevt
+#endif//acia
 
 #if defined(SSE_INT_MFP)
 /*  v3.8

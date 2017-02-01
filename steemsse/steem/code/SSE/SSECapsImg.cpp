@@ -6,50 +6,35 @@
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
-#if !defined(SSE_OSD) 
-#include <gui.decla.h> //DisableDiskLightAfter
-#endif
 #include <iorw.decla.h>
+#include <mfp.decla.h>
+#include <notifyinit.decla.h>
 #include <psg.decla.h>
 #include <run.decla.h>
+
 #include "SSECpu.h"
 #include "SSEInterrupt.h"
 #include "SSEShifter.h"
-#if defined(WIN32)
-#include <pasti/pasti.h>
-#endif
-
-#if !defined(SSE_CPU)
-#include <mfp.decla.h>
-#endif
-
 #include "SSECapsImg.h"
 #include "SSEDecla.h"
 #include "SSEDebug.h"
 #include "SSEFloppy.h"
 #include "SSEOption.h"
-#if defined(SSE_DISK_GHOST)
 #include "SSEGhostDisk.h"
-#endif
 #include "SSEVideo.h"
 
 
 TCaps::TCaps() {
-  CAPSIMG_OK=0; //3.6.3
-  // we init in main to keep control of timing
+  CAPSIMG_OK=0; // we init in main to keep control of timing/be able to trace
 }
 
 
 TCaps::~TCaps() {
   if(CAPSIMG_OK)
     CAPSExit();
-  CAPSIMG_OK=0;//3.6.3
+  CAPSIMG_OK=0;
 }
 
-
-void SetNotifyInitText(char*);//forward
-
-#undef LOGSECTION
 #define LOGSECTION LOGSECTION_INIT
 
 
@@ -109,7 +94,7 @@ int TCaps::Init() {
   WD1772.cbtrk=CallbackTRK;
 
   // we already create our 2 Caps drives, instead of waiting for an image:
-  ContainerID[0]=CAPSAddImage();
+  ContainerID[0]=CAPSAddImage(); //TODO clean up?
   ContainerID[1]=CAPSAddImage();
   ASSERT( ContainerID[0]!=-1 && ContainerID[1]!=-1 );
   WD1772.drivemax=2;
@@ -153,9 +138,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
       TRACE_LOG("%s ",CAPSGetPlatformName(img_info->platform[i]));
 #endif
     if(img_info->platform[i]==ciipAtariST 
-#if defined(SSE_DISK_CAPS_CTRAW) 
-      || ::SF314[drive].ImageType.Extension!=EXT_IPF// the other SF314 (confusing)
-#endif
+      || ::SF314[drive].ImageType.Extension==EXT_CTR
       || OPTION_HACKS) //unofficial or multiformat images
       found=true;
   }
@@ -308,36 +291,21 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
 
 #if defined(SSE_DRIVE_SOUND)
     if(SSEOption.DriveSound)
-    {
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
       ::SF314[DRIVE].Sound_CheckIrq();
-#else
-      ::SF314[0].Sound_CheckIrq();
-#endif
-    }
 #endif
   }
 
-//  TRACE_FDC("ipf MFP_GPIP_FDC_BIT: %d\n",!(lineout&CAPSFDC_LO_INTRQ));
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!(lineout&CAPSFDC_LO_INTRQ));
-#if !defined(SSE_OSD_DRIVE_LED3)
-  disk_light_off_time=timeGetTime()+DisableDiskLightAfter;
-#endif
 }
 
 #if !defined(SSE_BOILER_TRACE_CONTROL)
 #undef LOGSECTION
-//#define LOGSECTION LOGSECTION_IPF_LOCK_INFO
 #define LOGSECTION LOGSECTION_IMAGE_INFO
 #endif
 
 void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
-  ASSERT( !drive||drive==1 );
-  ASSERT( ::SF314[drive].ImageType.Manager==MNGR_CAPS );
-  ASSERT( drive==(unsigned)floppy_current_drive() );
 
   int side=Caps.SF314[drive].side;
-//  ASSERT( side==!(psg_reg[PSGR_PORT_A]& BIT_0) ); //elvira
   int track=Caps.SF314[drive].track;
   CapsTrackInfoT2 track_info; // apparently we must use type 2...
   track_info.type=1;
@@ -345,17 +313,8 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   
   CapsRevolutionInfo CRI;
 
-#if defined(SSE_DISK_CAPS_CTRAW_1ST_LOCK)
-/*  We've changed track, we reset # revs as recommended by caps authors.
-    Up to now we haven't seen the difference (eg Turrican works with or
-    without) so we "protect" this with option Hacks.
-*/
   if(Caps.LockedSide[drive]!=side || Caps.LockedTrack[drive]!=track)
-  {
-    if(OPTION_HACKS)
-      CAPSSetRevolution(Caps.ContainerID[drive],0);
-  }
-#endif
+    CAPSSetRevolution(Caps.ContainerID[drive],0); // new track, reset #revs just in case
 
   VERIFY( !CAPSLockTrack((PCAPSTRACKINFO)&track_info,Caps.ContainerID[drive],
     track,side,flags) );
@@ -363,7 +322,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   CAPSGetInfo(&CRI,Caps.ContainerID[drive],track,side,cgiitRevolution,0);
   TRACE_LOG("max rev %d real %d next %d\n",CRI.max,CRI.real,CRI.next);
   ASSERT( track==(int)track_info.cylinder );
-  ASSERT( !track_info.sectorsize );
+  //ASSERT( !track_info.sectorsize );//normally 0
   TRACE_LOG("CAPS Lock %c:S%dT%d flags %X sectors %d bits %d overlap %d startbit %d timebuf %x\n",
     drive+'A',side,track,flags,track_info.sectorcnt,track_info.tracklen,track_info.overlap,track_info.startbit,track_info.timebuf);
   Caps.SF314[drive].trackbuf=track_info.trackbuf;
@@ -375,7 +334,7 @@ void TCaps::CallbackTRK(PCAPSFDC pc, UDWORD drive) {
   Caps.LockedTrack[drive]=track;
 
 #if defined(SSE_DEBUG_IPF_TRACE_SECTORS) // debug info
-  if(::SF314[drive].ImageType.Extension==EXT_IPF)
+  if(::SF314[drive].ImageType.Extension==EXT_IPF) // not CTR
   {
     CapsSectorInfo CSI;
     DWORD sec_num;

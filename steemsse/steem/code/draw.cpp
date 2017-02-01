@@ -17,12 +17,7 @@ to the PC display.
 #define EXTC
 #define INIT(s) =s
 
-#if !(defined(SSE_VAR_RESIZE))
-EXT int stfm_b_timer INIT(0);//tmp
-#endif
-
-
-#if defined(SSE_VAR_RESIZE_370)
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE bad_drawing INIT(0);
 #if !defined(SSE_VID_D3D_ONLY)
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
@@ -74,7 +69,7 @@ EXT bool display_option_8_bit_fs INIT(false);
 #if !defined(SSE_VID_D3D_ONLY)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #endif
-#if defined(SSE_VAR_RESIZE_380)
+#if defined(SSE_VAR_RESIZE)
 EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
@@ -89,13 +84,9 @@ WIN_ONLY( EXT HWND ClipWin; )
 
 
 
-#if defined(SSE_VAR_RESIZE_380)
-short cpu_cycles_from_hbl_to_timer_b;
-#else
-int cpu_cycles_from_hbl_to_timer_b;
-#endif
+#if defined(SSE_VAR_RESIZE)
 
-#if defined(SSE_VAR_RESIZE_380)
+short cpu_cycles_from_hbl_to_timer_b;
 
 const BYTE scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
                                     SCANLINES_ABOVE_SCREEN_60HZ,
@@ -109,6 +100,8 @@ const WORD scanline_time_in_cpu_cycles_8mhz[4]={SCANLINE_TIME_IN_CPU_CYCLES_50HZ
 
 
 #else
+
+int cpu_cycles_from_hbl_to_timer_b;
 
 const int scanlines_above_screen[4]={SCANLINES_ABOVE_SCREEN_50HZ,
                                     SCANLINES_ABOVE_SCREEN_60HZ,
@@ -138,7 +131,7 @@ int scanline_drawn_so_far;
 int cpu_cycles_when_shifter_draw_pointer_updated;
 
 int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
-#if !defined(SSE_VAR_RESIZE_370) || !defined(SSE_VIDEO_CHIPSET)
+#if !defined(SSE_VIDEO_CHIPSET)
 bool right_border_changed=0;//we use the border mask instead
 #endif
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
@@ -540,15 +533,10 @@ void draw_set_jumps_and_source()
       }
 #endif
     }else if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_381)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
         && !(SCANLINES_INTERPOLATED&&(SSE_3BUFFER||SSE_OPTION_D3D))
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
-        && !(SCANLINES_INTERPOLATED&&SSE_3BUFFER)
 #endif
       ){
-#if defined(SSE_VID_D3D_STRETCH)
-//      if(!(D3D9_OK && SSE_OPTION_D3D)) //?
-#endif
 #if !defined(SSE_VID_D3D_ONLY)
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
 #endif
@@ -1411,9 +1399,20 @@ void res_change()
 //---------------------------------------------------------------------------
 bool draw_routines_init()
 {
-#if !defined(SSE_GLUE_FRAME_TIMINGS)
-/*  Those timings are now computed at each event, so we don't need
-    the frame plans anymore.
+#if !defined(SSE_GLUE)
+/*  Timings for each scanline, hbl and vbl interrupts were set once and for all
+    for the three ST syncs: 50hz, 60hz, 72hz.
+    This system was simple, fast and robust.
+    It had 2 disadvantages:
+    - Some memory use
+    - Lack of flexibility. Programs on the ST can and do change sync during
+    a frame, so that there's no guarantee of fixed frame timings. Typically,
+    a 50hz frame would contain 60hz scanlines (508 cycles instead of 512).
+    Steem could still display the frames fine in some cases, but timings during
+    and at the end of the frame were wrong.
+    Now, we compute the next screen event at each event check.
+    See TGlue::GetNextScreenEvent().
+    Advantages and disadvantages are the opposite of the previous system.
 */
   {
     event_plan[0]=event_plan_50hz;

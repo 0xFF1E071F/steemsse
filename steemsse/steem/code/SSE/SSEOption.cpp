@@ -121,10 +121,6 @@ int TConfig::SwitchSTType(int new_type) {
   ST_TYPE=new_type;
   if(ST_TYPE!=STE) // all STF types
   {
-//    stfm_borders=4; // Steem 3.2 command-line option STFMBORDER (not used)
-#if defined(SSE_INT_VBL_STF)//no
-    HblTiming=HBL_FOR_STF; 
-#endif
 #if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
@@ -139,10 +135,6 @@ int TConfig::SwitchSTType(int new_type) {
   }
   else //STE
   {
-//    stfm_borders=0;
-#if defined(SSE_INT_VBL_STF)
-    HblTiming=HBL_FOR_STE;
-#endif
 #if defined(SSE_CPU_MFP_RATIO)
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_CPU_CLOCK)
@@ -164,11 +156,6 @@ int TConfig::SwitchSTType(int new_type) {
 #endif
     n_cpu_cycles_per_second=CpuNormalHz; // no wrong CPU speed icon in OSD (3.5.1)
 #endif
-
-#if defined(SSE_INT_VBL_STF)//no
-  draw_routines_init(); // to adapt event plans (overkill?)
-#endif
-
 #if defined(SSE_GLUE)
   Glue.Update();
 #endif

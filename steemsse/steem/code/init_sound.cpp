@@ -367,13 +367,38 @@ position, but the current write position cannot be changed.
 //---------------------------------------------------------------------------
 HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK) //SS what is this horror?
 {
-  
+
+#if defined(SSE_VAR_EXC_391)
+
+  try {
+    if (SoundBuf && sound_write_primary==0){
+      SoundBuf->Stop();SoundBuf->Release();
+    }
+
+#if defined(SSE_DRIVE_SOUND)
+    SF314[0].Sound_ReleaseBuffers();
+#if defined(SSE_DRIVE_SOUND_391)
+    SF314[1].Sound_ReleaseBuffers();
+#endif
+#endif
+
+  }
+  catch(...)   {
+  }
+
+#else
+
   if (SoundBuf && sound_write_primary==0){
     SoundBuf->Stop();SoundBuf->Release();
   }
 
 #if defined(SSE_DRIVE_SOUND)
   SF314[0].Sound_ReleaseBuffers();
+#if defined(SSE_DRIVE_SOUND_391)
+  SF314[1].Sound_ReleaseBuffers();
+#endif
+#endif
+
 #endif
 
   if (PrimaryBuf){
@@ -552,7 +577,12 @@ HRESULT DSCreateSoundBuf()
 
 #if defined(SSE_DRIVE_SOUND)
     if(SSEOption.DriveSound)
+    {
       SF314[0].Sound_LoadSamples(DSObj,&dsbd,&wfx);
+#if defined(SSE_DRIVE_SOUND_391)
+      SF314[1].Sound_LoadSamples(DSObj,&dsbd,&wfx);
+#endif
+    }
 #endif
 
   }

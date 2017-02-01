@@ -65,12 +65,8 @@ struct  TImageSCP {
   // other functions
   TImageSCP();
   ~TImageSCP();
-  void ComputePosition(WORD position);
-#if defined(SSE_VS2008_WARNING_382)
+  void ComputePosition();
   int UnitsToNextFlux(DWORD position);
-#else
-  int UnitsToNextFlux(int position);
-#endif
   int UsToNextFlux(int units_to_next_flux);
 #if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
   BYTE GetDelay(int position);
@@ -81,9 +77,7 @@ struct  TImageSCP {
   void InterpretFlux(); // was a dev step
 #endif
   // variables
-#if !defined(SSE_VAR_RESIZE_372) || defined(SSE_VAR_RESIZE_382)
-  FILE *fCurrentImage; // use FloppyDrive's
-#endif
+  FILE *fCurrentImage;
   DWORD *TimeFromIndexPulse; // from IP
   DWORD nBits;
   DWORD Position;
@@ -92,10 +86,6 @@ struct  TImageSCP {
   TSCP_track_header track_header;
 #if defined(SSE_DISK_SCP2A) 
   BYTE Id; //0,1, same as drive
-#endif
-#if !defined(SSE_VAR_RESIZE_372)
-  BYTE nSides;
-  BYTE nTracks;
 #endif
   BYTE rev;
 };
