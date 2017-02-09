@@ -165,6 +165,218 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 
 //read
 
+#if defined(SSE_CPU_391)
+
+BYTE m68k_read_dest_b(){
+  BYTE x;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    return LOBYTE(r[PARAM_M]);
+  case BITS_543_001:
+    m68k_unrecognised();break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    return m68k_peek(abus);
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    x=m68k_peek(abus);
+    areg[PARAM_M]++;
+    if(PARAM_M==7)
+      areg[7]++;
+    return x;
+  case BITS_543_100:
+    areg[PARAM_M]--;
+    if (PARAM_M==7) 
+      areg[7]--;
+    INSTRUCTION_TIME(2); //n
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    return m68k_peek(abus);
+  case BITS_543_101:{
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_peek(abus);
+    return x;
+  }case BITS_543_110:
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ;//nr
+    return m68k_peek(abus);
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0:{
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_peek(abus);
+      return x;
+    }case 1:{
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_peek(abus);
+      return x;
+    }default:
+      m68k_unrecognised();
+    }
+  }
+  return 0;
+}
+
+
+WORD m68k_read_dest_w(){
+  WORD x;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    return LOWORD(r[PARAM_M]);
+  case BITS_543_001:
+    m68k_unrecognised();break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    return m68k_dpeek(abus);
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    areg[PARAM_M]+=2;
+    return x;
+  case BITS_543_100:
+    INSTRUCTION_TIME(2);//n
+    areg[PARAM_M]-=2;
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    return m68k_dpeek(abus);
+  case BITS_543_101:{
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    return x;
+  }case BITS_543_110:
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ;//nr
+    return m68k_dpeek(abus);
+  case BITS_543_111:
+    switch(ir&ir&0x7){
+    case 0:{
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_dpeek(abus);
+      return x;
+    }case 1:{
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_dpeek(abus);
+      return x;
+    }default:
+      m68k_unrecognised();
+    }
+  }
+  return 0;
+}
+
+
+LONG m68k_read_dest_l(){
+  LONG x;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    return (r[PARAM_M]);
+  case BITS_543_001:
+    m68k_unrecognised();break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ_L;//nR nr
+    return m68k_lpeek(abus);
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ_L;//nR nr
+    x=m68k_lpeek(abus);
+    areg[PARAM_M]+=4;
+    return x;
+  case BITS_543_100:
+    INSTRUCTION_TIME(2);//n
+    areg[PARAM_M]-=4;
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ_L;//nR nr
+    return m68k_lpeek(abus);
+  case BITS_543_101:{
+    //  (d16,An)        | 101 | reg |  12(3/0)   |              np nR nr          
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ_L;//nR nr
+    x=m68k_lpeek(abus);
+    return x;
+  }case BITS_543_110:
+//  (d8,An,Xn)      | 110 | reg |  14(3/0)   |         n    np nR nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ_L;////nR nr
+    return m68k_lpeek(abus);
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0:{
+//  (xxx).W         | 111 | 000 |  12(3/0)   |              np nR nr      
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ_L;//nR nr
+      x=m68k_lpeek(abus);
+      return x;
+    }case 1:{
+//(xxx).L         | 111 | 001 |  16(4/0)   |           np np nR nr           
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ_L;//nR nr
+      x=m68k_lpeek(abus);
+      return x;
+    }default:
+      m68k_unrecognised();
+    }
+  }
+  return 0;
+}
+
+
+#else
+
 BYTE m68k_read_dest_b(){
   BYTE x;
   switch(ir&BITS_543){
@@ -355,6 +567,7 @@ LONG m68k_read_dest_l(){
   return 0;
 }
 
+#endif//#if defined(SSE_CPU_391)
 
 /*
 
@@ -836,9 +1049,6 @@ void m68k_get_source_111_w(){
 #if defined(SSE_CPU_DATABUS)
     dbus=IRC;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_W(abus)
@@ -856,9 +1066,6 @@ void m68k_get_source_111_w(){
     register MEM_ADDRESS fl=m68k_fetchL();
 #endif
     pc+=4;  
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fl;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_READ_W(abus)
@@ -1073,6 +1280,9 @@ void m68k_get_dest_001_l(){
 void m68k_get_dest_010_b(){ 
   //  (An)            |          4(1/0) |                              nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS) //for when PREFETCH_IRC modifies abus (not the case now)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ; //nr
@@ -1087,6 +1297,9 @@ void m68k_get_dest_010_b(){
 void m68k_get_dest_010_w(){
   //  (An)            |          4(1/0) |                              nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ;//nr
@@ -1101,6 +1314,9 @@ void m68k_get_dest_010_w(){
 void m68k_get_dest_010_l(){ 
   //  (An)            |          8(2/0) |                           nR nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ_L;//nR nr
@@ -1115,6 +1331,9 @@ void m68k_get_dest_010_l(){
 void m68k_get_dest_011_b(){
   //  (An)+           |          4(1/0) |                              nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ;//nr
@@ -1132,6 +1351,9 @@ void m68k_get_dest_011_b(){
 void m68k_get_dest_011_w(){
   //  (An)+           |          4(1/0) |                              nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ;//nr
@@ -1147,6 +1369,9 @@ void m68k_get_dest_011_w(){
 void m68k_get_dest_011_l(){
   //  (An)+           |          8(2/0) |                           nR nr           
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
 #endif
   CPU_ABUS_ACCESS_READ_L;//nR nr
@@ -1168,6 +1393,9 @@ void m68k_get_dest_100_b(){
   areg[PARAM_M]--;
   if(PARAM_M==7)
     areg[PARAM_M]--; 
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
   CPU_ABUS_ACCESS_READ;//nr
   m68k_SET_DEST_B(abus);
@@ -1188,6 +1416,9 @@ void m68k_get_dest_100_w(){
   INSTRUCTION_TIME(2);//n
 #if defined(SSE_MMU_ROUNDING_BUS)
   areg[PARAM_M]-=2;
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
   m68k_SET_DEST_W(abus);
 #else
@@ -1203,6 +1434,9 @@ void m68k_get_dest_100_l(){
   INSTRUCTION_TIME(2);//n
 #if defined(SSE_MMU_ROUNDING_BUS)
   areg[PARAM_M]-=4;
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M];
   CPU_ABUS_ACCESS_READ_L;//nR nr
   m68k_SET_DEST_L(abus);  
@@ -1220,6 +1454,9 @@ void m68k_get_dest_101_b(){
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ; //nr
   m68k_SET_DEST_B(abus);
@@ -1236,6 +1473,9 @@ void m68k_get_dest_101_w(){
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ; //nr
   m68k_SET_DEST_W(abus);
@@ -1252,6 +1492,9 @@ void m68k_get_dest_101_l(){
   register signed int fw=(signed short)m68k_fetchW();
   pc+=2; 
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=  
+#endif
   abus=areg[PARAM_M]+fw;
   CPU_ABUS_ACCESS_READ_L;//nR nr
   m68k_SET_DEST_L(abus);
@@ -1269,8 +1512,14 @@ void m68k_get_dest_110_b(){
   m68k_iriwo=m68k_fetchW();
   pc+=2; 
   if(m68k_iriwo&BIT_b){  //.l
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
   CPU_ABUS_ACCESS_READ;//nr
@@ -1285,8 +1534,14 @@ void m68k_get_dest_110_w(){
   m68k_iriwo=m68k_fetchW();
   pc+=2; 
   if(m68k_iriwo&BIT_b){  //.l
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
   CPU_ABUS_ACCESS_READ;//nr
@@ -1301,8 +1556,14 @@ void m68k_get_dest_110_l(){
   m68k_iriwo=m68k_fetchW();
   pc+=2; 
   if(m68k_iriwo&BIT_b){  //.l
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
   }else{         //.w
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
   }
   CPU_ABUS_ACCESS_READ_L;//nR nr
@@ -1316,6 +1577,9 @@ void m68k_get_dest_111_b(){
     //  (xxx).W         |          8(2/0) |                        np    nr           
     CPU_ABUS_ACCESS_READ_FETCH;//np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=(signed short)m68k_fetchW(); //cast important for sign extension!
 #else
     register signed int fw=(signed short)m68k_fetchW();
@@ -1323,9 +1587,6 @@ void m68k_get_dest_111_b(){
     pc+=2; 
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_B(abus)
@@ -1339,6 +1600,9 @@ void m68k_get_dest_111_b(){
     //  (xxx).L         |         12(3/0) |                     np np    nr           
     CPU_ABUS_ACCESS_READ_FETCH_L;//np np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=m68k_fetchL();
 #else
     register MEM_ADDRESS fw=m68k_fetchL();
@@ -1346,9 +1610,6 @@ void m68k_get_dest_111_b(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_B(abus)
@@ -1368,15 +1629,15 @@ void m68k_get_dest_111_w(){
     //  (xxx).W         |          8(2/0) |                        np    nr           
     CPU_ABUS_ACCESS_READ_FETCH;//np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=(signed short)m68k_fetchW();pc+=2; 
 #else
     register signed int fw=(signed short)m68k_fetchW();pc+=2; 
 #endif
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_W(abus)
@@ -1390,6 +1651,9 @@ void m68k_get_dest_111_w(){
     //  (xxx).L         |         12(3/0) |                     np np    nr           
     CPU_ABUS_ACCESS_READ_FETCH_L;//np np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=m68k_fetchL();
 #else
     register MEM_ADDRESS fw=m68k_fetchL();
@@ -1397,9 +1661,6 @@ void m68k_get_dest_111_w(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ;//nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_W(abus)
@@ -1419,6 +1680,9 @@ void m68k_get_dest_111_l(){
     //  (xxx).W         |         12(3/0) |                        np nR nr           
     CPU_ABUS_ACCESS_READ_FETCH;//np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=(signed short)m68k_fetchW();
 #else
     register signed int fw=(signed short)m68k_fetchW();
@@ -1426,9 +1690,6 @@ void m68k_get_dest_111_l(){
     pc+=2; 
     if(CHECK_READ)
       TRUE_PC+=2;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ_L;//nR nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_L(abus)
@@ -1442,6 +1703,9 @@ void m68k_get_dest_111_l(){
     //  (xxx).L         |         16(4/0) |                     np np nR nr           
     CPU_ABUS_ACCESS_READ_FETCH_L;//np np
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_CPU_RESTORE_ABUS)
+    dest_addr=  
+#endif
     abus=m68k_fetchL();
 #else
     register MEM_ADDRESS fw=m68k_fetchL();
@@ -1449,9 +1713,6 @@ void m68k_get_dest_111_l(){
     pc+=4;  
     if(CHECK_READ)
       TRUE_PC+=4;
-#if defined(SSE_MMU_ROUNDING_BUS) && !defined(SSE_MMU_ROUNDING_BUS)
-    abus=fw;
-#endif
     CPU_ABUS_ACCESS_READ_L;//nR nr
 #if defined(SSE_MMU_ROUNDING_BUS)
     m68k_SET_DEST_L(abus)
@@ -1467,6 +1728,9 @@ void m68k_get_dest_111_l(){
 
 void m68kReadBFromAddr() {
   abus&=0xffffff;
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=abus;
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   if(abus>=himem  || mmu_confused)
 #else
@@ -1524,6 +1788,9 @@ void m68kReadBFromAddr() {
 
 void m68kReadWFromAddr() {
   abus&=0xffffff;                                   
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=abus;
+#endif
   if(abus&1)
     exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
 #if defined(SSE_MMU_RAM_TEST3)
@@ -1583,6 +1850,9 @@ void m68kReadWFromAddr() {
 
 void m68kReadLFromAddr() {
   abus&=0xffffff;                                   
+#if defined(SSE_CPU_RESTORE_ABUS)
+  dest_addr=abus;
+#endif
   if(abus&1)
     exception(BOMBS_ADDRESS_ERROR,EA_READ,abus);    
 #if defined(SSE_MMU_RAM_TEST3)

@@ -1742,6 +1742,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
+#define SSE_VS2008_WARNING_391
 #if defined(SSE_BLITTER) // refactoring
 #define SSE_BLT_BUS_ARBITRATION_391
 #define SSE_BLT_BUS_ARBITRATION_391B
@@ -1754,21 +1755,27 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_DRIVE_SOUND_SINGLE_SET
 #define SSE_DRIVE_SOUND_391
 #define SSE_SOUND_391
+#if defined(SSE_VID_D3D)
 #define SSE_VAR_OPT_391
+#define SSE_VID_D3D_CHECK_HARDWARE
 #if defined(SSE_VID_D3D_ONLY)
 //#if defined(SSE_LEAN_AND_MEAN)
 #define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
 //#endif
 #define SSE_VID_D3D_SCREENSHOT_391C
+#define SSE_VID_D3D_SCREENSHOT_391C1
+#endif
 #endif
 
 #endif//beta
 
 #ifdef SSE_BETA // long term
 //#undef SSE_CPU_MFP_RATIO_STE //dsots
+//#define SSE_CPU_RESTORE_ABUS
+//#define SSE_CPU_RESTORE_ABUS1
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
-//#define SSE_MMU_LOW_LEVEL //?
+#define SSE_MMU_LOW_LEVEL //?
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
@@ -1777,20 +1784,26 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ASSOCIATE_391
 #define SSE_BLT_391
 #define SSE_BOILER_TRAP
+#define SSE_CPU_391
 #define SSE_CPU_EXCEPTION_TRUE_PC_391
 #define SSE_CPU_FETCH_IO_391
 #define SSE_DISK_PASTI_AUTO_SWITCH_391
 #define SSE_DISK_SCP_391
 #define SSE_DONGLE_PORT_391
+#define SSE_JOYSTICK_391
 #define SSE_SOUND_DMA_391
 #define SSE_SOUND_DMA_391B // working but slow
 #define SSE_VAR_EXC_391
 #define SSE_VAR_RESIZE_391
 #define SSE_VID_D3D_391
 #define SSE_VID_D3D_391B
+#define SSE_VID_D3D_391C
+#define SSE_VID_D3D_391D
 #define SSE_VID_D3D_CRISP_391
 #define SSE_VID_D3D_SCREENSHOT_391
 #define SSE_VID_D3D_SCREENSHOT_391B
+#define SSE_VID_D3D_SCREENSHOT_391B1
+#define SSE_VID_D3D_SCREENSHOT_391B2
 #define SSE_VID_DD_SCREENSHOT_391
 #define SSE_WD1772_391
 

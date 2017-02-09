@@ -419,7 +419,9 @@ void IKBD_VBL()
       }else{
         report_button_abs=0;
       }
-
+#if defined(SSE_JOYSTICK_391)//bug TNT when pressing fire
+      if(OPTION_C1) ; else
+#endif
       if (send_change_for_button) mouse_change_since_last_interrupt=true;
     }
 

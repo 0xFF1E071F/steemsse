@@ -57,6 +57,10 @@ signed int compare_buffer;
 int act; 
 #endif
 
+#if defined(SSE_CPU_RESTORE_ABUS)
+MEM_ADDRESS dest_addr;
+#endif
+
 #if defined(SSE_CPU_TRUE_PC)
 #define TRUE_PC M68000.Pc
 #define CHECK_READ M68000.CheckRead
@@ -1077,7 +1081,12 @@ void                              m68k_ori_b(){
     m68k_GET_DEST_B_NOT_A; // EA
     PREFETCH_IRC; // np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1) //for when PREFETCH_IRC modifies abus (not the case now)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; // nw
+    }
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
@@ -1106,7 +1115,12 @@ void                              m68k_ori_w(){
     m68k_GET_DEST_W_NOT_A; // EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
@@ -1122,7 +1136,12 @@ void                              m68k_ori_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(4); // nn
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
+  }
   m68k_DEST_L|=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
@@ -1146,7 +1165,12 @@ void                              m68k_andi_b(){
     m68k_GET_DEST_B_NOT_A; //EA
     PREFETCH_IRC;//np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
@@ -1180,7 +1204,12 @@ void                              m68k_andi_w(){
 #endif
     PREFETCH_IRC;//np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE;//nw
+    }
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
@@ -1199,7 +1228,12 @@ void                              m68k_andi_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(4); //nn nn
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
+  }
   m68k_DEST_L&=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
@@ -1212,7 +1246,12 @@ void                              m68k_subi_b(){
   m68k_GET_DEST_B_NOT_A;//EA
   PREFETCH_IRC;//np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE;//nw
+  }
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
@@ -1225,7 +1264,12 @@ void                              m68k_subi_w(){
   m68k_GET_DEST_W_NOT_A; // EA
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
+  }
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
@@ -1240,7 +1284,12 @@ void                              m68k_subi_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(4);  //nn
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
+  }
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
@@ -1253,7 +1302,12 @@ void                              m68k_addi_b(){
   m68k_GET_DEST_B_NOT_A; // EA
   PREFETCH_IRC;//np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
+  }
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
@@ -1266,7 +1320,12 @@ void                              m68k_addi_w(){
   m68k_GET_DEST_W_NOT_A; //EA
   PREFETCH_IRC; // np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
+  }
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
@@ -1292,7 +1351,12 @@ void                              m68k_addi_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(4); //nn
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
+  }
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
@@ -1420,6 +1484,9 @@ void                              m68k_bchg(){
       SR_SET(SR_Z);
 #endif
     }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B^=(BYTE)m68k_src_b;
   }
@@ -1486,6 +1553,9 @@ void                              m68k_bclr(){
       SR_SET(SR_Z);
 #endif
     }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B&=(BYTE)(~m68k_src_b);
   }
@@ -1552,6 +1622,9 @@ void                              m68k_bset(){
       SR_SET(SR_Z);
 #endif
     }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B|=(BYTE)m68k_src_b;
   }
@@ -1593,7 +1666,12 @@ void                              m68k_eori_b(){
     m68k_GET_DEST_B_NOT_A; //EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_B^=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
@@ -1644,7 +1722,12 @@ void                              m68k_eori_w(){
     m68k_GET_DEST_W_NOT_A; //EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W^=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W;
@@ -1671,7 +1754,12 @@ void                              m68k_eori_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(4); //nn
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
+  }
   m68k_DEST_L^=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L;
@@ -1937,6 +2025,9 @@ Dn,<ea> :         |                 |             |               |
         SR_SET(SR_Z);
 #endif
       }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B^=(signed char)(1<<(7&r[PARAM_N]));
     }
@@ -1950,6 +2041,18 @@ void                              m68k_movep_w_from_dN_or_bclr(){
 Dx,(d16,Ay) :     |                 |
   .W :            | 16(2/2)         |                np    nW    nw np          
 */
+#if defined(SSE_CPU_391)
+    PREFETCH_CLASS(1);
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    abus=areg[PARAM_M]+(short)m68k_fetchW();
+    pc+=2; 
+    CPU_ABUS_ACCESS_WRITE; // nW
+    m68k_poke(abus,DWORD_B_1(&r[PARAM_N]));
+    abus+=2;
+    CPU_ABUS_ACCESS_WRITE; // nw
+    m68k_poke(abus,DWORD_B_0(&r[PARAM_N]));
+    PREFETCH_IRC; // np
+#else
     PREFETCH_CLASS(1);
     CPU_ABUS_ACCESS_READ_FETCH; //np
     MEM_ADDRESS ad=areg[PARAM_M]+(short)m68k_fetchW();
@@ -1960,6 +2063,7 @@ Dx,(d16,Ay) :     |                 |
     CPU_ABUS_ACCESS_WRITE; // nw
     m68k_poke(ad,DWORD_B_0(&r[PARAM_N]));
     PREFETCH_IRC; // np
+#endif//#if defined(SSE_CPU_391)
   }else{ //bclr
     if((ir&BITS_543)==BITS_543_000){
 /*
@@ -2016,6 +2120,9 @@ Dn,<ea> :         |                 |             |               |
         SR_SET(SR_Z);
 #endif
       }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B&=(signed char)~(1<<(7&r[PARAM_N]));
     }
@@ -2041,6 +2148,25 @@ NOTES :
   4 words if using ".l" (first read/write word at Ay+d16 then word at Ay+d16+2 
   then word at Ay+d16+4 and finally word at Ay+d16+6).
 */
+#if defined(SSE_CPU_391)
+    PREFETCH_CLASS(1);
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();
+    pc+=2; 
+    BYTE *p=(BYTE*)(&r[PARAM_N]);
+    CPU_ABUS_ACCESS_WRITE; // nW
+    m68k_poke(abus,DWORD_B_3(p));
+    abus+=2;
+    CPU_ABUS_ACCESS_WRITE; // nW
+    m68k_poke(abus,DWORD_B_2(p));
+    abus+=2;
+    CPU_ABUS_ACCESS_WRITE; // nw
+    m68k_poke(abus,DWORD_B_1(p));
+    abus+=2;
+    CPU_ABUS_ACCESS_WRITE; // nw
+    m68k_poke(abus,DWORD_B_0(p));
+    PREFETCH_IRC;  //np
+#else
     PREFETCH_CLASS(1);
     CPU_ABUS_ACCESS_READ_FETCH; //np
     MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();
@@ -2058,6 +2184,7 @@ NOTES :
     CPU_ABUS_ACCESS_WRITE; // nw
     m68k_poke(ad,DWORD_B_0(p));
     PREFETCH_IRC;  //np
+#endif
   }else{ // BSET
     if((ir&BITS_543)==BITS_543_000){
 /*
@@ -2113,6 +2240,9 @@ Dn,<ea> :         |                 |             |               |
         SR_SET(SR_Z);
 #endif
       }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B|=(signed char)(1<<(7&r[PARAM_N]));
     }
@@ -2157,7 +2287,12 @@ void                              m68k_negx_b(){
   m68k_GET_DEST_B_NOT_A; //EA
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER) 
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw //390
+  }
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   if(sr&SR_X)m68k_DEST_B--;
@@ -2196,7 +2331,12 @@ void                             m68k_negx_w(){
   m68k_GET_DEST_W_NOT_A; //EA
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER) 
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw 390
+  }
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   if(sr&SR_X)m68k_DEST_W--;
@@ -2237,7 +2377,12 @@ void                             m68k_negx_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(2); //n
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
+  }
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   if(sr&SR_X)m68k_DEST_L-=1;
@@ -2276,7 +2421,12 @@ void                              m68k_clr_b(){
   m68k_GET_DEST_B_NOT_A; // EA
   PREFETCH_IRC; // np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_B=0;
 #if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
@@ -2308,7 +2458,12 @@ void                             m68k_clr_w(){
   m68k_GET_DEST_W_NOT_A; //EA
   PREFETCH_IRC; // np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_W=0;
 #if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
@@ -2344,7 +2499,12 @@ void                             m68k_clr_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(2); // n
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
+  }
   m68k_DEST_L=0;
 #if defined(SSE_BOILER_MONITOR_VALUE3)
   if (DEST_IS_REGISTER==0)
@@ -2375,7 +2535,12 @@ void                              m68k_neg_b(){
   m68k_GET_DEST_B_NOT_A; // EA
   PREFETCH_IRC; // np
   if(DEST_IS_REGISTER==0)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B=(BYTE)-m68k_DEST_B;
   SR_CLEAR(SR_USER_BYTE);
@@ -2406,7 +2571,12 @@ void                             m68k_neg_w(){
   m68k_GET_DEST_W_NOT_A; // EA
   PREFETCH_IRC; // np
   if(DEST_IS_REGISTER==0)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W=(WORD)-m68k_DEST_W;
   SR_CLEAR(SR_USER_BYTE);
@@ -2439,7 +2609,12 @@ void                             m68k_neg_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(2); // n
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
+  }
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L=-m68k_DEST_L;
   SR_CLEAR(SR_USER_BYTE);
@@ -2469,7 +2644,12 @@ void                              m68k_not_b(){
   m68k_GET_DEST_B_NOT_A; // EA
   PREFETCH_IRC; // np
   if(DEST_IS_REGISTER==0)
-    {CPU_ABUS_ACCESS_WRITE;} // nw
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
+    CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_B=(BYTE)~m68k_DEST_B;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
@@ -2492,7 +2672,12 @@ void                             m68k_not_w(){
   m68k_GET_DEST_W_NOT_A; // EA
   PREFETCH_IRC; // np
   if(DEST_IS_REGISTER==0)
-    {CPU_ABUS_ACCESS_WRITE;} // nw
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
+    CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_W=(WORD)~m68k_DEST_W;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
@@ -2517,7 +2702,12 @@ void                             m68k_not_l(){
   if(DEST_IS_DATA_REGISTER)
     INSTRUCTION_TIME(2); // n
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
+  }
   m68k_DEST_L=~m68k_DEST_L;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
@@ -2675,7 +2865,12 @@ SR,<ea> :         |                 |               |
   if (DEST_IS_REGISTER)
     INSTRUCTION_TIME(2); // n
   else
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_W=sr;
 }
 
@@ -2777,7 +2972,12 @@ void                              m68k_nbcd(){
   if (DEST_IS_REGISTER)
     INSTRUCTION_TIME(2); // n
   else 
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   int m=m68k_DEST_B,n=0;
   if(m&0xff) n=0xa0;
   if(m&0xf)n=0x9a;
@@ -2912,6 +3112,203 @@ Dn :              |                 |
       PREFETCH_IRC; //np
   }//pea
 }
+
+#if defined(SSE_CPU_391)
+
+void                              m68k_movem_w_from_regs_or_ext_w(){
+  if((ir&BITS_543)==BITS_543_000){ 
+    // EXT.W
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+        EXT       |      INSTR      |  1st Operand  |          INSTR
+------------------+-----------------+---------------+--------------------------
+Dn :              |                 |               |
+  .W :            |  4(1/0)         |               |               np          
+*/
+    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
+    m68k_dest=&(r[PARAM_M]);
+    m68k_DEST_W=(signed short)((signed char)LOBYTE(r[PARAM_M]));
+    SR_CHECK_Z_AND_N_W;
+    PREFETCH_IRC; // np
+  }
+  else if ((ir & BITS_543)==BITS_543_100){ //predecrement 
+  // MOVEM R->M -(An)
+  //-(An)         |  8+4m(2/m)      |                np (nw)*       np    
+    PREFETCH_CLASS(1);
+    CPU_ABUS_ACCESS_READ_FETCH; // np
+    m68k_src_w=m68k_fetchW();pc+=2; 
+    abus=areg[PARAM_M];
+    DWORD areg_hi=(abus & 0xff000000);
+#if defined(SSE_BLT_BUS_ARBITRATION_391B)
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+#else
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0,BlitterStart=0;
+#else
+    short mask=1,BlitterStart=0;
+#endif
+#endif
+    for (int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+      if(BITTEST(m68k_src_w,bit)) {
+#else
+      if (m68k_src_w & mask){
+#endif
+        abus-=2;
+        CPU_ABUS_ACCESS_WRITE; // (nw)*
+        m68k_dpoke(abus,LOWORD(r[15-n]));
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
+/*  Notice that this was potentially buggy in blit mode, though I know
+    no case: we execute other instructions then we come back here?
+*/
+        if (ioaccess & IOACCESS_FLAG_DO_BLIT){
+          // After word that starts blitter must write one more word, then blit
+          if ((++BlitterStart)==2){
+            Blitter_Start_Now();
+            BlitterStart=0;
+          }
+        }
+#endif
+      }
+#if defined(SSE_VC_INTRINSICS_390F)
+      bit++;
+#else
+      mask<<=1;
+#endif
+    }
+    // The register written to memory should be the original one, so
+    // predecrement afterwards.
+    areg[PARAM_M]=abus | areg_hi;
+    PREFETCH_IRC; // np
+  }else{ //SS MOVEM other cases
+/*
+  .W              |                 | 
+    (An)          |  8+4m(2/m)      |                np (nw)*       np          
+    (d16,An)      | 12+4m(3/m)      |             np np (nw)*       np          
+    (d8,An,Xn)    | 14+4m(3/m)      |          np n  np (nw)*       np          
+    (xxx).W       | 12+4m(3/m)      |             np np (nw)*       np          
+    (xxx).L       | 16+4m(4/m)      |          np np np (nw)*       np        
+*/
+    PREFETCH_CLASS(1);
+
+    // check illegal before EA
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+        break;
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    m68k_src_w=m68k_fetchW();pc+=2;  // registers
+
+    switch (ir & BITS_543){
+
+    case BITS_543_010: // (An)
+      abus=areg[PARAM_M];
+      break;
+
+    case BITS_543_101: // (d16,An)
+      CPU_ABUS_ACCESS_READ_FETCH; // np
+      abus=areg[PARAM_M]+(signed short)m68k_fetchW();
+      pc+=2; 
+      break;
+
+    case BITS_543_110: 
+      // (d8,An,Xn)    | 14+4m(3/m)      |          np n  np (nw)*       np
+      m68k_iriwo=m68k_fetchW();pc+=2; 
+      INSTRUCTION_TIME(2); // n
+      CPU_ABUS_ACCESS_READ_FETCH; // np
+      if(m68k_iriwo&BIT_b){  //.l
+        abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+      }else{         //.w
+        abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+      }
+      break;
+
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+        CPU_ABUS_ACCESS_READ_FETCH; // np
+        abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+        pc+=2; 
+        break;
+      case 1:
+        CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+        abus=0xffffff & m68k_fetchL();
+        pc+=4;  
+        break;
+#if defined(SSE_DEBUG)
+      default:
+        ASSERT(0);
+#endif
+      }
+      break;
+#if defined(SSE_DEBUG)
+    default:
+      ASSERT(0);
+#endif
+    }
+#if defined(SSE_BLT_BUS_ARBITRATION_391B)
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+#else
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0,BlitterStart=0;
+#else
+    short mask=1,BlitterStart=0;
+#endif
+#endif
+    for (int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+      if(BITTEST(m68k_src_w,bit)) {
+#else
+      if (m68k_src_w & mask){
+#endif
+        CPU_ABUS_ACCESS_WRITE; // (nw)*
+        m68k_dpoke(abus,LOWORD(r[n]));
+        abus+=2;
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
+        if (ioaccess & IOACCESS_FLAG_DO_BLIT){
+          // After word that starts blitter must write one more word, then blit
+          if ((++BlitterStart)==2){
+            Blitter_Start_Now();
+            BlitterStart=0;
+          }
+        }
+#endif
+      }
+#if defined(SSE_VC_INTRINSICS_390F)
+      bit++;
+#else
+      mask<<=1;
+#endif
+    }
+    PREFETCH_IRC; // np
+  }
+}
+
+
+#else
 
 void                              m68k_movem_w_from_regs_or_ext_w(){
   if((ir&BITS_543)==BITS_543_000){ 
@@ -3136,6 +3533,189 @@ Dn :              |                 |               |
 #endif
 }
 
+#endif//#if defined(SSE_CPU_391)
+
+#if defined(SSE_CPU_391)
+
+void                              m68k_movem_l_from_regs_or_ext_l(){
+  if((ir&BITS_543)==BITS_543_000){  //ext.l
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+        EXT       |      INSTR      |  1st Operand  |          INSTR
+------------------+-----------------+---------------+--------------------------
+Dn :              |                 |               |
+  .W :            |  4(1/0)         |               |               np          
+  .L :            |  4(1/0)         |               |               np          
+
+*/
+    SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
+    m68k_dest=&(r[PARAM_M]);
+    m68k_DEST_L=(signed long)((signed short)LOWORD(r[PARAM_M]));
+    SR_CHECK_Z_AND_N_L;
+    PREFETCH_IRC; // np
+  }
+  else if((ir&BITS_543)==BITS_543_100) // MOVEM -(An)
+  {
+    //SS this is used to save registers on the stack
+/*
+
+-------------------------------------------------------------------------------
+	                |    Exec Time    |               Data Bus Usage
+      MOVEM       |      INSTR      |                  INSTR
+------------------+-----------------+------------------------------------------
+R --> M           |                 | 
+  .L              |                 |                             
+    -(An)         |  8+8m(2/2m)     |                np (nw nW)*    np   
+*/
+    PREFETCH_CLASS(1);
+    CPU_ABUS_ACCESS_READ_FETCH;
+    m68k_src_w=m68k_fetchW();pc+=2;
+    abus=areg[PARAM_M];
+    DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
+    TRUE_PC=pc+2;
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+    for (int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+      if(BITTEST(m68k_src_w,bit)) {
+#else
+      if (m68k_src_w & mask){
+#endif
+        abus-=4;
+        CPU_ABUS_ACCESS_WRITE_L; // (nw nW)*
+        m68k_lpoke(abus,r[15-n]);
+#if !defined(SSE_BLT_BUS_ARBITRATION_391B)
+        if (ioaccess & IOACCESS_FLAG_DO_BLIT) 
+          Blitter_Start_Now();
+#endif
+      }
+#if defined(SSE_VC_INTRINSICS_390F)
+      bit++;
+#else
+      mask<<=1;
+#endif
+    }
+    // The register written to memory should be the original one, so
+    // predecrement afterwards.
+    areg[PARAM_M]=abus | areg_hi;
+    PREFETCH_IRC;//np
+  }// movem .l -(an)
+  else{ //SS MOVEM other cases
+/*
+R --> M           |                 | 
+  .L              |                 |                             
+    (An)          |  8+8m(2/2m)     |                np (nW nw)*    np          
+    (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np          
+    (d8,An,Xn)    | 14+8m(3/2m)     |        n    np np (nW nw)*    np          
+    (xxx).W       | 12+8m(3/2m)     |             np np (nW nw)*    np          
+    (xxx).L       | 16+8m(4/2m)     |          np np np (nW nw)*    np      
+*/
+    PREFETCH_CLASS(1);
+    // check illegal
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+      case 1:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+    //note because of (d8,An,Xn) we can't count prefetch timing here
+    m68k_src_w=m68k_fetchW();pc+=2; // register mask
+
+    switch(ir&BITS_543){
+    case BITS_543_010: 
+      // (An)          |  8+8m(2/2m)     |                np (nW nw)*    np
+      CPU_ABUS_ACCESS_READ_FETCH; //np
+      abus=areg[PARAM_M];
+      break;
+
+    case BITS_543_101: 
+      // (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np     
+      CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+      abus=areg[PARAM_M]+(signed short)m68k_fetchW();
+      pc+=2; 
+      break;
+
+    case BITS_543_110: 
+      // (d8,An,Xn)    | 14+8m(3/2m)     |        n    np np (nW nw)*    np 
+      INSTRUCTION_TIME(2); // n 
+      CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+      m68k_ap=m68k_fetchW();pc+=2; 
+      if(m68k_ap&BIT_b){  //.l
+        abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
+      }else{         //.w
+        abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(signed short)r[m68k_ap>>12];
+      }
+      break;
+
+    case BITS_543_111:
+      switch(ir&0x7){
+
+      case 0:
+        //(xxx).W       | 12+8m(3/2m)     |             np np (nW nw)*    np
+        CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+        abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+        pc+=2; 
+        break;
+
+      case 1:
+        //(xxx).L       | 16+8m(4/2m)     |          np np np (nW nw)*    np
+        CPU_ABUS_ACCESS_READ_FETCH; // np
+        CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+        abus=0xffffff&m68k_fetchL();
+        pc+=4;  
+        break;
+
+      default: //ILLEGAL
+        ASSERT(0);
+      }
+      break;
+
+    default:
+      ASSERT(0);
+    }
+    TRUE_PC=pc+2; // Blood Money original
+#if defined(SSE_VC_INTRINSICS_390F)
+    short bit=0;
+#else
+    short mask=1;
+#endif
+    for (int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+      if(BITTEST(m68k_src_w,bit)) {
+#else
+      if (m68k_src_w&mask){
+#endif
+        CPU_ABUS_ACCESS_WRITE_L; //(nW nw)*
+        m68k_lpoke(abus,r[n]);
+        abus+=4;
+      }
+#if defined(SSE_VC_INTRINSICS_390F)
+      bit++;
+#else
+      mask<<=1;
+#endif
+    }//nxt
+    PREFETCH_IRC; // np
+  }//movem regs->mem
+}
+
+#else
+
 void                              m68k_movem_l_from_regs_or_ext_l(){
   if((ir&BITS_543)==BITS_543_000){  //ext.l
 /*
@@ -3345,6 +3925,150 @@ R --> M           |                 |
 #endif
 }
 
+#endif//#if defined(SSE_CPU_391)
+
+#if defined(SSE_CPU_391)
+
+void                              m68k_movem_l_to_regs(){
+  // check illegal
+  switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_011:
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      break;
+    default:
+      m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+  }
+/*
+  .L              |                 | 
+    (An)          | 12+8m(3+2m/0)   |                np nR (nr nR)* np          
+    (An)+         | 12+8m(3+2m/0)   |                np nR (nr nR)* np          
+    (d16,An)      | 16+8m(4+2m/0)   |             np np nR (nr nR)* np          
+    (d8,An,Xn)    | 18+8m(4+2m/0)   |          np n  np nR (nr nR)* np          
+    (xxx).W       | 16+8m(4+2m/0)   |             np np nR (nr nR)* np          
+    (xxx).L       | 20+8m(5+2m/0)   |          np np np nR (nr nR)* np          
+*/
+  bool postincrement=false;
+  CPU_ABUS_ACCESS_READ_FETCH; //np
+  m68k_src_w=m68k_fetchW();pc+=2; 
+
+  switch(ir&BITS_543){
+  case BITS_543_011: //(An)+  
+    postincrement=true;
+    //no break
+  case BITS_543_010: //(An)
+    abus=areg[PARAM_M];
+    break;
+
+  case BITS_543_101://(d16,An)
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();
+    pc+=2; 
+    break;
+
+  case BITS_543_110:
+    //(d8,An,Xn)    | 18+8m(4+2m/0)   |          np n  np nR (nr nR)* np
+    INSTRUCTION_TIME(2); //n //390
+    CPU_ABUS_ACCESS_READ_FETCH; // np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    break;
+
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0:
+      //(xxx).W       | 16+8m(4+2m/0)   |             np np nR (nr nR)* np          
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      break;
+
+    case 1:
+      //(xxx).L       | 20+8m(5+2m/0)   |          np np np nR (nr nR)* np    
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=0xffffff&m68k_fetchL();
+      pc+=4;  
+      break;
+
+    case 2:
+      //(d16,An)      | 16+8m(4+2m/0)   |             np np nR (nr nR)* np          
+      CPU_ABUS_ACCESS_READ_FETCH; //np
+      abus=pc+(signed short)m68k_fetchW();
+      pc+=2; 
+      break;
+
+    case 3:
+      //(d8,An,Xn)    | 18+8m(4+2m/0)   |          np n  np nR (nr nR)* np         
+      INSTRUCTION_TIME(2); //n //390
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      m68k_iriwo=m68k_fetchW();
+      if(m68k_iriwo&BIT_b){  //.l
+        abus=pc+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+      }else{         //.w
+        abus=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+      }
+      pc+=2; 
+      break;
+
+#if defined(SSE_DEBUG)
+    default:
+      ASSERT(0);
+#endif
+    }
+    break;
+#if defined(SSE_DEBUG)
+  default:
+    ASSERT(0);
+#endif
+  }
+  CPU_ABUS_ACCESS_READ; //nR 390
+  m68k_dpeek(abus); //extra word read (discarded) 390
+  TRUE_PC=pc+2;
+  DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
+#if defined(SSE_VC_INTRINSICS_390F)
+  short bit=0;
+#else
+  short mask=1;
+#endif
+  for (int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+    if(BITTEST(m68k_src_w,bit)) {
+#else
+    if (m68k_src_w & mask){
+#endif  
+      CPU_ABUS_ACCESS_READ_L; //(nr nR)*
+      r[n]=m68k_lpeek(abus);
+      abus+=4;
+    }
+#if defined(SSE_VC_INTRINSICS_390F)
+    bit++;
+#else
+    mask<<=1;
+#endif
+  }
+  if (postincrement) 
+    areg[PARAM_M]=abus | areg_hi;
+  PREFETCH_IRC;
+}
+
+#else
+
 void                              m68k_movem_l_to_regs(){
   // check illegal
   switch (ir & BITS_543){
@@ -3512,6 +4236,147 @@ void                              m68k_movem_l_to_regs(){
 #endif
 }
 
+#endif
+
+#if defined(SSE_CPU_391)
+
+void                              m68k_movem_w_to_regs(){
+    // check illegal
+    switch (ir & BITS_543){
+    case BITS_543_010: // (An)
+    case BITS_543_011:
+    case BITS_543_101: // (d16,An)
+    case BITS_543_110: // (d8, An, Xn)
+      break;
+    case BITS_543_111:
+      switch(ir&0x7){
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        break;
+      default:
+        m68k_unrecognised();
+      }
+      break;
+    default:
+      m68k_unrecognised();
+    }
+/*
+  .W              |                 | 
+    (An)          | 12+4m(3+m/0)    |                np (nr)*    nr np          
+    (An)+         | 12+4m(3+m/0)    |                np (nr)*    nr np          
+    (d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np          
+    (d8,An,Xn)    | 18+4m(4+m/0)    |          np n  np (nr)*    nr np          
+    (xxx).W       | 16+4m(4+m/0)    |             np np (nr)*    nr np          
+    (xxx).L       | 20+4m(5+m/0)    |          np np np (nr)*    nr np  
+*/
+  bool postincrement=false;
+  CPU_ABUS_ACCESS_READ_FETCH; //np
+  m68k_src_w=m68k_fetchW();pc+=2; 
+
+  switch (ir & BITS_543){
+
+  case BITS_543_011://(An)+         | 12+4m(3+m/0)    |                np (nr)*    nr np
+    postincrement=true;
+    //no break
+  case BITS_543_010://(An)          | 12+4m(3+m/0)    |                np (nr)*    nr np
+    abus=areg[PARAM_M];
+    break;
+
+  case BITS_543_101://(d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();
+    pc+=2; 
+    break;
+
+  case BITS_543_110://(d8,An,Xn)    | 18+4m(4+m/0)    |          np n  np (nr)*    nr np 
+    INSTRUCTION_TIME(2);//n //390
+    CPU_ABUS_ACCESS_READ_FETCH; //np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    break;
+
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0://(xxx).W       | 16+4m(4+m/0)    |             np np (nr)*    nr np
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      break;
+
+    case 1://(xxx).L       | 20+4m(5+m/0)    |          np np np (nr)*    nr np  
+      CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+      abus=0xffffff&m68k_fetchL();
+      pc+=4;  
+      break;
+
+    case 2:////(d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np
+      CPU_ABUS_ACCESS_READ_FETCH; //np
+      abus=pc+(signed short)m68k_fetchW();
+      pc+=2; 
+      break;
+
+    case 3:
+      INSTRUCTION_TIME(2);//n //390
+      CPU_ABUS_ACCESS_READ_FETCH; //np
+      m68k_iriwo=m68k_fetchW();
+      if(m68k_iriwo&BIT_b){  //.l
+        abus=pc+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+      }else{         //.w
+        abus=pc+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+      }
+      pc+=2; 
+      break;
+
+#if defined(SSE_DEBUG)
+    default:
+      ASSERT(0);
+#endif
+    }
+    break;
+#if defined(SSE_DEBUG)
+  default:
+    ASSERT(0);
+#endif
+  }
+
+  DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
+  TRUE_PC=pc+2;
+#if defined(SSE_VC_INTRINSICS_390F)
+  short bit=0;
+#else
+  short mask=1;
+#endif
+  for(int n=0;n<16;n++){
+#if defined(SSE_VC_INTRINSICS_390F)
+    if(BITTEST(m68k_src_w,bit)) {
+#else
+    if (m68k_src_w & mask){
+#endif
+      CPU_ABUS_ACCESS_READ;//(nr)*
+      r[n]=(signed long)((signed short)m68k_dpeek(abus));
+      abus+=2;
+    }
+#if defined(SSE_VC_INTRINSICS_390F)
+    bit++;
+#else
+    mask<<=1;
+#endif
+  }
+  if (postincrement) 
+    areg[PARAM_M]=abus | areg_hi;
+  CPU_ABUS_ACCESS_READ;//nr
+  m68k_dpeek(abus); //extra word read (discarded)
+  PREFETCH_IRC;//np
+}
+
+#else
+
 void                              m68k_movem_w_to_regs(){
     // check illegal
     switch (ir & BITS_543){
@@ -3675,6 +4540,8 @@ void                              m68k_movem_w_to_regs(){
    }
 #endif
 }
+
+#endif//#if defined(SSE_CPU_391)
 
 void                              m68k_jsr()
 {
@@ -4528,7 +5395,12 @@ void                              m68k_addq_b(){
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
+  }
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
 }
@@ -4567,7 +5439,12 @@ NOTES :
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC; // np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; // nw
+    }
     m68k_DEST_W+=m68k_src_w;
 #if defined(SSE_CPU_DATABUS)
     dbus=m68k_DEST_W;
@@ -4603,7 +5480,12 @@ void                             m68k_addq_l(){
     if(DEST_IS_DATA_REGISTER)
       INSTRUCTION_TIME(4); // nn
     else
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE_L; // nw nW
+    }
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
   }
@@ -4629,7 +5511,12 @@ void                              m68k_subq_b(){
   m68k_old_dest=m68k_DEST_B;
   PREFETCH_IRC; //np
   if(!DEST_IS_DATA_REGISTER)
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
+  }
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
 }
@@ -4660,7 +5547,12 @@ void                             m68k_subq_w(){
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
   }
@@ -4695,7 +5587,12 @@ void                             m68k_subq_l(){
     if(DEST_IS_DATA_REGISTER)
       INSTRUCTION_TIME(4); //nn
     else
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE_L; // nw nW
+    }
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
   }
@@ -4802,13 +5699,23 @@ FLOWCHART :
       if(DEST_IS_REGISTER)
         INSTRUCTION_TIME(2); // n
       else 
+      {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+        abus=dest_addr; 
+#endif
         CPU_ABUS_ACCESS_WRITE; //nw
+      }
       m68k_DEST_B=(BYTE)0xff; 
     }
     else // cc false
     {
       if(!DEST_IS_REGISTER)
+      {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+        abus=dest_addr; 
+#endif
         CPU_ABUS_ACCESS_WRITE; // nw
+      }
       m68k_DEST_B=0;
     }
   }
@@ -5051,6 +5958,23 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B :            | 18(3/1)         |                 n    nr    nr np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); //n
+      areg[PARAM_M]--;
+      if(PARAM_M==7)
+        areg[PARAM_M]--;
+      areg[PARAM_N]--;
+      if(PARAM_N==7)
+        areg[PARAM_N]--;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_src_b=m68k_peek(abus);
+      CHECK_READ=true;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_SET_DEST_B(abus);
+      PREFETCH_IRC; //np
+#else
       INSTRUCTION_TIME(2); //n
       CPU_ABUS_ACCESS_READ; //nr
       areg[PARAM_M]--;areg[PARAM_N]--;
@@ -5068,6 +5992,7 @@ Dy,Dx :           |                 |
       m68k_SET_DEST_B(areg[PARAM_N]);
 #endif
       PREFETCH_IRC; //np
+#endif//#if defined(SSE_CPU_391)
     }
     // computing of result lifted from WinUAE
     BYTE src = m68k_src_b;
@@ -5095,7 +6020,12 @@ Dy,Dx :           |                 |
       SR_SET(SR_X+SR_C+SR_N);
     }
     if((ir&BITS_543)==BITS_543_001) //390
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
     if(!m68k_DEST_B)
 #if defined(SSE_VC_INTRINSICS_390E)
@@ -5120,6 +6050,9 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_B_NOT_A; // EA
     m68k_src_b=LOBYTE(r[PARAM_N]);  
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -5150,6 +6083,9 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_W_NOT_A; //EA
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -5179,6 +6115,9 @@ void                             m68k_or_l_from_dN(){
     m68k_GET_DEST_L_NOT_A; //EA
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
     m68k_DEST_L|=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -5453,6 +6392,22 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); // n
+      areg[PARAM_M]--;      
+      if(PARAM_M==7)
+        areg[PARAM_M]--;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; // nr
+      m68k_src_b=m68k_peek(areg[PARAM_M]);
+      areg[PARAM_N]--;      
+      if(PARAM_N==7)
+        areg[PARAM_N]--;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; // nr
+      CHECK_READ=true;
+      m68k_SET_DEST_B(abus); // can crash
+#else
       INSTRUCTION_TIME(2); // n
       areg[PARAM_M]--;      
       if(PARAM_M==7)
@@ -5472,11 +6427,17 @@ Dy,Dx :           |                 |
 #else
       m68k_SET_DEST_B(areg[PARAM_N]); // can crash
 #endif
+#endif//#if defined(SSE_CPU_391)
     }
     m68k_old_dest=m68k_DEST_B;
     PREFETCH_IRC; // np
     if((ir&BITS_543)==BITS_543_001) // PREFETCH_IRC costs more than this test
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_B-=m68k_src_b;
     if(sr&SR_X)
       m68k_DEST_B--;
@@ -5501,6 +6462,9 @@ Dn,<ea> :         |                 |              /              |
     m68k_GET_DEST_B_NOT_A; // EA
     PREFETCH_IRC; // np
     m68k_old_dest=m68k_DEST_B;
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(SR_X);
@@ -5530,6 +6494,18 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); //n
+      areg[PARAM_M]-=2;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_src_w=m68k_dpeek(abus);
+      CHECK_READ=true;
+      areg[PARAM_N]-=2;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_SET_DEST_W(abus);
+#else
       INSTRUCTION_TIME(2); //n
       areg[PARAM_M]-=2;
       CPU_ABUS_ACCESS_READ; //nr
@@ -5544,11 +6520,17 @@ Dy,Dx :           |                 |
       m68k_SET_DEST_W(areg[PARAM_N]);
       CPU_ABUS_ACCESS_READ; //nr
 #endif
+#endif//#if defined(SSE_CPU_391)
     }
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC; //np
     if((ir&BITS_543)==BITS_543_001)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W-=m68k_src_w;
     if(sr&SR_X)
       m68k_DEST_W--;
@@ -5571,6 +6553,9 @@ Dn,<ea> :         |                 |              /              |
     m68k_GET_DEST_W_NOT_A; //EA
     PREFETCH_IRC; //np
     m68k_old_dest=m68k_DEST_W;
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
@@ -5602,6 +6587,25 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .L :            | 30(5/2)         |              n nr nR nr nR nw np    nW    
 */
+#if defined(SSE_CPU_391)
+      PREFETCH_CLASS(1);
+      INSTRUCTION_TIME(2); //n 
+      areg[PARAM_M]-=4;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ_L; // nr nR
+      m68k_src_l=m68k_lpeek(abus);
+      CHECK_READ=true;
+      areg[PARAM_N]-=4;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ_L; // nr nR
+      m68k_SET_DEST_L(abus);
+      CPU_ABUS_ACCESS_WRITE; //nw
+      PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
+      CPU_ABUS_ACCESS_WRITE; //nW
+#else
       PREFETCH_CLASS(1);
       INSTRUCTION_TIME(2); //n 
       areg[PARAM_M]-=4;
@@ -5620,6 +6624,7 @@ Dy,Dx :           |                 |
       CPU_ABUS_ACCESS_WRITE; //nw
       PREFETCH_IRC; //np
       CPU_ABUS_ACCESS_WRITE; //nW
+#endif//#if defined(SSE_CPU_391)
     }
     m68k_old_dest=m68k_DEST_L;
     m68k_DEST_L-=m68k_src_l;
@@ -5642,6 +6647,9 @@ Dy,Dx :           |                 |
     m68k_GET_DEST_L_NOT_A; // EA
     PREFETCH_IRC; //np
     m68k_old_dest=m68k_DEST_L;
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
@@ -5809,6 +6817,25 @@ void                              m68k_eor_b(){ //or CMPM.B
 (Ay)+,(Ax)+       |                 |
   .B or .W :      | 12(3/0)         |                      nr    nr np          
 */
+#if defined(SSE_CPU_391)
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_src_b=m68k_peek(abus);
+    areg[PARAM_M]++; 
+    if(PARAM_M==7)
+      areg[PARAM_M]++;
+    abus=areg[PARAM_N];
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_old_dest=m68k_peek(abus);
+    areg[PARAM_N]++; 
+    if(PARAM_N==7)
+      areg[PARAM_N]++;
+    compare_buffer=m68k_old_dest;
+    m68k_dest=&compare_buffer;
+    PREFETCH_IRC; //np
+    m68k_DEST_B-=m68k_src_b;
+    SR_SUB_B(0);
+#else
     CPU_ABUS_ACCESS_READ; //nr
     m68k_src_b=m68k_peek(areg[PARAM_M]);areg[PARAM_M]++; if(PARAM_M==7)areg[PARAM_M]++;
     CPU_ABUS_ACCESS_READ; //nr
@@ -5818,6 +6845,7 @@ void                              m68k_eor_b(){ //or CMPM.B
     PREFETCH_IRC; //np
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(0);
+#endif
   }else{
 /*
 -------------------------------------------------------------------------------
@@ -5839,7 +6867,12 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_B_NOT_A; //EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE;  //nw
+    }
     m68k_DEST_B^=LOBYTE(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
@@ -5857,6 +6890,21 @@ void                             m68k_eor_w(){ //or CMPM.W
 (Ay)+,(Ax)+       |                 |
   .B or .W :      | 12(3/0)         |                      nr    nr np          
 */
+#if defined(SSE_CPU_391)
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_src_w=m68k_dpeek(abus);
+    areg[PARAM_M]+=2;
+    abus=areg[PARAM_N];
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_old_dest=m68k_dpeek(abus);
+    areg[PARAM_N]+=2;
+    compare_buffer=m68k_old_dest;
+    m68k_dest=&compare_buffer;
+    PREFETCH_IRC; //np
+    m68k_DEST_W-=m68k_src_w;
+    SR_SUB_W(0);
+#else
     CPU_ABUS_ACCESS_READ; //nr
     m68k_src_w=m68k_dpeek(areg[PARAM_M]);areg[PARAM_M]+=2;
     CPU_ABUS_ACCESS_READ; //nr
@@ -5866,6 +6914,7 @@ void                             m68k_eor_w(){ //or CMPM.W
     PREFETCH_IRC; //np
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(0);
+#endif//#if defined(SSE_CPU_391)
   }else{
 /*
 Dn,<ea> :         |                 |               |
@@ -5883,7 +6932,12 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_W_NOT_A;//EA
     PREFETCH_IRC; //np
     if(!(DEST_IS_DATA_REGISTER))
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W^=LOWORD(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
@@ -5894,6 +6948,21 @@ Dn,<ea> :         |                 |               |
 void                             m68k_eor_l(){ //or CMPM.L
   if((ir&BITS_543)==BITS_543_001){  //cmpm
 //   .L :            | 20(5/0)         |                   nR nr nR nr np   
+#if defined(SSE_CPU_391)
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ_L; //nR nr
+    m68k_src_l=m68k_lpeek(abus);
+    areg[PARAM_M]+=4;
+    abus=areg[PARAM_N];
+    CPU_ABUS_ACCESS_READ_L; //nR nr
+    m68k_old_dest=m68k_lpeek(abus);
+    areg[PARAM_N]+=4;
+    compare_buffer=m68k_old_dest;
+    m68k_dest=&compare_buffer;
+    PREFETCH_IRC; //np
+    m68k_DEST_L-=m68k_src_l;
+    SR_SUB_L(0);
+#else
     CPU_ABUS_ACCESS_READ_L; //nR nr
     m68k_src_l=m68k_lpeek(areg[PARAM_M]);areg[PARAM_M]+=4;
     CPU_ABUS_ACCESS_READ_L; //nR nr
@@ -5903,6 +6972,7 @@ void                             m68k_eor_l(){ //or CMPM.L
     PREFETCH_IRC; //np
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(0);
+#endif
   }else{
 /*
 -------------------------------------------------------------------------------
@@ -5926,7 +6996,12 @@ Dn,<ea> :         |                 |               |
     if(DEST_IS_DATA_REGISTER)
       INSTRUCTION_TIME(4);//nn
     else
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE_L; //nw nW
+    }
     m68k_DEST_L^=r[PARAM_N];
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
@@ -6136,6 +7211,23 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B :            | 18(3/1)         |                 n    nr    nr np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); //n
+      areg[PARAM_M]--;
+      if(PARAM_M==7)
+        areg[PARAM_M]--;
+      areg[PARAM_N]--;
+      if(PARAM_N==7)
+        areg[PARAM_N]--;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_src_b=m68k_peek(abus);
+      CHECK_READ=true;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; // nr
+      m68k_SET_DEST_B(abus);
+      PREFETCH_IRC; //np
+#else
       INSTRUCTION_TIME(2); //n
       areg[PARAM_M]--;
       if(PARAM_M==7)areg[PARAM_M]--;
@@ -6153,6 +7245,7 @@ Dy,Dx :           |                 |
       CPU_ABUS_ACCESS_READ; // nr
 #endif
       PREFETCH_IRC; //np
+#endif//#if defined(SSE_CPU_391)
     }
 /*
   http://en.wikipedia.org/wiki/Binary-coded_decimal#Addition_with_BCD
@@ -6182,7 +7275,12 @@ Dy,Dx :           |                 |
     SR_SET(SR_X+SR_C);
   }
   if((ir&BITS_543)==BITS_543_001)//390
+  {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
+  }
   m68k_DEST_B=(hi_nibble&0xF0)+(lo_nibble&0xF);
 #if defined(SSE_VC_INTRINSICS_390E)
   if(!m68k_DEST_B)
@@ -6212,6 +7310,9 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_B_NOT_A; // EA
     m68k_src_b=LOBYTE(r[PARAM_N]);
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -6261,6 +7362,9 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_W_NOT_A; //EA
     m68k_src_w=LOWORD(r[PARAM_N]);
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; // nw
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -6305,6 +7409,9 @@ Dn,<ea> :         |                 |               |
     m68k_GET_DEST_L_NOT_A; //EA
     m68k_src_l=r[PARAM_N];
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; //nw nW
     m68k_DEST_L&=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
@@ -6481,6 +7588,22 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); // n
+      areg[PARAM_M]--;
+      if(PARAM_M==7)
+        areg[PARAM_M]--;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_src_b=m68k_peek(abus);
+      areg[PARAM_N]--;
+      if(PARAM_N==7)
+        areg[PARAM_N]--;
+      CHECK_READ=true;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; //nr
+      m68k_SET_DEST_B(abus);
+#else
       INSTRUCTION_TIME(2); // n
       areg[PARAM_M]--;
       if(PARAM_M==7)
@@ -6499,11 +7622,17 @@ Dy,Dx :           |                 |
       m68k_SET_DEST_B(areg[PARAM_N]);
       CPU_ABUS_ACCESS_READ; //nr
 #endif
+#endif//#if defined(SSE_CPU_391)
     }
     m68k_old_dest=m68k_DEST_B;
     PREFETCH_IRC; //np
     if((ir&BITS_543)==BITS_543_001)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_B+=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B++;
     SR_ADDX_B;
@@ -6526,6 +7655,9 @@ Dn,<ea> :         |                 |              /              |
     m68k_GET_DEST_B_NOT_A; // EA
     m68k_old_dest=m68k_DEST_B;
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B+=m68k_src_b;
     SR_ADD_B;
@@ -6550,6 +7682,18 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .B or .W :      | 18(3/1)         |              n nr    nr       np nw       
 */
+#if defined(SSE_CPU_391)
+      INSTRUCTION_TIME(2); // n
+      areg[PARAM_M]-=2; // or after peek? TODO
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ; // nr
+      m68k_src_w=m68k_dpeek(abus);
+      CHECK_READ=true;
+      areg[PARAM_N]-=2;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ; // nr
+      m68k_SET_DEST_W(abus);
+#else
       INSTRUCTION_TIME(2); // n
       areg[PARAM_M]-=2; // or after peek? TODO
       CPU_ABUS_ACCESS_READ; // nr 390
@@ -6564,11 +7708,17 @@ Dy,Dx :           |                 |
       m68k_SET_DEST_W(areg[PARAM_N]);
       CPU_ABUS_ACCESS_READ; // nr
 #endif
+#endif
     }
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC; //np
     if((ir&BITS_543)==BITS_543_001)
+    {
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
       CPU_ABUS_ACCESS_WRITE; //nw
+    }
     m68k_DEST_W+=m68k_src_w;
     if(sr&SR_X)m68k_DEST_W++;
     SR_ADDX_W;
@@ -6591,6 +7741,9 @@ Dn,<ea> :         |                 |              /              |
     m68k_GET_DEST_W_NOT_A; // EA
     m68k_old_dest=m68k_DEST_W;
     PREFETCH_IRC; //np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_W+=m68k_src_w;
     SR_ADD_W;
@@ -6622,6 +7775,25 @@ Dy,Dx :           |                 |
 -(Ay),-(Ax) :     |                 |
   .L :            | 30(5/2)         |              n nr nR nr nR nw np    nW    
 */
+#if defined(SSE_CPU_391)
+      PREFETCH_CLASS(1);
+      INSTRUCTION_TIME(2); //n
+      areg[PARAM_M]-=4;
+      abus=areg[PARAM_M];
+      CPU_ABUS_ACCESS_READ_L; // nr nR
+      m68k_src_l=m68k_lpeek(abus);
+      CHECK_READ=true;
+      areg[PARAM_N]-=4;
+      abus=areg[PARAM_N];
+      CPU_ABUS_ACCESS_READ_L; // nr nR
+      m68k_SET_DEST_L(abus);
+      CPU_ABUS_ACCESS_WRITE; //nw
+      PREFETCH_IRC; //np 
+#if defined(SSE_CPU_RESTORE_ABUS1)
+      abus=dest_addr; 
+#endif
+      CPU_ABUS_ACCESS_WRITE; //nW
+#else
       PREFETCH_CLASS(1);//390?
       INSTRUCTION_TIME(2); //n
       areg[PARAM_M]-=4;
@@ -6640,6 +7812,7 @@ Dy,Dx :           |                 |
       CPU_ABUS_ACCESS_WRITE; //nw
       PREFETCH_IRC; //np
       CPU_ABUS_ACCESS_WRITE; //nW
+#endif//#if defined(SSE_CPU_391)
     }
     m68k_old_dest=m68k_DEST_L;
     m68k_DEST_L+=m68k_src_l;
@@ -6663,6 +7836,9 @@ Dy,Dx :           |                 |
     m68k_GET_DEST_L_NOT_A; //EA
     m68k_old_dest=m68k_DEST_L;
     PREFETCH_IRC; // np
+#if defined(SSE_CPU_RESTORE_ABUS1)
+    abus=dest_addr; 
+#endif
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
@@ -6788,7 +7964,7 @@ void                             m68k_lsr_b_to_dM(){
   SR_CHECK_Z_AND_N_B;
 }
 
-void                             m68k_roxr_b_to_dM(){ //okay
+void                             m68k_roxr_b_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
@@ -6813,7 +7989,7 @@ void                             m68k_roxr_b_to_dM(){ //okay
 }
 
 
-void                             m68k_ror_b_to_dM(){  //okay!
+void                             m68k_ror_b_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
@@ -6860,7 +8036,7 @@ void                              m68k_asr_w_to_dM(){
 }
 
 
-void                             m68k_lsr_w_to_dM(){  //okay!
+void                             m68k_lsr_w_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
@@ -6884,7 +8060,7 @@ void                             m68k_lsr_w_to_dM(){  //okay!
 }
 
 
-void                             m68k_roxr_w_to_dM(){          //okay
+void                             m68k_roxr_w_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
@@ -6981,7 +8157,7 @@ void                             m68k_lsr_l_to_dM(){
 }
 
 
-void                             m68k_roxr_l_to_dM(){   //okay!
+void                             m68k_roxr_l_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+4); // n* nn
@@ -7006,7 +8182,7 @@ void                             m68k_roxr_l_to_dM(){   //okay!
 }
 
 
-void                             m68k_ror_l_to_dM(){   //okay!
+void                             m68k_ror_l_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+4); // n* nn
@@ -7149,7 +8325,7 @@ void                             m68k_rol_b_to_dM(){
 }
 
 
-void                              m68k_asl_w_to_dM(){       //okay!
+void                              m68k_asl_w_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+2); // n* n
@@ -7263,7 +8439,7 @@ void                             m68k_rol_w_to_dM(){
 }
 
 
-void                              m68k_asl_l_to_dM(){    //okay!
+void                              m68k_asl_l_to_dM(){
   m68k_BIT_SHIFT_TO_dM_GET_SOURCE; //EA
   PREFETCH_IRC; //np
   INSTRUCTION_TIME(2*m68k_src_w+4); // n* nn
@@ -7449,6 +8625,9 @@ void                              m68k_bit_shift_right_to_mem(){
     break;
 #endif
   }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+  abus=dest_addr; 
+#endif
   CPU_ABUS_ACCESS_WRITE; //nw
 }
 
@@ -7535,6 +8714,9 @@ void                              m68k_bit_shift_left_to_mem(){
     break;
 #endif
   }
+#if defined(SSE_CPU_RESTORE_ABUS1)
+  abus=dest_addr; 
+#endif
   CPU_ABUS_ACCESS_WRITE; //nw
 }
 
@@ -7965,7 +9147,7 @@ void m68k_0001() {  // move.b
     }
 
 #if defined(SSE_CPU_DATABUS)
-    dbus|=m68k_src_b;
+    dbus|=m68k_src_b; // | or = ?
 #endif
 
     CPU_ABUS_ACCESS_WRITE; // nw

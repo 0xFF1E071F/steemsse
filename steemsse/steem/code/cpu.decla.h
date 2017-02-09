@@ -228,6 +228,13 @@ extern int m68k_divu_cycles,m68k_divs_cycles;
 extern int act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
 #endif
 
+#if defined(SSE_CPU_DATABUS)
+extern WORD dbus;
+#endif
+#if defined(SSE_CPU_RESTORE_ABUS)
+extern MEM_ADDRESS dest_addr;
+#endif
+
 
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
 #define FOUR_MEGS 0x400000
@@ -316,7 +323,6 @@ basis, so the bus can be arbitrated away from the MC68000 after the first
 of the two 16-bit writes, and the processor will complete the long-word 
 write after it retakes the bus.
 */
-//  This works but maybe it's not worth the overhead for the moment?
 
 inline void InstructionTime(int t) {
 #if defined(SSE_BLT_390B)
@@ -453,7 +459,9 @@ inline void InstructionTimeRound(int t) {
     If counting for the blitter, no problem, blit cycles are computed after 
     blit.
 */
-
+/*  We do a single comparison here, but if the R/W is to Shifter registers,
+    rounding up happens in ior/iow.
+*/
 inline void FetchTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0; 
@@ -482,6 +490,8 @@ inline void ReadBusTiming() {
 
 inline void ReadBusTimingL() {
   ReadBusTiming();
+  // shouldn't we do abus+=2? or should we transform CPU_ABUS_ACCESS_WRITE_L
+  // into 2 CPU_ABUS_ACCESS_WRITE?
   ReadBusTiming();
 }
 
@@ -2314,6 +2324,7 @@ WinUAE
     INSTRUCTION_TIME(4); //  nn 4
   CPU_ABUS_ACCESS_WRITE_PUSH; // ns 8
   CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS 16
+  abus=0x100;//391 TODO
   CPU_ABUS_ACCESS_READ_L; // nV nv 24
   CPU_ABUS_ACCESS_READ_FETCH; //np 28
   INSTRUCTION_TIME(2); // n 30 // on ST it will provoke alignment of last fetch
@@ -2374,6 +2385,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
   CPU_ABUS_ACCESS_WRITE_PUSH; // ns 
   INSTRUCTION_TIME(16); // ni ni ni ni
   CPU_ABUS_ACCESS_WRITE_PUSH_L; // nS ns 
+  abus=0x100; //391
   CPU_ABUS_ACCESS_READ_L; // nV nv 
   CPU_ABUS_ACCESS_READ_FETCH; //np 
   INSTRUCTION_TIME(2); // n  // on ST it will provoke alignment of last fetch

@@ -3264,7 +3264,7 @@ Windows 2000	5.0
 #endif
 
   SetPageControlsFont();
-  ShowPageControls(); // forgot that for a while... where are the controls?
+  ShowPageControls();
 }
 
 #if defined(SSE_GUI_OPTIONS_REFRESH)
@@ -3288,18 +3288,6 @@ void TOptionBox::SSEUpdateIfVisible() {
   Win=GetDlgItem(Handle,7301); //kkb click
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,PEEK(0x484)&1,0);
-#if !defined(SSE_GUI_OPTIONS_STF)//390
-#if defined(SSE_STF)
-  Win=GetDlgItem(Handle,211); //ST Model
-  if(Win!=NULL) 
-    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
-#endif
-#if defined(SSE_MMU_WU)
-  Win=GetDlgItem(Handle,212); //WU
-  if(Win!=NULL) 
-    SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
-#endif
-#endif
 #if defined(SSE_VID_BORDERS_GUARD_EM)
   Win=GetDlgItem(Handle,1026);
   if((extended_monitor

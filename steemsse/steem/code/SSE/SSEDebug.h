@@ -222,9 +222,7 @@ enum logsection_enum_tag {
  LOGSECTION_FDC ,
  LOGSECTION_IO ,
  LOGSECTION_MFP_TIMERS ,
-//#if defined(SSE_BOILER_TRACE_MFP1) //also in vc ide
  LOGSECTION_MFP=LOGSECTION_MFP_TIMERS,
-//#endif
  LOGSECTION_INIT ,
  LOGSECTION_CRASH ,
  LOGSECTION_STEMDOS ,
@@ -339,6 +337,7 @@ enum logsection_enum_tag {
 #define VIDEO_CONTROL_MASK (Debug.ControlMask[9])
 #define VIDEO_CONTROL_LINEOFF (1<<15)
 #define VIDEO_CONTROL_RES (1<<14)
+#define VIDEO_CONTROL_BLIT (1<<13)
 #endif
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)

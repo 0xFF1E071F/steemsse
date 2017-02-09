@@ -227,7 +227,7 @@ void ASMCALL Blitter_Start_Now()
 #if defined(SSE_BLT_COPY_LOOP)
 /*  BLITT03I.TOS: In blit mode, the blit can apparently be interrupted before
     the write.
-    Data is kept in internal register, as well as current phase.
+    Data is kept in internal registers, as well as the current phase.
     This function will leave after 'read source', if there are still cycles, 
     the main loop will call again it at once.
     'Read destination' and 'write destination' are still done in one go.

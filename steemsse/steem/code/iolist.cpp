@@ -346,7 +346,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_BOILER_VIDEO_CONTROL)
   iolist_add_entry(FAKE_IO_START+18,"Video",2,
-    "line|res|.|.|.|.|.|.|.|.|.|.|.|.|.|.");
+    "line|res|blt|.|.|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)

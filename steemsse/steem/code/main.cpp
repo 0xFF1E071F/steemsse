@@ -339,7 +339,7 @@ int main(int argc,char *argv[])
   }catch(...){}
 #endif
 
-#if defined(SSE_VID_RECORD_AVI)//no
+#if defined(SSE_VID_RECORD_AVI)//shouldn't be here
   if(pAviFile)
     delete pAviFile;
 #endif
@@ -389,7 +389,6 @@ void FindWriteDir()
     // Must find a location that is r/w
     WriteDir=RunDir;
 #endif
-    ///ASSERT(IsSameStr_I(WriteDir,RunDir));
   }
 }
 //---------------------------------------------------------------------------
@@ -1262,7 +1261,7 @@ void make_Mem(BYTE conf0,BYTE conf1)
 
   mem_len=bank_length[0]+bank_length[1];
 
-  Mem=new BYTE[mem_len+MEM_EXTRA_BYTES]; // SS check delete
+  Mem=new BYTE[mem_len+MEM_EXTRA_BYTES];
 
   for (int y=0;y<MEM_EXTRA_BYTES;y++) Mem[y]=255;
   Mem_End=Mem+mem_len+MEM_EXTRA_BYTES;

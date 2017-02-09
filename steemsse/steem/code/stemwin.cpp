@@ -9,11 +9,10 @@ and its various buttons.
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
-
-#if defined(SSE_BOILER_390_LOG2)
+#ifdef SSE_BUILD
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
-#define LOGSECTION LOGSECTION_INIT//SS
+#define LOGSECTION LOGSECTION_INIT
 #endif
 
 //---------------------------------------------------------------------------
@@ -1173,7 +1172,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         ASSERT(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME);
         ASSERT(((DRAWITEMSTRUCT*)lPar)->CtlType==ODT_STATIC);
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
-#define status_bar ansi_string
+//#define status_bar ansi_string
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
 #if !defined(SSE_VS2008_WARNING_390)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
@@ -1182,13 +1181,13 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         FillRect(myHdc,&((DRAWITEMSTRUCT*)lPar)->rcItem,((COLOUR_MONITOR)?
           (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
         GUIRefreshStatusBar(false); // make sure the string is correct
-        ASSERT(status_bar);
+        ASSERT(ansi_string);
 #if !defined(BCC_BUILD) && !(defined(VC_BUILD) && _MSC_VER<=1200) // old compilers
-        ASSERT(strnlen(status_bar,MAX_PATH)<MAX_PATH);
+        ASSERT(strnlen(ansi_string,MAX_PATH)<MAX_PATH);
 #endif
-        int nchars=strlen(status_bar); // safe version?
+        int nchars=strlen(ansi_string); // safe version?
         SIZE Size;
-        GetTextExtentPoint32(myHdc,status_bar,nchars,&Size);
+        GetTextExtentPoint32(myHdc,ansi_string,nchars,&Size);
         myRect.left=myRect.right/2-Size.cx/2;
 #ifdef SSE_FLOPPY
         if(ADAT)
@@ -1204,7 +1203,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           myRect.left-=8;
         if(OPTION_HACKS)
           myRect.left-=8;
-        TextOut(myHdc,myRect.left,3,status_bar,nchars);
+        TextOut(myHdc,myRect.left,3,ansi_string,nchars);
         if(OPTION_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
         {
           HDC TempDC=CreateCompatibleDC(myHdc);
@@ -1213,7 +1212,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           int FlagIdx=OptionBox.TOSLangToFlagIdx((int)ROM_PEEK(0x1D));
           ASSERT(FlagIdx!=-1); // error code
           if (FlagIdx>=0){ 
-             //ASSERT(FlagIdx<10); 
              ASSERT(FlagIdx<14); 
             BitBlt(myHdc,myRect.left+((OPTION_WS)?58:51),4,RC_FLAG_WIDTH,
               RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
@@ -1257,11 +1255,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
         }
         return TRUE;
-      }
-
 #undef myHdc
 #undef status_bar
 #undef myRect
+      }
       break;
 #endif
 
@@ -1497,7 +1494,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 //---------------------------------------------------------------------------
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
-  TRACE_INIT("SetStemWinSize %d %d %d %d\n",xo,yo,w,h);
+  TRACE_LOG("SetStemWinSize %d %d %d %d\n",xo,yo,w,h);
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
   {
