@@ -190,4 +190,81 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
     shifter_draw_pointer=VideoCounter;
 }
 
+#if defined(SSE_MMU_LOW_LEVEL)
+//for future version?
+void TMMU::DecodeAddress() {
+
+  ASSERT(abus<FOUR_MEGS);
+
+  MEM_ADDRESS ad=abus;
+
+  int bank=0;
+  if (ad>=mmu_bank_length[0])
+  {
+    bank=1;
+    ad-=mmu_bank_length[0];
+  }
+
+  // MMU configured for 2MB 
+  if (mmu_bank_length[bank]==MB2){ 
+
+    if (bank_length[bank]==KB512){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_20|BIT_10);
+      else
+#endif
+        ad&=~(BIT_20|BIT_19);
+    }
+    else if (bank_length[bank]==KB128){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_20|BIT_19|BIT_10|BIT_9);
+      else
+#endif
+        ad&=~(BIT_20|BIT_19|BIT_18|BIT_17);
+    }
+  }//2MB
+
+  // MMU configured for 512K
+  else if (mmu_bank_length[bank]==KB512) { 
+    if (bank_length[bank]==KB128){ //real memory
+#ifdef SSE_STF_MMU
+      if(ST_TYPE==STF)
+        ad&=~(BIT_18|BIT_9); // TOS OK, but diagnostic catridge?
+      else
+#endif
+        ad&=~(BIT_18|BIT_17);
+    }
+  }//512K
+
+  if (bank==1) 
+    ad+=bank_length[0];
+
+  DecodedAddress=ad; //member variable
+}
+
+void TMMU::ReadByte() {
+  DecodeAddress();
+  BYTE byte=PEEK(DecodedAddress);
+  dbus=(dbus&0xFF00) | byte; ///?
+}
+
+void TMMU::ReadWord() {
+  DecodeAddress();
+  dbus=DPEEK(DecodedAddress);
+}
+
+void TMMU::WriteByte() {
+  DecodeAddress();
+  PEEK(DecodedAddress)=(dbus&0xFF);
+}
+
+void TMMU::WriteWord() {
+  DecodeAddress();
+  DPEEK(DecodedAddress)=dbus;
+}
+
+#endif
+
 #endif//#if defined(SSE_MMU)

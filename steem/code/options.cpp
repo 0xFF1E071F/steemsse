@@ -1389,14 +1389,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             OPTION_C1=!OPTION_C1;
-            if(!HD6301_OK) // it's not greyed out but nothing happens
-              OPTION_C1=0; //TODO grey out
+            if(!HD6301_OK)
+              OPTION_C1=0;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_C1,0);
             TRACE_LOG("Option HD6301 emu: %d\n",OPTION_C1);
-//            printf("HD6301 emu: %d\n",OPTION_C1);
-#if defined(SSE_GUI_STATUS_BAR)
-//            GUIRefreshStatusBar();//overkill
-#endif
           }
           break;
 #endif

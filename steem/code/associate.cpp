@@ -31,16 +31,26 @@ char key_location[]="Software\\Classes\\"; // where we put the extensions
 
 #include <windows.h>
 #include <stdio.h>
-//#include <strsafe.h>
+
+#if defined(SSE_VS2008_WARNING_391)
+#pragma warning (disable: 4100)
+#endif
 
 HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
+
 #if defined(SSE_VS2008_WARNING_390) && !defined(SSE_ASSOCIATE_391)
   strncpy(pszDest,pszSrc,cchDest);//crash on deassociating
+  strcpy_s(pszDest,cchDest,pszSrc);//same
 #else
   strcpy(pszDest,pszSrc);
 #endif
   return 0;
 }
+
+#if defined(SSE_VS2008_WARNING_391)
+#pragma warning (default: 4100)
+#endif
+
 
 //*************************************************************
 //

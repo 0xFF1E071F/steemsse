@@ -231,7 +231,8 @@ void TDebug::Vbl(){
 #if defined(SSE_TRACE_FOR_RELEASE_390)
 
 void TDebug::TraceInit() {
-  EasyStr trace_file=RunDir+SLASH+SSE_TRACE_FILE_NAME; // make sure we run in Steem dir...
+  // make sure we run in Steem dir... (RunDir is set in WinMain)
+  EasyStr trace_file=RunDir+SLASH+SSE_TRACE_FILE_NAME; 
   trace_file_pointer=freopen(trace_file, "w", stdout );
   //trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
 #ifdef SSE_DEBUG

@@ -86,6 +86,9 @@ struct TMMU {
 
   //DATA
   MEM_ADDRESS VideoCounter; // to separate from rendering
+#if defined(SSE_MMU_LOW_LEVEL)
+  MEM_ADDRESS DecodedAddress;
+#endif
 #if defined(SSE_MMU_WU)
   BYTE WU[6]; // 0, 1, 2
   BYTE WS[6]; // 0 + 4 + panic
@@ -102,8 +105,11 @@ struct TMMU {
   void WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b);
   void UpdateVideoCounter(int CyclesIn);
 #if defined(SSE_MMU_LOW_LEVEL)
-  WORD ReadRAM(); // abus as parameter?
-  void WriteRAM(); // abus, dbus as parameters?
+  void DecodeAddress();
+  void ReadByte(); 
+  void WriteByte();
+  void ReadWord();
+  void WriteWord();
 #endif
 };
 

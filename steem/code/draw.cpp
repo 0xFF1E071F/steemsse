@@ -186,6 +186,8 @@ bool freq_change_this_scanline=false;
 #undef EXTC
 #undef INIT
 
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
+
 #endif//decla
 
 //---------------------------------------------------------------------------
@@ -216,6 +218,7 @@ void ASMCALL draw_scanline_dont(int,int,int,int) {}
 
 void draw_begin()
 {
+  //TRACE_OSD("frame %d",FRAME);//called at each frame, it calls Lock()
   if (draw_lock) return;
   /*
   #ifndef NO_CRAZY_MONITOR
@@ -358,6 +361,7 @@ void draw_begin()
 //---------------------------------------------------------------------------
 void draw_set_jumps_and_source()
 {
+  // SS called at each frame by draw_begin()
   if (!draw_lock){
     draw_scanline=draw_scanline_dont;
     return;
@@ -635,6 +639,13 @@ void draw_set_jumps_and_source()
   WIN_ONLY( draw_buffer_complex_scanlines=(Disp.Method==DISPMETHOD_DD &&
                   Disp.DrawToVidMem && draw_med_low_double_height); )
 
+#if defined(SSE_BOILER_VIDEO_CONTROL__)
+  if(VIDEO_CONTROL_MASK & VIDEO_CONTROL_BLIT)
+  {
+    TRACE_LOG("src %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
+  }
+#endif
+
 }
 //---------------------------------------------------------------------------
 void draw_end()
@@ -674,8 +685,9 @@ void draw_end()
   }
 }
 
-#define LOGSECTION LOGSECTION_VIDEO
+
 #if !defined(SSE_VIDEO_CHIPSET)
+#define LOGSECTION LOGSECTION_VIDEO
 //---------------------------------------------------------------------------
 /* SS this was the core of Shifter trick analysis in Steem 3.2.
    There's not so much code but it ran many cases eg Darkside of the Spoon,
@@ -1153,9 +1165,8 @@ void inline draw_scanline_to_end()
   // end of the line we must add a raster.  
   shifter_skip_raster_for_hscroll = shifter_hscroll!=0;
 }
-#endif//ssdbg
 #undef LOGSECTION
-
+#endif//#if !defined(SSE_VIDEO_CHIPSET)
 
 //---------------------------------------------------------------------------
 bool draw_blit()
@@ -1322,7 +1333,7 @@ void init_screen()
   
   draw_end();
 
-#ifndef NO_CRAZY_MONITOR
+#ifndef NO_CRAZY_MONITOR//SS as is:
 /*  if(extended_monitor){  //crazy monitor
     shifter_x=em_width;shifter_y=em_height;
     res_vertical_scale=1;
@@ -1354,9 +1365,11 @@ void init_screen()
   // This is used to know where to cause the timer B event
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 //  res_change(); //all this does is resize the window - do we want that to happen?
-  //TRACE_INIT("init screen shifter_x %d shifter_y %d\n",shifter_x,shifter_y);
+
+  TRACE_LOG("init_screen() %dx%d,%d-%d\n",shifter_x,shifter_y,draw_first_scanline_for_border,draw_last_scanline_for_border);
 }
 //---------------------------------------------------------------------------
+//SS as is:
 /*void palette_convert_8(int n)
 {
 //  long col=((STpal[n] & 0x888) >> 3)+((STpal[n] & 0x777) << 1);  //correct STE colour
@@ -1391,7 +1404,6 @@ void old_palette_convert_32(int n){
 //---------------------------------------------------------------------------
 void res_change()
 {
-  //TRACE_INIT("res_change\n");
   if (ResChangeResize) StemWinResize();
 
   draw_set_jumps_and_source();
@@ -1534,7 +1546,7 @@ bool draw_routines_init()
   // [0=Smallest size possible, 1=640x400 (all reses), 2=640x200 (med/low res)]
   //  [BytesPerPixel-1]
   //    [screen_res]
-
+//TODO: should init just one time?
   // SS Smallest size possible
   // 1 byte per pixel
   jump_draw_scanline[0][0][0]=draw_scanline_8_lowres_pixelwise; //LO

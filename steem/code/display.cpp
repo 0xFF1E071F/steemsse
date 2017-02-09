@@ -82,13 +82,7 @@ DEFINE_GUID( IID_IDirectDraw7,0x15e65ec0,0x3b9c,0x11d2,0xb9,0x2f,0x00,0x60,0x97,
 #endif
 #endif
 
-
 //SS: the singleton object is Disp
-#if 1//defined(SSE_BOILER_390_LOG2)
-#define LOGSECTION LOGSECTION_VIDEO_RENDERING
-#else
-#define LOGSECTION LOGSECTION_INIT
-#endif
 
 //---------------------------------------------------------------------------
 #ifdef SSE_DEBUG_D3D //stolen somewhere
@@ -127,6 +121,11 @@ char *GetTextFromD3DError(HRESULT hr){
 #else
 #define REPORT_D3D_ERR 
 #endif
+
+#ifdef SSE_BUILD
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
+#endif
+
 //---------------------------------------------------------------------------
 SteemDisplay::SteemDisplay()
 {
@@ -221,8 +220,6 @@ HRESULT SteemDisplay::Init()
     monitor_height=GetScreenHeight();
   }
 
-  //TRACE_LOG("Display init\n");
-
 #if defined(SSE_VID_D3D)
   if(!D3D9_OK)
   {
@@ -264,13 +261,11 @@ HRESULT SteemDisplay::Init()
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 #ifdef WIN32
-//#undef LOGSECTION //SS
-//#define LOGSECTION LOGSECTION_INIT
+
 #if !defined(SSE_VID_D3D_ONLY)
 HRESULT SteemDisplay::InitDD()
 {
   SetNotifyInitText("DirectDraw");
-  //TRACE_LOG("DD Init\n");
 
   HRESULT Ret;
   try{
@@ -767,15 +762,11 @@ bool SteemDisplay::InitGDI()
 
   return true;
 }
-//#undef LOGSECTION//#define LOGSECTION LOGSECTION_INIT
 //---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-
-//#define LOGSECTION LOGSECTION_VIDEO//SS
 
 // for each frame, sequence is lock-write frame (emulate)-unlock-blit
 
-HRESULT SteemDisplay::Lock()
+HRESULT SteemDisplay::Lock() // SS called by draw_begin()
 {
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   if(SDL.InUse)
@@ -1301,11 +1292,7 @@ bool SteemDisplay::Blit()
 void SteemDisplay::WaitForAsyncBlitToFinish()
 {
 }
-//#undef LOGSECTION //video
 //---------------------------------------------------------------------------
-
-//#define LOGSECTION LOGSECTION_INIT //SS
-
 void SteemDisplay::RunStart(bool Temp)
 {
   if (FullScreen==0) return;
@@ -2141,11 +2128,16 @@ HRESULT SteemDisplay::SaveScreenShot()
   // (even if we wanted to) because some video cards will blur.
 
 #if defined(SSE_VID_D3D_ONLY) && defined(SSE_VID_SAVE_NEO)
-  //v3.8.2: moved up again...
+
+#if defined(SSE_VID_D3D_SCREENSHOT_391B2)
+  if(ScreenShotFormat==IF_NEO) 
+#else
   if(ScreenShotFormat==IF_NEO && !ToClipboard)
+#endif
   {
     if(pNeoFile)
     {
+      ASSERT(!ToClipboard);
       pNeoFile->resolution=change_endian(screen_res);//bugfix v...
       // palette was already copied (sooner=better)
       for(int i=0;i<16000;i++)
@@ -2154,6 +2146,7 @@ HRESULT SteemDisplay::SaveScreenShot()
       if(f)
       {
         fwrite(pNeoFile,sizeof(neochrome_file),1,f);
+        TRACE_LOG("Save screenshot %s res %d\n",ShotFile.Text,screen_res);
         fclose(f);
       }
       delete pNeoFile;
@@ -2161,13 +2154,12 @@ HRESULT SteemDisplay::SaveScreenShot()
       return 0;
     }
   }
+
 #endif
 
   if (Method==DISPMETHOD_DD){
+
 #if defined(SSE_VID_D3D_ONLY)
-/*  If we want a D3D-only build, we must offer a screenshot facility as well.
-    Code seems more compact.
-*/
     if (!pD3D||!pD3DDevice) 
       return DDERR_GENERIC;
     HRESULT hRet;
@@ -2180,6 +2172,10 @@ HRESULT SteemDisplay::SaveScreenShot()
     }
 #if defined(SSE_VID_D3D_SCREENSHOT_390) // bugfix stretch mode
     w=draw_blit_source_rect.right-draw_blit_source_rect.left;
+#if defined(SSE_VID_D3D_SCREENSHOT_391B1)
+    if(!screen_res && SCANLINES_INTERPOLATED)
+      w*=2; //yeah, yeah...
+#endif
     h=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
 #else
     w=SurfaceWidth;
@@ -2223,6 +2219,7 @@ HRESULT SteemDisplay::SaveScreenShot()
     RECT rcDest={0,0,0,0};
     rcDest.right=w;
     rcDest.bottom=h;
+
     if(ScreenShotMinSize) // option
     {
       if (border & 1){
@@ -2264,6 +2261,9 @@ HRESULT SteemDisplay::SaveScreenShot()
     }
     else
 #endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+#if defined(SSE_VID_D3D_SCREENSHOT_391C1)
+    if(!ToClipboard)
+#endif
     {
 #if defined(SSE_VID_D3D_SCREENSHOT_391C) // PNG, JPG available natively now...
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
@@ -2408,7 +2408,7 @@ HRESULT SteemDisplay::SaveScreenShot()
   }
 #endif
 
-	BYTE *Pixels=SurMem;
+  BYTE *Pixels=SurMem;
   bool ConvertPixels=true;
 #if !defined(SSE_VID_FREEIMAGE2) //3.6.3 always convert pixels
 #ifdef WIN32
@@ -2454,7 +2454,7 @@ bitmap in the desired bit depth, FALSE otherwise.
       EmptyClipboard();
 
       SetClipboardData(CF_BITMAP,SaveBmp);
-
+      TRACE_LOG("Copy screenshot %dx%d to clipboard\n",w,h);
       CloseClipboard();
     }
 #endif
@@ -2575,7 +2575,7 @@ bitmap in the desired bit depth, FALSE otherwise.
      }
     else
 #endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D_ONLY)
 
 #ifdef WIN32
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
@@ -2627,7 +2627,6 @@ bitmap in the desired bit depth, FALSE otherwise.
                                           0xff0000,0x00ff00,0x0000ff,true);
 #endif
       }
-      //TRACE_LOG("ImageFree save %s format %d convert%d\n",ShotFile.Text,ScreenShotFormat,ConvertPixels);
       TRACE_LOG("Save screenshot %s %dx%d opts %d FreeImage\n",ShotFile.Text,w,h,ScreenShotFormatOpts);
       FreeImage_Save((FREE_IMAGE_FORMAT)ScreenShotFormat,FIBmp,ShotFile,ScreenShotFormatOpts);
       FreeImage_Free(FIBmp);
@@ -2867,9 +2866,6 @@ int SteemDisplay::STYPixels() {
     TODO: filters (but looks complicated in WinUAE for so so results?)
  */
 
-
-
-
 #pragma warning( disable : 4701) //OldCur, 390
 
 bool SteemDisplay::D3DBlit() {
@@ -2904,8 +2900,11 @@ bool SteemDisplay::D3DBlit() {
 #if defined(SSE_VID_D3D_CRISP_391) 
    // TRACE_LOG("%d %d\n",screen_res,draw_win_mode[screen_res]);
     //TRACE_LOG("src %d %d %d %d dst %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,SurfaceWidth,SurfaceHeight,0,0);
-    if(FullScreen && OPTION_D3D_CRISP && !SSE_INTERPOLATE
-      && (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE))
+    bool use_scr_rect=(FullScreen && OPTION_D3D_CRISP && !SSE_INTERPOLATE
+      && (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE));
+    //if(FullScreen && OPTION_D3D_CRISP && !SSE_INTERPOLATE
+      //&& (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE))
+    if(use_scr_rect)
       d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
     else
       d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
@@ -2927,6 +2926,16 @@ bool SteemDisplay::D3DBlit() {
     else
 #endif
       d3derr=pD3DDevice->Present(NULL,NULL,NULL,NULL);
+
+#if defined(SSE_BOILER_VIDEO_CONTROL)
+  if(VIDEO_CONTROL_MASK & VIDEO_CONTROL_BLIT)
+  {
+    TRACE_LOG("src %d %d %d %d dst %d %d %d %d\n",
+      draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,
+      dest.left,dest.top,dest.right,dest.bottom);
+  }
+#endif
+
   }
 
 #if defined(SSE_VID_D3D_382)
@@ -2935,6 +2944,11 @@ bool SteemDisplay::D3DBlit() {
     TRACE("BLIT ERROR\n");
     TRACE_LOG("Blit error %d\n",d3derr);
     REPORT_D3D_ERR("Blit",d3derr);
+#if defined(SSE_VID_D3D_391C)
+    pD3DDevice=NULL;
+    pD3DTexture=NULL;
+    pD3DSprite=NULL;
+#endif
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
     M68000.ProcessingState=TM68000::BLIT_ERROR;
 #if defined(SSE_VID_D3D_390B)
@@ -2966,19 +2980,13 @@ void SteemDisplay::Cls() {
 
 HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat) {
   HRESULT d3derr;
-  //ASSERT(Disp.pD3D);
   d3derr=Disp.pD3D->CheckDeviceType(D3DADAPTER_DEFAULT,DeviceType,DisplayFormat,DisplayFormat,false);
-  TRACE_LOG("CheckDeviceType %d format %d err %d\n",DeviceType,DisplayFormat,d3derr);
   return d3derr;
 }
 
 
 HRESULT SteemDisplay::D3DCreateSurfaces() {
-/*  The function is long but this is necessary, we can't take hardware
-    capabilities for granted, many PC with motherboard video cards would
-    fail, for those we use software rendering.
-    Too bad all this burden is on our large programmers' shoulders.
-*/
+
   HRESULT d3derr=E_FAIL;
 
 #if defined(SSE_VID_D3D_390) && !defined(BCC_BUILD)
@@ -2989,7 +2997,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     return d3derr;
 #endif
   D3DDestroySurfaces();
-
+#if !defined(SSE_VID_D3D_CHECK_HARDWARE)
   UINT Adapter=D3DADAPTER_DEFAULT;
 
   // Get the current desktop display info
@@ -3044,6 +3052,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   if (DrawToVidMem==0) 
     vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
 #endif
+#endif//#if !defined(SSE_VID_D3D_CHECK_HARDWARE)
 
   D3DPRESENT_PARAMETERS d3dpp; 
   ZeroMemory(&d3dpp, sizeof(d3dpp));
@@ -3073,7 +3082,11 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   {
 #endif
     D3DDISPLAYMODE Mode; 
+#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+    pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,DisplayFormat,D3DMode,&Mode);
+#else
     pD3D->EnumAdapterModes(Adapter,DisplayFormat,D3DMode,&Mode);
+#endif
     TRACE_LOG("D3D mode %d %dx%d %dhz format %d\n",D3DMode,Mode.Width,Mode.Height,Mode.RefreshRate,Mode.Format);
     d3dpp.BackBufferFormat=Mode.Format;
     d3dpp.FullScreen_RefreshRateInHz=Mode.RefreshRate;
@@ -3138,9 +3151,8 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   }
 #endif
   d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,DeviceType,StemWin,vtx_proc,&d3dpp,&pD3DDevice);
-  TRACE_LOG("D3D %s CreateDevice %dx%d %dhz vertex %X buffers %d flags %X err %d\n",
-    (FullScreen?"fullscreen":"window"),Width,Height,d3dpp.FullScreen_RefreshRateInHz,vtx_proc,
-    d3dpp.BackBufferCount,d3dpp.Flags,d3derr);
+  TRACE_LOG("D3D %s CreateDevice %dx%d buffers %d flags %X err %d\n",
+    (FullScreen?"fullscreen":"window"),d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferCount,d3dpp.Flags,d3derr);
 
   //TRACE2("%s %dx%d %dbit %dhz %d buffers Vtx $%X Flags $%X\n",
   //  (FullScreen?"FS":"Win"),Width,Height,bitsperpixel,d3dpp.FullScreen_RefreshRateInHz,
@@ -3185,9 +3197,9 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     return d3derr;
 #endif
   }
-
+#if !defined(SSE_VID_D3D_CHECK_HARDWARE)
   BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
-
+#endif
 #ifdef SSE_VID_D3D_WINDOW
   if(FullScreen)
 #endif
@@ -3214,6 +3226,23 @@ D3DCreateSurfacesEnd:
 
 VOID SteemDisplay::D3DDestroySurfaces() {
   TRACE_LOG("D3D destroy surfaces S %x T %x D %x\n",pD3DSprite,pD3DTexture,pD3DDevice);
+#if defined(SSE_VID_D3D_391D)
+  if(pD3D && pD3DDevice)
+  {
+    if(pD3DSprite)
+    {
+      pD3DSprite->Release();
+      pD3DSprite=NULL;
+    }
+    if (pD3DTexture)
+    {
+      pD3DTexture->Release();
+      pD3DTexture=NULL;
+    }
+    pD3DDevice->Release();
+    pD3DDevice = NULL;
+  }
+#else
   if(pD3DSprite)
   {
     pD3DSprite->Release();
@@ -3224,19 +3253,20 @@ VOID SteemDisplay::D3DDestroySurfaces() {
     pD3DTexture->Release();
     pD3DTexture=NULL;
   }
-
   if (pD3DDevice)
   {
     pD3DDevice->Release();
     pD3DDevice = NULL;
   }
+#endif
 }
 
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_INIT
 
 HRESULT SteemDisplay::D3DInit()
 {
   SetNotifyInitText("DirectD3D");
-  //ASSERT(!pD3D);
   if(pD3D)
     pD3D->Release();
   // Create the D3D object - computer needs DirectX9
@@ -3245,20 +3275,81 @@ HRESULT SteemDisplay::D3DInit()
     TRACE_LOG("D3D9 Init Fail!\n");
     return E_FAIL; 
   }
+
+#if defined(SSE_VID_D3D_CHECK_HARDWARE) // do it once, keeping result
+  UINT Adapter=D3DADAPTER_DEFAULT;
+  // Get the current desktop display info
+  D3DDISPLAYMODE d3ddm;
+  HRESULT d3derr=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm);
+  HDC hdc = GetDC(StemWin);
+  WORD bitsperpixel= GetDeviceCaps(hdc, BITSPIXEL); // another D3D shortcoming
+  ReleaseDC(StemWin, hdc);
+  TRACE_LOG("Screen %dx%d %dhz format %d %dbit err %d\n",d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
+  // Probe capacities of video card, starting with desktop mode, HW
+  // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization
+  DisplayFormat=d3ddm.Format;
+  DeviceType=D3DDEVTYPE_HAL;
+  d3derr=check_device_type(DeviceType,DisplayFormat);
+  if(d3derr) // could be "alpha" in desktop format?
+  {
+    REPORT_D3D_ERR("check_device_type1",d3derr);
+    DisplayFormat=D3DFMT_X8R8G8B8; // try X8R8G8B8 format
+    d3derr=check_device_type(DeviceType,DisplayFormat);
+    if(d3derr) // no HW abilities?
+    {
+      REPORT_D3D_ERR("check_device_type2",d3derr);
+      D3DDEVTYPE DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
+      d3derr=check_device_type(DeviceType,DisplayFormat);
+      TRACE_LOG("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
+    }
+  }
+  ASSERT(!d3derr);
+  D3DCAPS9 caps;
+  d3derr=pD3D->GetDeviceCaps(Adapter,DeviceType,&caps);
+  TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
+  if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
+    TRACE_LOG("T&L\n");
+    vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
+      TRACE_LOG("Pure device\n");
+      vtx_proc |= D3DCREATE_PUREDEVICE;
+    }
+  } else {
+    TRACE_LOG("Software vertex\n");
+    vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+  }
+#if defined(SSE_VID_D3D_ONLY) // not sure it makes much sense but...
+  if (DrawToVidMem==0) 
+    vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
+#endif
+  TRACE_LOG("vtx_proc = $%X\n",vtx_proc);
+  BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
+#endif
   TRACE_LOG("D3D9 Init OK\n");
   return S_OK;
 }
 
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
+
 
 HRESULT SteemDisplay::D3DLock() {
   HRESULT d3derr=E_FAIL;
+#if defined(SSE_VID_D3D_391C)
+  if(pD3DDevice&&pD3DTexture)
+#else
   if(pD3DTexture)
+#endif
   {
     D3DLOCKED_RECT LockedRect;
     d3derr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
 #if defined(SSE_VID_D3D_382)
     if(d3derr)
+    {
       REPORT_D3D_ERR("LockRect",d3derr);
+      ASSERT(!draw_mem);
+      draw_mem=NULL;
+    }
     else
     {
 #endif
@@ -3303,7 +3394,11 @@ VOID SteemDisplay::D3DRelease()
 
 void SteemDisplay::D3DUnlock() {
   HRESULT d3derr=E_FAIL;
+#if defined(SSE_VID_D3D_391C)
+  if(pD3DDevice&&pD3DTexture)
+#else
   if(pD3DTexture)
+#endif
     d3derr=pD3DTexture->UnlockRect(0);
   return;
 }
@@ -3315,7 +3410,11 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   HRESULT hr=E_FAIL;
 #if defined(SSE_VID_D3D_373)
   //ASSERT(pD3D);
+#if defined(SSE_VID_D3D_391C)
+  if(!pD3D||!pD3DDevice)
+#else
   if(!pD3D)
+#endif
     return hr;
 #endif
 

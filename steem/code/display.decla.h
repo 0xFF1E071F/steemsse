@@ -126,6 +126,12 @@ private:
   int STYPixels();
 #endif
 
+#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+  D3DFORMAT DisplayFormat;
+  D3DDEVTYPE DeviceType;
+  DWORD vtx_proc;
+#endif
+
 #if defined(SSE_VID_D3D)
 public:
   HRESULT D3DInit(); 
