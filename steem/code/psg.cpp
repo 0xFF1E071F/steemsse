@@ -570,13 +570,33 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     eg Ace 2 on BIG demo
 */
 
+#if defined(SSE_SOUND_RECORD_391B)
+/*  Recording was broken with option 'Sampled YM-2149' because source_p
+    was modified then used again.
+*/
+  int source=*source_p;
+#endif
+
   if(OPTION_SAMPLED_YM
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     && YM2149.p_fixed_vol_3voices
 #endif
     )
   {
+#if defined(SSE_SOUND_RECORD_391B)
+    BYTE index[3],interpolate[3];
+    for(int abc=0;abc<3;abc++)
+    {
+      index[abc]=( ((source)>>1))&0xF; // 4bit volume
 
+      interpolate[abc]=
+        ( ((source)&BIT_6) && index[abc]>0 && !((source)&1)) ? 1 : 0;
+
+      source>>=8;
+      ASSERT( interpolate[abc]<=1 );
+      ASSERT( index[abc]<=15 );
+    }
+#else
     BYTE index[3],interpolate[3];
     for(int abc=0;abc<3;abc++)
     {
@@ -589,6 +609,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
       ASSERT( interpolate[abc]<=1 );
       ASSERT( index[abc]<=15 );
     }
+#endif
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
     int vol=YM2149.p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]];
 #else
@@ -609,19 +630,32 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #endif
       vol= (int) sqrt( (float) vol * (float) vol2); 
     }
+#if defined(SSE_SOUND_RECORD_391B)
+    source=vol;
+#else
     *source_p=vol;
+#endif
   }//OPTION_SAMPLED_YM
 
 
 #endif//mixing
 
   // Dispatches to the correct function  
+#if defined(SSE_SOUND_RECORD_391B)
+  if(Alter_V==CALC_V_CHIP)                    
+    CalcVChip(v,dv,&source);                 
+  else if(Alter_V==CALC_V_CHIP_25KHZ)         
+    CalcVChip25Khz(v,dv,&source);            
+  else if(Alter_V==CALC_V_EMU)                
+    CalcVEmu(v,&source);                     
+#else
   if(Alter_V==CALC_V_CHIP)                    
     CalcVChip(v,dv,source_p);                 
   else if(Alter_V==CALC_V_CHIP_25KHZ)         
     CalcVChip25Khz(v,dv,source_p);            
   else if(Alter_V==CALC_V_EMU)                
     CalcVEmu(v,source_p);                     
+#endif
 }
 
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
@@ -1087,7 +1121,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
     val=v;
-
     val+= (**lp_dma_sound_channel);    
 #if defined(SSE_SOUND_DMA_391)
       if(OPTION_MICROWIRE)
@@ -1126,6 +1159,10 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 
     if(sound_num_channels==2){ // RIGHT CHANNEL
+
+#if defined(SSE_SOUND_RECORD_391)
+      val=v;//argh!
+#endif
       val+= (*(*lp_dma_sound_channel+1)); 
 #if defined(SSE_SOUND_DMA_391)
       if(OPTION_MICROWIRE)
@@ -1165,6 +1202,7 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
     }//right
     (*source_p)++;// don't zero! (or mute when recording)
+    
 
     SINE_ONLY( t++ );
     if(*lp_dma_sound_channel<*lp_max_dma_sound_channel) 

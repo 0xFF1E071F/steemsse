@@ -1793,6 +1793,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_JOYSTICK_391
 #define SSE_SOUND_DMA_391
 #define SSE_SOUND_DMA_391B // working but slow
+#define SSE_SOUND_RECORD_391 // restore val!
+#define SSE_SOUND_RECORD_391B // don't change source_p!
 #define SSE_VAR_EXC_391
 #define SSE_VAR_RESIZE_391
 #define SSE_VID_D3D_391
