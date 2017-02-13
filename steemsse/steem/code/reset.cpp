@@ -265,13 +265,13 @@ void reset_peripherals(bool Cold)
     if (em_planes==1){
       screen_res=2;
 #if defined(SSE_GLUE)
-    shifter_freq=72;
-    shifter_freq_idx=2;
+      shifter_freq=72;
+      shifter_freq_idx=2;
 #endif
     }else{
       screen_res=0;
 #if defined(SSE_GLUE)
-      screen_res=Shifter.m_ShiftMode;
+      screen_res=Shifter.m_ShiftMode;//?
       shifter_freq=50;
       shifter_freq_idx=0;
 #endif
@@ -279,6 +279,9 @@ void reset_peripherals(bool Cold)
 #if !defined(SSE_GLUE)
     shifter_freq=50;
     shifter_freq_idx=0;
+#endif
+#if defined(SSE_GLUE_391)
+    Glue.m_ShiftMode=screen_res; // extended monitor
 #endif
 #ifdef SSE_TOS_GEMDOS_EM_381B
     Tos.HackMemoryForExtendedMonitor();

@@ -1790,6 +1790,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DISK_PASTI_AUTO_SWITCH_391
 #define SSE_DISK_SCP_391
 #define SSE_DONGLE_PORT_391
+#define SSE_GLUE_391
+#undef SSE_IKBD_6301_ROM_KEYTABLE //test
 #define SSE_JOYSTICK_391
 #define SSE_SOUND_DMA_391
 #define SSE_SOUND_DMA_391B // working but slow
