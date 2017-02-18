@@ -1007,6 +1007,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #if defined(SSE_DRIVE_SOUND)
     TSF314 SF314Copy=SF314[0];
+#if defined(SSE_DRIVE_SOUND_391)
+    TSF314 SF314Copy1=SF314[1];
+#endif
 #endif
 
 #if SSE_VERSION>=370
@@ -1032,7 +1035,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     }
 #endif
 
-#if defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
+#if defined(SSE_DRIVE_SOUND_391)
+    SF314[0].Sound_Volume=SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
+    for(int i=0;i<TSF314::NSOUNDS;i++)
+    {
+      SF314[0].Sound_Buffer[i]=SF314Copy.Sound_Buffer[i];
+      SF314[1].Sound_Buffer[i]=SF314Copy1.Sound_Buffer[i];//he he, no wonder it crashed
+    }   
+#elif defined(SSE_DRIVE_SOUND) // avoid crash, restore volume
     SF314[0].Sound_Volume=SF314[1].Sound_Volume=SF314Copy.Sound_Volume;
     for(int i=0;i<TSF314::NSOUNDS;i++)
       SF314[0].Sound_Buffer[i]=SF314[1].Sound_Buffer[i]

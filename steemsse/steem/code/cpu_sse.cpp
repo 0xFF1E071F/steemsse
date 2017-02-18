@@ -101,8 +101,9 @@ bool (*m68k_jump_condition_test[16])();
 // big functions not much used, not inlined
 #define m68k_READ_B_FROM_ADDR m68kReadBFromAddr();
 #define m68k_READ_W_FROM_ADDR m68kReadWFromAddr();
+#if !defined(SSE_CPU_SPLIT_RL9)
 #define m68k_READ_L_FROM_ADDR m68kReadLFromAddr();
-
+#endif
 //---------------------------------------------------------------------------
 void m68k_interrupt(MEM_ADDRESS ad) {
   // we don't count cycles here, they are variable (trace, irq...)
@@ -1032,16 +1033,6 @@ bool m68k_condition_test_le(){return ((sr&SR_Z) || ( ((sr&(SR_N+SR_V))==SR_N) ||
     (d8,An,Xn)    | 12(2/1) 10(2/0) |          np | n    np    nr | np nw	      
     (xxx).W       | 12(2/1)  8(2/0) |          np |      np    nr | np nw	      
     (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np nw	      
-  .L :                              |             |               |
-    Dn            | 16(3/0)  0(0/0) |       np np |               | np       nn	
-    (An)          | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    (An)+         | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
-    -(An)         | 20(3/2) 10(2/0) |       np np | n       nR nr | np nw nW    
-    (d16,An)      | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (d8,An,Xn)    | 20(3/2) 14(3/0) |       np np | n    np nR nr | np nw nW    
-    (xxx).W       | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
-    (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW    
-
 -------------------------------------------------------------------------------
  ORI, ANDI, EORI  |    Exec Time    |               Data Bus Usage
   to CCR, to SR   |      INSTR      | 1st Operand |          INSTR
@@ -1127,9 +1118,20 @@ void                              m68k_ori_w(){
   }
 }
 
+/*
+  .L :                              |             |               |
+    Dn            | 16(3/0)  0(0/0) |       np np |               | np       nn	
+    (An)          | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
+    (An)+         | 20(3/2)  8(2/0) |       np np |         nR nr | np nw nW    
+    -(An)         | 20(3/2) 10(2/0) |       np np | n       nR nr | np nw nW    
+    (d16,An)      | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
+    (d8,An,Xn)    | 20(3/2) 14(3/0) |       np np | n    np nR nr | np nw nW    
+    (xxx).W       | 20(3/2) 12(3/0) |       np np |      np nR nr | np nw nW    
+    (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW    
+*/
 
 void                              m68k_ori_l(){
-  CPU_ABUS_ACCESS_READ_FETCH_L; // np
+  CPU_ABUS_ACCESS_READ_FETCH_L; // np np
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A; // EA
   PREFETCH_IRC; // np
@@ -1765,6 +1767,79 @@ void                              m68k_eori_l(){
   SR_CHECK_Z_AND_N_L;
 }
 
+#if defined(SSE_CPU_SIMPLIFY_READ_DEST_CMPI)
+
+void                              m68k_cmpi_b(){
+/*
+-------------------------------------------------------------------------------
+                  |    Exec Time    |               Data Bus Usage
+       CMPI       |  INSTR     EA   | 1st Operand |  2nd OP (ea)  |   INSTR
+------------------+-----------------+-------------+-------------+--------------
+#<data>,<ea> :    |                 |             |               |
+  .B or .W :      |                 |             |               |
+    Dn            |  8(2/0)  0(0/0) |          np |               | np          
+    (An)          |  8(2/0)  4(1/0) |          np |            nr | np          
+    (An)+         |  8(2/0)  4(1/0) |          np |            nr | np          
+    -(An)         |  8(2/0)  6(1/0) |          np | n          nr | np          
+    (d16,An)      |  8(2/0)  8(2/0) |          np |      np    nr | np          
+    (d8,An,Xn)    |  8(2/0) 10(2/0) |          np | n    np    nr | np          
+    (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
+    (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np          
+*/
+  CPU_ABUS_ACCESS_READ_FETCH; // np
+  m68k_GET_IMMEDIATE_B;
+  m68k_GET_DEST_B_NOT_A;
+  m68k_old_dest=m68k_DEST_B;
+  //m68k_old_dest=m68k_read_dest_b(); //EA
+  PREFETCH_IRC; // np
+  compare_buffer=m68k_old_dest;
+  m68k_dest=&compare_buffer;
+  m68k_DEST_B-=m68k_src_b;
+  SR_SUB_B(0);
+}
+
+
+void                              m68k_cmpi_w(){
+  CPU_ABUS_ACCESS_READ_FETCH; //np
+  m68k_GET_IMMEDIATE_W; 
+  m68k_GET_DEST_W_NOT_A;
+  m68k_old_dest=m68k_DEST_W;
+  //m68k_old_dest=m68k_read_dest_w(); //EA
+  PREFETCH_IRC; //np
+  compare_buffer=m68k_old_dest;
+  m68k_dest=&compare_buffer;
+  m68k_DEST_W-=m68k_src_w;
+  SR_SUB_W(0);
+}
+
+
+void                              m68k_cmpi_l(){
+/*
+  .L :            |                 |             |               |
+    Dn            | 14(3/0)  0(0/0) |       np np |               | np       n  
+    (An)          | 12(3/0)  8(2/0) |       np np |         nR nr | np          
+    (An)+         | 12(3/0)  8(2/0) |       np np |         nR nr | np          
+    -(An)         | 12(3/0) 10(2/0) |       np np | n       nR nr | np          
+    (d16,An)      | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
+    (d8,An,Xn)    | 12(3/0) 14(3/0) |       np np | n    np nR nr | np          
+    (xxx).W       | 12(3/0) 12(3/0) |       np np |      np nR nr | np          
+    (xxx).L       | 12(3/0) 16(4/0) |       np np |   np np nR nr | np       
+*/
+  CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+  m68k_GET_IMMEDIATE_L;
+  m68k_GET_DEST_L_NOT_A;
+  m68k_old_dest=m68k_DEST_L;
+  //m68k_old_dest=m68k_read_dest_l(); //EA
+  PREFETCH_IRC; // np
+  if(DEST_IS_REGISTER)
+    INSTRUCTION_TIME(2); // n
+  compare_buffer=m68k_old_dest;
+  m68k_dest=&compare_buffer;
+  m68k_DEST_L-=m68k_src_l;
+  SR_SUB_L(0);
+}
+
+#else
 
 void                              m68k_cmpi_b(){
 /*
@@ -1830,6 +1905,7 @@ void                              m68k_cmpi_l(){
   SR_SUB_L(0);
 }
 
+#endif//#if defined(SSE_CPU_SIMPLIFY_READ_DEST_CMPI)
 
 void                              m68k_movep_w_to_dN_or_btst(){
   if((ir&BITS_543)==BITS_543_001){ //MOVEP.W 
@@ -2713,6 +2789,133 @@ void                             m68k_not_l(){
   SR_CHECK_Z_AND_N_L;
 }
 
+#if defined(SSE_CPU_SIMPLIFY_READ_DEST_TST)
+
+/*
+-------------------------------------------------------------------------------
+	                |     Exec Time   |               Data Bus Usage             
+       TST        |  INSTR     EA   |  1st OP (ea)  |          INSTR           
+------------------+-----------------+---------------+--------------------------
+*/
+
+void                              m68k_tst_b(){
+/*
+  .B or .W :      |                 |               | 
+    Dn            |  4(1/0)  0(0/0) |               |               np          
+    (An)          |  4(1/0)  4(1/0) |            nr |               np          
+    (An)+         |  4(1/0)  4(1/0) |            nr |               np          
+    -(An)         |  4(1/0)  6(1/0) | n          nr |               np          
+    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np          
+    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np          
+    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np          
+    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np          
+*/
+  //MEM_ADDRESS save_pc=pc;
+  
+ // BYTE x=m68k_read_dest_b(); // EA
+  //MEM_ADDRESS save_abus=abus;
+  //pc=save_pc;
+  //m68k_GET_DEST_B_NOT_A;
+  //BYTE y=m68k_DEST_B;
+  BYTE x = 0;
+  switch(ir&BITS_543) {
+    //case BITS_543_000:
+    //case BITS_543_001:
+    case BITS_543_010:
+    //case BITS_543_011:
+      x=m68k_read_dest_b();
+      break;
+    default:
+      m68k_GET_DEST_B_NOT_A;
+      x=m68k_DEST_B;
+      break;
+  }
+
+  /*if(x!=y) {
+    TRACE("abus %X peek %X\n",abus,m68k_peek(abus));
+    TRACE("save_abus %X peek %X\n",save_abus,m68k_peek(save_abus));
+  }*/
+
+  //ASSERT(x==y);
+
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
+#if defined(SSE_VC_INTRINSICS_390E)
+  if(!x)
+    BITSET(sr,SR_Z_BIT);
+  if(x&MSB_B)
+    BITSET(sr,SR_N_BIT);
+#else
+  if(!x)SR_SET(SR_Z);
+  if(x&MSB_B)SR_SET(SR_N);
+#endif
+  PREFETCH_IRC; // np
+}
+
+
+void                             m68k_tst_w(){
+/*
+  .B or .W :      |                 |               | 
+    Dn            |  4(1/0)  0(0/0) |               |               np          
+    (An)          |  4(1/0)  4(1/0) |            nr |               np          
+    (An)+         |  4(1/0)  4(1/0) |            nr |               np          
+    -(An)         |  4(1/0)  6(1/0) | n          nr |               np          
+    (d16,An)      |  4(1/0)  8(2/0) |      np    nr |               np          
+    (d8,An,Xn)    |  4(1/0) 10(2/0) | n    np    nr |               np          
+    (xxx).W       |  4(1/0)  8(2/0) |      np    nr |               np          
+    (xxx).L       |  4(1/0) 12(3/0) |   np np    nr |               np          
+*/
+  //WORD x=m68k_read_dest_w(); // EA
+  m68k_GET_DEST_W_NOT_A;
+  WORD x=m68k_DEST_W;
+
+  //WORD y=m68k_read_dest_w(); // EA
+  //ASSERT(x==y); //if fetching...
+
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
+#if defined(SSE_VC_INTRINSICS_390E)
+  if(!x)
+    BITSET(sr,SR_Z_BIT);
+  if(x&MSB_W)
+    BITSET(sr,SR_N_BIT);
+#else
+  if(!x)SR_SET(SR_Z);
+  if(x&MSB_W)SR_SET(SR_N);
+#endif
+  PREFETCH_IRC; // np
+}
+
+
+void                             m68k_tst_l(){
+/*
+  .L              |                 |               | 
+    Dn            |  4(1/0)  0(0/0) |               |               np          
+    (An)          |  4(1/0)  8(2/0) |         nR nr |               np          
+    (An)+         |  4(1/0)  8(2/0) |         nR nr |               np          
+    -(An)         |  4(1/0) 10(2/0) | n       nR nr |               np          
+    (d16,An)      |  4(1/0) 12(3/0) |      np nR nr |               np          
+    (d8,An,Xn)    |  4(1/0) 14(3/0) | n    np nR nr |               np          
+    (xxx).W       |  4(1/0) 12(3/0) |      np nR nr |               np          
+    (xxx).L       |  4(1/0) 16(4/0) |   np np nR nr |               np          
+*/
+  //LONG x=m68k_read_dest_l(); // EA
+  m68k_GET_DEST_L_NOT_A;
+  LONG x=m68k_DEST_L;
+  SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
+#if defined(SSE_VC_INTRINSICS_390E)
+  if(!x)
+    BITSET(sr,SR_Z_BIT);
+  if(x&MSB_L)
+    BITSET(sr,SR_N_BIT);
+#else
+  if(!x)SR_SET(SR_Z);
+  if(x&MSB_L)SR_SET(SR_N);
+#endif
+  PREFETCH_IRC; // np
+}
+
+
+#else
+
 /*
 -------------------------------------------------------------------------------
 	                |     Exec Time   |               Data Bus Usage             
@@ -2800,6 +3003,7 @@ void                             m68k_tst_l(){
   PREFETCH_IRC; // np
 }
 
+#endif//#if defined(SSE_CPU_SIMPLIFY_READ_DEST_TST)
 
 void                              m68k_tas(){
   if((ir&B6_111111)==B6_111100){
@@ -4052,7 +4256,7 @@ void                              m68k_movem_l_to_regs(){
 #else
     if (m68k_src_w & mask){
 #endif  
-      CPU_ABUS_ACCESS_READ_L; //(nr nR)*
+      CPU_ABUS_ACCESS_READ_L; //(nr nR)* //SS isn't nR nr more logical?
       r[n]=m68k_lpeek(abus);
       abus+=4;
     }
@@ -5029,9 +5233,20 @@ void                              m68k_unlk(){
 ------------------+-----------------+------------------------------------------
 An :              | 12(3/0)         |                         nU nu np          
 */
+#if defined(SSE_CPU_SPLIT_RL8)
+  abus=r[15]=areg[PARAM_M];
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?  
+#else
   CPU_ABUS_ACCESS_READ_POP_L; // nU nu
   r[15]=areg[PARAM_M];
   abus=r[15];m68k_READ_L_FROM_ADDR;
+#endif
   PREFETCH_IRC; //np
   r[15]+=4;    //This is contrary to the Programmer's reference manual which says
   areg[PARAM_M]=m68k_src_l; //it does move (a7),An then adds 4 to a7, but it fixed Wrath of Demon

@@ -672,7 +672,7 @@ void GUIRefreshStatusBar() {
         strcat(status_bar," ##");
 #endif
 #if defined(SSE_GUI_STATUS_BAR_VSYNC)
-      if(SSE_WIN_VSYNC)
+      if(OPTION_WIN_VSYNC)
         strcat(status_bar," V"); // V for VSync!
 #endif
     }

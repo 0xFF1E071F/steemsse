@@ -577,7 +577,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
       osd_show_disk_light=b->checked;
 #if defined(SSE_OSD_DRIVE_INFO)
     }else if (b->id==12001){
-      OSD_DRIVE_INFO=b->checked;
+      OPTION_DRIVE_INFO=b->checked;
 #endif
     }else if (b->id==12020){
       osd_show_scrollers=b->checked;
@@ -657,7 +657,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
 #endif
     }
 #endif
-#if defined(SSE_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
     else if(b->id==4008)
       PSG_FILTER_FIX=b->checked;
 #endif

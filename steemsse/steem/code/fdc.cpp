@@ -1389,7 +1389,7 @@ void agenda_fdc_finished(int)
   fdc_str&=BYTE(~FDC_STR_BUSY); // Turn off busy bit
   fdc_str&=BYTE(~FDC_STR_T1_TRACK_0); // This is lost data bit for non-type 1 commands
 #if defined(SSE_DISK_GHOST)
-  if(!(SSE_GHOST_DISK && WD1772.Lines.CommandWasIntercepted)) // spurious Lost Data
+  if(!(OPTION_GHOST_DISK && WD1772.Lines.CommandWasIntercepted)) // spurious Lost Data
 #endif
   if (floppy_type1_command_active){
     if (floppy_head_track[floppy_current_drive()]==0) fdc_str|=FDC_STR_T1_TRACK_0;
@@ -1397,7 +1397,7 @@ void agenda_fdc_finished(int)
   }
 
 #if defined(SSE_DISK_GHOST)
-  if((SSE_GHOST_DISK 
+  if((OPTION_GHOST_DISK 
     && WD1772.Lines.CommandWasIntercepted))
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
 #endif

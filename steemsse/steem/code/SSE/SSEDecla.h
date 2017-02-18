@@ -287,7 +287,7 @@ int ChangeBorderSize(int size); // gui.cpp
 #endif
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#define SCANLINES_INTERPOLATED (SSE_INTERPOLATE&&!mixed_output&&screen_res<2)
+#define SCANLINES_INTERPOLATED (OPTION_INTERPOLATED_SCANLINES&&!mixed_output&&screen_res<2)
 #else
 #define SCANLINES_INTERPOLATED (false) //unix
 #endif

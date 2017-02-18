@@ -730,6 +730,7 @@ typedef struct{
 
 void LoadState(GoodConfigStoreFile *pCSF)
 {
+  ASSERT(Disp.ScreenShotExt.Text!=NULL);
   LoadAllDialogData(true,INIFile,NULL,pCSF);
   log_to(LOGSECTION_INIT,"STARTUP: Finished LoadAllDialogData");
 

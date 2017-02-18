@@ -148,6 +148,7 @@ void TImageHFE::Init() {
 
 
 bool TImageHFE::LoadTrack(BYTE side,BYTE track) {
+  ASSERT(Id==0||Id==1);
   bool ok=false;
   //current_side=side;
   if(side<NUM_SIDES && track<NUM_TRACKS && ImageData)  

@@ -369,11 +369,9 @@ HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK) //SS what is this horror?
 {
 
 #if defined(SSE_VAR_EXC_391)
+  ASSERT(DSObj);
 
-  try {
-    if (SoundBuf && sound_write_primary==0){
-      SoundBuf->Stop();SoundBuf->Release();
-    }
+  try { //was circling around a bug
 
 #if defined(SSE_DRIVE_SOUND)
     SF314[0].Sound_ReleaseBuffers();
@@ -382,6 +380,18 @@ HRESULT DSReleaseAllBuffers(HRESULT Ret=DS_OK) //SS what is this horror?
 #endif
 #endif
 
+
+    if (SoundBuf && sound_write_primary==0){
+      SoundBuf->Stop();SoundBuf->Release();
+    }
+/*
+#if defined(SSE_DRIVE_SOUND)
+    SF314[0].Sound_ReleaseBuffers();
+#if defined(SSE_DRIVE_SOUND_391)
+    SF314[1].Sound_ReleaseBuffers();
+#endif
+#endif
+*/
   }
   catch(...)   {
   }

@@ -425,7 +425,7 @@ Not emulated
 */
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX || 
+    && (!OPTION_PASTI_JUST_STX || 
     SF314[drive].ImageType.Extension==EXT_STX
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
@@ -756,7 +756,7 @@ is no such effect because they are read only on the ST.
   if(hPasti && pasti_active
     
 #if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!PASTI_JUST_STX 
+    && (!OPTION_PASTI_JUST_STX 
     || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
     ||addr!=0xff8605 || (MCR&CR_HDC_OR_FDC))
 #endif        
@@ -784,7 +784,7 @@ is no such effect because they are read only on the ST.
       //                            HEXSl(io_src_b,2)+" ("+io_src_b+") pc=$"+HEXSl(pc,6)+" cycles="+pioi.cycles);
 
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
-      if(SSE_GHOST_DISK && WD1772.Lines.CommandWasIntercepted
+      if(OPTION_GHOST_DISK && WD1772.Lines.CommandWasIntercepted
         && addr==0xff8604 && !(MCR&(BIT_1+BIT_2+BIT_3)) // FDC commands
         )
       {
@@ -822,7 +822,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #if USE_PASTI
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX) //all or nothing?
-    && (!PASTI_JUST_STX || 
+    && (!OPTION_PASTI_JUST_STX || 
     SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&BIT_3) // hard disk handling by pasti
@@ -831,7 +831,7 @@ void TDma::UpdateRegs(bool trace_them) {
 #endif//defined(SSE_DISK_PASTI_ONLY_STX)
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
     // regs should be alright since last update (?)
-    &&!(SSE_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
+    &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
 #endif
     )
   {
@@ -1056,7 +1056,7 @@ void TDma::TransferBytes() {
 #if USE_PASTI    
     if(hPasti&&pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-    &&(!PASTI_JUST_STX || 
+    &&(!OPTION_PASTI_JUST_STX || 
     SF314[DRIVE].ImageType.Extension==EXT_STX)
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti

@@ -388,7 +388,7 @@ void stop_cpu_log()
 void log_os_call(int trap)
 {
 #if defined(SSE_BOILER_TRAP)
-  if (logging_suspended && !USE_TRACE_FILE) return;
+  if (logging_suspended && !OPTION_TRACE_FILE) return;
 #else
   if (logging_suspended) return;
 #endif

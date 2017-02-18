@@ -64,6 +64,7 @@ void TImageSTW::Close() {
 
 bool TImageSTW::Create(char *path) {
   // utility called by Disk manager
+  ASSERT(Id==0);
   bool ok=false;
   Close();
   fCurrentImage=fopen(path,"wb+"); // create new image
@@ -138,6 +139,7 @@ void TImageSTW::Init() {
 
 
 bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
+  ASSERT(Id==0||Id==1);
   bool ok=false;
   if(side<N_SIDES && track<N_TRACKS && ImageData)  
   {

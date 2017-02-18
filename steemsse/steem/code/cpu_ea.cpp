@@ -3,7 +3,9 @@
 
 void m68kReadBFromAddr();
 void m68kReadWFromAddr();
+#if !defined(SSE_CPU_SPLIT_RL9)
 void m68kReadLFromAddr();
+#endif
 
 #define LOGSECTION LOGSECTION_CARTRIDGE
 
@@ -165,9 +167,10 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 
 //read
 
-#if defined(SSE_CPU_391)
+#if defined(SSE_CPU_SIMPLIFY_READ_DEST_)
+#elif defined(SSE_CPU_391)
 
-BYTE m68k_read_dest_b(){
+BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
   BYTE x;
   switch(ir&BITS_543){
   case BITS_543_000:
@@ -239,7 +242,7 @@ BYTE m68k_read_dest_b(){
 }
 
 
-WORD m68k_read_dest_w(){
+WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
   WORD x;
   switch(ir&BITS_543){
   case BITS_543_000:
@@ -307,6 +310,119 @@ WORD m68k_read_dest_w(){
 }
 
 
+#if defined(SSE_CPU_SPLIT_RL1) //we read word by word, a bit fancy...
+
+LONG m68k_read_dest_l(){ //only used by tst.l, cmpi.l
+  LONG x=0;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    x=r[PARAM_M];
+    break;
+  case BITS_543_001:
+    m68k_unrecognised();
+    break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nR
+    dbus=m68k_dpeek(abus);
+    x=dbus<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    dbus=m68k_dpeek(abus);
+    x|=dbus;
+    break;
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nR
+    dbus=m68k_dpeek(abus);
+    x=dbus<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    dbus=m68k_dpeek(abus);
+    x|=dbus;
+    areg[PARAM_M]+=4;
+    break;
+  case BITS_543_100:
+    INSTRUCTION_TIME(2);//n
+    areg[PARAM_M]-=4;
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nR
+    dbus=m68k_dpeek(abus);
+    x=dbus<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    dbus=m68k_dpeek(abus);
+    x|=dbus;
+    break;
+  case BITS_543_101:
+    //  (d16,An)        | 101 | reg |  12(3/0)   |              np nR nr          
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ; //nR
+    dbus=m68k_dpeek(abus);
+    x=dbus<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    dbus=m68k_dpeek(abus);
+    x|=dbus;
+    break;
+  case BITS_543_110:
+//  (d8,An,Xn)      | 110 | reg |  14(3/0)   |         n    np nR nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ; //nR
+    dbus=m68k_dpeek(abus);
+    x=dbus<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    dbus=m68k_dpeek(abus);
+    x|=dbus;
+    break;
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0:
+//  (xxx).W         | 111 | 000 |  12(3/0)   |              np nR nr      
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ; //nR
+      dbus=m68k_dpeek(abus);
+      x=dbus<<16;
+      abus+=2;
+      CPU_ABUS_ACCESS_READ; //nr
+      dbus=m68k_dpeek(abus);
+      x|=dbus;
+      break;
+    case 1:
+//(xxx).L         | 111 | 001 |  16(4/0)   |           np np nR nr           
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ; //nR
+      dbus=m68k_dpeek(abus);
+      x=dbus<<16;
+      abus+=2;
+      CPU_ABUS_ACCESS_READ; //nr
+      dbus=m68k_dpeek(abus);
+      x|=dbus;
+      break;
+    default:
+      m68k_unrecognised();
+      break;
+    }
+    break;
+  }
+  return x;
+}
+
+#else
+
 LONG m68k_read_dest_l(){
   LONG x;
   switch(ir&BITS_543){
@@ -373,6 +489,8 @@ LONG m68k_read_dest_l(){
   }
   return 0;
 }
+
+#endif
 
 
 #else
@@ -724,8 +842,23 @@ void m68k_get_source_010_l(){ // .L (An)
   //  (An)            |          8(2/0) |                           nR nr         
 #if defined(SSE_MMU_ROUNDING_BUS)
   abus=areg[PARAM_M];
+#if defined(SSE_CPU_SPLIT_RL2) 
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  //LONG y=m68k_src_l;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+
+  //LONG x=m68k_lpeek(abus-2) ;
+  //ASSERT(m68k_src_l==x);
+ 
+#else
   CPU_ABUS_ACCESS_READ_L; //nR nr
   m68k_READ_L(abus) 
+#endif
 #else
   CPU_ABUS_ACCESS_READ_L; //nR nr
   m68k_READ_L(areg[PARAM_M]) 
@@ -770,6 +903,17 @@ void m68k_get_source_011_w(){ // .W (An)+
 
 void m68k_get_source_011_l(){ // .L (An)+
   //  (An)+           |          8(2/0) |                           nR nr           
+#if defined(SSE_CPU_SPLIT_RL3) 
+  abus=areg[PARAM_M];
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+  areg[PARAM_M]+=4; // for .L, we assume ++ post read
+#else
 #if defined(SSE_MMU_ROUNDING_BUS)
   abus=areg[PARAM_M];
 #endif
@@ -780,6 +924,7 @@ void m68k_get_source_011_l(){ // .L (An)+
   m68k_READ_L(areg[PARAM_M]) 
 #endif
   areg[PARAM_M]+=4; // for .L, we assume ++ post read
+#endif//#if defined(SSE_CPU_SPLIT_RL3) 
 }
 
 // -(An)
@@ -828,6 +973,18 @@ void m68k_get_source_100_w(){ // .W -(An)
 
 void m68k_get_source_100_l(){ // .L -(An)
   //  -(An)           |         10(2/0) |                   n       nR nr           
+#if defined(SSE_CPU_SPLIT_RL4) 
+  INSTRUCTION_TIME(2);//n
+  areg[PARAM_M]-=4;
+  abus=areg[PARAM_M];
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+#else
   INSTRUCTION_TIME(2);//n
 #if defined(SSE_MMU_ROUNDING_BUS)
   areg[PARAM_M]-=4;
@@ -840,7 +997,7 @@ void m68k_get_source_100_l(){ // .L -(An)
   areg[PARAM_M]-=4;
   m68k_READ_L(areg[PARAM_M])  
 #endif
-  
+#endif//#if defined(SSE_CPU_SPLIT_RL4)   
 }
 
 
@@ -881,6 +1038,19 @@ void m68k_get_source_101_w(){ // .W (d16, An)
 
 void m68k_get_source_101_l(){ // .L (d16, An)
   //  (d16,An)        |         12(3/0) |                        np nR nr           
+#if defined(SSE_CPU_SPLIT_RL5)
+  CPU_ABUS_ACCESS_READ_FETCH;//np
+  register int fw=(signed short)m68k_fetchW();
+  pc+=2;
+  abus=areg[PARAM_M]+fw;
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+#else
   CPU_ABUS_ACCESS_READ_FETCH;//np
   register int fw=(signed short)m68k_fetchW();
   pc+=2;
@@ -892,6 +1062,7 @@ void m68k_get_source_101_l(){ // .L (d16, An)
   CPU_ABUS_ACCESS_READ_L;//nR nr
   m68k_READ_L(areg[PARAM_M]+fw);
 #endif
+#endif//#if defined(SSE_CPU_SPLIT_RL5)
 }
 
 // (d8,An,Xn)
@@ -930,6 +1101,24 @@ void m68k_get_source_110_w(){ // .W (d8,An,Xn)
 
 void m68k_get_source_110_l(){ // .L (d8,An,Xn)
   //  (d8,An,Xn)      |         14(3/0) |                   n    np nR nr           
+#if defined(SSE_CPU_SPLIT_RL6)
+  INSTRUCTION_TIME(2);//n
+  CPU_ABUS_ACCESS_READ_FETCH; //np
+  WORD w=m68k_fetchW();
+  pc+=2; 
+  if(w&BIT_b){  //.l
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(int)r[w>>12];
+  }else{         //.w
+    abus=areg[PARAM_M]+(signed char)LOBYTE(w)+(signed short)r[w>>12];
+  }
+  CPU_ABUS_ACCESS_READ; //nR
+  m68k_READ_W(abus)
+  m68k_src_l=m68k_src_w<<16;
+  abus+=2;
+  CPU_ABUS_ACCESS_READ; //nr
+  m68k_READ_W(abus)
+  m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+#else
   INSTRUCTION_TIME(2);//n
   CPU_ABUS_ACCESS_READ_FETCH; //np
   WORD w=m68k_fetchW();
@@ -941,6 +1130,7 @@ void m68k_get_source_110_l(){ // .L (d8,An,Xn)
   }
   CPU_ABUS_ACCESS_READ_L; //nR nr
   m68k_READ_L_FROM_ADDR
+#endif//#if defined(SSE_CPU_SPLIT_RL6)
 }
 
 // (xxx).W, (xxx).L, (d16, PC), (d8, PC, Xn), #<data>
@@ -1122,6 +1312,86 @@ void m68k_get_source_111_w(){
   }
 }
 
+#if defined(SSE_CPU_SPLIT_RL7)
+
+void m68k_get_source_111_l(){
+
+  switch(ir&0x7){
+  case 0:{ // .L (xxx).W
+    //  (xxx).W         |         12(3/0) |                        np nR nr           
+    TRUE_PC+=2;
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=(signed short)m68k_fetchW();
+    pc+=2; 
+    CPU_ABUS_ACCESS_READ; //nR
+    m68k_READ_W(abus)
+    m68k_src_l=m68k_src_w<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_READ_W(abus)
+    m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+    break;
+  }case 1:{ // .L (xxx).L
+    //  (xxx).L         |         16(4/0) |                     np np nR nr           
+    TRUE_PC+=4;
+    CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+    abus=m68k_fetchL();
+    pc+=4;  
+    CPU_ABUS_ACCESS_READ; //nR
+    m68k_READ_W(abus)
+    m68k_src_l=m68k_src_w<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_READ_W(abus)
+    m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+    break;
+  }case 2:{ // .L (d16, PC)
+    //  (d16,An)        |         12(3/0) |                        np nR nr           
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=PC_RELATIVE_PC+(signed short)m68k_fetchW();
+    pc+=2;
+    PC_RELATIVE_MONITOR(abus);
+    CPU_ABUS_ACCESS_READ; //nR
+    m68k_READ_W(abus)
+    m68k_src_l=m68k_src_w<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_READ_W(abus)
+    m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+    break;
+  }case 3:{ // .L (d8, PC, Xn)
+    //  (d8,An,Xn)      |         14(3/0) |                   n    np nR nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=PC_RELATIVE_PC+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    PC_RELATIVE_MONITOR(abus);
+    pc+=2;
+    CPU_ABUS_ACCESS_READ; //nR
+    m68k_READ_W(abus)
+    m68k_src_l=m68k_src_w<<16;
+    abus+=2;
+    CPU_ABUS_ACCESS_READ; //nr
+    m68k_READ_W(abus)
+    m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?
+    break;       //what do bits 8,9,a  of extra word do?  (not always 0)
+  }case 4:{ // .B #<data>
+    //  #<data>         |          8(2/0) |                     np np                 
+    TRUE_PC+=4;
+    CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+    m68k_src_l=m68k_fetchL();
+    pc+=4;  
+    break;
+  }default:
+    ILLEGAL;
+  }
+}
+
+#else
 
 void m68k_get_source_111_l(){
 
@@ -1217,6 +1487,7 @@ void m68k_get_source_111_l(){
   }
 }
 
+#endif//#if defined(SSE_CPU_SPLIT_RL7)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1240,6 +1511,11 @@ void m68k_get_source_111_l(){
     If it's a read cycle, we use the <EA> rules for PC.
 */
 
+/*  GET DEST implies reading the destination, that's why timing is counted.
+    Steem sets the void pointer m68k_dest, if reading is useful it happens in
+    the instruction... 
+    TODO: systematically use read_dest instead?
+*/
 
 void m68k_get_dest_000_b(){ 
   //  Dn              |          0(0/0) |
@@ -1847,7 +2123,7 @@ void m68kReadWFromAddr() {
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
 
-
+#if !defined(SSE_CPU_SPLIT_RL9)
 void m68kReadLFromAddr() {
   abus&=0xffffff;                                   
 #if defined(SSE_CPU_RESTORE_ABUS)
@@ -1908,5 +2184,6 @@ void m68kReadLFromAddr() {
   else
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
+#endif
 
 #undef LOGSECTION

@@ -104,6 +104,238 @@ EXT int HzIdxToHz[NUM_HZ];
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)//391
 
+
+#if defined(SSE_VID_DD_REORDER_STRUCT)
+
+
+class SteemDisplay
+{
+  //DATA
+public: //temp
+#ifdef WIN32
+  HBITMAP GDIBmp;
+  BYTE *GDIBmpMem;
+  HDC GDIBmpDC;
+#if defined(SSE_VID_SAVE_NEO)
+  neochrome_file *pNeoFile;
+#endif
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  HINSTANCE hFreeImage;
+#endif
+#if defined(SSE_VID_D3D)
+  LPDIRECT3D9 pD3D;
+  LPDIRECT3DDEVICE9  pD3DDevice;
+  IDirect3DTexture9* pD3DTexture;
+  ID3DXSprite* pD3DSprite;
+#endif//#if defined(SSE_VID_D3D)
+#if !defined(SSE_VID_D3D_ONLY)
+  IDirectDrawClipper *DDClipper;
+#if defined(SSE_VID_DD7)
+  IDirectDraw7 *DDObj;
+  IDirectDrawSurface7 *DDPrimarySur,*DDBackSur;
+  DDSURFACEDESC2 DDBackSurDesc;
+#if defined(SSE_VID_3BUFFER_WIN)
+  IDirectDrawSurface7 *DDBackSur2; // our second back buffer
+#endif
+#else
+  IDirectDraw2 *DDObj;
+  IDirectDrawSurface *DDPrimarySur,*DDBackSur;
+  DDSURFACEDESC DDBackSurDesc;
+#if defined(SSE_VID_3BUFFER_WIN)
+  IDirectDrawSurface *DDBackSur2; // our second back buffer
+#endif
+#endif//dd7?
+#endif//!defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+  D3DFORMAT DisplayFormat;
+  D3DDEVTYPE DeviceType;
+  DWORD vtx_proc;
+#endif
+  int GDIBmpLineLength;
+  DWORD GDIBmpSize;
+#if defined(SSE_VID_D3D_LIST_MODES)
+  UINT D3DMode; // depends on video card and format
+#endif
+#if defined(SSE_VID_D3D_382)
+  UINT D3DFsW,D3DFsH;
+#endif//#if defined(SSE_VID_D3D_382)
+#if !defined(SSE_VID_D3D_ONLY)
+  DWORD DDLockFlags;
+  int DDClosestHz[3][2][NUM_HZ];
+#endif//#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  int ScreenShotFormatOpts;
+#endif
+  Str ScreenShotExt;
+#endif//#ifdef WIN32
+
+  Str ScreenShotNextFile;
+  int Method,UseMethods[5],nUseMethod;
+  int ScreenShotFormat;
+  int ScreenShotMinSize;
+  DWORD ChangeToWinTimeOut;
+#if defined(SSE_VID_3BUFFER_WIN)
+  BOOL BlitIfVBlank(); // our polling function
+#endif
+#if defined(SSE_VID_3BUFFER_WIN)
+  long VSyncTiming; // must be public
+#endif
+
+
+#if defined(SSE_VAR_RESIZE)
+  WORD SurfaceWidth,SurfaceHeight;
+#else
+  int SurfaceWidth,SurfaceHeight;
+#endif
+
+
+#ifdef WIN32
+#if !defined(SSE_VID_D3D_ONLY)
+  bool DDDisplayModePossible[3][2];
+  bool DDBackSurIsAttached,DDExclusive;
+#endif
+#if !defined(SSE_VID_D3D_ONLY) && defined(SSE_VID_3BUFFER_WIN)
+  bool SurfaceToggle;
+#endif
+  bool DrawToVidMem,BlitHideMouse;
+  bool DrawLetterboxWithGDI;
+#endif//#ifdef WIN32
+
+
+#if defined(UNIX)
+  XImage *X_Img;
+  Window XVM_FullWin;
+#ifndef NO_XVIDMODE
+  XF86VidModeModeInfo **XVM_Modes;
+  int XVM_nModes,XVM_ViewX,XVM_ViewY;
+  int XVM_FullW,XVM_FullH;
+#endif
+#ifndef NO_SHM
+  int SHMCompletion;
+  XShmSegmentInfo XSHM_Info;
+  bool XSHM_Attached;
+  bool asynchronous_blit_in_progress;
+#endif
+  bool AlreadyWarnedOfBadMode;
+  bool GoToFullscreenOnRun;
+  
+
+#endif//#if defined(UNIX)
+
+  bool RunOnChangeToWindow;
+  bool ScreenShotUseFullName,ScreenShotAlwaysAddNum;
+  bool DoAsyncBlit;
+
+
+  //FUNCTIONS
+private:
+#ifdef WIN32
+  // DD Only
+#if !defined(SSE_VID_D3D_ONLY)
+  HRESULT InitDD();
+#if defined(SSE_VID_DD7)
+  static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC2,LPVOID);
+#else
+  static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC,LPVOID);
+#endif
+  HRESULT DDCreateSurfaces();
+  void DDDestroySurfaces();
+  HRESULT DDError(char *,HRESULT);
+#endif//#if !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_UTIL)
+  int STXPixels();
+  int STYPixels();
+#endif
+
+#if defined(SSE_VID_D3D)
+public:
+  HRESULT D3DInit(); 
+  HRESULT D3DCreateSurfaces();
+  HRESULT D3DSpriteInit();
+  void D3DDestroySurfaces();
+  VOID D3DRelease();
+  HRESULT D3DLock();
+  void D3DUnlock();
+  bool D3DBlit();
+  friend HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat);
+#if defined(SSE_VID_D3D_382)
+  void D3DUpdateWH(UINT mode);
+#endif
+private:
+#endif//d3d
+
+  // GDI Only
+  bool InitGDI();
+
+#elif defined(UNIX)
+	bool CheckDisplayMode(DWORD,DWORD,DWORD);
+  bool InitX();
+  bool InitXSHM();
+#ifndef NO_XVIDMODE
+  static int XVM_WinProc(void*,Window,XEvent*);
+#endif
+
+#endif//#ifdef WIN32
+//WIN32 + UNIX
+public:
+  SteemDisplay();
+  ~SteemDisplay();
+  void SetMethods(int,...);
+  HRESULT Init();
+  HRESULT Lock();
+  void VSync();
+  bool Blit();
+  void WaitForAsyncBlitToFinish();
+  void Unlock();
+#ifdef SHOW_WAVEFORM
+  void DrawWaveform();
+#endif
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+  void RunStart(bool=0),RunEnd();
+#else
+  void RunStart(bool=0),RunEnd(bool=0);
+#endif
+  void ScreenChange();
+  void ChangeToFullScreen(),ChangeToWindowedMode(bool=0);
+  void DrawFullScreenLetterbox(),FlipToDialogsScreen();
+  bool CanGoToFullScreen();
+#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+  HRESULT SetDisplayMode();
+#else
+  HRESULT SetDisplayMode(int,int,int,int=0,int* = NULL);
+#endif
+  HRESULT RestoreSurfaces();
+  void Release();
+  HRESULT SaveScreenShot();
+  bool BorderPossible();
+
+#ifdef WIN32
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  void ScreenShotCheckFreeImageLoad();
+#endif
+#ifdef IN_MAIN
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  bool ScreenShotIsFreeImageAvailable();
+#endif
+  void ScreenShotGetFormats(EasyStringList*);
+#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+  void ScreenShotGetFormatOpts(EasyStringList*);
+#endif
+#endif
+#endif//#ifdef WIN32
+
+#if defined(UNIX)
+	void Surround();
+#endif
+
+};
+
+
+
+
+
+#else
+
 class SteemDisplay
 {
 private:
@@ -318,7 +550,10 @@ public:
 
 };
 
-#pragma pack(pop)//391
+
+#endif
+
+#pragma pack(pop,STRUCTURE_ALIGNMENT)//391
 
 EXT SteemDisplay Disp;
 

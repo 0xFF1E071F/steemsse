@@ -1414,13 +1414,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1032:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSE_INTERPOLATE=!SSE_INTERPOLATE;
-            TRACE_LOG("Interpolate scanlines: %d\n",SSE_INTERPOLATE);
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_INTERPOLATE,0);
+            OPTION_INTERPOLATED_SCANLINES=!OPTION_INTERPOLATED_SCANLINES;
+            TRACE_LOG("Interpolate scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
 #if !defined(SSE_VID_D3D_ONLY)
-            draw_fs_blit_mode=(SSE_INTERPOLATE)?DFSM_STRETCHBLIT:
+            draw_fs_blit_mode=(OPTION_INTERPOLATED_SCANLINES)?DFSM_STRETCHBLIT:
 #if defined(SSE_VID_D3D2)
-              (D3D9_OK && SSE_OPTION_D3D) ? DFSM_STRETCHBLIT :
+              (D3D9_OK && OPTION_D3D) ? DFSM_STRETCHBLIT :
 #endif
               DFSM_STRAIGHTBLIT;
 #endif//#if !defined(SSE_VID_D3D_ONLY)
@@ -1435,13 +1435,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1033:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSE_WIN_VSYNC=!SSE_WIN_VSYNC;
-            TRACE_LOG("Option Window VSync: %d\n",SSE_WIN_VSYNC);
+            OPTION_WIN_VSYNC=!OPTION_WIN_VSYNC;
+            TRACE_LOG("Option Window VSync: %d\n",OPTION_WIN_VSYNC);
 #if !defined(SSE_VID_3BUFFER_NO_VSYNC) &&!defined(SSE_VID_D3D_3BUFFER)
-            if(SSE_WIN_VSYNC)
-              SSE_3BUFFER=false;
+            if(OPTION_WIN_VSYNC)
+              OPTION_3BUFFER=false;
 #endif
-//            SendMessage(HWND(lPar),BM_SETCHECK,SSE_WIN_VSYNC,0);
+//            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_WIN_VSYNC,0);
 #if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
 #endif
@@ -1454,13 +1454,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1034:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            SSE_3BUFFER=!SSE_3BUFFER;
+            OPTION_3BUFFER=!OPTION_3BUFFER;
 #if !defined(SSE_VID_3BUFFER_NO_VSYNC)
-            if(SSE_3BUFFER)
-              SSE_WIN_VSYNC=false;
+            if(OPTION_3BUFFER)
+              OPTION_WIN_VSYNC=false;
 #endif
-            TRACE_LOG("Option Triple Buffer: %d\n",SSE_3BUFFER);
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_3BUFFER,0); //was disabled in 390?
+            TRACE_LOG("Option Triple Buffer: %d\n",OPTION_3BUFFER);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER,0); //was disabled in 390?
 #if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
 #endif
@@ -1942,9 +1942,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_DISK_GHOST)  && !defined(SSE_GUI_DM_GHOST)
         case 7313: // option Ghost disk 
           if (HIWORD(wPar)==BN_CLICKED){
-            SSE_GHOST_DISK=!SSE_GHOST_DISK;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_GHOST_DISK,0);
-            TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
+            OPTION_GHOST_DISK=!OPTION_GHOST_DISK;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_GHOST_DISK,0);
+            TRACE_LOG("Option Ghost disk %d\n",OPTION_GHOST_DISK);
           }
           break;
 #endif
@@ -1952,29 +1952,29 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VID_D3D_OPTION)
         case 7314: // option D3D
           if (HIWORD(wPar)==BN_CLICKED){
-            SSE_OPTION_D3D=!SSE_OPTION_D3D;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSE_OPTION_D3D,0);
+            OPTION_D3D=!OPTION_D3D;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D,0);
 #ifndef SSE_VID_D3D_ONLY
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^ (i<4) ); 
+    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^ (i<4) ); 
 #else
   WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
-    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^ (i<3) ); 
 #endif
 #else
 
   WORD items[]={7315,280,208,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Win,items[i]),!SSE_OPTION_D3D^!i); 
+    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^!i); 
 #endif
 #endif
 #endif//#ifndef SSE_VID_D3D_ONLY
-            TRACE_LOG("Option D3D %d\n",SSE_OPTION_D3D);
+            TRACE_LOG("Option D3D %d\n",OPTION_D3D);
 
 #ifndef SSE_VID_D3D_ONLY
     Disp.ScreenChange();
@@ -2046,21 +2046,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VID_D3D_382)
             Disp.D3DUpdateWH(Disp.D3DMode);
             TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
-            if(FullScreen && SSE_OPTION_D3D && old_mode!=Disp.D3DMode)
+            if(FullScreen && OPTION_D3D && old_mode!=Disp.D3DMode)
             {
-             // SetWindowPos(StemWin,HWND_TOPMOST,0,0,50,50,0);
-               //Disp.ScreenChange();
               SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
-              //MoveWindow(StemWin,0,0,Disp.D3DFsW,Disp.D3DFsH,TRUE);
               InvalidateRect(StemWin,NULL,FALSE);
-              //
-              //Sleep(200);
-//              InvalidateRect(StemWin,NULL,FALSE);
-             // Disp.ScreenChange();
-              //SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
-              //RECT rc; rc.top=rc.left=0; rc.right=Disp.D3DFsW; rc.bottom=Disp.D3DFsH;
-              //InvalidateRect(StemWin,&rc,FALSE);
-              
             }
 #endif
           }
@@ -2096,7 +2085,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
 #if defined(SSE_VID_D3D_382)
-            if(FullScreen && SSE_OPTION_D3D && D3D9_OK)
+            if(FullScreen && OPTION_D3D && D3D9_OK)
               Disp.D3DSpriteInit();
 #endif
           }
@@ -2739,8 +2728,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_GUI_OPTIONS_DRIVE_INFO)
         }else if(i==1) {
           if (HIWORD(wPar)==BN_CLICKED){
-            OSD_DRIVE_INFO=!OSD_DRIVE_INFO;
-            SendMessage(HWND(lPar),BM_SETCHECK,OSD_DRIVE_INFO,0);
+            OPTION_DRIVE_INFO=!OPTION_DRIVE_INFO;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_DRIVE_INFO,0);
           }
 #endif
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)

@@ -30,6 +30,7 @@ bool FloppyArchiveIsReadWrite=0;
 
 
 #pragma warning (disable: 4701) //some MSA vars
+
 int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDetectBPB,BPBINFO *pFileBPB)
 {
 
@@ -108,6 +109,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       do{
         EasyStr fn=zippy.filename_in_zip();
 //        TRACE_LOG("File in zip %s\n",fn.c_str());
+        ASSERT(Type==DISK_COMPRESSED);
         Type=FileIsDisk(fn); // SS this changes Type
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){
@@ -119,10 +121,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
             if (Type==DISK_PASTI){
 #if defined(SSE_DISK_PASTI_ONLY_STX)
               ASSERT(drive!=-1);
+              ASSERT(!OPTION_PASTI_JUST_STX||(!ST&&!MSA));
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);
-
+                TRACE("OPTION_PASTI_JUST_STX %d\n",OPTION_PASTI_JUST_STX);
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
                 if(ST)
                   SF314[drive].ImageType.Extension=EXT_ST;
@@ -130,9 +133,9 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
                   SF314[drive].ImageType.Extension=EXT_MSA;
                 else
                   SF314[drive].ImageType.Extension=EXT_STX;
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH_391)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH_391_)
                 if(ST||MSA)
-                  PASTI_JUST_STX=false; //temp, TODO
+                  OPTION_PASTI_JUST_STX=false; //temp, TODO
 #endif
               }
 #endif
@@ -168,7 +171,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               TOS=OPTION_PRG_SUPPORT && has_extension(fn,DISK_EXT_TOS);
 #endif
 #if defined(SSE_FLOPPY) && defined(WIN32)
-              if(PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
+              if(OPTION_PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
                 pasti_active=false;
 #endif
             }
@@ -780,7 +783,7 @@ Header:
 /*  We deactivate pasti even without option 'Pasti only for STX' if we're
     running CAPS or WD1772 manager.
 */
-  if(pasti_active && !PASTI_JUST_STX && SF314[drive].ImageType.Manager!=MNGR_PASTI)
+  if(pasti_active && !OPTION_PASTI_JUST_STX && SF314[drive].ImageType.Manager!=MNGR_PASTI)
     pasti_active=false;
 #endif
 
@@ -802,7 +805,8 @@ Header:
 
   //SS note that options haven't been retrieved yet when starting
   //steem and auto.sts is loaded with its disks -> we can't open a
-  //ghost image here, we don't know if option is set
+  //ghost image here, we don't know if option is set 
+//TODO, now we could...
 
   // Media change, write protect for 10 VBLs, unprotect for 10 VBLs, wp for 10
   if (this==&FloppyDrive[0]) floppy_mediach[0]=30;
@@ -1429,7 +1433,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 /*  3.6.1 Disable Pasti at once when ejecting STX disk if the other disk
     isn't STX and option 'Pasti only for STX' is checked.
 */
-    if(PASTI_JUST_STX && 
+    if(OPTION_PASTI_JUST_STX && 
       SF314[1-floppy_current_drive()].ImageType.Extension!=EXT_STX)
     {
       pasti_active=false;
@@ -1486,7 +1490,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #if defined(SSE_DISK_GHOST)
   // This makes sure to update the image before leaving, though
   // there's a destructor. Really needed?
-  if(SSE_GHOST_DISK && SF314[drive].State.ghost)
+  if(OPTION_GHOST_DISK && SF314[drive].State.ghost)
   {
     GhostDisk[drive].Close();
     SF314[drive].State.ghost=0; 
