@@ -34,7 +34,7 @@ bool ExtensionIsPastiDisk(char *Ext)
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-  if(PASTI_JUST_STX)
+  if(OPTION_PASTI_JUST_STX)
     return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
 #endif
   char *t=pasti_file_exts;
@@ -109,8 +109,9 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
 #endif
     ){
     if (ExtensionIsPastiDisk(Ext)
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
-    && (IsSameStr_I(Ext,DISK_EXT_STX)||!PASTI_JUST_STX&&pasti_active)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && !defined(SSE_DISK_PASTI_AUTO_SWITCH_391)
+      // this is tested in ExtensionIsPastiDisk()
+    && (IsSameStr_I(Ext,DISK_EXT_STX)||!OPTION_PASTI_JUST_STX&&pasti_active)
 #endif
     ){
       return DISK_PASTI;
@@ -1535,7 +1536,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
                 2024,T("Configuration"));
 #if defined(SSE_GUI_DM_PASTI_ONLY_STX)
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-                (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
+                (OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
 #endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
               (UINT)PastiPop,T("&Pasti"));
@@ -1547,7 +1548,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
 #if defined(SSE_GUI_DM_PASTI_ONLY_STX) //option moved from 'SSE' page
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-                (PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
+                (OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
 #endif
 #endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
@@ -1556,7 +1557,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-              (SSE_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
+              (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN) 
@@ -2180,8 +2181,8 @@ That will toggle bit x.
 
 #if defined(SSE_GUI_DM_PASTI_ONLY_STX)
         case 2026:
-          PASTI_JUST_STX=!PASTI_JUST_STX;
-          TRACE_LOG("Option Pasti just STX %d\n",PASTI_JUST_STX);
+          OPTION_PASTI_JUST_STX=!OPTION_PASTI_JUST_STX;
+          TRACE_LOG("Option Pasti just STX %d\n",OPTION_PASTI_JUST_STX);
           for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
           {
             if(FloppyDrive[i].NotEmpty())
@@ -2204,14 +2205,14 @@ That will toggle bit x.
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
         case 2027:
-          SSE_GHOST_DISK=!SSE_GHOST_DISK;
-          TRACE_LOG("Option Ghost disk %d\n",SSE_GHOST_DISK);
+          OPTION_GHOST_DISK=!OPTION_GHOST_DISK;
+          TRACE_LOG("Option Ghost disk %d\n",OPTION_GHOST_DISK);
           break;
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN) 
         case 2028:
           OPTION_PRG_SUPPORT=!OPTION_PRG_SUPPORT;
-          TRACE_LOG("Option PRG support %d\n",SSE_GHOST_DISK);
+          TRACE_LOG("Option PRG support %d\n",OPTION_GHOST_DISK);
           break;
 #endif
 #if defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)

@@ -93,6 +93,6 @@ struct TGlue {
 
 };
 
-#pragma pack(pop)
+#pragma pack(pop,STRUCTURE_ALIGNMENT)
 
 #endif//#ifndef SSEGLUE_H

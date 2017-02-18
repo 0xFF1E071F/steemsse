@@ -254,31 +254,12 @@ void TImageSCP::IncPosition() {
     // provided there are >1 revs...    
     if(file_header.IFF_NUMREVS>1)
     {
-#if defined(SSE_DISK_SCP2B)
       // we step revs 0->1 each IP, we'll reload 0 during rev
       // works with Turrican, I Ludicrus, Leavin' Teramis
-      // and you can see that it's simpler
       // Notice we do no computing, the first bit of the new rev
       // is relative to last bit of previous rev, or we are very
       // lucky.
       LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
-#else
-      // We step revs only if there's reading over the IP
-      switch(WD1772.prg_phase)
-      {
-      case TWD1772::WD_TYPEI_READ_ID:
-      case TWD1772::WD_TYPEII_READ_ID:
-      case TWD1772::WD_TYPEIII_READ_ID:
-      case TWD1772::WD_TYPEII_READ_DATA: 
-      case TWD1772::WD_TYPEII_READ_CRC:
-        LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
-        break;
-      // test... will  fail on a $A1 though
-      case TWD1772::WD_TYPEII_FIND_ID://3.7.2 I Ludicrus vs Turrican, or need 3 revs
-        if(!WD1772.Amd.Enabled)
-          LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track(),true);
-      }//sw
-#endif
     }      
   }
 }
@@ -358,6 +339,7 @@ void TImageSCP::InterpretFlux() {
 
 
 bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
+  ASSERT(Id==0||Id==1);
   bool ok=false;
 
   ASSERT( side<2 && track<N_TRACKS ); // unique side may be 1

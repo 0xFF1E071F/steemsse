@@ -266,9 +266,9 @@ void osd_draw()
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
 #if defined(SSE_VID_D3D_391)
   if(FullScreen && !screen_res 
-    && (SSE_INTERPOLATE || draw_win_mode[screen_res]==DWM_GRILLE))
+    && (OPTION_INTERPOLATED_SCANLINES || draw_win_mode[screen_res]==DWM_GRILLE))
 #else
-  if(SSE_INTERPOLATE && !screen_res && FullScreen
+  if(OPTION_INTERPOLATED_SCANLINES && !screen_res && FullScreen
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
 #endif    
@@ -488,7 +488,7 @@ void osd_draw()
 
   if(osd_show_disk_light 
 #if defined(SSE_OSD_DRIVE_INFO)
-    || OSD_DRIVE_INFO
+    || OPTION_DRIVE_INFO
 #endif
     )
 
@@ -511,7 +511,7 @@ void osd_draw()
           ? col_fd_red[(hbl_count/512) & 1] : col_fd_green[(hbl_count/512) & 1];
 
 #if defined(SSE_OSD_DRIVE_INFO)
-      if(osd_show_disk_light && !OSD_DRIVE_INFO)
+      if(osd_show_disk_light && !OPTION_DRIVE_INFO)
 #endif
       {
         if (FDCCantWriteDisplayTimer>timer){
@@ -529,7 +529,7 @@ void osd_draw()
 /*  Display drive, side, track, sector
     Sector for type II commands and 'Read Address'
 */
-      if(OSD_DRIVE_INFO)// && seconds>=osd_show_plasma)
+      if(OPTION_DRIVE_INFO)// && seconds>=osd_show_plasma)
       {
 #define THE_LEFT (x1/2)
 #define THE_RIGHT ((x1))

@@ -216,7 +216,7 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
   if(Lines.CommandWasIntercepted && hPasti
     && SF314[drive].ImageType.Manager==MNGR_PASTI)
   {
-    ASSERT( !PASTI_JUST_STX || SF314[drive].ImageType.Extension==EXT_STX );
+    ASSERT(!OPTION_PASTI_JUST_STX||SF314[drive].ImageType.Extension==EXT_STX);
     pasti_update_reg(0xff8609,(Dma.BaseAddress&0xff0000)>>16);
     pasti_update_reg(0xff860b,(Dma.BaseAddress&0xff00)>>8);
     pasti_update_reg(0xff860d,(Dma.BaseAddress&0xff));
@@ -406,7 +406,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     and use ghost disk.
 */
     Lines.CommandWasIntercepted=0; // reset this at each new whatever command 
-    if(SSE_GHOST_DISK)
+    if(OPTION_GHOST_DISK)
     {
       if((SF314[drive].ImageType.Manager==MNGR_PASTI 
         && SF314[drive].ImageType.Extension==EXT_STX)
@@ -493,7 +493,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SSE_DISK_CAPS)
   if(SF314[drive].ImageType.Manager==MNGR_CAPS)
 #if defined(SSE_DISK_GHOST)
-    if(SSE_GHOST_DISK && Lines.CommandWasIntercepted)
+    if(OPTION_GHOST_DISK && Lines.CommandWasIntercepted)
     {
       TRACE_FDC("Ghost - Caps doesn't get command %x\n",io_src_b);
       Caps.WD1772.r_command=CR;//update this...
@@ -1531,7 +1531,8 @@ r1       r0            1772
     else if(Amd.nA1)
       Amd.Reset();
 
-#if defined(SSE_DISK_SCP2B)
+#if defined(SSE_DISK_SCP)
+    // we're reading nothing vital:
     // switch back to rev1 if we're on rev2
     else if(IMAGE_SCP && ImageSCP[DRIVE].rev)
       ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,CURRENT_TRACK);

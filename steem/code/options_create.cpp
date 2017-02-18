@@ -1482,6 +1482,7 @@ void TOptionBox::CreateDisplayPage()
     Disp.ScreenShotFormat=FIF_BMP;
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     Disp.ScreenShotFormatOpts=0;
+    ASSERT(Disp.ScreenShotExt.Text!=NULL);
 #endif
     n=1;    
   }
@@ -1571,7 +1572,7 @@ void TOptionBox::CreateOSDPage()
   Wid=GetCheckBoxSize(Font,T("Disk drive track info")).Width;
   Win=CreateWindow("Button",T("Disk drive track info"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l + Wid2,y,Wid,23,Handle,(HMENU)12001,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OSD_DRIVE_INFO,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_DRIVE_INFO,0);
   ToolAddWindow(ToolTip,Win,
     T("See what the floppy drive is doing with this option"));
 #endif
@@ -1695,7 +1696,7 @@ void TOptionBox::CreateFullscreenPage()
   Win=CreateWindow("Button",T("Direct3D"),mask,
     page_l,y,Wid,25,Handle,(HMENU)7314,HInstance,NULL);
 #endif
-  SendMessage(Win,BM_SETCHECK,SSE_OPTION_D3D,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_D3D,0);
   ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible with Windows 7 or 8."));
   y+=LineHeight;
 #endif
@@ -1811,7 +1812,7 @@ void TOptionBox::CreateFullscreenPage()
   Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
   Win=CreateWindow("Button",T("Triple buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER,0);
   ToolAddWindow(ToolTip,Win,T("This may reduce tearing"));
   y+=LineHeight;
 #endif
@@ -1871,7 +1872,7 @@ void TOptionBox::CreateFullscreenPage()
 
 #if defined(SSE_VID_DD_FS_32BIT) //disable if unavailable
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX | disabledflag;
-  if(!SSEConfig.VideoCard8bit||SSE_OPTION_D3D&&D3D9_OK)
+  if(!SSEConfig.VideoCard8bit||OPTION_D3D&&D3D9_OK)
     mask|=WS_DISABLED;
   Win=CreateWindow("Button",T("Use 256 colour mode"),
     mask,
@@ -2023,16 +2024,16 @@ void TOptionBox::CreateFullscreenPage()
   WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
 #endif
   for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<4) ); 
+    EnableWindow(GetDlgItem(Handle,items[i]),!OPTION_D3D^ (i<4) ); 
 #else
   WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^ (i<3) ); 
+    EnableWindow(GetDlgItem(Handle,items[i]),!OPTION_D3D^ (i<3) ); 
 #endif
 #else
   WORD items[]={7315,280,208,0xFFFF};
   for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Handle,items[i]),!SSE_OPTION_D3D^!i); 
+    EnableWindow(GetDlgItem(Handle,items[i]),!OPTION_D3D^!i); 
 #endif
 
 #endif
@@ -3070,7 +3071,7 @@ void TOptionBox::CreateSSEPage() {
   Win=CreateWindow("Button",T("Interpolated scanlines"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l +Offset,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSE_INTERPOLATE,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
   ToolAddWindow(ToolTip,Win,
     T("Blurry scanlines like on those bad monitors!"));
   y+=LineHeight;
@@ -3106,7 +3107,7 @@ Windows 2000	5.0
   Wid=GetCheckBoxSize(Font,T("VSync")).Width;
   Win=CreateWindow("Button",T("VSync"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_WIN_VSYNC,0);
   tip_text=T("Works with windows and fullscreen, but if your monitor refresh rate is wrong, emulation speed will change!");
   ToolAddWindow(ToolTip,Win,tip_text.Text);
 #endif
@@ -3117,7 +3118,7 @@ Windows 2000	5.0
   Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
   Win=CreateWindow("Button",T("Triple buffering"), mask,
                page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER,0);
   tip_text=T("This may reduce tearing at the price of high CPU use.");
   ToolAddWindow(ToolTip,Win,tip_text.Text);
 #endif
@@ -3303,13 +3304,13 @@ void TOptionBox::SSEUpdateIfVisible() {
 #if defined(SSE_VID_VSYNC_WINDOW)
   Win=GetDlgItem(Handle,1033); 
   if(Win!=NULL) 
-    SendMessage(Win,BM_SETCHECK,SSE_WIN_VSYNC,0);
+    SendMessage(Win,BM_SETCHECK,OPTION_WIN_VSYNC,0);
 #endif
 
 #if defined(SSE_VID_3BUFFER) && !defined(SSE_VID_D3D_ONLY)
   Win=GetDlgItem(Handle,1034); 
   if(Win!=NULL) 
-    SendMessage(Win,BM_SETCHECK,SSE_3BUFFER,0);
+    SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER,0);
 #endif
 
 #if defined(SSE_GUI_MOUSE_VM_FRIENDLY)

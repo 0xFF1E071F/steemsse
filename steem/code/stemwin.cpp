@@ -79,7 +79,7 @@ void StemWinResize(int xo,int yo)
 #endif
 
 #if defined(SSE_VID_D3D1)
-  if(D3D9_OK && SSE_OPTION_D3D
+  if(D3D9_OK && OPTION_D3D
 #if defined(SSE_VID_D3D_380)
     && Disp.pD3DDevice // "D3DX: pDevice pointer is invalid"
 #endif
@@ -975,7 +975,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       if (FullScreen){
 #if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_OPTION) 
         //circles  around a bug I don't understand
-        if(SSE_OPTION_D3D)
+        if(OPTION_D3D)
           cw=Disp.D3DFsW, ch=Disp.D3DFsH; // make size correct
 #endif
         if (FSQuitBut) SetWindowPos(FSQuitBut,0,0,ch-14-MENUHEIGHT,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);

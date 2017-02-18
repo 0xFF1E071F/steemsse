@@ -1375,8 +1375,6 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_DISK_SCP)
 
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
-#define SSE_DISK_SCP2A //id
-#define SSE_DISK_SCP2B //all IP 1->2 (..->1 during rev) - perf?
 #define SSE_DISK_SCP_DRIVE_WOBBLE // for weak bits
 #define SSE_DISK_SCP373 // War Heli
 
@@ -1773,9 +1771,23 @@ Beta: not SSE_PRIVATE_BUILD
 //#undef SSE_CPU_MFP_RATIO_STE //dsots
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
+#define SSE_CPU_SPLIT_RL1
+#define SSE_CPU_SPLIT_RL2
+#define SSE_CPU_SPLIT_RL3
+#define SSE_CPU_SPLIT_RL4
+#define SSE_CPU_SPLIT_RL5
+#define SSE_CPU_SPLIT_RL6
+#define SSE_CPU_SPLIT_RL7
+#define SSE_CPU_SPLIT_RL8
+#define SSE_CPU_SPLIT_RL9
+
+//#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
+//#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
+//#define SSE_CPU_SIMPLIFY_READ_DEST_TST
+
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
-#define SSE_MMU_LOW_LEVEL //?
+//#define SSE_MMU_LOW_LEVEL //?
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
@@ -1784,12 +1796,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ASSOCIATE_391
 #define SSE_BLT_391
 #define SSE_BOILER_TRAP
+#define SSE_COMPILER_391
 #define SSE_CPU_391
-#define SSE_CPU_EXCEPTION_TRUE_PC_391
-#define SSE_CPU_FETCH_IO_391
+#define SSE_CPU_EXCEPTION_TRUE_PC_391 // MOVE <ea>,(xxx).L
+#define SSE_CPU_FETCH_IO_391 // oops, it's pc+2
 #define SSE_DISK_PASTI_AUTO_SWITCH_391
+#define SSE_DISK_PRG_391
 #define SSE_DISK_SCP_391
-#define SSE_DONGLE_PORT_391
+#define SSE_DONGLE_PORT_391 //the page was seriously messed-up
 #define SSE_GLUE_391
 #undef SSE_IKBD_6301_ROM_KEYTABLE //test
 #define SSE_JOYSTICK_391
@@ -1797,17 +1811,20 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_DMA_391B // working but slow
 #define SSE_SOUND_RECORD_391 // restore val!
 #define SSE_SOUND_RECORD_391B // don't change source_p!
-#define SSE_VAR_EXC_391
+//#define SSE_VAR_EXC_391 //MFD?
 #define SSE_VAR_RESIZE_391
+#define SSE_VAR_DATALOAD_391
 #define SSE_VID_D3D_391
 #define SSE_VID_D3D_391B
 #define SSE_VID_D3D_391C
 #define SSE_VID_D3D_391D
+#define SSE_VID_D3D_391E
 #define SSE_VID_D3D_CRISP_391
 #define SSE_VID_D3D_SCREENSHOT_391
 #define SSE_VID_D3D_SCREENSHOT_391B
 #define SSE_VID_D3D_SCREENSHOT_391B1
 #define SSE_VID_D3D_SCREENSHOT_391B2
+#define SSE_VID_DD_REORDER_STRUCT
 #define SSE_VID_DD_SCREENSHOT_391
 #define SSE_WD1772_391
 

@@ -1057,7 +1057,7 @@ void event_scanline()
 #endif
 #if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
-  if(SSE_3BUFFER && !(scan_y%2)
+  if(OPTION_3BUFFER && !(scan_y%2)
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
 #endif
@@ -1148,7 +1148,7 @@ void event_vbl_interrupt() //SS misleading name?
     Glue.VCount--; 
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
-  bool VSyncing=( (SSE_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
+  bool VSyncing=( (OPTION_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
     && fast_forward==0 && slow_motion==0);
 #else
   bool VSyncing=(FSDoVsync && FullScreen && fast_forward==0 && slow_motion==0);
@@ -1180,7 +1180,7 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
     if (VSyncing==0 
 #if !defined(SSE_VID_D3D_3BUFFER)
-      &&( !SSE_3BUFFER
+      &&( !OPTION_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
       || FullScreen
 #endif
@@ -1348,7 +1348,7 @@ void event_vbl_interrupt() //SS misleading name?
     timer=timeGetTime();
 //#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
-  if(SSE_3BUFFER
+  if(OPTION_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
 #endif
@@ -1399,7 +1399,7 @@ void event_vbl_interrupt() //SS misleading name?
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
 */
-      if(SSE_3BUFFER
+      if(OPTION_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
         && !FullScreen
 #endif
@@ -1435,7 +1435,7 @@ void event_vbl_interrupt() //SS misleading name?
         timer=timeGetTime();
 #if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
-        if(SSE_3BUFFER //&& SSE_WIN_VSYNC
+        if(OPTION_3BUFFER //&& OPTION_WIN_VSYNC
 #if !defined(SSE_VID_3BUFFER_FS)
           && !FullScreen 
 #endif
@@ -1709,7 +1709,7 @@ void event_pasti_update()
 {
   if (hPasti==NULL || pasti_active==false
 #if defined(SSE_DISK_PASTI_ONLY_STX)
-    ||PASTI_JUST_STX && SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
+    ||OPTION_PASTI_JUST_STX && SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD) && defined(SSE_DMA_OBJECT)
     && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
 #endif
@@ -1741,7 +1741,7 @@ void event_pasti_update()
 #if defined(SSE_GLUE)
 
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
-  ASSERT(!Glue.Status.vbi_done);
+ // ASSERT(!Glue.Status.vbi_done);
 #if defined(SSE_MMU_RELOAD_SDP_380)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
@@ -1785,7 +1785,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
-  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
+//  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
     Glue.VCount=501; // not 500
   else if (Glue.m_SyncMode&2) // 50hz

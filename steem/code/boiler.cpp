@@ -1012,9 +1012,9 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
             case 1517: // Output TRACE to file
-              USE_TRACE_FILE=!USE_TRACE_FILE;
+              OPTION_TRACE_FILE=!OPTION_TRACE_FILE;
               CheckMenuItem(sse_menu,1517,
-                MF_BYCOMMAND|((int)(USE_TRACE_FILE)
+                MF_BYCOMMAND|((int)(OPTION_TRACE_FILE)
                 ?MF_CHECKED:MF_UNCHECKED));
               break;
 #endif

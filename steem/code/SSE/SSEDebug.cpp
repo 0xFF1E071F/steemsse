@@ -315,13 +315,13 @@ void TDebug::Trace(char *fmt, ...){
 #endif
 
 #if defined(SSE_UNIX_TRACE)
-  if(!USE_TRACE_FILE)  
+  if(!OPTION_TRACE_FILE)  
     fprintf(stderr,trace_buffer);
 #endif 
   
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if defined(DEBUG_BUILD) || defined(SSE_UNIX)
-  if(USE_TRACE_FILE && trace_file_pointer && trace_buffer)
+  if(OPTION_TRACE_FILE && trace_file_pointer && trace_buffer)
 #endif      
   {
     printf(trace_buffer);
@@ -529,7 +529,7 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #if USE_PASTI
     if(pasti_active)
-      //TRACE("; Pasti active %s",PASTI_JUST_STX?"STX only":"");
+      //TRACE("; Pasti active %s",OPTION_PASTI_JUST_STX?"STX only":"");
       TRACE("; Pasti");
 #endif
     TRACE("\n");
@@ -620,13 +620,13 @@ void TDebug::TraceLog(char *fmt, ...) { // static
 #endif
 
 #if defined(SSE_UNIX_TRACE)
-    if(!USE_TRACE_FILE)
+    if(!OPTION_TRACE_FILE)
       fprintf(stderr,Debug.trace_buffer);
 #endif 
     
 #if defined(SSE_DEBUG_TRACE_FILE)
 #if defined(DEBUG_BUILD) || defined(SSE_UNIX)
-    if(USE_TRACE_FILE && Debug.trace_file_pointer && Debug.trace_buffer)
+    if(OPTION_TRACE_FILE && Debug.trace_file_pointer && Debug.trace_buffer)
 #endif      
       printf(Debug.trace_buffer),Debug.nTrace++; 
     if(TRACE_FILE_REWIND && Debug.nTrace>=TRACE_MAX_WRITES && Debug.trace_file_pointer)

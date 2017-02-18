@@ -472,11 +472,11 @@ inline void FetchTiming() {
   {  INSTRUCTION_TIME_BUS(4);}
 }
 
-
 inline void FetchTimingL() {
   FetchTiming();
   FetchTiming();
 }
+
 
 inline void ReadBusTiming() {
 #if defined(SSE_BLT_390B)
@@ -488,12 +488,17 @@ inline void ReadBusTiming() {
    { INSTRUCTION_TIME_BUS(4);}
 }
 
+
 inline void ReadBusTimingL() {
   ReadBusTiming();
   // shouldn't we do abus+=2? or should we transform CPU_ABUS_ACCESS_WRITE_L
   // into 2 CPU_ABUS_ACCESS_WRITE?
+  // maybe also do 2 peekw instead of peekl?
+  // generally abus is +2, but in some cases it can be -2
+  // can't be done in a genral function...
   ReadBusTiming();
 }
+
 
 inline void WriteBusTiming() {
 #if defined(SSE_BLT_390B)

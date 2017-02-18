@@ -484,7 +484,7 @@ bool Initialise()
 #if defined(SSE_UNIX_TRACE)
     else if (Type==ARG_TRACEFILE){
       if(Path.Length()>0) // room for improvement...
-        USE_TRACE_FILE=(Path.Mids(0,1)=="Y" || Path.Mids(0,1)=="y") ? 1 : 0;
+        OPTION_TRACE_FILE=(Path.Mids(0,1)=="Y" || Path.Mids(0,1)=="y") ? 1 : 0;
     }
 
     else if (Type==ARG_LOGSECTION){

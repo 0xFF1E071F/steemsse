@@ -958,7 +958,7 @@ void TOptionBox::CreateOSDPage()
 #if defined(SSE_OSD_DRIVE_INFO)
   p_but=new hxc_button(XD,page_p,page_l,y,0,25,button_notify_proc,this,
                           BT_CHECKBOX,T("Disk drive track info"),12001,BkCol);
-  p_but->set_check(OSD_DRIVE_INFO);
+  p_but->set_check(OPTION_DRIVE_INFO);
   y+=35;
 #endif
 

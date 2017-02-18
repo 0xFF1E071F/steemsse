@@ -84,9 +84,7 @@ struct  TImageSCP {
   WORD nBytes;
   TSCP_file_header file_header;
   TSCP_track_header track_header;
-#if defined(SSE_DISK_SCP2A) 
   BYTE Id; //0,1, same as drive
-#endif
   BYTE rev;
 };
 #pragma pack(pop)

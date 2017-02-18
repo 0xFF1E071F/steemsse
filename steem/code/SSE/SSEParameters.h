@@ -16,7 +16,9 @@
 #if defined(STRUCTURE_ALIGNMENT)
 #error STRUCTURE_ALIGNMENT defined!
 #endif
-#ifdef SSE_X64
+#if defined(SSE_COMPILER_391__)
+#define STRUCTURE_ALIGNMENT 1
+#elif defined(SSE_X64)
 #define STRUCTURE_ALIGNMENT 16 //default in Win64
 #else
 #define STRUCTURE_ALIGNMENT 8 //default in Win32

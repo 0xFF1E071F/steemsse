@@ -31,6 +31,9 @@ void THardDiskManager::update_mount()
 //---------------------------------------------------------------------------
 bool THardDiskManager::IsMountedDrive(char d)
 {
+#ifdef SSE_DISK_PRG_391
+  if(!DisableHardDrives)
+#endif
   if (d>='C'){
     for (int n=0;n<nDrives;n++){
       if (d==Drive[n].Letter){

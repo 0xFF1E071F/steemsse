@@ -34,6 +34,7 @@ TSF314::TSF314() {
 #if defined(SSE_DISK_GHOST)
 
 bool TSF314::CheckGhostDisk(bool write) {
+  ASSERT(OPTION_GHOST_DISK);
   if(!State.ghost) // need to open ghost image?
   {
     EasyStr STGPath=FloppyDrive[Id].GetImageFile();

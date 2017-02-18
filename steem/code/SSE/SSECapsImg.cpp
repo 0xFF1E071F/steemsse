@@ -30,8 +30,12 @@ TCaps::TCaps() {
 
 
 TCaps::~TCaps() {
+  try { //391 - 64
   if(CAPSIMG_OK)
     CAPSExit();
+  }
+  catch(...) {
+  }
   CAPSIMG_OK=0;
 }
 
