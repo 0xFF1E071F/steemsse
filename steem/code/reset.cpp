@@ -120,7 +120,6 @@ is issued, and that the reset was active for at least 132 clock cycles [27].
 void power_on()
 {
   TRACE_INIT("power_on\n");
-  ASSERT(Disp.ScreenShotExt.Text!=NULL);
 #if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();//overkill
 #endif

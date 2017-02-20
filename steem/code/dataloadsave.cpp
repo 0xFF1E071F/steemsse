@@ -862,7 +862,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     if (FirstLoad) CheckResetIcon();
 
 #if defined(SSE_STF)
+#ifndef TEST01
     OptionBox.Hide(); // hack
+#endif
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
     SSEConfig.SwitchSTType(ST_TYPE);
 #endif
@@ -907,7 +909,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #endif
 #if defined(SSE_VAR_EMU_DETECT) 
-    //STEALTH_MODE=pCSF->GetInt("Options","StealthMode",STEALTH_MODE);
     OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
 #endif
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
@@ -995,25 +996,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       SetWindowText(StemWin,stem_window_title);
     }
 #endif
-#if defined(SSE_GUI_SNAPSHOT_INI_383)
+#if defined(SSE_GUI_SNAPSHOT_INI)
     DefaultSnapshotFile=pCSF->GetStr("Main","DefaultSnapshot","");
-#elif defined(SSE_GUI_SNAPSHOT_INI)
-/*  Request, be able to load a specified snapshot using a shortcut.
-    We also don't want to bloat Steem, so we use BootStateFile.
-    This variable is overwritten if Steem is launched with a state
-    file. This seems appropriate behaviour.
-    bugfix v3.8.0: statefile as argument was ignored, broke DemoBaseST
-*/
-
-#if defined(SSE_GUI_SNAPSHOT_INI2)
-    BootStateFile=pCSF->GetStr("Main","DefaultSnapshot",BootStateFile.Text);
-#else
-    BootStateFile=pCSF->GetStr("Main","DefaultSnapshot","");
-#endif
-#ifdef SSE_DEBUG
-    if(BootStateFile.NotEmpty())
-      TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
-#endif
 #endif
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
@@ -1118,6 +1102,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if !defined(SSE_VID_D3D_ONLY)
     prefer_res_640_400=(bool)pCSF->GetInt("Display","Prefer640x400",prefer_res_640_400);
 #endif
+#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+    OPTION_FULLSCREEN_DEFAULT_HZ=(bool)pCSF->GetInt("Display",
+      "FullScreenDefaultHz",OPTION_FULLSCREEN_DEFAULT_HZ);
+#endif
     ResChangeResize=(bool)pCSF->GetInt("Display","ResChangeResize",ResChangeResize);
 #if !defined(SSE_VID_D3D_ONLY)
     draw_fs_fx=pCSF->GetInt("Options","InterlaceMode",draw_fs_fx);
@@ -1198,10 +1186,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     Disp.ScreenShotFormat=pCSF->GetInt("Options","ScreenShotFormat",Disp.ScreenShotFormat);
 #ifdef WIN32
     Disp.ScreenShotExt=pCSF->GetStr("Options","ScreenShotExt",Disp.ScreenShotExt);
-    ASSERT(Disp.ScreenShotExt.Text!=NULL);
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     Disp.ScreenShotFormatOpts=pCSF->GetInt("Options","ScreenShotFormatOpts",Disp.ScreenShotFormatOpts);
-    ASSERT(Disp.ScreenShotExt.Text!=NULL);
     Disp.ScreenShotCheckFreeImageLoad();
 #endif
 #endif
@@ -1451,6 +1437,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","DrawFSMode",EasyStr(draw_fs_blit_mode));
 #endif
   pCSF->SetStr("Display","FSDoVsync",LPSTR(FSDoVsync ? "1":"0"));
+#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+  pCSF->SetStr("Display","FullScreenDefaultHz",EasyStr(OPTION_FULLSCREEN_DEFAULT_HZ));
+#endif
 #if !defined(SSE_VID_D3D_ONLY)
   pCSF->SetStr("Display","Prefer640x400",LPSTR(prefer_res_640_400 ? "1":"0"));
 #endif
@@ -1705,7 +1694,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","ScreenShotFol",ScreenShotFol);
   pCSF->SetInt("Options","ScreenShotFormat",Disp.ScreenShotFormat);
 #ifdef WIN32
-  ASSERT(Disp.ScreenShotExt.Text!=NULL);
+  ASSERT(Disp.ScreenShotExt.Text!=NULL); // if it assert, gonna crash
   pCSF->SetStr("Options","ScreenShotExt",Disp.ScreenShotExt);
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   pCSF->SetInt("Options","ScreenShotFormatOpts",Disp.ScreenShotFormatOpts);

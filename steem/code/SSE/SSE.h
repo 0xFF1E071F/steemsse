@@ -504,8 +504,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_OPTIONS_SOUND
 #define SSE_GUI_380//tmp name
 #define SSE_GUI_RESET_BUTTON2
-#define SSE_GUI_SNAPSHOT_INI2 //bugfix
-#define SSE_GUI_SNAPSHOT_INI_383
 #define SSE_GUI_MOUSE_VM_FRIENDLY //VM for virtual machine
 #define SSE_GUI_390
 #define SSE_GUI_390B
@@ -1757,6 +1755,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_OPT_391
 #define SSE_VID_D3D_CHECK_HARDWARE
 #if defined(SSE_VID_D3D_ONLY)
+#define SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ
 //#if defined(SSE_LEAN_AND_MEAN)
 #define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
 //#endif

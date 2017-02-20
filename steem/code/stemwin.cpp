@@ -335,12 +335,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           EasyStr fn=LastSnapShot;
           if (LOWORD(wPar)==207) fn=WriteDir+SLASH+"auto_reset_backup.sts", AddToHistory=0;
           if (LOWORD(wPar)==208) fn=WriteDir+SLASH+"auto_loadsnapshot_backup.sts", AddToHistory=0;
-#if defined(SSE_GUI_SNAPSHOT_INI_383)
+#if defined(SSE_GUI_SNAPSHOT_INI)
           if(LOWORD(wPar)==209)
             fn=DefaultSnapshotFile;
-#elif defined(SSE_GUI_SNAPSHOT_INI)
-          if(LOWORD(wPar)==209)
-            fn=BootStateFile;
 #endif
           LoadSnapShot(fn,AddToHistory);
           if (LOWORD(wPar)==207 || LOWORD(wPar)==208) DeleteFile(fn);
@@ -1172,7 +1169,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         ASSERT(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME);
         ASSERT(((DRAWITEMSTRUCT*)lPar)->CtlType==ODT_STATIC);
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
-//#define status_bar ansi_string
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
 #if !defined(SSE_VS2008_WARNING_390)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle

@@ -3085,7 +3085,12 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #endif
     TRACE_LOG("D3D mode %d %dx%d %dhz format %d\n",D3DMode,Mode.Width,Mode.Height,Mode.RefreshRate,Mode.Format);
     d3dpp.BackBufferFormat=Mode.Format;
+#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+    d3dpp.FullScreen_RefreshRateInHz=(OPTION_FULLSCREEN_DEFAULT_HZ)
+      ?0:Mode.RefreshRate;
+#else
     d3dpp.FullScreen_RefreshRateInHz=Mode.RefreshRate;
+#endif
     d3dpp.BackBufferWidth=Width=Mode.Width;
     d3dpp.BackBufferHeight=Height=Mode.Height;
 #if defined(SSE_VID_D3D_WINDOW)

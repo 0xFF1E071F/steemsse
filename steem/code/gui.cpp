@@ -153,7 +153,7 @@ Str Comlines[NUM_COMLINES]={Comlines_Default[0][0],Comlines_Default[1][0],Comlin
 bool StepByStepInit=0;
 EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName="auto";
-#if defined(SSE_GUI_SNAPSHOT_INI_383)
+#if defined(SSE_GUI_SNAPSHOT_INI)
 EasyStr DefaultSnapshotFile;
 #endif
 #if defined(SSE_GUI_CONFIG_FILE)
