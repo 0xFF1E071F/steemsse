@@ -1741,7 +1741,7 @@ void event_pasti_update()
 #if defined(SSE_GLUE)
 
 void event_trigger_vbi() { //6X cycles into frame (reference end of HSYNC)
- // ASSERT(!Glue.Status.vbi_done);
+  ASSERT(!Glue.Status.vbi_done);
 #if defined(SSE_MMU_RELOAD_SDP_380)
 /*  The video counter is reloaded from VBASE a second time at the end
     of VSYNC, when VBI is set pending.
@@ -1785,7 +1785,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
-//  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
+  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
     Glue.VCount=501; // not 500
   else if (Glue.m_SyncMode&2) // 50hz

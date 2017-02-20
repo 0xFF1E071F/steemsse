@@ -669,7 +669,6 @@ void TOptionBox::ChangeScreenShotFormat(int NewFormat,Str Ext)
     if (dot) *dot=0;
   }
   Disp.ScreenShotExt=Ext.LowerCase();
-  ASSERT(Disp.ScreenShotExt.Text!=NULL);
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   Disp.ScreenShotFormatOpts=0;
   Disp.ScreenShotCheckFreeImageLoad();
@@ -1114,6 +1113,17 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,FSDoVsync,0);
           }
           break;
+
+#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+        case 209:
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_FULLSCREEN_DEFAULT_HZ=!OPTION_FULLSCREEN_DEFAULT_HZ;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
+            TRACE_LOG("Option FullScreenDefaultHz = %d\n",OPTION_FULLSCREEN_DEFAULT_HZ);
+          }
+          break;
+#endif
+
         case 207:
           if (HIWORD(wPar)==CBN_SELENDOK){
 #if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)

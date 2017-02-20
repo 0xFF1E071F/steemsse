@@ -1482,7 +1482,6 @@ void TOptionBox::CreateDisplayPage()
     Disp.ScreenShotFormat=FIF_BMP;
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
     Disp.ScreenShotFormatOpts=0;
-    ASSERT(Disp.ScreenShotExt.Text!=NULL);
 #endif
     n=1;    
   }
@@ -1927,6 +1926,16 @@ void TOptionBox::CreateFullscreenPage()
   ToolAddWindow(ToolTip,Win,T("When this option is ticked Steem will synchronise the PC monitor with the ST in fullscreen mode, this makes some things look a lot smoother but can be very slow.")+
                               " "+T("The ST used 50Hz (PAL), 60Hz (NTSC) and 70Hz (Mono), for good synchronisation you should set the PC refresh rate to the same or double the ST refresh rate."));
 
+#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+  y+=LineHeight;
+  w=GetCheckBoxSize(Font,T("Use desktop refresh rate")).Width;
+  Win=CreateWindow("Button",T("Use desktop refresh rate"),
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    page_l+10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
+  ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode"));
+
+  SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
+#endif
 
 #if !defined(SSE_VID_D3D_ONLY)
   y+=30;

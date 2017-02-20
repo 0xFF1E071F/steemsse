@@ -125,7 +125,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);
-                TRACE("OPTION_PASTI_JUST_STX %d\n",OPTION_PASTI_JUST_STX);
+               // TRACE("OPTION_PASTI_JUST_STX %d\n",OPTION_PASTI_JUST_STX);
                 SF314[drive].ImageType.Manager=MNGR_PASTI;
                 if(ST)
                   SF314[drive].ImageType.Extension=EXT_ST;
@@ -133,10 +133,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
                   SF314[drive].ImageType.Extension=EXT_MSA;
                 else
                   SF314[drive].ImageType.Extension=EXT_STX;
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH_391_)
-                if(ST||MSA)
-                  OPTION_PASTI_JUST_STX=false; //temp, TODO
-#endif
               }
 #endif
               f_PastiDisk=true;

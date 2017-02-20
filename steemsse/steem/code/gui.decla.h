@@ -549,7 +549,7 @@ void CleanUpSteem();
 EXT bool StepByStepInit;
 EXT EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 EXT EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
-#if defined(SSE_GUI_SNAPSHOT_INI_383)
+#if defined(SSE_GUI_SNAPSHOT_INI)
 EXT EasyStr DefaultSnapshotFile;
 #endif
 #if defined(SSE_GUI_CONFIG_FILE)

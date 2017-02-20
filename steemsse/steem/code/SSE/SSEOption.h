@@ -62,6 +62,7 @@ struct TOption {
   unsigned int VMMouse:1;
   unsigned int OsdTime:1;
   unsigned int CartidgeOff:1;
+  unsigned int FullScreenDefaultHz:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -122,6 +123,7 @@ extern struct TOption SSEOption;
 #define OPTION_KEYBOARD_CLICK (SSEOption.KeyboardClick)
 #define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)
 #define OPTION_OSD_TIME (SSEOption.OsdTime)
+#define OPTION_FULLSCREEN_DEFAULT_HZ (SSEOption.FullScreenDefaultHz)
 
 
 struct TConfig {
