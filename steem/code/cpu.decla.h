@@ -165,6 +165,31 @@ enum nbombs {
 
 enum exception_action{EA_READ=0,EA_WRITE,EA_FETCH,EA_INST};
 
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+class m68k_exception
+{
+public:
+  MEM_ADDRESS _pc;
+  MEM_ADDRESS crash_address;
+  MEM_ADDRESS address;
+  int bombs;
+  exception_action action;
+  WORD _sr,_ir;
+
+  m68k_exception() {}
+  ~m68k_exception() {}
+
+  void init(int,exception_action,MEM_ADDRESS);
+  void crash();
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 class m68k_exception
 {
 public:
@@ -182,6 +207,7 @@ public:
   void crash();
 };
 
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 extern void exception(int,exception_action,MEM_ADDRESS);
 

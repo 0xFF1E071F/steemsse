@@ -241,11 +241,11 @@ void Blitter_Blit_Word()
   switch(Blit.BlittingPhase)
   {
   case TBlitter::PRIME:
-    ASSERT( Blit.FXSR && Blit.XCount==Blit.XCounter //should be just assert
+    ASSERT( Blit.FXSR && Blit.XCount==Blit.XCounter
       &&((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))) );
     abus=Blit.SrcAdr;
     BLT_ABUS_ACCESS_READ;
-    Blitter_ReadSource(abus); //ss prefetch
+    Blitter_ReadSource(abus);
     Blit.SrcAdr+=Blit.SrcXInc;     
     Blit.BlittingPhase++;
     break;

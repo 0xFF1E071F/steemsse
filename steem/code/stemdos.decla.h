@@ -71,6 +71,23 @@ EXT int stemdos_rte_action;
 
 void stemdos_get_PC_path();
 
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+typedef struct{
+  Str filename;
+  FILE *f;
+  DWORD attrib;
+  int owner_program;
+  WORD date,time;
+  bool open;
+}stemdos_file_struct;
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 typedef struct{
   bool open;
   FILE *f;
@@ -79,6 +96,9 @@ typedef struct{
   WORD date,time;
   DWORD attrib;
 }stemdos_file_struct;
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
 EXT stemdos_file_struct stemdos_file[46];
 EXT stemdos_file_struct stemdos_new_file;
 #if defined(SSE_VAR_RESIZE)
@@ -88,6 +108,23 @@ EXT int stemdos_std_handle_forced_to[6];
 #endif
 
 #define MAX_STEMDOS_FSNEXT_STRUCTS 100
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+typedef struct{
+  EasyStr path;
+  EasyStr NextFile;
+  MEM_ADDRESS dta;
+  DWORD start_hbl;
+  int attr;
+}stemdos_fsnext_struct_type;
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 typedef struct{
   MEM_ADDRESS dta;
   EasyStr path;
@@ -95,6 +132,10 @@ typedef struct{
   int attr;
   DWORD start_hbl;
 }stemdos_fsnext_struct_type;
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
+
 EXT stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
 //---------------------------------------------------------------------------
 #if defined(SSE_VAR_RESIZE_391)
@@ -208,6 +249,11 @@ void STStringToPC(char*),PCStringToST(char*);
 
 #ifdef SSE_TOS_STRUCT
 
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
 struct TTos {
   BYTE LastPTermedProcess; //to go around (Steem) bug...
 #if defined(SSE_STF_MATCH_TOS3)
@@ -227,6 +273,32 @@ struct TTos {
 void CheckSTTypeAndTos();
 #endif
 };
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
+struct TTos {
+  BYTE LastPTermedProcess; //to go around (Steem) bug...
+#if defined(SSE_STF_MATCH_TOS3)
+  BYTE DefaultCountry;
+#endif
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
+  EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
+  void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
+#endif
+#if defined(SSE_SOUND_KEYBOARD_CLICK)
+  void CheckKeyboardClick();
+#endif
+#if defined(SSE_TOS_GEMDOS_EM_381B)
+  void HackMemoryForExtendedMonitor();
+#endif
+#if defined(SSE_TOS_WARNING)
+void CheckSTTypeAndTos();
+#endif
+};
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 extern TTos Tos;
 

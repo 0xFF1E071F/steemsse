@@ -180,7 +180,7 @@ struct TMC68901 {
 #endif
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB()

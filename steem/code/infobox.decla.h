@@ -36,6 +36,69 @@ enum {
 #define HL_UNDERLINE 2
 #define HL_WINDOWBK 4
 //---------------------------------------------------------------------------
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+class TGeneralInfo : public TStemDialog
+{
+public: //TODO
+  void GetHyperlinkLists(EasyStringList &,EasyStringList &);
+#ifdef WIN32
+  static WINDOWPROC OldEditWndProc;
+  HBRUSH BkBrush;
+  HIMAGELIST il;
+#if defined(SSE_GUI_INFOBOX_80COL)
+  HFONT hFontCourier;
+#endif
+  EasyStr SearchText;
+  int page_l,page_w;
+  int MaxLinkID;
+  int Page;
+  ScrollControlWin Scroller;
+  static LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
+  static LRESULT __stdcall HyperLinkWndProc(HWND,UINT,WPARAM,LPARAM);
+  void DestroyCurrentPage();
+  void ManageWindowClasses(bool);
+#elif defined(UNIX)
+  int page_l,page_w;
+  int Page;
+  static int WinProc(TGeneralInfo*,Window,XEvent*);
+  static int button_notifyproc(hxc_button*,int,int*);
+  static int listview_notify_proc(hxc_listview*,int,int);
+  static int edit_notify_proc(hxc_edit*,int,int);
+	void ShowTheReadme(char*,bool=false);
+	hxc_button gb,thanks_label;
+	hxc_textdisplay about,thanks;
+	hxc_textdisplay readme;
+	hxc_button steem_link,email_link;
+	hxc_scrollarea sa;
+	hxc_listview page_lv;
+  int last_find_idx;
+#endif
+public:
+  TGeneralInfo();
+  ~TGeneralInfo() { Hide();WIN_ONLY( DeleteObject(BkBrush); ) }
+  void Show(),Hide();
+  bool ToggleVisible(){ IsVisible() ? Hide():Show();return IsVisible(); }
+  bool LoadData(bool,GoodConfigStoreFile*,bool* = NULL),SaveData(bool,ConfigStoreFile*);
+  void CreatePage(int);
+  void CreateSpeedPage(),CreateAboutPage(),CreateLinksPage(),CreateReadmePage(int);
+#ifdef WIN32
+  void HidePage(int),HideStatics(int,int);
+  int DrawColumn(int,int,int,char*,...);
+  EasyStr dp4_disp(int);
+  void SetFonts(int,int);
+  void LoadIcons();
+#elif defined(UNIX)
+#endif
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 class TGeneralInfo : public TStemDialog
 {
 private:
@@ -98,5 +161,8 @@ public:
 #elif defined(UNIX)
 #endif
 };
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
 WIN_ONLY( WINDOWPROC TGeneralInfo::OldEditWndProc; );
 

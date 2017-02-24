@@ -1796,6 +1796,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_391
 #define SSE_BOILER_TRAP
 #define SSE_COMPILER_391
+#define SSE_COMPILER_STRUCT_391
 #define SSE_CPU_391
 #define SSE_CPU_EXCEPTION_TRUE_PC_391 // MOVE <ea>,(xxx).L
 #define SSE_CPU_FETCH_IO_391 // oops, it's pc+2

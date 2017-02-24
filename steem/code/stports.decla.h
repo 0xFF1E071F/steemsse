@@ -68,6 +68,64 @@ inline int GetPortIOType(int PortType)
 #define ParallelPort STPort[1]
 #define SerialPort STPort[2]
 
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+class TSTPort
+{
+private:
+public:
+  TSTPort();
+  ~TSTPort() {Close();}
+
+  bool Create(Str &,Str &,bool);
+  bool IsOpen() { return MIDI_Out || MIDI_In || PCPort || f || LoopBuf || PCPortIn; }
+  bool IsPCPort() { return PCPort!=NULL; }
+  void SetupCOM(int,bool,int,int,bool,BYTE,BYTE,BYTE);
+  DWORD GetModemFlags();
+  bool SetDTR(bool),SetRTS(bool);
+
+  bool OutputByte(BYTE);
+  bool StartBreak(),EndBreak();
+  bool AreBytesToOutput();
+  void StartOutput(),StopOutput();
+  WIN_ONLY( int GetMIDIOutDeviceID(); )
+
+  void StartInput(),StopInput();
+  bool AreBytesToRead();
+  bool AreBytesToCome() { return AreBytesToRead(); }
+  void NextByte();
+  BYTE ReadByte();
+  WIN_ONLY( int GetMIDIInDeviceID(); )
+
+  void Reset();
+  void Close();
+
+  EasyStr File;
+
+  TMIDIOut *MIDI_Out;
+  TMIDIIn *MIDI_In;
+  TPortIO *PCPort,*PCPortIn;
+  FILE *f;
+  CircularBuffer *LoopBuf;
+  int Type;
+#ifdef WIN32
+  int MIDIOutDevice,MIDIInDevice;
+  int COMNum,LPTNum;
+#elif defined(UNIX)
+  Str PortDev[TPORTIO_NUM_TYPES];
+  Str LANPipeIn; // Need seperate device for input for PORTTYPE_LAN
+  bool AllowIO[TPORTIO_NUM_TYPES][2];
+#endif
+
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 class TSTPort
 {
 private:
@@ -115,6 +173,9 @@ public:
   FILE *f;
   CircularBuffer *LoopBuf;
 };
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
 
 #if defined(SSE_DONGLE_PORT3)
 extern TSTPort STPort[4];

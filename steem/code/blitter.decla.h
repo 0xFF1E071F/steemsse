@@ -8,9 +8,53 @@
 /*  SS The following structure was named _BLITTER_STRUCT in Steem 3.2.
     We changed the name into TBlitter.
 */
-// TODO padding... why only for "SSE" objects? but then trouble again with old snapshots 
 
-//#pragma pack(push, STRUCTURE_ALIGNMENT)
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+struct TBlitter{ 
+  
+  MEM_ADDRESS SrcAdr,DestAdr;
+#if defined(SSE_BLT_YCOUNT)
+  DWORD YCount; // hack, we need more than 16 bit for the 0=65536 thing //TODO
+#endif
+  DWORD SrcBuffer;
+  int XCounter,YCounter; //internal counters
+  int TimeToSwapBus;
+#if defined(SSE_BLT_390B)
+  int TimeAtBlit,BlitCycles;
+#endif
+  WORD HalfToneRAM[16];
+  WORD EndMask[3];
+#if defined(SSE_BLT_YCOUNT)
+  WORD XCount;
+#else
+  WORD XCount,YCount;
+#endif
+#if defined(SSE_BLT_COPY_LOOP)
+  WORD SrcDat,DestDat,NewDat;  //internal data registers - now persistent 
+#endif
+  WORD Mask;   //internal mask register
+  short SrcXInc,SrcYInc,DestXInc,DestYInc;
+  BYTE Hop,Op,Skew;
+#if defined(SSE_BLT_COPY_LOOP)
+  BYTE BlittingPhase; // to follow 'state-machine' phase R-W...
+  enum {PRIME,READ_SOURCE,READ_DEST,WRITE_DEST};
+#else
+  bool InBlitter_Draw; //are we in the routine? //SS not used
+#endif
+  bool Smudge,Hog,NFSR,FXSR,Busy,Last,HasBus,NeedDestRead;
+#if defined(SSE_BLT_RESTART)
+  bool Restarted; // flag - cheat
+#endif
+  char LineNumber;
+
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
 
 struct TBlitter{ 
   WORD HalfToneRAM[16];
@@ -72,7 +116,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 #endif
 };
 
-//#pragma pack(pop)
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 extern TBlitter Blit;
 

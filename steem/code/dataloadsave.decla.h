@@ -41,10 +41,14 @@ void SaveAllDialogData(bool,Str,ConfigStoreFile* = NULL);
 #define PSEC_PCJOY 17
 #define PSEC_OSD 18
 
+#pragma pack(push, STRUCTURE_ALIGNMENT)//391
+
 typedef struct{
   char *Name;
   int ID;
 }ProfileSectionData;
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 extern ProfileSectionData ProfileSection[20];
 Str ProfileSectionGetStrFromID(int ID);

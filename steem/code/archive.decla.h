@@ -76,6 +76,55 @@ void LoadUnrarDLL();
 #define ZIPPY_FAIL true
 #define ZIPPY_SUCCEED 0
 
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+class zipclass{
+private:
+public:
+#ifdef UNIX
+  //use zlib
+  unzFile uf;
+  unz_global_info gi;
+  char filename_inzip[256];
+  unz_file_info fi;
+#endif
+#ifdef WIN32
+  PackStruct PackInfo;
+#endif
+#ifdef RAR_SUPPORT
+  ArchiveList_struct *rar_list,*rar_current;
+#endif
+#if defined(SSE_VAR_UNRAR)
+  // persistent, good idea?
+  RAROpenArchiveData ArchiveData;
+  RARHeaderData HeaderData; // no Ex?
+  HANDLE hArcData;
+#endif
+  long crc;
+  int current_file_n,current_file_offset, err;
+  char type[12];
+  EasyStr last_error;
+  WORD attrib;
+  bool is_open;
+
+  zipclass();
+  ~zipclass(){ };
+
+  bool first(char*);
+  bool next();
+  bool close();
+  char* filename_in_zip();
+  void list_contents(char*,EasyStringList*,bool=false);
+  bool extract_file(char*,int,char*,bool=false,DWORD=0);
+};
+
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 class zipclass{
 private:
 public:
@@ -116,6 +165,8 @@ public:
   void list_contents(char*,EasyStringList*,bool=false);
   bool extract_file(char*,int,char*,bool=false,DWORD=0);
 };
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 extern zipclass zippy; 
 
