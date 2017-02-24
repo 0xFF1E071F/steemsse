@@ -118,9 +118,7 @@ release it will be 0xF1, and so on.)
 SS: most ST's had a 6301 that sent '$F1'
 */
 
-#if defined(SSE_IKBD_FAKE_CUSTOM)
-extern "C" void keyboard_buffer_write(BYTE,int signal=0);
-#elif defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301)
 extern "C" void keyboard_buffer_write(BYTE);
 #else
 EXT void keyboard_buffer_write(BYTE);
@@ -234,22 +232,56 @@ void ikbd_send_joystick_message(int);
 #define BIT_RMB BIT_0
 #define BIT_LMB BIT_1
 
-
-
-#if defined(SSE_IKBD_FAKE_CUSTOM) // fixes Drag/Unlimited Bobs
-#define IKBD_SCANLINES_FROM_ABS_MOUSE_POLL_TO_SEND int((MONO) ? 50:60)
-#else
 #define IKBD_SCANLINES_FROM_ABS_MOUSE_POLL_TO_SEND int((MONO) ? 50:30)
-#endif
-
-
 #define IKBD_SCANLINES_FROM_JOY_POLL_TO_SEND int((MONO) ? 32:20)   // 32:20
 #define RMB_DOWN(mk) (mk & 1)
 #define LMB_DOWN(mk) (mk & 2)
 
-
 EXT const int ikbd_clock_days_in_mon[13];
 EXT const int ikbd_clock_max_val[6];
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+struct IKBD_STRUCT{ // SS removed _
+  BYTE ram[128]; 
+  DWORD cursor_key_joy_time[6];
+  DWORD cursor_key_joy_ticks[4];
+  int command_read_count,command_parameter_counter;
+  int mouse_mode;
+  int joy_mode;
+  int abs_mouse_max_x,abs_mouse_max_y;
+  int cursor_key_mouse_pulse_count_x,cursor_key_mouse_pulse_count_y;
+  int relative_mouse_threshold_x,relative_mouse_threshold_y;
+  int abs_mouse_scale_x,abs_mouse_scale_y;
+  int abs_mouse_x,abs_mouse_y;
+  int duration;
+  int abs_mousek_flags;
+  int psyg_hack_stage;
+  int clock_vbl_count;
+  int reset_121A_hack;
+  int reset_0814_hack;
+  int reset_1214_hack;
+  int joy_packet_pos;
+  int mouse_packet_pos;
+#if defined(SSE_IKBD_POLL_IN_FRAME)
+  int scanline_to_poll; // each VBL, we poll IKBD during a random scanline
+#endif
+  WORD load_memory_address;
+  BYTE command_param[8];
+  BYTE command;
+  BYTE mouse_button_press_what_message;
+  BYTE clock[6];
+  bool mouse_upside_down;
+  bool send_nothing;
+  bool port_0_joy;
+  bool resetting;
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
 
 struct IKBD_STRUCT{ // SS removed _
   int command_read_count,command_parameter_counter;
@@ -296,27 +328,13 @@ logically connected to it. If a mouse disable command is received while port 0
 #if defined(SSE_IKBD_POLL_IN_FRAME)
   int scanline_to_poll; // each VBL, we poll IKBD during a random scanline
 #endif
-#if defined(SSE_IKBD_FAKE_CUSTOM)
-  int custom_prg_checksum; // for 6301 custom programs ID (boot & main)
-  BOOL custom_prg_loading; // faking loader execution
-  int custom_prg_ID; 
-  void CustomDragonnels();
-  void CustomFroggies();
-  void CustomTB2();
-#endif
-
-
 };
 
-EXT IKBD_STRUCT ikbd;
 
-#if defined(SSE_IKBD_FAKE_CUSTOM)
-#define IKBD_CUSTOM_DUMMY 1 
-#define IKBD_CUSTOM_SIGNAL 1 
-#define IKBD_DRAGONNELS_MENU 1
-#define IKBD_FROGGIES_MENU 2
-#define IKBD_TB2_MENU 3
-#endif
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
+
+EXT IKBD_STRUCT ikbd;
 
 BYTE keyboard_buffer_read();
 

@@ -232,10 +232,29 @@ EXT int cpu_timer_at_start_of_hbl;
 
 
 typedef void(*EVENTPROC)();
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+typedef struct{
+  EVENTPROC event;
+  int time;
+}screen_event_struct;
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 typedef struct{
   int time;
   EVENTPROC event;
 }screen_event_struct;
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
+
+
 
 #if defined(SSE_GLUE)
 void event_trigger_vbi();

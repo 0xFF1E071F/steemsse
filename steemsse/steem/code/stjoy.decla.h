@@ -98,6 +98,102 @@ int DIPOVNum=-1,DIAxisNeg[MAX_PC_JOYS][6],DI_RnMap[MAX_PC_JOYS][3],DIDisconnecte
 EXT int NumJoysticks;
 EXT bool JoyExists[MAX_PC_JOYS];
 
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+typedef struct{
+#ifdef UNIX
+  UINT AxisMin[6],AxisMax[6]; // On X user sets these
+  UINT AxisMid[6],AxisLen[6];
+  int NumButtons;
+  bool AxisExists[7];
+  bool On,NoEvent;
+  Str DeviceFile;
+  int Dev;
+  UINT AxisDZ[6],Range;
+#elif defined(WIN32)
+  UINT AxisMin[6],AxisMax[6]; // On X user sets these
+  UINT AxisMid[6],AxisLen[6];
+  UINT ExFlags;
+  int NumButtons;
+  int WaitRead,WaitReadTime;
+  bool NeedsEx;
+  bool AxisExists[7];  
+#endif
+}JoystickInfo;
+EXT JoystickInfo JoyInfo[MAX_PC_JOYS];
+
+typedef struct{
+  UINT AxisPos[6];
+  UINT Buttons;
+  DWORD POV;
+  bool Valid;
+}OldJoystickPosition;
+EXT OldJoystickPosition OldJoyPos;
+//---------------------------------------------------------------------------
+class TJoystickConfig : public TStemDialog
+{
+private:
+#ifdef WIN32
+  static LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
+  static LRESULT __stdcall DeadZoneWndProc(HWND,UINT,WPARAM,LPARAM);
+  static LRESULT __stdcall GroupBoxWndProc(HWND,UINT,WPARAM,LPARAM);
+  void ManageWindowClasses(bool);
+
+  HWND JagBut,Group[2];
+  WINDOWPROC OldGroupBoxWndProc;
+#elif defined(UNIX)
+  static int WinProc(TJoystickConfig*,Window,XEvent*);
+  static int button_notify_proc(hxc_button*,int,int*);
+  static int picker_notify_proc(hxc_buttonpicker*,int,int);
+  static int dd_notify_proc(hxc_dropdown*,int,int);
+  static int scrollbar_notify_proc(hxc_scrollbar*,int,int);
+  static int edit_notify_proc(hxc_edit*,int,int);
+  static int timerproc(void*,Window,int);
+
+  void ShowAndUpdatePage();
+  bool AttemptOpenJoy(int);
+
+  bool ConfigST;
+  int PCJoyEdit;
+
+	hxc_button st_group,pc_group,config_group;
+  hxc_dropdown config_dd,setup_dd;
+	hxc_button dir_par[2],fire_par[2],jagpad_par[2];
+
+  hxc_edit device_ed;
+
+	hxc_button joy_group[2],fire_but_label[2],autofire_but_label[2][2];
+	hxc_dropdown autofire_dd[2];
+	hxc_scrollbar MouseSpeedSB;
+	hxc_button MouseSpeedLabel[4];
+#endif
+public:
+  TJoystickConfig();
+  ~TJoystickConfig() { Hide(); };
+  void Show(),Hide();
+  bool ToggleVisible(){ IsVisible() ? Hide():Show();return IsVisible(); }
+  bool LoadData(bool,GoodConfigStoreFile*,bool* = NULL),SaveData(bool,ConfigStoreFile*);
+  static void CreateJoyAnyButtonMasks();
+  static int BasePort;
+
+#ifdef WIN32
+  bool HasHandledMessage(MSG *);
+  void FillJoyTypeCombo(),CheckJoyType();
+  void JoyModeChange(int,int);
+#elif defined(UNIX)
+  void UpdateJoyPos();
+  hxc_buttonpicker picker[2][6];
+  hxc_button enable_but[2];
+  hxc_button centre_icon[2];
+#endif
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 typedef struct{
   UINT AxisMin[6],AxisMax[6]; // On X user sets these
   UINT AxisMid[6],AxisLen[6];
@@ -182,6 +278,9 @@ public:
   hxc_button centre_icon[2];
 #endif
 };
+
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
 //int TJoystickConfig::BasePort=0;
 //----------------- Joystick Interface---------------------
 #define JOY_MODE_OFF 0
@@ -233,6 +332,32 @@ public:
 #define JAGPAD_DIR_L_BIT BIT_19
 #define JAGPAD_DIR_R_BIT BIT_20
 
+
+#if defined(SSE_COMPILER_STRUCT_391)
+
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+class TJoystick
+{
+public:
+  TJoystick();
+  ~TJoystick(){};
+  int ToggleKey; //,KeyAutoFire;
+#if defined(SSE_JOYSTICK_JUMP_BUTTON)
+  int DirID[7];  // Up Down Left Right Fire AutoFire Jump
+#else
+  int DirID[6];  // Up Down Left Right Fire AutoFire
+#endif
+  int AnyFireOnJoy,AutoFireSpeed;
+  int DeadZone;
+  int JagDirID[17];
+  int Type;
+};
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+#else
+
 class TJoystick
 {
 public:
@@ -252,6 +377,9 @@ public:
   int Type;
 };
 
+#endif//#if defined(SSE_COMPILER_STRUCT_391)
+
+//TODO
 TJoystick::TJoystick()
 {
   ToggleKey=0;
