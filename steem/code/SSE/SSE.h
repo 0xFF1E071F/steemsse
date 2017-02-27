@@ -56,8 +56,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 #define SSE_STRUCTURE //  necessary for the SSE build
 
-#define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
+//#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -1415,6 +1415,88 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
+////////////////
+// 3.9.1 mods //
+////////////////
+
+#if 1 //features
+
+#define SSE_VS2008_WARNING_391
+#if defined(SSE_BLITTER) // refactoring
+#define SSE_BLT_BUS_ARBITRATION_391
+#define SSE_BLT_BUS_ARBITRATION_391B
+#define SSE_BLT_COPY_LOOP
+#define SSE_BLT_RESTART //trick
+//#define SSE_BLT_RESTART2 // too heavy 
+#define SSE_BLT_MAIN_LOOP
+#endif
+#define SSE_CPU_BUS_ERROR_TIMING
+#define SSE_CPU_SPLIT_RL1
+#define SSE_CPU_SPLIT_RL2
+#define SSE_CPU_SPLIT_RL3
+#define SSE_CPU_SPLIT_RL4
+#define SSE_CPU_SPLIT_RL5
+#define SSE_CPU_SPLIT_RL6
+#define SSE_CPU_SPLIT_RL7
+#define SSE_CPU_SPLIT_RL8
+#define SSE_CPU_SPLIT_RL9
+#undef SSE_DRIVE_SOUND_SINGLE_SET
+#define SSE_DRIVE_SOUND_391
+#define SSE_SOUND_391
+#if defined(SSE_VID_D3D)
+#define SSE_VAR_OPT_391
+#define SSE_VID_D3D_CHECK_HARDWARE
+#if defined(SSE_VID_D3D_ONLY)
+#define SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ
+#define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
+#define SSE_VID_D3D_SCREENSHOT_391C
+#define SSE_VID_D3D_SCREENSHOT_391C1
+#endif
+#endif
+
+#endif//features
+
+#if 1//oops, a lot of bugs again in v3.9.0!
+
+#define SSE_ASSOCIATE_391
+#define SSE_BLT_391
+#define SSE_BOILER_TRAP
+#define SSE_COMPILER_391
+#define SSE_COMPILER_STRUCT_391
+#define SSE_CPU_391
+#define SSE_CPU_EXCEPTION_TRUE_PC_391 // MOVE <ea>,(xxx).L
+#define SSE_CPU_FETCH_IO_391 // oops, it's pc+2
+#define SSE_DISK_PASTI_AUTO_SWITCH_391
+#define SSE_DISK_PRG_391
+#define SSE_DISK_SCP_391
+#define SSE_DONGLE_PORT_391 //the page was seriously messed-up
+#define SSE_GLUE_391
+#define SSE_GUI_391
+#undef SSE_IKBD_6301_ROM_KEYTABLE //test
+#define SSE_JOYSTICK_391
+#define SSE_SOUND_DMA_391
+#define SSE_SOUND_DMA_391B // working but slow
+#define SSE_SOUND_RECORD_391 // restore val!
+#define SSE_SOUND_RECORD_391B // don't change source_p!
+#define SSE_VAR_RESIZE_391
+#define SSE_VAR_DATALOAD_391
+#define SSE_VID_D3D_391
+#define SSE_VID_D3D_391B
+#define SSE_VID_D3D_391C
+#define SSE_VID_D3D_391D
+#define SSE_VID_D3D_391E
+#define SSE_VID_D3D_CRISP_391
+#define SSE_VID_D3D_SCREENSHOT_391
+#define SSE_VID_D3D_SCREENSHOT_391B
+#define SSE_VID_D3D_SCREENSHOT_391B1
+#define SSE_VID_D3D_SCREENSHOT_391B2
+#define SSE_VID_DD_REORDER_STRUCT
+#define SSE_VID_DD_SCREENSHOT_391
+#define SSE_WD1772_391
+
+#endif//bugfixes
+
+
 ///////////////
 // STRUCTURE //
 ///////////////
@@ -1738,31 +1820,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-#define SSE_VS2008_WARNING_391
-#if defined(SSE_BLITTER) // refactoring
-#define SSE_BLT_BUS_ARBITRATION_391
-#define SSE_BLT_BUS_ARBITRATION_391B
-#define SSE_BLT_COPY_LOOP
-#define SSE_BLT_RESTART //trick
-//#define SSE_BLT_RESTART2 // too heavy 
-#define SSE_BLT_MAIN_LOOP
-#endif
-#define SSE_CPU_BUS_ERROR_TIMING
-#undef SSE_DRIVE_SOUND_SINGLE_SET
-#define SSE_DRIVE_SOUND_391
-#define SSE_SOUND_391
-#if defined(SSE_VID_D3D)
-#define SSE_VAR_OPT_391
-#define SSE_VID_D3D_CHECK_HARDWARE
-#if defined(SSE_VID_D3D_ONLY)
-#define SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ
-//#if defined(SSE_LEAN_AND_MEAN)
-#define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
-//#endif
-#define SSE_VID_D3D_SCREENSHOT_391C
-#define SSE_VID_D3D_SCREENSHOT_391C1
-#endif
-#endif
+
 
 #endif//beta
 
@@ -1770,63 +1828,17 @@ Beta: not SSE_PRIVATE_BUILD
 //#undef SSE_CPU_MFP_RATIO_STE //dsots
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
-#define SSE_CPU_SPLIT_RL1
-#define SSE_CPU_SPLIT_RL2
-#define SSE_CPU_SPLIT_RL3
-#define SSE_CPU_SPLIT_RL4
-#define SSE_CPU_SPLIT_RL5
-#define SSE_CPU_SPLIT_RL6
-#define SSE_CPU_SPLIT_RL7
-#define SSE_CPU_SPLIT_RL8
-#define SSE_CPU_SPLIT_RL9
-
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
 //#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
-
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
-//oops, a lot of bugs again in v3.9.0!
 
-#define SSE_ASSOCIATE_391
-#define SSE_BLT_391
-#define SSE_BOILER_TRAP
-#define SSE_COMPILER_391
-#define SSE_COMPILER_STRUCT_391
-#define SSE_CPU_391
-#define SSE_CPU_EXCEPTION_TRUE_PC_391 // MOVE <ea>,(xxx).L
-#define SSE_CPU_FETCH_IO_391 // oops, it's pc+2
-#define SSE_DISK_PASTI_AUTO_SWITCH_391
-#define SSE_DISK_PRG_391
-#define SSE_DISK_SCP_391
-#define SSE_DONGLE_PORT_391 //the page was seriously messed-up
-#define SSE_GLUE_391
-#undef SSE_IKBD_6301_ROM_KEYTABLE //test
-#define SSE_JOYSTICK_391
-#define SSE_SOUND_DMA_391
-#define SSE_SOUND_DMA_391B // working but slow
-#define SSE_SOUND_RECORD_391 // restore val!
-#define SSE_SOUND_RECORD_391B // don't change source_p!
-//#define SSE_VAR_EXC_391 //MFD?
-#define SSE_VAR_RESIZE_391
-#define SSE_VAR_DATALOAD_391
-#define SSE_VID_D3D_391
-#define SSE_VID_D3D_391B
-#define SSE_VID_D3D_391C
-#define SSE_VID_D3D_391D
-#define SSE_VID_D3D_391E
-#define SSE_VID_D3D_CRISP_391
-#define SSE_VID_D3D_SCREENSHOT_391
-#define SSE_VID_D3D_SCREENSHOT_391B
-#define SSE_VID_D3D_SCREENSHOT_391B1
-#define SSE_VID_D3D_SCREENSHOT_391B2
-#define SSE_VID_DD_REORDER_STRUCT
-#define SSE_VID_DD_SCREENSHOT_391
-#define SSE_WD1772_391
+
 
 #endif//bugfix
 

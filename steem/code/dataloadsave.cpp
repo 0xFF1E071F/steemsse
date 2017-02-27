@@ -862,7 +862,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     if (FirstLoad) CheckResetIcon();
 
 #if defined(SSE_STF)
-#ifndef TEST01
+#if !defined(SSE_GUI_391)
     OptionBox.Hide(); // hack
 #endif
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);

@@ -1296,11 +1296,6 @@ Byte instructions can not be used to read or write this register.
       Blit.LineNumber=BYTE(Val & (BIT_0 | BIT_1 | BIT_2 | BIT_3)); 
       Blit.Smudge=bool(Val & BIT_5); //SS persistent
       Blit.Hog=bool(Val & BIT_6); //SS volatile
-
-#ifdef TEST01___ //detect cases
-      if(!Blit.Hog && pc<0xe00000) TRACE_OSD("BLTM");
-#endif
-
 #if defined(SSE_BLT_RESTART)
       Blit.Restarted=false;
 #endif
