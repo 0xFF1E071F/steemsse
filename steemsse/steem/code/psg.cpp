@@ -722,7 +722,9 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     (Sea of Colour).
     Now it won't work if a program does a lot of quick changes for effect.
 */
-    if(old_dma_sound_l_top_val<dma_sound_l_top_val)
+    if(!OPTION_MICROWIRE)
+      ;
+    else if(old_dma_sound_l_top_val<dma_sound_l_top_val)
       old_dma_sound_l_top_val++;
     else if(old_dma_sound_l_top_val>dma_sound_l_top_val)
       old_dma_sound_l_top_val--;

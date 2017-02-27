@@ -3112,13 +3112,8 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   {
 #ifndef NO_CRAZY_MONITOR
     if(extended_monitor){
-#ifdef TEST02_
-      Width=em_width;
-      Height=em_height;
-#else
       Width=GetScreenWidth();
       Height=GetScreenHeight();
-#endif
     }else
 #endif
     if (Disp.BorderPossible()){ //SS: GetScreenWidth()>640

@@ -2,7 +2,7 @@
 
 Description=Fix the frustrating bug of cursor resetting after boss
 ApplyWhen=When the game is loaded and ready
-Version=Smash 16 STX version at atarimania, French
+Version=STX, STF T102 1MB
 PatchAuthor=Steven Seagal
 
 [Patch]
