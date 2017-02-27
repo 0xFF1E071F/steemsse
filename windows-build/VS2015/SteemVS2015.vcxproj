@@ -299,7 +299,7 @@
       <OutputFile>.\Steem___Win32_Boiler0/SteemVS2008.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy "Release\BoilerBeta.exe" "D:\emu\ST\bin\steem\BoilerVC9.exe"
+      <Command>copy "Release\BoilerBeta.exe" "D:\emu\ST\bin\steem\BoilerVS2015.exe"
 
 </Command>
     </PostBuildEvent>
@@ -488,6 +488,7 @@
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_VC80_UPGRADE=0x0600;%(PreprocessorDefinitions);STEVEN_SEAGAL</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>dinput8.lib;dxguid.lib;winmm.lib;ComCtl32.Lib;odbc32.lib;odbccp32.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -508,7 +509,7 @@
       <OutputFile>.\Release/SteemVS2008.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\steem\SteemVC9.exe"</Command>
+      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\steem\SteemVS2015.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -565,7 +566,7 @@
       <OutputFile>.\Release/SteemVS2008.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\steem\SteemVC9.exe"</Command>
+      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\SteemSSE64\SteemVS2015.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -795,7 +796,7 @@
       <AdditionalOptions>/GA  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalIncludeDirectories>..\..\include\;..\..\steem\code\;..\..\3rdparty\;C:\Program Files\Microsoft DirectX SDK\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -819,6 +820,7 @@
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_VC80_UPGRADE=0x0600;%(PreprocessorDefinitions);STEVEN_SEAGAL</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
       <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
@@ -840,7 +842,7 @@
       <OutputFile>.\Release/SteemVS2008.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\steem\SteemVC9Opt.exe"</Command>
+      <Command>copy "Release\SteemBeta.exe" "D:\emu\ST\bin\steem\SteemVS2015Opt.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Opt|x64'">
@@ -900,7 +902,7 @@
       <OutputFile>.\Release/SteemVS2008.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy "Release64\SteemBeta.exe" "D:\emu\ST\bin\SteemSSE64\SteemSSE64.exe"</Command>
+      <Command>copy "Release64\SteemBeta.exe" "D:\emu\ST\bin\SteemSSE64\SteemVS2015Opt.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
