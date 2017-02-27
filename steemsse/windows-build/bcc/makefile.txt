@@ -135,7 +135,7 @@ link:
 
 
 Steem.res:
-           $(RC) $(RC_PATH) -fo$(OUT)\Steem.res
+           $(RC) $(RC_PATH) -DSTEVEN_SEAGAL -fo$(OUT)\Steem.res
 
 Steem.obj:
            $(CPP) $(CPPFLAGS) $(STEEMFLAGS) -c -o$(OUT)\Steem.obj $(STEEMROOT)\Steem.cpp
@@ -227,7 +227,8 @@ SSE:	SSE.obj SSEOption.obj SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj \
 
 
 ArchiveAccessSSE:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
+#        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
+           $(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
 
 #unrarlib:
 #	$(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\unrarlib.obj $(3RDPARTYROOT)\unrarlib\unrarlib\unrarlib.c $(CFLAGS) 
