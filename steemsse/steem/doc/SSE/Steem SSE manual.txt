@@ -56,10 +56,6 @@ Other builds are available.
 Unsurprisingly, 'Win64' means a Windows 64bit build.
 
 DD means that DirectDraw is used instead of Direct3D (D3D).
-In the main build, we use Direct3D9 for all video rendering.
-In the DirectDraw build, we use DirectDraw 2.
-
-The essential difference is in fullscreen mode (see below).
 
 The 'Debug' build features the "Boiler", a very powerful debugger included
 with the emulator.
@@ -231,14 +227,15 @@ it by mistake.
 Use the right mouse button to choose your options and the left one to record
 a screenshot.
 
-The D3D build of Steem can save a screenshot as a BMP, JPG, PNG or NEO file.
+The D3D build of Steem can natively save a screenshot as a BMP, JPG, PNG or
+NEO file.
 The DD build of Steem can natively save in BMP or NEO format, but with
 the freeimage.dll plugin, more formats and options are available.
 
 PNG is the recommended format because it is both small and lossless. 
 Notice that JPG is a lossy format, only appropriate for a very colourful
 screen.
-NEO is the Neochrome format used on the ST.
+NEO is the format used by Neochrome on the ST.
 
 It is also possible to save multiple screenshots in a row using a shortcut.
 
@@ -286,7 +283,7 @@ You may create your own patches with a text editor.
 -----------
 
 You can assign key combinations (up to 3 keys each) to either some Steem
-control (start/stop, fullscreen, swap disks, etc.) or some Atari ST
+control (start/stop, fullscreen, etc.) or some Atari ST
 key. Not only keys are taken but also mouse and joystick actions.
 You can load and save as many key sets as you wish, and use several
 of them at the same time.
@@ -395,7 +392,7 @@ I know it is complicated, it is like this to avoid placing yet another option.
 The "Forest" demo by LJBK will recognise STF WU1-2 and STE.
 The "Bee" demos by LJBK will recognise WS1-4, and the demos will behave as
 expected in all WS (sync scrolling).
-Demo Closure by SYNC should work as STF (WS2,3,4) and STE (WS1).
+Demo Closure by SYNC should work as STF (WS1-4) and STE (WS1).
 
 Needless to say, Steem SSE is leading the way for this issue.
 
@@ -569,6 +566,7 @@ the "Change File" button to open the file selector where you can select the
 output file (you can create a new one by typing in a new name and clicking 
 "Open"). The "Reset Current File" button will delete everything that is 
 currently in the file.
+You can't use a file for input.
 
 
 -Loopback (Output->Input)
@@ -579,6 +577,7 @@ by the port, what use that is I really don't know!
 -Special adapters
 
 Some (simple) dongles are emulated. You can select one in the Ports page.
+For joystick port dongles, option C1 is required.
 This option also covers some other adapters:
 -Pro Sound Designer: used by Wings of Death and Lethal Xcess.
 -Switches for Ultimate Ripper Cartridge and Multiface ST.
@@ -947,9 +946,8 @@ led is green for reading, red for writing, yellow for hard disk.
 
 -Drive track info
 
-Alternatively, this will display current drive, side, track and sector (plus
-command in the Boiler), like those devices some people had attached to their
-ST.
+Alternatively, this will display current drive, side, track and sector, like 
+those devices some people had attached to their ST.
 
 
 -Logo
@@ -1047,6 +1045,13 @@ Don't use this in high resolution.
 One more buffer is used in video rendering.
 It doesn't seem to make a great difference.
 It depends on the video card abilities, it could fail on some systems. 
+
+---Use desktop refresh rate
+
+This will bypass the hz setting in Mode, using the current desktop refresh 
+rate instead.
+It can be useful if the video card can force a refresh rate that is not 
+officially supported by the display.
 
 
 --DirectDraw builds
@@ -1303,8 +1308,8 @@ elaborate.
 This version of 'vertical synchronisation' also works in windowed mode. 
 Your monitor needs a compatible refresh rate, or emulation speed is adjusted.
 With the right monitor, emulation of many programs is about perfect on the
-video side. Games like Goldrunner, Lethal Xcess, Xenon, etc. won't look much
-smoother on a real ST.
+video side. Games like Goldrunner, Lethal Xcess, Xenon, etc. and demo scrollers
+won't look much smoother on a real ST.
 Unfortunately, most ST programs run at 50hz. You can check this option on 
 a 60hz display with some 60hz programs, like HighResMode.
 
@@ -1501,7 +1506,9 @@ STT is a Steem-specific format that is to be considered legacy.
 
 If you right click in the box to the right of the big drive icon, a context 
 menu allows you to toggle the read-only property (important for some games),
-swap disks A and B, remove the disk, or go to where the disk is stored. 
+swap disks A and B (a keyboard shortcut can interfere with the game), remove
+the disk, or go to where the disk is stored. 
+
 
 Right clicking on a disk image displays a menu with a myriad of options to 
 allow you to organise and use your disk images. "Get Contents" is useful if the

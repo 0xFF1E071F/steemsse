@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.8.3
+v3.9.1
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
@@ -57,16 +57,21 @@ Games
 =========
 
 - 4 Wheel Drive/Combo Racer STX: pasti 02j
+- 10th Frame dongle: C1
 - Albedo STX: DI, pasti 02j
 - Altaïr: to use the missile, press any SHIFT key
 - Amberstar STX: WP
+- Ange de Cristal STX: Use Old Timing (02j)
 - Antago STX, SCP: WP
 - Arctic Fox: not T106
 - Billiards Simulator: <4MB
+- Bubble Dizzy original: No B
+- Cricket Captain dongle: C1
 - Chessmaster 2000: STF
+- Crash Garret: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
-- Demoniak -ELT: STF (WU2), C1, C2
+- Demoniak -ELT: STF, C1, C2, ADAT
 - Dragonflight: create STW disk
 - Dungeon Master SCP: DI
 - Dynabusters+: STE; F1: music F2: volume
@@ -83,6 +88,7 @@ Games
 - Hyper Force: STF
 - International Tennis: not C1
 - Jupiter Masterdrive STX: DI
+- Leader Board dongle: C1
 - Les Aventures De Moktar: no ghost disk
 - Lethal Xcess: Borders on
 - Live & Let Die: STF
@@ -92,6 +98,7 @@ Games
 - Mean Street: ADAT
 - Mercs STX: not T102
 - Microprose Golf ST: ADAT
+- Multi Player Soccer Manager dongle: C1
 - Nightdawn: STF
 - Obsession: Borders on
 - Pacmania STE: Borders on
@@ -99,6 +106,7 @@ Games
 - Platoon STX: STF T100US (DI)
 - Realm of the Trolls: create STW disk
 - R-Type: STF
+- Rugby Coach dongle: C1
 - Seven Gates of Jambala: C2 
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
@@ -115,6 +123,8 @@ Games
 - Warp STX: C1, DI, retry!
 - X-Out: C1
 
+Dongle games: choose the appropriate adapter in the 'Ports' option page.
+Don't forget to remove it when you don't need it anymore!
 
 Demos
 =========
@@ -132,7 +142,7 @@ Demos
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
 - Circus back²STage: STE, 4MB
-- Closure: ADAT
+- Closure: ADAT, choose a WS
 - Corporation Megademo: STE, C1
 - Cuddly Demos: DI, WS1 if STE
 - Dangerous Fantaisy: STE
