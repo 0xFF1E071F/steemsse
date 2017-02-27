@@ -45,7 +45,7 @@ Dots in WU2 (correct)
 
 -Dizzy Panic 1 player/start switching (correct)
 
--Down TLN display issues
+-Down -TLN: flickering screen
 
 -Dynabuster+ flicker at scores (correct)
 
@@ -64,6 +64,8 @@ Mouse move can be erratic with option C1
 Some MIDI keyboards send $FE all the time as  'Active Sensing'.
 It will mess other programs.
 
+-GEMDOS harddisk sometimes seems to be on while option is off.
+
 -Hades Nebula sometimes fails to start
 
 -hi-fi dreams should sound better on STE
@@ -78,6 +80,8 @@ patched version jumping woman trash on bottom
 -Jumping Jacskon -MCA STE lower border flickers (correct)
 
 -Keyboard: sometimes won't take input anymore - quit Steem and start again
+
+-Lethal Xcess: possible to lose overscan at start on STE - reboot
 
 -Lose picture at stop with 400x278 display size
 Due to DirectDraw hacks

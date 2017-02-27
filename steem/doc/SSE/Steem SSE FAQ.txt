@@ -1,12 +1,13 @@
 Steem SSE FAQ
 ---------------
 
-v3.9.0
+v3.9.1
 
 Q:
 What is the Atari ST?
 A:
 The Atari ST was the best 16bit computer.
+
 
 Q:
 What is Steem?
@@ -187,13 +188,14 @@ Help! I reset the ST, stop and start Steem, delete auto.sts and I just get
 a blank screen.
 A:
 Check options ST model and TOS. With STF and TOS1.6, you'll have a blank
-screen.
+screen. 
 
 
 Q:
 Steem can't handle zip or rar or 7z files.
 A:
-Check that necessary DLL files are in your Steem folder.
+Check that necessary DLL files are in your Steem folder (or your system
+folder).
 
 
 Q:
@@ -234,7 +236,7 @@ The options that should make the most sense are:
 - Delay 20ms if your computer can handle it
 - Frequency: depends on your hardware (44.1k is generally fine) and the
 program (50066 may sound better for some STE programs).
-- Format: 16bit stereo is generally fine.
+- Format: 16bit stereo is advised.
 - Volume: if you're not satisfied, it could help to set it to max and use
 your Windows control panel to adjust. Though in recent versions of Steem SSE,
 the volume slider has been fixed.
@@ -248,13 +250,9 @@ restarting Steem gives you control back.
 
 
 Q:
-When I take a screenshot in Steem my pictures turn out upside down and back
-to front if I am using FreeImage.dll.
+Joysticks don't seem to be read correctly.
 A:
-Steem was updated to work with later versions of this great plugin, because,
-hem, they broke compatibility between versions.
-So you need to use a recent version, that you can find there:
-http://freeimage.sourceforge.net/download.html
+Please first check that option 'Ports/Special adapters' doesn't interfere.
 
 
 Q:
@@ -289,12 +287,14 @@ xinput1_3.dll
 If it doesn't help, some search engine will be more useful than me.
 There is also a DirectDraw build available in case it really won't work.
 
+
 Q:
 What is the difference between the D3D and the DirectDraw (DD) build?
 A:
 The main difference is in fullscreen mode. The DD build uses 800x600 (with
 borders on) while the D3D uses any resolution you choose. There are other
 options available.
+
 
 Q:
 What's the difference between ACSI and GEMDOS hard drives?
@@ -330,7 +330,8 @@ Access Times (Slow)' is checked in the Disk manager, for ST, MSA, DIM, STW
 and HFE disk images.
 For IPF, CTR, and SCP disk images, the option isn't necessary as emulation
 is slow anyway :) 
-For STX images, settings are in 'Pasti configuration'.
+For STX images, settings are in 'Pasti configuration', but you want maximum
+accuracy.
 
 
 Q:
@@ -345,7 +346,8 @@ By the way, with most files zipped, file association makes less sense.
 Q:
 There's a strange bug, the keyboard doesn't click like on a real ST.
 A:
-If you really want that click, check the sound options.
+If you really want that click, check the sound options, Steem gives you
+the choice.
 
 
 Q:
