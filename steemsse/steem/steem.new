@@ -13,7 +13,7 @@ If a program won't run from hard drives, copy it to a disk image using the ST de
 Some programs won't work if their disk is read only, always try making it read-write (or extracting the disk if it is in an archive) if you have problems
 Some programs won't work with memory size set to 4Mb or 512Kb
 fast forward is very useful, map it to a key using shortcuts to get the full effect
-Check the new options in this SSE build: ST model, wake-up state, C1, C2, Hacks...
+Check the new options in this SSE build: ST model, C1, C2, Display size...
 More programs than you think require Accurate Disk Access Times (slow) option in the Disk manager, check Hints.txt
 Steem SSE site is now http://ataristeven.exxoshost.co.uk
 The source of Steem SSE is at http://sourceforge.net/projects/steemsse
@@ -24,12 +24,10 @@ When Chuck Norris can't do it, call Steven Seagal
 maximize the window to go to fullscreen mode (directx required)
 Know your mc68k from your mk68901?  Download the debug build of steem and help us get those bad games working
 drag a file to the Home button with right mouse button - easy shortcuts to your disks
-Steem Boiler: Power without the price!
-ST, MSA, DIM, STT, STX, IPF, CTR, SCP, PRG, TOS: Steem runs everything!
+ST, MSA, DIM, STT, STX, IPF, CTR, SCP, HFE, STW, PRG, TOS: Steem runs everything!
 You need pasti.dll for STX images, capslib.dll for IPF and CTR images
 With unrar.dll, you can use the rar format
 With archiveaccess.dll, you can use the 7z format and many more
-Make sure to use the latest version of Freeimage.dll or you could get upside-down pictures!
 
 [LINKS]
 
