@@ -52,7 +52,7 @@ using namespace std;
 #endif
 
 typedef EasyStr Str;
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "translate.decla.h"
 #else
 #include "translate.h"
@@ -83,7 +83,7 @@ typedef EasyStr Str;
 
 #endif
 //---------------------------------------------------------------------------
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #ifdef WIN32
 #include "resnum.decla.h"
@@ -124,7 +124,7 @@ typedef EasyStr Str;
 #include "di_get_contents.h"
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #include "stemdialogs.decla.h"
 #include "harddiskman.decla.h"
@@ -219,7 +219,7 @@ typedef EasyStr Str;
 
 #include <wordwrapper.h>
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "screen_saver.decla.h"
 #else
 #include "screen_saver.h"

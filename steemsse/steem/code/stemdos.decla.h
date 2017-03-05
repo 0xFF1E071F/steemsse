@@ -138,14 +138,10 @@ typedef struct{
 
 EXT stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
 //---------------------------------------------------------------------------
-#if defined(SSE_VAR_RESIZE_391)
-EXT int stemdos_command; // NVDI
-EXT BYTE stemdos_attr;
-#elif defined(SSE_VAR_RESIZE)
-EXT BYTE stemdos_command;
+EXT int stemdos_command;
+#if defined(SSE_VAR_RESIZE)
 EXT BYTE stemdos_attr;
 #else
-EXT int stemdos_command;
 EXT int stemdos_attr;
 #endif
 
@@ -200,11 +196,8 @@ void stemdos_parse_path(); //remove \..\ etc.
 EXT MEM_ADDRESS stemdos_dta;
 
 EXT short stemdos_save_sr;
-#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
-EXT BYTE stemdos_current_drive;
-#else
 EXT int stemdos_current_drive;
-#endif
+
 #if defined(SSE_TOS_GEMDOS_NOINLINE)
 
 void stemdos_trap_1_Fdup();
@@ -247,8 +240,7 @@ void STStringToPC(char*),PCStringToST(char*);
 
 #endif//#ifndef DISABLE_STEMDOS
 
-#ifdef SSE_TOS_STRUCT
-
+#ifdef SSE_TOS
 
 #if defined(SSE_COMPILER_STRUCT_391)
 
@@ -259,19 +251,20 @@ struct TTos {
 #if defined(SSE_STF_MATCH_TOS3)
   BYTE DefaultCountry;
 #endif
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
+#if defined(SSE_TOS_KEYBOARD_CLICK)
+  void CheckKeyboardClick();
+#endif
+#if defined(SSE_TOS_WARNING)
+  void CheckSTTypeAndTos();
+#endif
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
-#endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
-  void CheckKeyboardClick();
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_381B)
   void HackMemoryForExtendedMonitor();
 #endif
-#if defined(SSE_TOS_WARNING)
-void CheckSTTypeAndTos();
-#endif
+
 };
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
@@ -283,18 +276,18 @@ struct TTos {
 #if defined(SSE_STF_MATCH_TOS3)
   BYTE DefaultCountry;
 #endif
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //version with refactoring
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
   EasyStr GetNextTos(DirSearch &ds); // to enumerate TOS files
   void GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date);
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
   void CheckKeyboardClick();
 #endif
 #if defined(SSE_TOS_GEMDOS_EM_381B)
   void HackMemoryForExtendedMonitor();
 #endif
 #if defined(SSE_TOS_WARNING)
-void CheckSTTypeAndTos();
+  void CheckSTTypeAndTos();
 #endif
 };
 

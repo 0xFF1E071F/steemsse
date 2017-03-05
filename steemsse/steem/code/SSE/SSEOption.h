@@ -81,7 +81,7 @@ extern struct TOption SSEOption;
 #define OPTION_HACKS (SSEOption.Hacks)
 #define OPTION_C1 (SSEOption.Chipset1)
 #define OPTION_C2 (SSEOption.Chipset2)
-#define OPTION_MICROWIRE (SSEOption.Microwire)
+#define OPTION_MICROWIRE (SSEOption.Microwire && SSEOption.STModel==STE)
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
 #define OPTION_CAPTURE_MOUSE (SSEOption.CaptureMouse)

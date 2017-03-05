@@ -1,5 +1,5 @@
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: screen_saver.cpp")
 #endif
 

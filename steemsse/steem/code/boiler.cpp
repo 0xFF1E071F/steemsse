@@ -6,11 +6,11 @@ DESCRIPTION: This file contains a lot of utility functions for Steem's debug
 build and the basis of the debug GUI.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: boiler.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #include "SSE/SSECpu.h" //m68k_lpoke()
 MEM_ADDRESS dpc,old_dpc;

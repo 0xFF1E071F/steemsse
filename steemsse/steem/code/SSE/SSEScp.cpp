@@ -84,8 +84,7 @@ void  TImageSCP::ComputePosition() {
       break;
     }
   }
-
-#if defined(SSE_DISK_SCP373)
+#if defined(SSE_DISK_SCP_RANDOMISE)
 /* Randomise first bit when starting reading a track.
    Fixes War Heli track 68
    The protection is looking for A1 47 4D 43 then checks that the byte
@@ -102,12 +101,9 @@ void  TImageSCP::ComputePosition() {
 #endif
 
   ASSERT(SF314[DRIVE].CyclesPerByte());
-#if defined(SSE_DISK_SCP_391) // just informative? TODO
+  // just informative? TODO
   Disk[DRIVE].current_byte=(time_of_next_event-SF314[DRIVE].time_of_last_ip)
     /SF314[DRIVE].CyclesPerByte();
-#else
-  Disk[DRIVE].current_byte=(ACT-SF314[DRIVE].time_of_last_ip)/SF314[DRIVE].CyclesPerByte();
-#endif
 }
 
 #if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
@@ -270,7 +266,7 @@ void TImageSCP::Init() {
   TimeFromIndexPulse=NULL;
   N_SIDES=2;
   N_TRACKS=83; //max
-  nBytes=DRIVE_BYTES_ROTATION_STW; //not really pertinent (TODO?)
+  nBytes=DISK_BYTES_PER_TRACK; //not really pertinent (TODO?)
 }
 
 
@@ -460,7 +456,7 @@ bool TImageSCP::Open(char *path) {
         else
           N_TRACKS=(file_header.IFF_END-file_header.IFF_START+1)/2;
 
-#if defined(SSE_DEBUG) && defined(SSE_DISK_STW2)
+#if defined(SSE_DEBUG)
 TRACE_LOG("SCP %d sides %d tracks %d IFF_VER %X IFF_DISKTYPE %X IFF_NUMREVS %d \
 IFF_START %d IFF_END %d IFF_FLAGS %d IFF_ENCODING %d IFF_HEADS %d \
 IFF_RSRVED %X IFF_CHECKSUM %X\n",Id,N_SIDES,N_TRACKS,file_header.IFF_VER,

@@ -4,10 +4,10 @@ MODULE: Steem
 DESCRIPTION: Functions to create the pages of the options dialog box.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: options_create.cpp")
 #endif
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "SSE\SSESTF.h"
 #include "SSE\SSE6301.h"
 #include "SSE\SSEOption.h"
@@ -55,7 +55,7 @@ void TOptionBox::CreateMachinePage()
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
   Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
-#if defined(SSE_X64_390)
+#if defined(SSE_X64_390) //TODO also for x86
   SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[0]));
   SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[1]));
 #if defined(SSE_STF_MEGASTF)
@@ -246,29 +246,21 @@ compatible only with the STF"));
   CreateWindowEx(512,"Steem Path Display","",WS_CHILD,
                   page_l+10,y,page_w-20,22,Handle,(HMENU)8500,HInstance,NULL);
   y+=30;
-  //temp switches, because I added 'freeze' before 'transparent'
-#if defined(SSE_CARTRIDGE_FREEZE) && defined(SSE_CARTRIDGE_TRANSPARENT)
+  
+#if defined(SSE_CARTRIDGE_FREEZE) || defined(SSE_CARTRIDGE_TRANSPARENT)
   CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10,y,(page_w-20)/4-5,23,Handle,(HMENU)8501,HInstance,NULL);
 
   CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10+(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8502,HInstance,NULL);
-
+#if defined(SSE_CARTRIDGE_TRANSPARENT)
   Win=CreateWindow("Button","",WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10+2*(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8504,HInstance,NULL);
-
+#endif
+#if defined(SSE_CARTRIDGE_FREEZE)
   CreateWindow("Button",T("Freeze"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10+3*(page_w-20)/4,y,(page_w-20)/4-5,23,Handle,(HMENU)8503,HInstance,NULL);
-
-#elif defined(SSE_CARTRIDGE_FREEZE)
-  CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
-                  page_l+10,y,(page_w-20)/3-5,23,Handle,(HMENU)8501,HInstance,NULL);
-
-  CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
-                  page_l+10+(page_w-20)/3,y,(page_w-20)/3-5,23,Handle,(HMENU)8502,HInstance,NULL);
-
-  CreateWindow("Button",T("Freeze"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
-                  page_l+10+2*(page_w-20)/3,y,(page_w-20)/3-5,23,Handle,(HMENU)8503,HInstance,NULL);
+#endif
 #else
   CreateWindow("Button",T("Choose"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+10,y,(page_w-20)/2-5,23,Handle,(HMENU)8501,HInstance,NULL);
@@ -567,19 +559,17 @@ void TOptionBox::CreatePortsPage()
 {
   HWND Win;
   int y=10,Wid;
+  
+#if defined(SSE_DONGLE_PORT)
+  int GroupHeight=(OPTIONS_HEIGHT-10)/3-10-15;
+#else
   int GroupHeight=(OPTIONS_HEIGHT-10)/3-10;
-#if defined(SSE_DONGLE_PORT_391)
-  GroupHeight-=15;
 #endif
   int GroupMiddle=20+30+(GroupHeight-20-30)/2;
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
   for (int p=0;p<4;p++){
     if(p==3)
       GroupHeight-=45;
-#elif defined(SSE_DONGLE_PORT3)
-  for (int p=0;p<4;p++){
-    if(p==1)
-      GroupHeight/=2;
 #else
   for (int p=0;p<3;p++){
 #endif
@@ -590,9 +580,8 @@ void TOptionBox::CreatePortsPage()
       case 0:PortName=T("MIDI Ports");break;
       case 1:PortName=T("Parallel Port");break;
       case 2:PortName=T("Serial Port");break;
-#if defined(SSE_DONGLE_PORT3)
-      //case 3:PortName=T("Dongles");break;
-      case 3:PortName=T("Special Adapters");break; //not all are dongles anyway
+#if defined(SSE_DONGLE_PORT)
+      case 3:PortName=T("Special Adapters");break;
 #endif
     }
     CtrlParent=CreateWindow("Button",PortName,WS_CHILD | BS_GROUPBOX,
@@ -606,9 +595,7 @@ void TOptionBox::CreatePortsPage()
 #endif
 
     y+=GroupHeight;
-#if defined(SSE_DONGLE_PORT_391)
-    y+=0;
-#else
+#if !defined(SSE_DONGLE_PORT)
     y+=10;
 #endif
     Wid=get_text_width(T("Connect to"));
@@ -619,7 +606,7 @@ void TOptionBox::CreatePortsPage()
                             15+Wid,20,page_w-10-(15+Wid),200,CtrlParent,HMENU(base+2),HInstance,NULL);
     CBAddString(Win,T("None"),PORTTYPE_NONE);
 
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
     if(p==3)
     {
 #if defined(SSE_DONGLE_LEADERBOARD)
@@ -662,7 +649,7 @@ void TOptionBox::CreatePortsPage()
     if (AllowCOM) CBAddString(Win,T("COM Port"),PORTTYPE_COM);
     CBAddString(Win,T("File"),PORTTYPE_FILE);
     CBAddString(Win,T("Loopback (Output->Input)"),PORTTYPE_LOOP);
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
     }
 #endif
 
@@ -672,7 +659,7 @@ void TOptionBox::CreatePortsPage()
 
     // MIDI
     Wid=get_text_width(T("Output device"));
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
     CreateWindow("Static",T("Output device"),WS_CHILD,
                   10,54-5,Wid,23,CtrlParent,HMENU(base+10),HInstance,NULL);
 
@@ -703,7 +690,7 @@ void TOptionBox::CreatePortsPage()
     SendMessage(Win,CB_SETCURSEL,STPort[p].MIDIOutDevice+2,0);
 
     Wid=get_text_width(T("Input device"));
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
     CreateWindow("Static",T("Input device"),WS_CHILD,
                             10,80+4-10,Wid,23,CtrlParent,HMENU(base+12),HInstance,NULL);
 
@@ -735,7 +722,7 @@ void TOptionBox::CreatePortsPage()
 
     //Parallel
     Wid=get_text_width(T("Select port"));
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
     CreateWindow("Static",T("Select port"),WS_CHILD,
                             page_w/2-(Wid+105)/2,GroupMiddle-15+4-5,Wid,23,CtrlParent,HMENU(base+20),HInstance,NULL);
 
@@ -753,7 +740,7 @@ void TOptionBox::CreatePortsPage()
 
     //COM
     Wid=get_text_width(T("Select port"));
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
     CreateWindow("Static",T("Select port"),WS_CHILD,
                             page_w/2-(Wid+105)/2,GroupMiddle-15+4-5,Wid,23,CtrlParent,HMENU(base+30),HInstance,NULL);
 
@@ -770,7 +757,7 @@ void TOptionBox::CreatePortsPage()
     SendMessage(Win,CB_SETCURSEL,STPort[p].COMNum,0);
 
     //File
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
     CreateWindowEx(512,"Steem Path Display",STPort[p].File,WS_CHILD,
                     10,GroupMiddle-30-2,page_w-20,22,CtrlParent,HMENU(base+40),HInstance,NULL);
 
@@ -791,7 +778,7 @@ void TOptionBox::CreatePortsPage()
 #endif
     // Disabled (parallel only)
     if (p==1){
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
       CreateWindow("Steem Path Display",T("Disabled due to parallel joystick"),
                     WS_CHILD | PDS_VCENTRESTATIC,
                     10,20,page_w-20,GroupHeight-30-5,CtrlParent,HMENU(99),HInstance,NULL);
@@ -841,7 +828,7 @@ void TOptionBox::PortsMakeTypeVisible(int p)
   // Redraw the groupbox
   RECT rc;
   GetWindowRect(CtrlParent,&rc);
-#if defined(SSE_DONGLE_PORT_391)
+#if defined(SSE_DONGLE_PORT)
   rc.left+=8;rc.right-=8;rc.top+=20+25-5;rc.bottom-=5;
 #else
   rc.left+=8;rc.right-=8;rc.top+=20+25;rc.bottom-=5;
@@ -1134,10 +1121,8 @@ void TOptionBox::CreateBrightnessPage()
 void TOptionBox::CreateDisplayPage()
 {
   HWND Win;
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
   int mask;
-  long Wid,Offset=0;
-#elif defined(SSE_VID_DISABLE_AUTOBORDER2)
   long Wid,Offset=0;
 #else
   long Wid;
@@ -1668,7 +1653,7 @@ void TOptionBox::CreateFullscreenPage()
   long Offset=0;
 #if defined(SSE_VID_D3D_ONLY)
   long Wid=0;
-#else
+#else // DirectDraw
 #if defined(SSE_VID_D3D_OPTION)
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX; 
 #if defined(SSE_VID_D3D_373)
@@ -2272,14 +2257,12 @@ void TOptionBox::CreateSoundPage()
                   page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)7099,HInstance,NULL),
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
 
-#if defined(SSE_GUI_OPTIONS_SOUND_FILTER)
+#if defined(SSE_SOUND_FILTERS)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' (Steem original)"));
-#if defined(SSE_SOUND_FILTER_STF)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'SCART'"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' tunes only"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' samples only"));
-#endif
 #if defined(SSE_SOUND_FILTER_HATARI)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'Hatari'"));
 #endif

@@ -5,11 +5,11 @@ DESCRIPTION: The base class for Steem's dialogs that are used to configure
 the emulator and perform additional functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: stemdialogs.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 WIN_ONLY( bool StemDialog_RetDefVal; )
 
 TStemDialog *DialogList[MAX_DIALOGS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};

@@ -11,7 +11,7 @@ SS: this is compiled only if STEVEN_SEAGAL or SSE_CPU isn't defined.
 
 #if !defined(SSE_CPU)
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s

@@ -4,12 +4,12 @@ MODULE: emu
 DESCRIPTION: Code to handle Steem's flexible port redirection system.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: stports.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_BUILD)
+#if defined(SSE_DONGLE_PORT)
 TSTPort STPort[4];
 #else
 TSTPort STPort[3];

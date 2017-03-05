@@ -62,7 +62,7 @@ EXT int sound_variable_a INIT(32);
 EXT int sound_variable_d INIT(208);
 #endif
 
-#if defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTERS)
 #define SOUND_MODE_MUTE         0
 #define SOUND_MODE_EMULATED     1
 #define SOUND_MODE_CHIP         2
@@ -72,16 +72,12 @@ EXT int sound_variable_d INIT(208);
 #if defined(SSE_SOUND_FILTER_HATARI)
 #define SOUND_MODE_HATARI    6
 #endif
-
 #else
 #define SOUND_MODE_MUTE         0
 #define SOUND_MODE_CHIP         1
 #define SOUND_MODE_EMULATED     2
 #define SOUND_MODE_SHARPSAMPLES 3
 #define SOUND_MODE_SHARPCHIP    4
-#if defined(SSE_SOUND_FILTER_STF5)
-//#define SOUND_MODE_MONITOR      5
-#endif
 #endif
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
@@ -230,7 +226,7 @@ EXT BYTE dma_sound_treble;
 EXT int dma_sound_bass;
 EXT int dma_sound_treble;
 #endif
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
 EXT BYTE old_dma_sound_l_top_val,old_dma_sound_r_top_val;
 #endif
 #endif//microwire
@@ -248,11 +244,7 @@ void psg_write_buffer(int,DWORD);
 #define MOD_PSG_NOISE_ARRAY & 8191
 
 #ifndef ONEGAME
-#if defined(SSE_SOUND_NO_EXTRA_PER_VBL)
-#define PSG_WRITE_EXTRA 0
-#else
 #define PSG_WRITE_EXTRA 300
-#endif
 #else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
 #endif

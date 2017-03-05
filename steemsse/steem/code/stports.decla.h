@@ -40,7 +40,7 @@ struct TDongle {
 };
 extern TDongle Dongle;
 
-#if defined(SSE_DONGLE_PORT3) 
+#if defined(SSE_DONGLE_PORT) 
 #define DONGLE_ID STPort[3].Type // in case we choose another way later
 #endif
 
@@ -177,7 +177,7 @@ public:
 #endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
 extern TSTPort STPort[4];
 #else
 extern TSTPort STPort[3];

@@ -6,17 +6,17 @@ is called when a command is written to the FDC's command register via the
 DMA I/O addresses (see iow.cpp).
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: fdc.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
 
 #if defined(SSE_VAR_RESIZE)
-EXT BYTE floppy_mediach[2]; // potentially breaks snapshot...
+EXT BYTE floppy_mediach[2];
 EXT BYTE num_connected_floppies INIT(2);
 #else
 EXT int floppy_mediach[2];
@@ -64,10 +64,8 @@ BYTE floppy_head_track[2];
 BYTE floppy_access_ff_counter=0;
 BYTE floppy_irq_flag=0;
 BYTE fdc_step_time_to_hbls[4]={94,188,32,47};
-#if !defined(SSE_DMA_OBJECT)
-#if !defined(SSE_DMA_FIFO_READ_ADDRESS)
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
 BYTE fdc_read_address_buffer_len=0;
-#endif
 #endif
 WORD floppy_write_track_bytes_done;
 BYTE fdc_spinning_up=0;
@@ -86,7 +84,9 @@ int floppy_type1_command_active=2;  // Default to type 1 status
 #endif
 #endif //var_resize
 
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS) //argh, forgot switch until 392
 EXT BYTE fdc_read_address_buffer[20];
+#endif
 
 #undef EXT
 #undef INIT
@@ -98,7 +98,12 @@ EXT BYTE fdc_read_address_buffer[20];
 
 #endif//decla
 
-#if !defined(SSE_STRUCTURE_DMA_INC_ADDRESS)
+#if defined(SSE_DMA_FIFO_FDC)
+
+#define DMA_INC_ADDRESS Dma.IncAddress();
+
+#else
+
 #define DMA_INC_ADDRESS                                    \
   if (dma_sector_count){                                   \
     dma_address++;                                         \
@@ -119,14 +124,13 @@ EXT BYTE fdc_read_address_buffer[20];
 #define FDC_HBLS_PER_ROTATION (313*50/5) 
 #endif
 
-#if defined(SSE_FDC_INDEX_PULSE1) 
+#if defined(SSE_FDC_ACCURATE_TIMING) 
 // 4ms =200ms/50
 #define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/ ((ADAT)?50:20)) 
 #else
 // 5% of track is index pulse, too high? 
 #define FDC_HBLS_OF_INDEX_PULSE (FDC_HBLS_PER_ROTATION/20) // 20
 #endif
-
 
 #define LOGSECTION LOGSECTION_FDC
 //---------------------------------------------------------------------------
@@ -214,7 +218,7 @@ bool floppy_handle_file_error(int floppyno,bool Write,int sector,int PosInSector
 //---------------------------------------------------------------------------
 bool floppy_track_index_pulse_active()
 {
-#if defined(SSE_FDC_INDEX_PULSE2) && defined(SSE_DRIVE)
+#if defined(SSE_FDC_ACCURATE_TIMING)
 /*  Normally floppy_type1_command_active is up-to-date both in
     Steem native and WD1772 emu.
     Of course, selected drive should be spinning (motor on).
@@ -223,8 +227,9 @@ bool floppy_track_index_pulse_active()
 */
   if(ADAT)
   {
-    return (floppy_type1_command_active && SF314[DRIVE].State.motor
+    bool active=(floppy_type1_command_active && SF314[DRIVE].State.motor
       && SF314[DRIVE].BytePosition()<=125); //4ms = +-125 bytes
+    return active;
   }
   else 
 #endif
@@ -242,7 +247,7 @@ bool floppy_track_index_pulse_active()
 void fdc_type1_check_verify()
 {
 #if defined(SSE_FDC_VERIFY_AGENDA)
-//  What isn't emulated: ID track is correct?
+
   if(ADAT)
   {
     if(FDC_VERIFY)
@@ -250,9 +255,6 @@ void fdc_type1_check_verify()
       WORD HBLsToNextID;
       BYTE NextIDNum;
       Disk[DRIVE].NextID(NextIDNum,HBLsToNextID); // C++ references
-#if !defined(SSE_FDC_390B) // counted in bytes in NextID()
-      HBLsToNextID+=SF314[DRIVE].BytesToHbls(6); // right after ID
-#endif
       HBLsToNextID+=MILLISECONDS_TO_HBLS(15); // head settling
 
 #if defined(SSE_DRIVE_EMPTY_VERIFY_TIME_OUT)
@@ -267,15 +269,13 @@ void fdc_type1_check_verify()
       }
       else
 #endif
-      {//bugfix scope
-#if defined(SSE_WD1772)
+      {
         WD1772.IndexCounter=0; // 5 REVS to find match
-#endif
         agenda_add(agenda_fdc_verify,HBLsToNextID,NextIDNum);
       }
     }
     else
-      // delay 'finish' to avoid nasty bugs (European Demos)
+      // no verify: delay 'finish' to avoid nasty bugs (European Demos)
       agenda_add(agenda_fdc_verify,2,1); 
     return;
   }
@@ -304,7 +304,7 @@ void floppy_fdc_command(BYTE cm)
 {
   dbg_log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) && defined(SSE_YM2149_OBJECT)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)//TODO RECHECK
 /*  This was missing in Steem up to now but was in Hatari.
     Commands are ignored if no drive is currently selected, except
     for command Interrupt, which shouldn't need any drive.
@@ -336,8 +336,8 @@ void floppy_fdc_command(BYTE cm)
   DSOS.
   The ADAT condition is just to make sure we break nothing in normal mode.
 */
-    if( ADAT && fdc_spinning_up &&!(WD1772.CR&BIT_3) && WD1772.CommandType(cm)<4
-      && cm!=WD1772.CR)
+    if( ADAT && fdc_spinning_up &&!(WD1772.CR&BIT_3) 
+      && WD1772.CommandType(cm)<4  && cm!=WD1772.CR)
       // we don't return, we will execute this command instead
       TRACE_LOG("CR %X->%X during spin-up\n",WD1772.CR,cm);
     else
@@ -392,17 +392,15 @@ void floppy_fdc_command(BYTE cm)
     }
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
-#if defined(SSE_DRIVE_MOTOR_ON)
+#if defined(SSE_DRIVE)
     if(ADAT)
       SF314[DRIVE].State.motor=true;
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
-#else
-    TRACE_LOG("Motor on\n");
 #endif
     if (floppy_instant_sector_access){
       agenda_add(agenda_fdc_spun_up,MILLISECONDS_TO_HBLS(100),delay_exec);
     }else{
-#if defined(SSE_DRIVE_SPIN_UP_TIME)
+#if defined(SSE_FDC_SPIN_UP)
       ASSERT(ADAT);
       //  Set up agenda for next IP
       WD1772.IndexCounter=0;
@@ -414,7 +412,7 @@ void floppy_fdc_command(BYTE cm)
 #endif
     }
   }
-#if defined(SSE_DRIVE_MOTOR_ON)
+#if defined(SSE_DRIVE)
   else
     SF314[DRIVE].State.motor=true;
 #endif
@@ -423,7 +421,7 @@ void floppy_fdc_command(BYTE cm)
 //---------------------------------------------------------------------------
 void agenda_fdc_spun_up(int do_exec)
 {
-#if defined(SSE_DRIVE_SPIN_UP_TIME)
+#if defined(SSE_FDC_SPIN_UP)
 /*  
 On the WD1772 all commands, except the Force Interrupt Command,
  are programmed via the h Flag to delay for spindle motor start 
@@ -440,7 +438,7 @@ On the WD1772 all commands, except the Force Interrupt Command,
   {
     ASSERT(WD1772.IndexCounter<6);
     ASSERT(fdc_spinning_up);
-    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor)
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor) //TODO wd's line
       WD1772.IndexCounter++;
     if(WD1772.IndexCounter<6) // not finished
     {
@@ -466,7 +464,7 @@ void fdc_execute()
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   floppy_irq_flag=FLOPPY_IRQ_YES;
-#if defined(SSE_FDC_PRECISE_HBL)
+#if defined(SSE_FDC_ACCURATE_TIMING)
   int hbls_to_interrupt=64;
 #define hbl_multiply 1
 #else
@@ -592,7 +590,7 @@ and ends the command.
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
           if (floppy_head_track[floppyno]==0){
-#if defined(SSE_FDC_390B)
+#if defined(SSE_FDC_ACCURATE_TIMING)
             hbls_to_interrupt=(ADAT)?1:2;
 #else
             hbls_to_interrupt=2;
@@ -617,7 +615,7 @@ and ends the command.
           {
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
-            agenda_add(agenda_floppy_seek,2-1,0); //1 scanline
+            agenda_add(agenda_floppy_seek,1,0); //1 scanline
           }
           else
 #endif
@@ -666,10 +664,9 @@ cycles before the first stepping pulse.
       default: //step, step in, step out
       {
 #if defined(SSE_DRIVE_SOUND)
-      if(SSEOption.DriveSound /*&& !OPTION_DRIVE_SOUND_SEEK_SAMPLE*/)
-        SF314[DRIVE].Sound_Step();
+        if(SSEOption.DriveSound)
+          SF314[DRIVE].Sound_Step();
 #endif
-
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         char d=1; //step direction, default is inwards
         if (floppy->Empty()){
@@ -688,7 +685,7 @@ cycles before the first stepping pulse.
           }else{ //can step
             floppy_head_track[floppyno]+=d;
             dbg_log(Str("FDC: Stepped drive ")+char('A'+floppyno)+" to track "+floppy_head_track[floppyno]);
-#if defined(SSE_FDC_STEP)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
             if(ADAT)
               floppy_irq_flag=0;// IRQ set in fdc_type1_check_verify()
 #endif
@@ -822,7 +819,7 @@ CRC.
           int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
           for (int n=0;n<nSects;n++){
             if (IDList[n].Track==fdc_tr 
-#if defined(SSE_FDC_IDFIELD_IGNORE_SIDE)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*  Side in ID field may have whatever value. The WD1772 chip doesn't control
     side. In the ST, it is done by the YM2149 PSG.
 */
@@ -837,13 +834,8 @@ CRC.
               }
             }
           }
-#if defined(SSE_DISK_RW_SECTOR_TIMING)
-/*  Compute more precisely at which byte/HBL the sector R/W operation should
-    start. Important for Microprose Golf 
-*/
-
+#if defined(SSE_FDC_ACCURATE_TIMING)
           if (SectorIdx>-1 && nSects>0) {
-#if defined(SSE_DISK_HBL_DRIFT)
             BYTE num=fdc_sr;
             WORD CurrentByte=SF314[DRIVE].BytePosition();
             WORD BytesToNextID=Disk[DRIVE].BytesToID(num);
@@ -857,44 +849,6 @@ CRC.
               HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);//?
             //TRACE_FDC("hbl now %d then %d, diff %d\n",hbl_count,HBLOfSectorStart,HBLOfSectorStart-hbl_count);
             HBLOfSectorStart-=2;//see below, Steem's way
-#elif defined(SSE_DISK_RW_SECTOR_TIMING3)
-            //trying with IDs... 
-            WORD dummy;
-            BYTE num=fdc_sr;
-            WORD SectorStartingByte=Disk[DRIVE].BytesToID(num, dummy);
-            DWORD HBLOfSectorStart=hbl_count;
-            HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(SectorStartingByte);
-#if defined(SSE_FDC_HEAD_SETTLE)//normally also type III
-            if(WD1772.CR&BIT_2)
-              HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);//?
-#endif
-#if defined(SSE_DISK_RW_SECTOR_TIMING4)
-/*  Gap between ID and data.
-    There's already gap as 1st stage of the agenda function, 16bytes.
-    We don't need to count pre-ID gap.
-    With this, no need for added bytes at end of sector.
-*/
-            BYTE pre_data_gap=Disk[DRIVE].PreDataGap()-12-3;
-            HBLOfSectorStart+=SF314[DRIVE].BytesToHbls(pre_data_gap-16);
-#endif
-            HBLOfSectorStart-=2;//see below, Steem's way
-#else//SSE_DISK_RW_SECTOR_TIMING3
-            WORD SectorStartingByte= SF314[DRIVE].PostIndexGap()
-              +SectorIdx*SF314[DRIVE].RecordLength()
-              +SF314[DRIVE].PreDataGap();
-            
-            DWORD HBLOfSectorStart=SF314[DRIVE].HblsAtIndex()
-              +SF314[DRIVE].BytesToHbls(SectorStartingByte);
-
-#if defined(SSE_FDC_HEAD_SETTLE)//normally also type III
-//          ASSERT( !(WD1772.CR&BIT_2) );
-          if(WD1772.CR&BIT_2)
-            HBLOfSectorStart+=MILLISECONDS_TO_HBLS(15);
-#endif
-
-          if (HBLOfSectorStart<hbl_count) 
-            HBLOfSectorStart+=FDC_HBLS_PER_ROTATION;
-#endif//SSE_DISK_RW_SECTOR_TIMING3
 #else //Steem 3.2
           if (SectorIdx>-1){
             // Break up the readable track into nSects sections,
@@ -907,7 +861,7 @@ CRC.
 #endif
 
             agenda_delete(agenda_floppy_readwrite_sector);
-#if defined(SSE_DISK_HBL_DRIFT)
+#if defined(SSE_FDC_ACCURATE_TIMING)
             agenda_add(agenda_floppy_readwrite_sector,int(hbl_multiply
               *(HBLOfSectorStart-hbl_count))+2,MAKELONG(0,start));
 #else
@@ -1144,17 +1098,21 @@ acknowledge Force Interrupt commands only between micro- instructions.
         agenda_delete(agenda_floppy_read_address);
         agenda_delete(agenda_floppy_read_track);
         agenda_delete(agenda_floppy_write_track);
+#if defined(SSE_FDC_ACCURATE)
+        if(ADAT)
+        {
 #if defined(SSE_FDC_VERIFY_AGENDA)
-        agenda_delete(agenda_fdc_verify);
+          agenda_delete(agenda_fdc_verify);
 #endif
-#if defined(SSE_FDC_SPIN_UP_AGENDA)
-        if(ADAT)//v3.7.0
+#if defined(SSE_FDC_SPIN_UP)
           agenda_delete(agenda_fdc_spun_up); // Holocaust/Blood real start
+#endif
+        }
 #endif
         agenda_delete(agenda_fdc_finished);
         fdc_str=BYTE(fdc_str & FDC_STR_MOTOR_ON);
         if (fdc_cr & b1100){
-#if defined(SSE_FDC_FORCE_INTERRUPT) && defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_FDC_FORCE_INTERRUPT)
 /*  "The lower four bits of the command determine the conditional 
 interrupt as follows:
 - i0,i1 = Not used with the WD1772
@@ -1176,50 +1134,38 @@ condition for interrupt is met the INTRQ line goes high signifying
   -> D4 (IRQ every index pulse) wasn't implemented yet in Steem. 
   Done in v3.5.3. Fixes Panzer rotation time returning null times.
 */          
-#if defined(SSE_FDC_390A) // behave as 3.2 if not ADAT
-          if(!ADAT)
-            agenda_fdc_finished(0);
+          if(ADAT)
+          {
+            if(fdc_cr&b1000)
+            {
+              ASSERT( fdc_cr==0xD8 );
+              WD1772.InterruptCondition=8;
+              //TRACE_LOG("Immediate IRQ\n");
+              agenda_fdc_finished(0); // Interrupt CPU immediately
+            }
+            else 
+            {
+              ASSERT( fdc_cr==0xD4 );
+              WD1772.InterruptCondition=4;// IRQ at every index pulse
+              floppy_irq_flag=false;
+              WORD hbls_to_next_ip=SF314[DRIVE].HblsNextIndex();
+              //TRACE_LOG("IP IRQ in %d HBL (%d)\n",hbls_to_next_ip,hbl_count+hbls_to_next_ip);
+              agenda_add(agenda_fdc_finished,hbls_to_next_ip,0);
+            }
+          }
           else
 #endif
-          if(fdc_cr&b1000)
-          {
-            ASSERT( fdc_cr==0xD8 );
-            WD1772.InterruptCondition=8;
-//            TRACE_LOG("Immediate IRQ\n");
             agenda_fdc_finished(0); // Interrupt CPU immediately
-          }
-          else 
-          {
-            ASSERT( fdc_cr==0xD4 );
-            WD1772.InterruptCondition=4;// IRQ at every index pulse
-            floppy_irq_flag=false;
-            WORD hbls_to_next_ip=SF314[DRIVE].HblsNextIndex();
-//            TRACE_LOG("IP IRQ in %d HBL (%d)\n",hbls_to_next_ip,hbl_count+hbls_to_next_ip);
-            agenda_add(agenda_fdc_finished,hbls_to_next_ip,0);
-          }
-#else
-          agenda_fdc_finished(0); // Interrupt CPU immediately
-#endif
         }else{ //SS D0
-#if defined(SSE_FDC_MOTOR_OFF) && !defined(SSE_FDC_390A)
-          agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
-#endif
           ASSERT( fdc_cr==0xD0 );
+          floppy_irq_flag=0;
 #if defined(SSE_FDC_FORCE_INTERRUPT)
           WD1772.InterruptCondition=0;
-#endif
-          floppy_irq_flag=0;
-
-#if defined(SSE_FDC_FORCE_INTERRUPT)
-#if defined(SSE_FDC_390A)
           if(ADAT)
-            agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
+            agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0); //no IP ctr...
           else
-#else
-          if(!ADAT) // this was decided before
 #endif
-#endif
-            mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
+          mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         }
         /* From Jorge Cwik
           By the way, the status after a Type IV command depends on the previous
@@ -1238,7 +1184,7 @@ condition for interrupt is met the INTRQ line goes high signifying
       }
     }
   }
-#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
   if(!ADAT)
 #endif
   if (fdc_str & FDC_STR_MOTOR_ON) agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
@@ -1246,7 +1192,7 @@ condition for interrupt is met the INTRQ line goes high signifying
   if (floppy_irq_flag){
     if (floppy_irq_flag!=FLOPPY_IRQ_NOW){ // Don't need to add agenda if it has happened
       if (floppy_irq_flag==FLOPPY_IRQ_ONESEC){
-#if defined(SSE_FDC_PRECISE_HBL)
+#if defined(SSE_FDC_ACCURATE_TIMING)
         TRACE_LOG("Error - 5REV - IRQ in %d HBLs\n",FDC_HBLS_PER_ROTATION*5);
         agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION*5,0);
 #else
@@ -1262,7 +1208,7 @@ condition for interrupt is met the INTRQ line goes high signifying
 
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 
 void agenda_fdc_motor_flag_off(int revs_to_wait)
 {
@@ -1284,7 +1230,7 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
 
   if(ADAT)
   {
-    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor
+    if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE && SF314[DRIVE].State.motor
 #if defined(SSE_DRIVE_EMPTY_VERIFY_TIME_OUT2)
       &&!FloppyDrive[DRIVE].Empty()
 #endif
@@ -1298,34 +1244,24 @@ void agenda_fdc_motor_flag_off(int revs_to_wait)
     WD1772.IndexCounter=0; 
   }
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
-#if defined(SSE_DRIVE_MOTOR_ON)
+
   TRACE_LOG("Motor off drive %c\n",'A'+DRIVE);
   SF314[DRIVE].State.motor=false;
-#else
-  TRACE_LOG("Motor off\n");
-#endif
 }
 
 #else
 
 void agenda_fdc_motor_flag_off(int)
 {
-  TRACE_LOG("Motor off\n");
   fdc_str&=BYTE(~FDC_STR_MOTOR_ON);
-#if defined(SSE_DRIVE_MOTOR_ON)
-  SF314[DRIVE].State.motor=false;
-#endif
 }
 
 #endif
 //---------------------------------------------------------------------------
 
 #if defined(SSE_FDC_VERIFY_AGENDA)
-#if defined(SSE_VS2008_WARNING_390)
+
 void agenda_fdc_verify(int) {
-#else
-void agenda_fdc_verify(int id) {
-#endif
 
   ASSERT( ADAT );
 
@@ -1336,19 +1272,10 @@ void agenda_fdc_verify(int id) {
     // It will fail on an unformatted track or if there is no disk of course
     int floppyno=floppy_current_drive();
     TFloppyImage *floppy=&FloppyDrive[floppyno];
-
-#if !defined(SSE_DRIVE_MOTOR_ON)
-    ASSERT( !floppy->Empty() );
-#endif
-
-    if (floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM
-#if !defined(SSE_DRIVE_MOTOR_ON)
-      || floppy->Empty()
-#endif
-      ){
+    if (floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM){
       fdc_str|=FDC_STR_SEEK_ERROR;
     }
-    else if(floppy_head_track[floppyno]!=fdc_tr)
+    else if(floppy_head_track[floppyno]!=fdc_tr) // track not correct
     {
       fdc_str|=FDC_STR_SEEK_ERROR;
     }
@@ -1414,18 +1341,14 @@ void agenda_fdc_finished(int)
   } 
   else 
 #endif
-#if defined(SSE_FDC_MOTOR_OFF)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
   if(ADAT)
   {
-#if defined(SSE_DRIVE_SPIN_DOWN_TIME)
     //  Set up agenda for next IP
     agenda_delete(agenda_fdc_motor_flag_off); //3.6.2
     WD1772.IndexCounter=0;
     DWORD delay=SF314[DRIVE].HblsNextIndex();
     agenda_add(agenda_fdc_motor_flag_off,delay,0);
-#else
-    agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0);
-#endif
   }
 #endif
 }
@@ -1509,12 +1432,12 @@ issued."
   }//SS scope
   int hbls_to_interrupt=fdc_step_time_to_hbls[fdc_cr & (BIT_0 | BIT_1)];
   if (floppy_instant_sector_access) hbls_to_interrupt>>=5;
-#if !defined(SSE_FDC_PRECISE_HBL)
+#if defined(SSE_FDC_ACCURATE_TIMING)
+  agenda_add(agenda_floppy_seek,hbls_to_interrupt,0);
+#else
   double hbl_multiply=1.0;
   if (shifter_freq==MONO_HZ) hbl_multiply=double(HBLS_PER_SECOND_MONO)/double(HBLS_PER_SECOND_AVE);
   agenda_add(agenda_floppy_seek,int(hbl_multiply*double(hbls_to_interrupt)),0);
-#else
-  agenda_add(agenda_floppy_seek,hbls_to_interrupt,0);
 #endif
 }
 //---------------------------------------------------------------------------
@@ -1524,14 +1447,11 @@ void agenda_floppy_readwrite_sector(int Data)
   ASSERT(floppyno==0 || floppyno==1);
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   ASSERT(floppy);
-#if defined(SSE_FDC_ACCURATE) && !defined(SSE_VS2008_WARNING_390)
-  BYTE nSects=floppy->SectorsPerTrack;
-#endif
   bool FromFormat=0;
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
-#if defined(SSE_DISK_HBL_DRIFT)
+#if defined(SSE_FDC_ACCURATE_TIMING)
   int Command=fdc_cr; //shouldn't change...
 #else
   int Command=HIWORD(Data);
@@ -1550,20 +1470,18 @@ void agenda_floppy_readwrite_sector(int Data)
   disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
   fdc_str=BYTE(FDC_STR_BUSY | FDC_STR_MOTOR_ON | WriteProtect);
-#if defined(SSE_FDC_SPIN_UP_STATUS)
-  fdc_str|=FDC_STR_T1_SPINUP_COMPLETE; // no real use...
-#endif
   floppy_irq_flag=0;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
 
-#if defined(SSE_FDC_MOTOR_OFF)
-  if(!ADAT) {
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+  if(ADAT)
+    fdc_str|=FDC_STR_T1_SPINUP_COMPLETE; // no real use...
+  else
 #endif
-  agenda_delete(agenda_fdc_motor_flag_off);
-  agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-#if defined(SSE_FDC_MOTOR_OFF)
+  {
+    agenda_delete(agenda_fdc_motor_flag_off);
+    agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
   }
-#endif
         
 instant_sector_access_loop:
   int Part=LOWORD(Data);
@@ -1597,7 +1515,7 @@ instant_sector_access_loop:
         if (floppy->IsZip()) FDCCantWriteDisplayTimer=timer+5000; // Writing will be lost!
         //SS byte per byte, we write 16 bytes
         for (int bb=BytesPerStage;bb>0;bb--){
-#if defined(SSE_DMA_FIFO_NATIVE)
+#if defined(SSE_DMA_FIFO_FDC)
           Temp=Dma.GetFifoByte(); //SS from RAM to disk
 #else
           Temp=read_from_dma(); //SS from RAM to disk
@@ -1610,7 +1528,7 @@ instant_sector_access_loop:
               break;
             }
           }
-#if !(defined(SSE_DMA_FIFO_NATIVE))
+#if !(defined(SSE_DMA_FIFO_FDC))
           dma_address++;
 #endif
           PosInSector++;
@@ -1618,12 +1536,12 @@ instant_sector_access_loop:
       }
     }else{ // SS Read
 
-#if !(defined(SSE_DMA_FIFO_NATIVE))
+#if !(defined(SSE_DMA_FIFO_FDC))
       BYTE *lpDest;
 #endif
       for (int bb=BytesPerStage;bb>0;bb--){	// SS: int BytesPerStage=16;
 
-#if defined(SSE_DMA_FIFO_NATIVE)
+#if defined(SSE_DMA_FIFO_FDC)
         if (fread(&Temp,1,1,f)==0){
           if (floppy_handle_file_error(floppyno,0,fdc_sr,PosInSector,FromFormat)){
             TRACE_LOG("fread error\n");
@@ -1631,18 +1549,8 @@ instant_sector_access_loop:
             break;
           }
         }
-#if defined(SSE_DMA_FIFO_NATIVE3)
-        if(dma_sector_count) // bugfix Sabotage 3.8.0
-#elif defined(SSE_DMA_FIFO_NATIVE2)
-/*  This was in Steem 3.2 and I forgot it when doing DMA FIFO.
-    bugfix International Sports Challenge-ICS fast drive mode 3.7.0
-    It must be placed here (and for "STW"), not in DMA object,
-    because pasti.dll clears dma_sector_count in advance.
-*/
-        if(DMA_ADDRESS_IS_VALID_W && dma_sector_count)
-#endif
-
-          Dma.AddToFifo(Temp); 
+        if(dma_sector_count && (ADAT||DMA_ADDRESS_IS_VALID_W)) //game Sabotage
+          Dma.AddToFifo(Temp); // disk to RAM
 #else
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
           lpDest=lpPEEK(dma_address);
@@ -1669,16 +1577,20 @@ instant_sector_access_loop:
     if (Command & BIT_4){ // Multiple sectors
       fdc_sr++;
       floppy_irq_flag=0;
-#if defined(SSE_FDC_MULTIPLE_SECTORS)
+#if defined(SSE_FDC_ACCURATE)
       if(ADAT)
       {
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
         if(!fdc_sr)
           fdc_sr++; // CAPS: 255 wraps to 1 (due to add with carry)
+#endif
         TRACE_LOG("SR->%d\n",fdc_sr);
+#if defined(SSE_FDC_ACCURATE_TIMING)
         // The controller must find next sector
         agenda_add(agenda_floppy_readwrite_sector,Disk[DRIVE].SectorGap(),
           MAKELONG(++Part,Command));
         return;
+#endif
       }
 #endif
     }
@@ -1700,69 +1612,37 @@ instant_sector_access_loop:
       return; // Don't loop
   }
 
-  if (floppy_instant_sector_access){
+  if (floppy_instant_sector_access){  //SS Fast disk
     Data=MAKELONG(Part,Command); // SS Part has been ++, Command is unchanged
     goto instant_sector_access_loop; //SS OMG!
-  }else{
-
-#if defined(SSE_DRIVE_REM_HACKS)
-/*  v3.7
-    If SSE_DISK_RW_SECTOR_TIMING4 isn't defined this is still a hack,
-    we're compensating for the imprecision of the agenda system at 
-    the end of the sector.
-    At least the disk now has 6256 bytes, not 6270 like in the previous hack.
-    This also reduces code.
-    Value adjusted for for MPS Golf; Ultimate 3D Dots
-    26-28 OK
-    If SSE_DISK_RW_SECTOR_TIMING4 is defined, this is a fix: agenda in 16 
-    bytes except for the latest part, CRC + $FF included, 19 bytes.
-*/
-  ASSERT(Part!=64); // 32 -> 65
-#if defined(SSE_DISK_HBL_DRIFT)
+  }else{ //SS Slow disk
+#if defined(SSE_FDC_ACCURATE_TIMING)
 /*  Correct drift due to hbl system imprecision. 
     With packs of 16 bytes it can accumulate, and at the end of the sector, 
     we're off by a couple of HBL, enough to miss next ID.
     Necrosys STE, Oh No More Froggies
     MPS Golf still OK (MUST slow down)
-    And we finally get rid of our 6256+14 hack :)
 */
-  WORD bytes= (Part==65)? 19 : 16;
-  WORD start=HIWORD(Data);
-  if(Part<65)
-  {
-    WORD current_byte=SF314[DRIVE].BytePosition();
-    WORD theory_byte=start+ (Part-1)*16;
-    if(current_byte-theory_byte)
+    ASSERT(Part!=64); // 32 -> 65
+    WORD bytes= (Part==65)? 19 : 16;
+    WORD start=HIWORD(Data);
+    if(Part<65)
     {
-//      TRACE_LOG("Drift start %d theory %d byte %d Part %d\n",start,start+(Part-1)*16,SF314[DRIVE].BytePosition(),Part);
-      bytes-=2*(current_byte-theory_byte);
+      WORD current_byte=SF314[DRIVE].BytePosition();
+      WORD theory_byte=start+ (Part-1)*16;
+      if(current_byte-theory_byte)
+      {
+        //TRACE_LOG("Drift start %d theory %d byte %d Part %d\n",start,start+(Part-1)*16,SF314[DRIVE].BytePosition(),Part);
+        bytes-=2*(current_byte-theory_byte);
+      }
     }
-  }
-  agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls(bytes),MAKELONG(Part,start)); 
-#else
-  agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls( (Part==65)? 
-#if !defined(SSE_DISK_RW_SECTOR_TIMING4) // no hack!
-     OPTION_HACKS?27:
-#endif
-  19
-    :16),MAKELONG(Part,Command)); 
-#endif
-
-
-#else
-#if defined(SSE_DISK_BYTES_PER_ROTATION)
-    int bytes_per_second=TSF314::TRACK_BYTES*5;
+    agenda_add(agenda_floppy_readwrite_sector,SF314[DRIVE].BytesToHbls(bytes),
+      MAKELONG(Part,start)); 
 #else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
-#endif
-
-#if defined(SSE_FDC_PRECISE_HBL)
-    int hbls_per_second=HBL_PER_SECOND;
-#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
-#endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
     agenda_add(agenda_floppy_readwrite_sector,n_hbls,MAKELONG(Part,Command));
 #endif
@@ -1779,9 +1659,9 @@ void agenda_floppy_read_address(int idx)
   if (idx<nSects){
     dbg_log(Str("FDC: Reading address for sector ")+IDList[idx].SectorNum+" on track "+
                 floppy_head_track[floppyno]+", side "+floppy_current_side()+" hbls="+hbl_count);
-#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     BYTE fdc_read_address_buffer[6];
-    BYTE fdc_read_address_buffer_len=0;//not real len, we use Dma.Fifo_idx
+    int fdc_read_address_buffer_len=0;//not real len, we use Dma.Fifo_idx
 #endif
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].Track;
     fdc_read_address_buffer[fdc_read_address_buffer_len++]=IDList[idx].Side;
@@ -1794,7 +1674,7 @@ void agenda_floppy_read_address(int idx)
       IDList[idx].Side,IDList[idx].SectorNum,IDList[idx].SectorLen,
       IDList[idx].CRC1,IDList[idx].CRC2);
 
-#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     for(int i=0;i<6;i++)
       Dma.AddToFifo(fdc_read_address_buffer[i]);
 #else
@@ -1816,21 +1696,19 @@ void agenda_floppy_read_address(int idx)
     if(ADAT)
       WD1772.SR=IDList[idx].Track;
 #endif
-
+    // TODO, timing?
     agenda_fdc_finished(0);
 #if !defined(SSE_OSD_DRIVE_LED3)
     disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
 
-#if defined(SSE_FDC_MOTOR_OFF)
-    if(!ADAT) {
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+    if(!ADAT) 
 #endif
+    {
       agenda_delete(agenda_fdc_motor_flag_off);
       agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-#if defined(SSE_FDC_MOTOR_OFF)
     }
-#endif
-
   }
 }
 //---------------------------------------------------------------------------
@@ -1862,7 +1740,7 @@ void agenda_floppy_read_track(int part)
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
   if (floppy->Empty()) return; // Stop, timeout
-#if defined(SSE_DISK_HBL_DRIFT)
+#if defined(SSE_FDC_ACCURATE_TIMING)
   int RealPart=HIWORD(part);//starts at 0
   part=LOWORD(part);
 #endif
@@ -1874,14 +1752,13 @@ void agenda_floppy_read_track(int part)
   fdc_str|=FDC_STR_BUSY;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
 
-#if defined(SSE_FDC_MOTOR_OFF)
-  if(!ADAT) {
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+  if(!ADAT)
 #endif
-  agenda_delete(agenda_fdc_motor_flag_off);
-  agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-#if defined(SSE_FDC_MOTOR_OFF)
+  {
+    agenda_delete(agenda_fdc_motor_flag_off);
+    agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
   }
-#endif
 
   int TrackBytes=floppy->GetRawTrackData(floppy_current_side(),floppy_head_track[floppyno]);
   if (TrackBytes){
@@ -1931,7 +1808,7 @@ void agenda_floppy_read_track(int part)
       }else{
         TrackBytes=DDBytes;
       }
-#if defined(SSE_FDC_390A)
+#if defined(SSE_FDC_ACCURATE_TIMING)
       if(ADAT) // should be 6256 up to 11 secs, beyond, it's not ADAT
         TrackBytes=Disk[floppyno].TrackBytes; 
 #endif
@@ -1944,7 +1821,7 @@ void agenda_floppy_read_track(int part)
         int SectorBytes=(128 << IDList[IDListIdx].SectorLen);
         BYTE pre_sect[200];
         int i=0;
-#if defined(SSE_DISK_READ_TRACK_11)
+#if defined(SSE_FDC_ACCURATE_TIMING)
         for (int n=0;n<(ADAT?nSects<Disk[floppyno].PostIndexGap():22);n++) 
           pre_sect[i++]=0x4e;  // Gap 1 & 3 (22 bytes)
 /*
@@ -2058,7 +1935,7 @@ CRC                                2           2           2
         byte_idx-=2;
 
         // Write Gap 4
-#if defined(SSE_DISK_READ_TRACK_11)
+#if defined(SSE_FDC_ACCURATE_TIMING)
 /*
 Gap 4 Post Data                   40          40           1      4E
 */
@@ -2093,7 +1970,7 @@ Gap 4 Post Data                   40          40           1      4E
 #endif
       }else{
         // End of track, read in 0x4e
-#if defined(SSE_DISK_READ_TRACK_11)
+#if defined(SSE_FDC_ACCURATE_TIMING)
         BYTE gap5bytes=(nSects>=11?20:16); //ProCopy 1.5 Analyze
         // isn't it a bug anyway? More gap with 11 than 9-10 ???
         write_to_dma(0x4e,gap5bytes);
@@ -2112,24 +1989,17 @@ Gap 4 Post Data                   40          40           1      4E
     agenda_fdc_finished(0);
     dbg_log(Str("FDC: Read track finished, t=")+hbl_count);
   }else if (Error==0){   //read more of the track
-#if defined(SSE_DISK_BYTES_PER_ROTATION)
-#if defined(SSE_FDC_390B)
+#if defined(SSE_FDC_ACCURATE_TIMING)
     int bytes_per_second=Disk[DRIVE].TrackBytes*5;
-#else
-    int bytes_per_second=TDisk::TRACK_BYTES*5;
-#endif
+    int hbls_per_second=HBL_PER_SECOND;
 #else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
-#endif
-#if defined(SSE_FDC_PRECISE_HBL)
-    int hbls_per_second=HBL_PER_SECOND;
-#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
 #endif
     int n_hbls=hbls_per_second/(bytes_per_second/16);
-#if defined(SSE_DISK_HBL_DRIFT) 
+#if defined(SSE_FDC_ACCURATE_TIMING) 
 /*  Correct HBL drift for Read Track.
     Timing is important for ProCopy Analyze.
 */
@@ -2214,7 +2084,7 @@ void agenda_floppy_write_track(int part)
   TFloppyImage *floppy=&FloppyDrive[floppyno];
   BYTE Data;
   int TrackBytes=6448; // Double density format only
-#if defined(SSE_FDC_390A)
+#if defined(SSE_FDC_ACCURATE_TIMING)
   if(ADAT)
      TrackBytes=Disk[floppyno].TrackBytes; 
 #endif
@@ -2233,14 +2103,14 @@ void agenda_floppy_write_track(int part)
   bool Error=0;
   fdc_str|=FDC_STR_BUSY;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
-#if defined(SSE_FDC_MOTOR_OFF)
-  if(!ADAT) {
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+  if(!ADAT)
 #endif
-  agenda_delete(agenda_fdc_motor_flag_off);
-  agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
-#if defined(SSE_FDC_MOTOR_OFF)
+  {
+    agenda_delete(agenda_fdc_motor_flag_off);
+    agenda_add(agenda_fdc_motor_flag_off,MILLISECONDS_TO_HBLS(1800),0);
   }
-#endif
+
 #if !defined(SSE_OSD_DRIVE_LED3)
   disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
@@ -2343,20 +2213,13 @@ void agenda_floppy_write_track(int part)
     dbg_log("FDC: Format aborted, can't write to format file");
     fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;
   }else{ //write more of the track
-#if defined(SSE_FDC_390A)
+#if defined(SSE_FDC_ACCURATE_TIMING)
     int bytes_per_second=(ADAT)? Disk[DRIVE].TrackBytes*5 : 8000*5;
     int hbls_per_second=(ADAT)? HBL_PER_SECOND : 
       ((shifter_freq==MONO_HZ)?int(HBLS_PER_SECOND_MONO) : HBLS_PER_SECOND_AVE);
-#elif defined(SSE_DISK_BYTES_PER_ROTATION)
-    int bytes_per_second=TDisk::TRACK_BYTES*5;
 #else
     // 8000 bytes per revolution * 5 revolutions per second
     int bytes_per_second=8000*5;
-#endif
-#if defined(SSE_FDC_390A)
-#elif defined(SSE_FDC_PRECISE_HBL)
-    int hbls_per_second=HBL_PER_SECOND;
-#else
     int hbls_per_second=HBLS_PER_SECOND_AVE; // 60hz and 50hz are roughly the same
     if (shifter_freq==MONO_HZ) hbls_per_second=int(HBLS_PER_SECOND_MONO);
 #endif
@@ -2387,7 +2250,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
   
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
 
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
   if (old_irq!=(bool)pPIOI->intrqState){
 #else
   if (old_irq!=pPIOI->intrqState){
@@ -2396,7 +2259,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 #if defined(SSE_DISK_GHOST)
     if(!WD1772.Lines.CommandWasIntercepted)
 #endif
-    mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!pPIOI->intrqState);
+      mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,!pPIOI->intrqState);
     if (pPIOI->intrqState){
       // FDC is busy, activate light
 #if !defined(SSE_OSD_DRIVE_LED3)

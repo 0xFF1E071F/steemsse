@@ -6,11 +6,11 @@ to and from files. This includes loading TOS images and handling steem.ini
 and steem.new.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: loadsave.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 void AddSnapShotToHistory(char *);
 bool LoadSnapShot(char *,bool,bool,bool);
@@ -182,7 +182,7 @@ int LoadSnapShotChangeCart(Str NewCart)
   return 0;
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
 int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer,int NewROMCountry)
 #else
 int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
@@ -191,7 +191,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
   bool Fail=0;
   if (load_TOS(NewROM)){
 
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
 /*  Steem couldn't load this precise file.
     Before prompting user, have a go at matching a TOS with the same
     version number.
@@ -207,11 +207,7 @@ int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer)
             WORD Ver,Date;
             BYTE Country;
             Tos.GetTosProperties(Path,Ver,Country,Date);
-            if(Ver==NewROMVer
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
-              && (Country==NewROMCountry)
-#endif
-              )
+            if(Ver==NewROMVer && Country==NewROMCountry)
             {
               ROMFile=Path;
               TRACE_INIT("preselect TOS %s\n",ROMFile.Text);
@@ -569,7 +565,7 @@ bool load_TOS(char *)
 }
 #endif
 //---------------------------------------------------------------------------
-#if defined(SSE_CARTRIDGE_352)
+#if defined(SSE_CARTRIDGE)
 /*  Loading a ROM cartridge.
     Steem format STC has 4 null bytes at the start, then the 128 KB
     of the cartridge.
@@ -615,7 +611,7 @@ bool load_cart(char *filename) {
     if(!failed)
     {
       fread(&FirstBytes,4,1,f);
-#if defined(SSE_CARTRIDGE_390)// cartidge header is TOS' business
+
 #if defined(SSE_CARTRIDGE_BAT)
       if(FirstBytes==0x3631564D) // "MV16"
         SSEConfig.mv16=true; 
@@ -624,18 +620,7 @@ bool load_cart(char *filename) {
         SSEConfig.mv16=SSEConfig.mr16=true; 
 #endif
 #endif
-#else
-      switch(FirstBytes) {
-#if defined(SSE_CARTRIDGE_DIAGNOSTIC)
-      case 0x5F2352FA: // $FA52235F reversed - Atari diagnostic, Ultimate Ripper
-        break;
-#endif
-      case 0x42EFCDAB:  //$ABCDEF42 reversed - application
-        break;
-      default: // unknown
-        failed=true;
-      }
-#endif
+
       if(!failed)
       {
 #if defined(SSE_CARTRIDGE_TRANSPARENT)
@@ -662,18 +647,6 @@ bool load_cart(char *filename) {
         if(pc>=MEM_EXPANSION_CARTRIDGE && pc<0xfc0000){
           SET_PC(PC32);        //TODO ?
         }
-        //TRACE2("Cartridge %X %X\n",FirstBytes,checksum);
-#if defined(SSE_CARTRIDGE_DIAGNOSTIC) && !defined(SSE_CARTRIDGE_390) 
-/*  If these four bytes are found, the computer will transfer control
-    to memory location $FA0004.
-    390: TOS will do it itself
-*/
-        if(FirstBytes==0x5F2352FA)
-        {
-          SET_PC(0xFA0004)
-        }
-#endif
-        
       }
       fclose(f);
     }

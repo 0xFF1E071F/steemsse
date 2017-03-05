@@ -4,7 +4,6 @@
 
 #if defined(SSE_CPU)
 
-//#include <cpu.decla.h>
 #include <d2.decla.h>
 #ifdef DEBUG_BUILD
 #include <debug_emu.decla.h>

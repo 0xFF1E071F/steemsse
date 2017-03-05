@@ -44,7 +44,6 @@ WORD TDisk::BytePositionOfFirstId() { // with +7 for reading ID //no!
   return ( PostIndexGap() + ( (nSectors()<11)?12+3+1:3+3+1) );
 }
 
-#if defined(SSE_DISK_HBL_DRIFT)
 
 WORD TDisk::BytesToID(BYTE &num) {
 /*  Compute distance in bytes between current byte and desired ID
@@ -86,58 +85,6 @@ WORD TDisk::BytesToID(BYTE &num) {
 }
 
 
-#elif defined(SSE_DISK_RW_SECTOR_TIMING3)
-
-WORD TDisk::BytesToID(BYTE &num,WORD &nHbls) {
-/*  Compute distance in bytes between current byte and desired ID
-    identified by 'num' (sector)
-    return 0 if it doesn't exist
-    if num=0, assume next ID, num will contain sector index, 1-based
-    (so, not num!)
-    Bytes of ID are not counted.
-*/
-
-  WORD bytes_to_id=0;
-  const WORD current_byte=SF314[Id].BytePosition();
-
-  if(FloppyDrive[Id].Empty())
-    ;
-  else
-  {
-    //here we assume normal ST disk image, sectors are 1...10
-    WORD record_length=RecordLength();
-    BYTE n_sectors=nSectors();
-    WORD byte_first_id=BytePositionOfFirstId();
-#if !defined(SSE_VS2008_WARNING_382)
-    WORD byte_last_id=byte_first_id+(n_sectors-1)*record_length;
-#endif
-    WORD byte_target_id;
-
-    // If we're looking for whatever next num, we compute it first
-    if(!num)
-    {
-      num=(current_byte-byte_first_id)/record_length+1; // current
-      num++;
-      if(num==n_sectors+1) num=1; //TODO smart way
-    }
-
-    byte_target_id=byte_first_id+(num-1)*record_length;
-
-    if(current_byte<=byte_target_id) // this rev
-      bytes_to_id=byte_target_id-current_byte;
-    else                            // next rev
-    {
-      bytes_to_id=TRACK_BYTES-current_byte+byte_target_id;
-      TRACE_FDC("%d next rev current %d target %d diff %d to id %d\n",num,current_byte,byte_target_id,current_byte-byte_target_id,bytes_to_id);
-      //TRACE_FDC("%d + %d x %d\n",byte_first_id,n_sectors,record_length);
-    }
-  }
-  nHbls=SF314[Id].BytesToHbls(bytes_to_id);
-  return bytes_to_id;
-}
-
-#endif//#if defined(SSE_DISK_RW_SECTOR_TIMING3)
-
 WORD TDisk::HblsPerSector() {
   return nSectors()?(SF314[Id].HblsPerRotation()-SF314[Id].BytesToHbls(TrackGap()))/nSectors() : 0;
 }
@@ -153,37 +100,10 @@ void TDisk::NextID(BYTE &RecordIdx,WORD &nHbls) {
   if(FloppyDrive[Id].Empty())
     return;
 
-#if defined(SSE_DISK_HBL_DRIFT) // use debugged BytesToID
-
   WORD BytesToRun=BytesToID(RecordIdx);
   if(RecordIdx)
     RecordIdx--; //!
   BytesToRun+=7-1; // FE + 6 ID bytes are read (?)
-
-#else
-
-  WORD BytesToRun;
-  WORD ByteOfNextId=BytePositionOfFirstId();//default
-  WORD BytePositionOfLastId=ByteOfNextId+(nSectors()-1)*RecordLength();
-  WORD CurrentByte=SF314[Id].BytePosition(); 
-
-  // still on this rev
-  if(CurrentByte<ByteOfNextId) // before first ID
-    BytesToRun=ByteOfNextId-CurrentByte;
-  else if(CurrentByte<BytePositionOfLastId) // before last ID
-  {
-    while(CurrentByte>=ByteOfNextId)
-      ByteOfNextId+=RecordLength();
-    BytesToRun=ByteOfNextId-CurrentByte;
-    RecordIdx=(ByteOfNextId-BytePositionOfFirstId())/RecordLength();
-    ASSERT( RecordIdx>=1 && RecordIdx<nSectors() ); //<= ?
-  }
-  // next rev
-  else
-    BytesToRun=TRACK_BYTES-CurrentByte+ByteOfNextId;
-#endif
-
-
 
   nHbls=SF314[Id].BytesToHbls(BytesToRun);
 #if 0 && defined(SSE_DEBUG)
@@ -210,19 +130,16 @@ BYTE TDisk::nSectors() {
 
 
 BYTE TDisk::PostIndexGap() {
-#if defined(SSE_FDC_390B)
+
   switch( nSectors() )
   {
   case 9:
     return 60;
   case 10:
-    return 22;
+    return 22; //?
   default:
     return 10;
   }
-#else
-  return (nSectors()<11)? 60 : 10;
-#endif
 }
 
 
@@ -243,12 +160,7 @@ BYTE TDisk::PreDataGap() {
 
 
 BYTE TDisk::PostDataGap() {
-#if defined(SSE_FDC_390B) // count CRC?
-  // 
-  return (nSectors()<11)? 40+2 : 1+2;
-#else
-  return (nSectors()<11)? 40 : 1;
-#endif
+  return (nSectors()<11)? 40+2 : 1+2; // count CRC? TODO
 }
 
 
@@ -257,20 +169,10 @@ WORD TDisk::PreIndexGap() {
   switch(nSectors())
   {
   case 9:
-#if defined(SSE_DRIVE_REM_HACKS2)
     gap=664+6; // 6256 vs 6250
-#else
-    gap=664;
-#endif
     break;
   case 10:
-#if defined(SSE_FDC_390B)
     gap=50+6+ (60-22);
-#elif defined(SSE_DRIVE_REM_HACKS2)
-    gap=50+6;
-#else
-    gap=50;
-#endif
     break;
   case 11:
     gap=20;

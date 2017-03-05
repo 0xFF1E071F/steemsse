@@ -8,11 +8,11 @@ for output.
 /*  SS 'init' is a bit of a misnomer as it's used during emulation
 */
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: init_sound.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #define EXT
 #define INIT(s) =s
 
@@ -24,7 +24,7 @@ EXT int UseSound INIT(0);
 EXT EasyStr sound_device_name; // INIT("/dev/dsp");
 EXT int console_device INIT(-1);
 
-#if defined(SS_RTAUDIO_LARGER_BUFFER)
+#if defined(SSE_RTAUDIO_LARGER_BUFFER)
 EXT int rt_buffer_size INIT(256*2),rt_buffer_num INIT(4);
 #else
 EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
@@ -163,7 +163,7 @@ HRESULT InitSound()
   SoundRelease();
 
   HRESULT Ret;
-#if !(defined(SSE_SOUND_SKIP_DSOUND_TEST)) //stupid?
+
   // Hey, this allows Steem to run even if there is no DSound.dll
   dbg_log("SOUND: Attempting to load dsound.dll");
   HINSTANCE hDSDll=LoadLibrary("dsound");
@@ -177,7 +177,6 @@ HRESULT InitSound()
     dbg_log("SOUND: Freeing library");
     FreeLibrary(hDSDll);
   }
-#endif
 
   dbg_log("SOUND: Initialising, creating DirectSound object");
   Ret=CoCreateInstance(CLSID_DirectSound,NULL,CLSCTX_ALL,IID_IDirectSound,(void**)&DSObj);
@@ -341,7 +340,7 @@ position, but the current write position cannot be changed.
 
 */
     SoundBuf->GetCurrentPosition(&play_cursor,&write_cursor);
-#if defined(SSE_SOUND_OPTIMISE) // one DIV fewer!
+#if defined(SSE_SOUND_OPT1) // one DIV fewer!
     DWORD cursor=(sound_time_method==0) ? play_cursor:write_cursor;
     cursor/=sound_bytes_per_sample;
 #else

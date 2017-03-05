@@ -6,14 +6,14 @@ DESCRIPTION: This file was going to house Steem's medium-level hard disk image
 emulation, but it hasn't been written yet (and probably won't be).
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: hdimg.cpp")
 #endif
 
 #if !defined(SSE_ACSI_DISABLE_HDIMG)
 /*  Stub is disabled (finally, wasn't aware of it before). See SSEAcsi.cpp.
 */
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #define EXT
 #define INIT(s) =s
 

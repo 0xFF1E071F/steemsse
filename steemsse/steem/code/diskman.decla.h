@@ -6,7 +6,7 @@
 #define DISK_COMPRESSED 2
 #define DISK_PASTI 3
 //SS this should be improved
-#if defined(SSE_DRIVE_IPF1)
+#if defined(SSE_DISK_CAPS)
 #define DISK_IPF 4
 #define DISK_CTR 5
 #endif
@@ -73,7 +73,7 @@ public: //TODO
   HWND DiskView;
   HICON DriveIcon[2],AccurateFDCIcon,DisableDiskIcon;
   HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     ImportDiag,
 #endif
     PropDiag,DiagFocus;
@@ -93,7 +93,7 @@ public: //TODO
   EasyStringList contents_sl;
   WORD BytesPerSectorIdx,SecsPerTrackIdx,TracksIdx,SidesIdx;
   bool DragEntered,EndingDrag;
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
   bool Importing;
 #endif
 #elif defined(UNIX)
@@ -224,7 +224,7 @@ public:
     return (DiskManFileInfo*)lvi.lParam;
   }
   void ShowLinksDiag(),
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     ShowImportDiag(),
 #endif
     ShowPropDiag(),ShowDiskDiag();
@@ -236,13 +236,13 @@ public:
 
 #ifdef SSE_X64_LPTR
   HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) 
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     | int64_t(ImportDiag) 
 #endif
     | int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
 #else
   HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag)
-#if !defined(SSE_VAR_NO_WINSTON_390)    
+#if !defined(SSE_VAR_NO_WINSTON)    
     | long(ImportDiag) 
 #endif
     | long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  
@@ -323,7 +323,7 @@ private:
   Str MSAConvPath;
   HANDLE MSAConvProcess;
   Str MSAConvSel;
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
   bool Importing;
 #endif
 #elif defined(UNIX)
@@ -392,7 +392,7 @@ public:
     return (DiskManFileInfo*)lvi.lParam;
   }
   void ShowLinksDiag(),
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     ShowImportDiag(),
 #endif
     ShowPropDiag(),ShowDiskDiag();
@@ -405,19 +405,19 @@ public:
   HWND DiskView;
   HICON DriveIcon[2],AccurateFDCIcon,DisableDiskIcon;
   HWND DatabaseDiag,ContentDiag,DiskDiag,LinksDiag,
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     ImportDiag,
 #endif
     PropDiag,DiagFocus;
 #ifdef SSE_X64_LPTR
   HWND VisibleDiag() { return HWND(int64_t(DiskDiag) | int64_t(LinksDiag) 
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
     | int64_t(ImportDiag) 
 #endif
     | int64_t(PropDiag) | int64_t(ContentDiag) | int64_t(DatabaseDiag)); }
 #else
   HWND VisibleDiag() { return HWND(long(DiskDiag) | long(LinksDiag)
-#if !defined(SSE_VAR_NO_WINSTON_390)    
+#if !defined(SSE_VAR_NO_WINSTON)    
     | long(ImportDiag) 
 #endif
     | long(PropDiag) | long(ContentDiag) | long(DatabaseDiag)); }  

@@ -303,10 +303,6 @@ int main(int argc,char *argv[])
     PerformCleanShutdown();
   	return EXIT_SUCCESS;
 #if defined(SSE_VAR_MAIN_LOOP2)
-/*  If SSE_VAR_MAIN_LOOP1 is defined, this will catch all non-emulation related
-    system exceptions. If it isn't defined, it will catch everything, emu or 
-    not.
-*/
 #if defined(SSE_VAR_MAIN_LOOP3)
   }catch( SE_Exception e ){
     //Normally this SEH info is enough to track the bug (using a debugger)

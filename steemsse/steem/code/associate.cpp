@@ -5,7 +5,7 @@ DESCRIPTION: The code to perform the sometimes confusing task of associating
 Steem with required file types.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: associate.cpp")
 #endif
 
@@ -32,22 +32,18 @@ char key_location[]="Software\\Classes\\"; // where we put the extensions
 #include <windows.h>
 #include <stdio.h>
 
-#if defined(SSE_VS2008_WARNING_391)
+#if defined(SSE_VS2008_WARNING)
+// we disable the warning because using strncpy or strcpy_s causes a 
+// crash on deassociating
 #pragma warning (disable: 4100)
 #endif
 
 HRESULT StringCchCopy(LPTSTR pszDest,size_t cchDest,LPCTSTR pszSrc) {
-
-#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_ASSOCIATE_391)
-  strncpy(pszDest,pszSrc,cchDest);//crash on deassociating
-  strcpy_s(pszDest,cchDest,pszSrc);//same
-#else
   strcpy(pszDest,pszSrc);
-#endif
   return 0;
 }
 
-#if defined(SSE_VS2008_WARNING_391)
+#if defined(SSE_VS2008_WARNING)
 #pragma warning (default: 4100)
 #endif
 

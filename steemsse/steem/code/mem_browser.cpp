@@ -6,12 +6,11 @@ DESCRIPTION: The code for Steem's memory browsers, used heavily in the debug
 build to view memory and I/O areas.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: mem_browser.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
-// review this it looks strange
+#if defined(SSE_BUILD)
 WNDPROC mem_browser::OldEditWndProc;
 DWORD mem_browser::ex_style=WS_EX_TOOLWINDOW;
 HBITMAP mem_browser::icons_bmp=NULL;

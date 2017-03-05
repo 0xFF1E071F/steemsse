@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Initialisation for CPU jump tables.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: cpuinit.cpp")
 #endif
 
@@ -360,7 +360,6 @@ void cpu_routines_init()
 */
   int cpuInfo[4];
   __cpuid(cpuInfo, 1);
- // bool popcount=(cpuInfo[2]&BIT_23);
   bool popcount=(BITTEST(cpuInfo[2],23));
   count_bits_set_in_word=(popcount)?count_bits_set_in_word2:count_bits_set_in_word1;
 #endif

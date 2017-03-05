@@ -79,7 +79,7 @@ struct TShifter {
   void Vbl();
 
 };
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 // just taking some unimportant code out of Render for clarity
 

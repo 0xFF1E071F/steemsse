@@ -35,9 +35,7 @@
 
 void TWD1772::Reset() {
   STR=2; // funny, like ACIA
-#ifdef SSE_FDC_FORCE_INTERRUPT
   InterruptCondition=0;
-#endif
 #if defined(SSE_DISK_GHOST)
   Lines.CommandWasIntercepted=0;
 #endif
@@ -297,7 +295,6 @@ BYTE TWD1772::IORead(BYTE Line) {
           " ($"+HEXSl(STR,2)+"), clearing IRQ"); )
           floppy_irq_flag=0;
 
-#if defined(SSE_FDC_FORCE_INTERRUPT)
 /*
 WD doc:
 "When using the immediate interrupt condition (i3 = 1) an interrupt
@@ -320,9 +317,6 @@ WD doc:
         if(!ADAT || InterruptCondition!=8)
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         InterruptCondition=0;
-#else
-        mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
-#endif
       }
       Lines.irq=0;
       ior_byte=STR;
@@ -1058,11 +1052,7 @@ void TWD1772::Motor(bool state) {
 
 
 int TWD1772::MsToCycles(int ms) {
-#if defined(SSE_CPU_MFP_RATIO) && ! defined(SSE_WD1772_391) 
-  return ms*CpuNormalHz/1000;// No, the WD won't count more cycles to compensate!
-#else
   return ms*8000;
-#endif
 }
 
 
@@ -1189,10 +1179,8 @@ void TWD1772::NewCommand(BYTE command) {
     else // D0, just stop motor in 9 rev
     {
       // no IRQ!
-#if defined(SSE_FDC_FORCE_INTERRUPT) 
       if(InterruptCondition!=8)
         Irq(false); // but could have to clear it (Wipe-Out)
-#endif
       prg_phase=WD_MOTOR_OFF;
       IndexCounter=10;
       InterruptCondition=0;

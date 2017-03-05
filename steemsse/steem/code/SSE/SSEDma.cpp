@@ -47,6 +47,7 @@
 #define LOGSECTION LOGSECTION_DMA
 #endif
 
+#define DMA_INC_ADDRESS IncAddress();
 
 TDma::TDma() {
 #if defined(SSE_DMA_FIFO)
@@ -114,11 +115,9 @@ bool TDma::Drq() {
   }
   else // disk->RAM (reading disk)
   {
-#if defined(SSE_DMA_FIFO_NATIVE2)
    if(!Counter)
      ; // ignore
    else
-#endif
     if(!(MCR&CR_HDC_OR_FDC))
       AddToFifo(WD1772.DR);
 #if defined(SSE_ACSI)
@@ -646,7 +645,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     if( !(MCR&CR_WRITE) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
       TRACE_LOG("DMA Reset\n");
-#if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
       fdc_read_address_buffer_len=0;// this is only for command III read address
 #endif
       Counter=0;
@@ -663,7 +662,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #else
     MCR&=0x00ff;
     MCR|=WORD(WORD(io_src_b) << 8);
-#if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     fdc_read_address_buffer_len=0;
 #endif
     ByteCount=0;
@@ -675,7 +674,7 @@ What was in the buffers will go nowhere, the internal counter is reset.
     MCR&=0xff00;
     MCR|=io_src_b;
 #if !defined(SSE_DMA_WRITE_CONTROL) // see above
-#if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     fdc_read_address_buffer_len=0;
 #endif
     ByteCount=0;
@@ -918,7 +917,6 @@ void TDma::UpdateRegs(bool trace_them) {
 #undef LOGSECTION
 
 
-#if defined(SSE_STRUCTURE_DMA_INC_ADDRESS)
 /*  We see no need for an inline function/macro for disk operation.
     This is the same as the macro in fdc.cpp but with our new names.
     "The count should indicate the number of 512 bytes chunks that 
@@ -943,7 +941,6 @@ void TDma::IncAddress() {
     }                                                      
   }
 }
-#endif
 
 
 #if defined(SSE_DMA_FIFO)
@@ -969,7 +966,6 @@ void TDma::RequestTransfer() {
 void TDma::TransferBytes() {
   // execute the DMA transfer (assume floppy)
   ASSERT( Request );
- // ASSERT( MCR&CR_DRQ_FDC_OR_HDC ); // bit 7 or no transfer ???->no
   ASSERT(!(MCR&CR_RESERVED)); // reserved bits
 
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)

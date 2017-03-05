@@ -5,11 +5,11 @@ DESCRIPTION: Steem's virtual hard drive emulation. This is achieved through
 intercepting ST OS calls and translating them to PC OS calls.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: stemdos.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -37,14 +37,10 @@ int stemdos_std_handle_forced_to[6]={0,0,0,0,0,0};
 #endif
 
 stemdos_fsnext_struct_type stemdos_fsnext_struct[MAX_STEMDOS_FSNEXT_STRUCTS];
-#if defined(SSE_VAR_RESIZE_391)
 int stemdos_command;
-BYTE stemdos_attr;
-#elif defined(SSE_VAR_RESIZE)
-BYTE stemdos_command;
+#if defined(SSE_VAR_RESIZE)
 BYTE stemdos_attr;
 #else
-int stemdos_command;
 int stemdos_attr;
 #endif
 //int stemdos_Fattrib_mode;
@@ -74,17 +70,13 @@ int stemdos_Fattrib_flag;
 MEM_ADDRESS stemdos_dta;
 
 short stemdos_save_sr;
-#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
-BYTE stemdos_current_drive;
-#else
 int stemdos_current_drive;
-#endif
 #endif//DISABLE_STEMDOS
 
 #undef EXT
 #undef INIT
 
-#ifdef SSE_TOS_STRUCT
+#ifdef SSE_TOS
 
 TTos Tos;
 
@@ -1613,7 +1605,7 @@ void stemdos_intercept_trap_1()
 
     }case 0x4B:{   // EXEC(mode,fil,com,env)
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK) 
+#if defined(SSE_TOS_KEYBOARD_CLICK) 
       if(!OPTION_KEYBOARD_CLICK) //see Pump ab das Bier by The Confederacy
         Tos.CheckKeyboardClick(); 
 #endif    
@@ -2031,7 +2023,7 @@ void STStringToPC(char *)
 //---------------------------------------------------------------------------
 #endif//DISABLE_STEMDOS
 
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT2) //ux382
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
 // refactoring to avoid duplication, code was originally in options.cpp
 
 EasyStr TTos::GetNextTos(DirSearch &ds) { // to enumerate TOS files
@@ -2085,7 +2077,7 @@ void TTos::GetTosProperties(EasyStr Path,WORD &Ver,BYTE &Country,WORD &Date) {
 
 #endif//ux382
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
 
 void TTos::CheckKeyboardClick() {
   if(OPTION_KEYBOARD_CLICK) // pathetic, there must be a better way

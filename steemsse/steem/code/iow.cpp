@@ -6,7 +6,7 @@ that deal with writes to ST I/O addresses ($ff8000 onwards), this is the only
 route of communication between programs and the chips in the emulated ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: iow.cpp")
 #endif
 
@@ -483,7 +483,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
               mfp_reg[n]=io_src_b;
 
               MFP_CALC_INTERRUPTS_ENABLED;
-#if defined(SSE_VAR_REWRITE_380)
+#if defined(SSE_BUILD)
               for (int n=0;n<4;n++){ // we need to save n now
 #else
               for (n=0;n<4;n++){
@@ -767,20 +767,14 @@ This address is being used to feed the National LMC both address and data
           case 0xff8922: // Set high byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
 /*
-
  "The mask register must be written before the data register. Sending commences 
  when the data register is written and takes approximately 16 psec. Subsequent 
  writes to the data and mask registers are blocked until sending is complete. "
  Just a hack for now.
  Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
-#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
-            if(OPTION_HACKS 
+            if(OPTION_HACKS  // TODO option microwire
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
-#else
-            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
-#endif
-
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break; // fixes XMas 2004 scroller
@@ -790,12 +784,8 @@ This address is being used to feed the National LMC both address and data
             break;
           case 0xff8923: // Set low byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
             if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
-#else
-            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
-#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
@@ -926,7 +916,7 @@ bits are being ignored.
                         if (nController==b0101) dma_sound_l_volume=new_val;
                         if (nController==b0100) dma_sound_r_volume=new_val;
                       }
-#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_DMA_390A)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME)
                       dma_sound_l_top_val=128;
                       dma_sound_r_top_val=128;
 #else // we keep Steem 3.2 code, but will filter further if necessary
@@ -1026,12 +1016,8 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
           case 0xff8924:  // Set high byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
             if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
-#else
-            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
-#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
@@ -1042,12 +1028,8 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-#if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY_B)
             if(OPTION_HACKS 
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
-#else
-            if(ACT-MicroWire_StartTime<MICROWIRE_LATENCY_CYCLES) 
-#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;// fixes XMas 2004 scroller
@@ -1273,7 +1255,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
           if (hPasti && pasti_active) 
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif//pasti
-#if defined(SSE_FDC_INDEX_PULSE_COUNTER) && defined(SSE_DEBUG) && defined(SSE_YM2149_OBJECT)
+#if defined(SSE_DEBUG) && defined(SSE_FDC_ACCURATE)
 /* Symic Demo TODO right or wrong?
 */
           if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
@@ -1287,10 +1269,10 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
           SerialPort.SetRTS(io_src_b & BIT_3);
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
-#if defined(SSE_YM2149A)
+#if defined(SSE_YM2149_DRIVE)
             // TODO not reliable
             YM2149.SelectedDrive=floppy_current_drive();
-            YM2149.SelectedSide=floppy_current_side();
+            YM2149.SelectedSide=floppy_current_side(); //TODO out of here!! bit 0 not tested
 #endif
 
 
@@ -2116,7 +2098,7 @@ rasterline to allow horizontal fine-scrolling.
     {
       if (addr==0xff8001){ //Memory Configuration
 
-#if defined(SSE_MMU_WRITE_MEM_CONF) 
+#if defined(SSE_MMU_RAM_WRITE_CONF) 
         if(mem_len<=FOUR_MEGS){ // programs actually may write here
 #else
         if (old_pc>=FOURTEEN_MEGS && mem_len<=FOUR_MEGS){
@@ -2200,11 +2182,7 @@ rasterline to allow horizontal fine-scrolling.
        if(ST_TYPE!=STE)
        {
          TRACE_LOG("STF write %X to %X\n",io_src_b,addr);
-#if defined(SSE_STF_PADDLES_390) // as for read
          exception(BOMBS_BUS_ERROR,EA_WRITE,addr); 
-#else
-         break;  // or bombs?
-#endif
        }
 #endif
       if (addr==0xff9202){ // Doesn't work for high byte
@@ -2304,6 +2282,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
   }
 }
 //---------------------------------------------------------------------------
+//TODO replace L with 2 W
 void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
 {
   if (emudetect_called){

@@ -51,7 +51,7 @@ EXT void agenda_floppy_read_track(int);
 EXT void agenda_floppy_write_track(int);
 
 #if defined(SSE_FDC_VERIFY_AGENDA)
-EXT void agenda_fdc_verify(int a);
+EXT void agenda_fdc_verify(int);
 #endif
 
 #if USE_PASTI
@@ -71,10 +71,6 @@ EXT bool pasti_active INIT(0);
 EXT void pasti_update_reg(unsigned addr,unsigned data);
 #endif
 #endif
-
-
-
-//#ifdef IN_EMU
 
 #define FDC_STR_BUSY               BIT_0
 #define FDC_STR_T1_INDEX_PULSE     BIT_1
@@ -118,7 +114,7 @@ EXT BYTE floppy_access_ff_counter;
 enum {FLOPPY_IRQ_YES=9,FLOPPY_IRQ_ONESEC,FLOPPY_IRQ_NOW};
 EXT BYTE floppy_irq_flag;
 EXT BYTE fdc_step_time_to_hbls[4];
-#if !(defined(SSE_DMA_FIFO_READ_ADDRESS))
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
 EXT BYTE fdc_read_address_buffer_len;
 #endif
 
@@ -144,34 +140,17 @@ EXT int floppy_type1_command_active;  // Default to type 1 status
 #endif
 #endif//defined(SSE_VAR_RESIZE)
 
-#if defined(SSE_DMA_FIFO_READ_ADDRESS)
-// just a little hack saving bytes TODO
-#if !defined(SSE_DMA_FIFO_READ_ADDRESS2)
-#define fdc_read_address_buffer Dma.Fifo
-#define fdc_read_address_buffer_len Dma.Fifo_idx
-#endif
-#else
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
 EXT BYTE fdc_read_address_buffer[20];
 #endif
-
-//#endif
 
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
-#if defined(SSE_DRIVE_OBJECT)
-#if defined(SSE_YM2149A___) // seriously bugged??
-#define DRIVE (YM2149.SelectedDrive) // 0 or 1 guaranteed
-#define CURRENT_SIDE (YM2149.SelectedSide)
-#else
+#if defined(SSE_FLOPPY) //TODO direct variables
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed
 #define CURRENT_SIDE floppy_current_side()
-#endif
-
 #define CURRENT_TRACK (SF314[DRIVE].Track())
-
-
-
 #endif
 
 #undef EXT

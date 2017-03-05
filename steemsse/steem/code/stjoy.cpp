@@ -5,7 +5,7 @@ DESCRIPTION: This file contains both the code for the Steem joysticks dialog
 and the code to read the PC joysticks.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: stjoy.cpp")
 #endif
 
@@ -21,7 +21,7 @@ EXT KeyCode VK_NUMLOCK,VK_SCROLL;
 #endif
 
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 
 #define EXT
@@ -886,7 +886,7 @@ void TJoystickConfig::Show()
     y+=30;
 
     EasyStr Text=T("Or any button on");
-#if defined(SSE_JOYSTICK_390) //116 is for 2nd jump button
+#if defined(SSE_JOYSTICK_JUMP_BUTTON) //116 is for 2nd jump button
     CreateWindow("Static",Text,WS_CHILD | WS_VISIBLE | int(NumJoysticks==0 ? WS_DISABLED:0),
                   x+10,y+4,GetTextSize(Font,Text).Width,23,Handle,(HMENU)(1160+p*100),HInstance,NULL);
 #else
@@ -1137,7 +1137,7 @@ void TJoystickConfig::JoyModeChange(int Port,int base)
         InvalidateRect(GetDlgItem(Handle,n),NULL,0);
       }
     }
-#if defined(SSE_JOYSTICK_390) // hide "Or any button on" for joypad
+#if defined(SSE_JOYSTICK_JUMP_BUTTON) // hide "Or any button on" for joypad
     ShowWindow(GetDlgItem(Handle,1160),false);
 #endif
   }
@@ -1226,7 +1226,7 @@ LRESULT __stdcall TJoystickConfig::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM
         {
           int Port=BasePort+(LOWORD(wPar)/100 - 1);
           Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=GetWindowWord(HWND(lPar),0);
-#if defined(SSE_JOYSTICK_390)
+#if defined(SSE_JOYSTICK_DELETE_KEY)
           if(Joy[Port].DirID[(LOWORD(wPar) % 100)-10]==VK_DELETE)
           {
             Joy[Port].DirID[(LOWORD(wPar) % 100)-10]=0; // assign nothing
@@ -1464,7 +1464,7 @@ LRESULT __stdcall TJoystickConfig::GroupBoxWndProc(HWND Win,UINT Mess,WPARAM wPa
 #undef GET_THIS
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)//v3.7.1
+#if defined(SSE_BUILD)//v3.7.1
 #undef EXT
 #undef INIT
 #endif

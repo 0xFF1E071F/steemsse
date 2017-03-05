@@ -133,11 +133,7 @@ WORD TSF314::BytePosition() {
 }
 
 WORD TSF314::BytesToHbls(int bytes) {
-#if defined(SSE_FDC_390A)
   return HblsPerRotation()*bytes/Disk[Id].TrackBytes;
-#else
-  return HblsPerRotation()*bytes/TDisk::TRACK_BYTES;
-#endif
 }
 
 
@@ -156,15 +152,8 @@ WORD TSF314::HblsPerRotation() {
 }
 
 WORD TSF314::HblsToBytes(int hbls) {
-#if defined(SSE_FDC_390A)
   return Disk[Id].TrackBytes*hbls/HblsPerRotation();
-#else
-  return TDisk::TRACK_BYTES*hbls/HblsPerRotation();
-#endif
 }
-
-
-
 
 
 #if defined(SSE_WD1772)
@@ -622,9 +611,6 @@ void TSF314::Sound_LoadSamples(IDirectSound *DSObj,DSBUFFERDESC *dsbd,WAVEFORMAT
         if(Ret==DS_OK)
           fread(lpvAudioPtr1,1,dwAudioBytes1,fp);
         Ret=Sound_Buffer[i]->Unlock(lpvAudioPtr1,dwAudioBytes1,NULL,0);
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
-        SF314[1].Sound_Buffer[i]=Sound_Buffer[i]; // not beautiful C++...
-#endif
       }
       fclose(fp);
     }
@@ -647,9 +633,6 @@ void TSF314::Sound_ReleaseBuffers() {
       Ret1=Sound_Buffer[i]->Stop();
       Ret2=Sound_Buffer[i]->Release();
       Sound_Buffer[i]=NULL;
-#if defined(SSE_DRIVE_SOUND_SINGLE_SET) // drive B uses sounds of A
-      SF314[1].Sound_Buffer[i]=NULL; // not beautiful C++...
-#endif
     }
   }
 }

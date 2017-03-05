@@ -10,11 +10,11 @@ If option C1 is checked, hardware-level emulation is set on, see 6301.
 If option C1 isn't checked, behaviour should be exactly the same as v3.2.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: ikbd.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -419,7 +419,7 @@ void IKBD_VBL()
       }else{
         report_button_abs=0;
       }
-#if defined(SSE_JOYSTICK_391)//bug TNT when pressing fire
+#if defined(SSE_JOYSTICK) // TNT when pressing fire
       if(OPTION_C1) ; else
 #endif
       if (send_change_for_button) mouse_change_since_last_interrupt=true;
@@ -486,14 +486,14 @@ void IKBD_VBL()
     if (ModDown & b00001100) mss.LCtrl=true;
     if (ModDown & b00110000) mss.LAlt=true;
 
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
     if((bool)ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #else
     if (ST_Key_Down[key_table[VK_LSHIFT]]!=mss.LShift){
 #endif
       HandleKeyPress(VK_LSHIFT,mss.LShift==0,IGNORE_EXTEND);
     }
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
     if((bool)ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){
 #else
     if (ST_Key_Down[key_table[VK_RSHIFT]]!=mss.RShift){

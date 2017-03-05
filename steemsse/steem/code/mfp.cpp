@@ -6,11 +6,11 @@ DESCRIPTION: The core of Steem's Multi Function Processor emulation
 the ST.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: mfp.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -136,7 +136,7 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
   }
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 // inline functions -> mfp.decla.h
 #else // Steem 3.2 build, using mfp.h
 inline BYTE mfp_get_timer_control_register(int n)
@@ -545,7 +545,7 @@ int mfp_calc_timer_counter(int timer)
   return 0;
 }
 
-#ifndef SSE_STRUCTURE_DECLA // moved to SSEInterrupt
+#ifndef SSE_BUILD // moved to SSEInterrupt
 void ASMCALL check_for_interrupts_pending()
 {
   if (STOP_INTS_BECAUSE_INTERCEPT_OS==0){
@@ -648,14 +648,8 @@ void mfp_interrupt(int irq) {
 #endif
 
 #if defined(SSE_BLT_BLIT_MODE_INTERRUPT)
-/*  Stop blitter to start interrupt. This is a bugfix and necessary for Lethal
-    Xcess if we use the correct BLIT mode cycles (64x4).
-    v3.7 This mod is better placed here, when there's an actual interrupt.
-    390: remove explanation - LXs doesn't need this now?
-*/
-#if !defined(SSE_VAR_OPT_390E)//reduce footprint
-  if(Blit.HasBus) // opt: we assume the test is quicker than clearing
-#endif
+// TODO 
+  ASSERT(!Blit.HasBus); 
   Blit.HasBus=false; 
 #endif
 
@@ -777,11 +771,7 @@ TMC68901::TMC68901() {
 }
 
 void TMC68901::Init() {
-#if defined(SSE_INT_MFP_INIT_390)
-  ZeroMemory(this,sizeof(TMC68901)); //struct has been changed
-#else
-  ZeroMemory(&IrqInfo,sizeof(TMC68901IrqInfo)*16);
-#endif
+  ZeroMemory(this,sizeof(TMC68901));
   // init IrqInfo structure
   IrqInfo[0].IsGpip=IrqInfo[1].IsGpip=IrqInfo[2].IsGpip=IrqInfo[3].IsGpip
     =IrqInfo[6].IsGpip=IrqInfo[7].IsGpip=IrqInfo[14].IsGpip=IrqInfo[15].IsGpip

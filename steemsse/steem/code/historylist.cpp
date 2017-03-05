@@ -6,7 +6,7 @@ DESCRIPTION: The history list window in the debug build that shows a list of
 recently executed commands.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: historylist.cpp")
 #endif
 

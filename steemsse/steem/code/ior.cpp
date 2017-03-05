@@ -5,11 +5,11 @@ DESCRIPTION: I/O address reads. This file contains crucial core functions
 that deal with reads from ST I/O addresses ($ff8000 onwards).
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: ior.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 bool io_word_access=false;
 #endif
 

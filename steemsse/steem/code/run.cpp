@@ -8,11 +8,11 @@ to be scheduled to the nearest cycle. Speed limiting and drawing is also
 handled here, in event_scanline and event_vbl_interrupt.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: run.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -125,6 +125,7 @@ void exception(int exn,exception_action ea,MEM_ADDRESS a)
 //---------------------------------------------------------------------------
 void run()
 {
+  //TODO don't restart if blit error, init DX should change state
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
@@ -219,9 +220,6 @@ void run()
 
   do{
     ExcepHappened=0;
-#if defined(SSE_VAR_MAIN_LOOP1)//undef 390, see main.cpp
-    try {
-#endif
 #pragma warning(disable: 4611) //390
     TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
@@ -328,23 +326,6 @@ void run()
       if (runstate!=RUNSTATE_RUNNING) ExcepHappened=0;
 #endif
     END_M68K_EXCEPTION
-#if defined(SSE_VAR_MAIN_LOOP1)//undef 390
-/*  This will catch exceptions during emulation.
-    Tested with DIVMAX.TOS when SSE_CPU_DIVS_OVERFLOW_PC isn't defined.
-    Also triggered sometimes when refactoring GLUE/Frame timings
-*/
-    }
-    catch(...)
-    {
-      TRACE("System exception\n");
-      runstate=RUNSTATE_STOPPING;
-#if defined(SSE_GUI_STATUS_BAR_ALERT)
-      M68000.ProcessingState=TM68000::INTEL_CRASH; // Intel M68000 crashed
-      GUIRefreshStatusBar();
-#endif
-    }
-#endif
-
   }while (ExcepHappened);
 
   PortsRunEnd();
@@ -512,24 +493,20 @@ void inline prepare_next_event() //SS check this "inline" thing
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 
-#if defined(SSE_INT_MFP_TIMERS_INLINE)
-/*  About time we did this. Easier for mods and debugging.
-    It doesn't matter if it's really inlined or not.
-*/
+#if defined(SSE_INT_MFP)
+
 inline void handle_timeout(int tn) {
 
   dbg_log(Str("MFP: Timer ")+char('A'+tn)+" timeout at "+ABSOLUTE_CPU_TIME+" timeout was "+mfp_timer_timeout[tn]+
     " period was "+mfp_timer_period[tn]);
 
   if (mfp_timer_period_change[tn]){    
-#if defined(SSE_INT_MFP)
     // Audio Artistic, timer D would count through before the write
     if(MC68901.WritePending)
     {
       TRACE_MFP("Handle time-out Flush MFP event ");
       event_mfp_write(); //flush
     }
-#endif
     MFP_CALC_TIMER_PERIOD(tn);          
     mfp_timer_period_change[tn]=0;       
   }
@@ -551,20 +528,20 @@ inline void handle_timeout(int tn) {
   if(OPTION_C2)
   {
 #if defined(SSE_CPU_MFP_RATIO_PRECISION)
-  mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
-  // this guarantees that we're always at the right cycle, despite
-  // the inconvenience of a ratio
-  if(mfp_timer_period_current_fraction[tn]>=1000) {
-    mfp_timer_period_current_fraction[tn]-=1000;
-    new_timeout+=1; 
-  }
+    mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
+    // this guarantees that we're always at the right cycle, despite
+    // the inconvenience of a ratio
+    if(mfp_timer_period_current_fraction[tn]>=1000) {
+      mfp_timer_period_current_fraction[tn]-=1000;
+      new_timeout+=1; 
+    }
 #endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
-  new_timeout+=MC68901.Wobble[tn]=(rand() % MFP_TIMERS_WOBBLE);
+    new_timeout+=MC68901.Wobble[tn]=(rand() % MFP_TIMERS_WOBBLE);
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE)
-   new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
+    new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
 #endif
-  }
+  }//C2
   mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
   mfp_timer_timeout[tn]=new_timeout;
 }
@@ -593,7 +570,7 @@ inline void handle_timeout(int tn) {
 void event_timer_a_timeout()
 {
   HANDLE_TIMEOUT(0);
-#if !defined(SSE_INT_MFP_TIMERS_INLINE)
+#if !defined(SSE_INT_MFP)
   mfp_interrupt_pend(MFP_INT_TIMER_A,mfp_timer_timeout[0]);
   mfp_timer_timeout[0]=new_timeout;
 #endif
@@ -601,7 +578,7 @@ void event_timer_a_timeout()
 void event_timer_b_timeout()
 {
   HANDLE_TIMEOUT(1);
-#if !defined(SSE_INT_MFP_TIMERS_INLINE)
+#if !defined(SSE_INT_MFP)
   mfp_interrupt_pend(MFP_INT_TIMER_B,mfp_timer_timeout[1]);
   mfp_timer_timeout[1]=new_timeout;
 #endif
@@ -609,7 +586,7 @@ void event_timer_b_timeout()
 void event_timer_c_timeout()
 {
   HANDLE_TIMEOUT(2);
-#if !defined(SSE_INT_MFP_TIMERS_INLINE)
+#if !defined(SSE_INT_MFP)
   mfp_interrupt_pend(MFP_INT_TIMER_C,mfp_timer_timeout[2]);
   mfp_timer_timeout[2]=new_timeout;
 #endif
@@ -617,7 +594,7 @@ void event_timer_c_timeout()
 void event_timer_d_timeout()
 {
   HANDLE_TIMEOUT(3);
-#if !defined(SSE_INT_MFP_TIMERS_INLINE)
+#if !defined(SSE_INT_MFP)
   mfp_interrupt_pend(MFP_INT_TIMER_D,mfp_timer_timeout[3]);
   mfp_timer_timeout[3]=new_timeout;
 #endif

@@ -624,7 +624,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4006)
       b->checked=OPTION_C1=b->checked&HD6301_OK;
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
     else if(b->id==4007)
     {
       if(b->checked)// pathetic, there must be a better way
@@ -656,10 +656,6 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
         YM2149.FreeFixedVolTable();
 #endif
     }
-#endif
-#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
-    else if(b->id==4008)
-      PSG_FILTER_FIX=b->checked;
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
     else if(b->id==4009)

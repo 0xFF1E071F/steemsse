@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The code for the hard drive manager dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: harddiskman.cpp")
 #endif
 
@@ -31,7 +31,7 @@ void THardDiskManager::update_mount()
 //---------------------------------------------------------------------------
 bool THardDiskManager::IsMountedDrive(char d)
 {
-#ifdef SSE_DISK_PRG_391
+#ifdef SSE_TOS_PRG_AUTORUN
   if(!DisableHardDrives)
 #endif
   if (d>='C'){

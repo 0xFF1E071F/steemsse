@@ -259,7 +259,7 @@ public:
   hxc_button mc68901_but;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
 #endif
 
@@ -269,10 +269,6 @@ public:
 
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
   hxc_button psg_samples_but;
-#endif
-
-#if defined(SSE_SOUND_FILTER_STF)
-  hxc_button psg_filter_but;
 #endif
 
 #if defined(SSE_SOUND_MICROWIRE)
@@ -529,7 +525,7 @@ public:
   hxc_button mc68901_but;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
 #endif
 
@@ -539,10 +535,6 @@ public:
 
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
   hxc_button psg_samples_but;
-#endif
-
-#if defined(SSE_SOUND_FILTER_STF)
-  hxc_button psg_filter_but;
 #endif
 
 #if defined(SSE_SOUND_MICROWIRE)

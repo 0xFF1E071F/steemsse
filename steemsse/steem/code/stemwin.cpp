@@ -5,7 +5,7 @@ DESCRIPTION: This file (included from gui.cpp) handles the main Steem window
 and its various buttons.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: stemwin.cpp")
 #endif
 
