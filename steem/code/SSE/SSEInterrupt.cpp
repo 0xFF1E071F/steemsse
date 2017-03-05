@@ -202,11 +202,7 @@ void ASMCALL check_for_interrupts_pending() {
     Pacemaker STE! Spurious interrupt has a handler (RTE)
     Zikdisk2        ditto
 */
-#if defined(SSE_INT_MFP_SPURIOUS_390)
           if(irq==-1 && !no_real_irq) // couldn't find one and there was no break
-#else
-          if(irq==-1 && iack_latency <=20 && !no_real_irq) // couldn't find one and there was no break
-#endif
           {
             TRACE_OSD("Spurious! %d",iack_latency);
             //TRACE_OSD2("Spurious"); // but maybe it annoys player

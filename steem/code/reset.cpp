@@ -4,7 +4,7 @@ MODULE: emu
 DESCRIPTION: Functions to reset the emulator to a startup state.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: reset.cpp")
 #endif
 
@@ -275,12 +275,11 @@ void reset_peripherals(bool Cold)
       shifter_freq_idx=0;
 #endif
     }
-#if !defined(SSE_GLUE)
+#if defined(SSE_GLUE)
+    Glue.m_ShiftMode=screen_res; // important for extended monitor
+#else
     shifter_freq=50;
     shifter_freq_idx=0;
-#endif
-#if defined(SSE_GLUE_391)
-    Glue.m_ShiftMode=screen_res; // extended monitor
 #endif
 #ifdef SSE_TOS_GEMDOS_EM_381B
     Tos.HackMemoryForExtendedMonitor();
@@ -332,7 +331,7 @@ void reset_peripherals(bool Cold)
   dma_mode=0;
   dma_sector_count=0xffff;
 #endif
-#if !(defined(SSE_DMA_FIFO_READ_ADDRESS2))
+#if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
   fdc_read_address_buffer_len=0;
 #endif
   dma_bytes_written_for_sector_count=0;
@@ -380,7 +379,7 @@ void reset_peripherals(bool Cold)
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
   dma_sound_last_word=MAKEWORD(128,128);
-#if defined(SSE_SOUND_DMA_390D)
+#if defined(SSE_SOUND_DMA) //unimportant
   dma_sound_internal_buf_len=0;
 #endif
 #if defined(SSE_CARTRIDGE_BAT) //hack to reduce pops
@@ -400,7 +399,7 @@ void reset_peripherals(bool Cold)
   dma_sound_r_volume=20;
   dma_sound_l_top_val=128;
   dma_sound_r_top_val=128;
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
   old_dma_sound_l_top_val=dma_sound_l_top_val;
   old_dma_sound_r_top_val=dma_sound_r_top_val;
 #endif

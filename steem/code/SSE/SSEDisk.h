@@ -60,7 +60,7 @@ struct TImageType {
 
 
 struct TDisk {
-  enum {TRACK_BYTES=DRIVE_BYTES_ROTATION};
+  enum {TRACK_BYTES=DISK_BYTES_PER_TRACK};
   WORD current_byte;
   WORD TrackBytes;
   BYTE current_side; //of the image
@@ -71,11 +71,7 @@ struct TDisk {
 
   // gaps
   WORD BytePositionOfFirstId();
-#if defined(SSE_DISK_HBL_DRIFT)
   WORD BytesToID(BYTE &num);// if num=0, next ID
-#else
-  WORD BytesToID(BYTE &num,WORD &nHbls);// if num=0, next ID
-#endif
   WORD HblsPerSector();
   BYTE nSectors();
   void NextID(BYTE &RecordIdx,WORD &nHbls);

@@ -17,7 +17,7 @@ SS: used in the x64 build
 typedef EasyStr Str;
 #include "code/conditions.h"
 
-#ifdef SSE_STRUCTURE_DECLA
+#ifdef SSE_BUILD
 #include "code/steemh.decla.h"
 #include "code/draw.decla.h"
 #include "code/display.decla.h"

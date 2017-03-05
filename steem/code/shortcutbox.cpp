@@ -5,11 +5,11 @@ DESCRIPTION: Functions to implement Steem's flexible shortcuts system that
 maps all sorts of user input to all sorts of emulator functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: shortcutbox.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #ifdef IN_MAIN
 #define EXT

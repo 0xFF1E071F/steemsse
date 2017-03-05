@@ -5,11 +5,11 @@ DESCRIPTION: Functions to create and draw Steem's on screen display that
 appears when the emulator begins to run to give useful information.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: osd.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -264,13 +264,13 @@ void osd_draw()
 #endif
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_D3D_391)
+#if defined(SSE_VID_D3D)
   if(FullScreen && !screen_res 
     && (OPTION_INTERPOLATED_SCANLINES || draw_win_mode[screen_res]==DWM_GRILLE))
 #else
   if(OPTION_INTERPOLATED_SCANLINES && !screen_res && FullScreen
 #if defined(SSE_VID_D3D_382)
-    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
+    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE //TODO
 #endif    
     )
 #endif
@@ -543,18 +543,7 @@ void osd_draw()
         char tmp_buffer[BUFFER_LENGTH];
 
 #ifdef SSE_DEBUG // add current command (CR)
-#if 0 && defined(SSE_OSD_DRIVE_INFO_EXT) //3.8.2, was SSE_DISK_IMAGE //MFD
-        /*  Instead of the status bar, we put image info on debug OSD track info,
-        so it's valid for both drives, we see clearly what happens with
-        different types mixed.
-        */
-        ASSERT(SF314[DRIVE].ImageType.Extension-1>=0);
-        ASSERT(SF314[DRIVE].ImageType.Extension-1<EXT_HFE);
-        sprintf(tmp_buffer,"%C:%s-%02X-%d-%02d-%02d",'A'+DRIVE,
-          extension_list[SF314[DRIVE].ImageType.Extension],fdc_cr,
-#else
         sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
-#endif
           CURRENT_SIDE,floppy_head_track[DRIVE],
           (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
 #else // not Debug
@@ -677,14 +666,13 @@ void osd_draw()
           }
           if (i==(scroll_len-1)){
             if ((x+16)<THE_LEFT) 
-#if defined(SSE_OSD_SCROLLER_CONTROL)
             {
+#if defined(SSE_OSD_SCROLLER_CONTROL)
               OsdControl.ScrollerPhase=TOsdControl::NO_SCROLLER;
 #endif
               osd_scroller_finish_time=0;
-#if defined(SSE_OSD_SCROLLER_CONTROL)
             }
-#endif
+
           }
         }
         x-=16;

@@ -486,7 +486,7 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
     if(OPTION_SAMPLED_YM)
       TRACE("; YM");
-#if defined(SSE_DONGLE_PORT3) // if bug report = mouse drift...
+#if defined(SSE_DONGLE_PORT) // if bug report = mouse drift...
     if(STPort[3].Type)
       TRACE("; Dongle %d", STPort[3].Type);  
 #endif

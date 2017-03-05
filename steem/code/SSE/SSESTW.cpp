@@ -47,7 +47,7 @@ TImageSTW::~TImageSTW() {
 void TImageSTW::Close() {
   if(fCurrentImage)
   {
-#if defined(SSE_DEBUG) && defined(SSE_DISK_STW2)
+#if defined(SSE_DEBUG)
     TRACE_LOG("STW %s image\n",FloppyDrive[Id].WrittenTo?"save and close":"close");
 #endif
     fseek(fCurrentImage,0,SEEK_SET); // rewind
@@ -134,7 +134,7 @@ void TImageSTW::Init() {
   TrackData=NULL;
   N_SIDES=2;
   N_TRACKS=84;
-  TRACKBYTES=DRIVE_BYTES_ROTATION_STW;
+  TRACKBYTES=DISK_BYTES_PER_TRACK;
 }
 
 
@@ -172,10 +172,8 @@ bool TImageSTW::Open(char *path) {
   bool ok=false;
   Close(); // make sure previous image is correctly closed
   fCurrentImage=fopen(path,"rb+"); // try to open existing file
-#if defined(SSE_DISK_STW_READONLY) //3.7.1 last minute
   if(!fCurrentImage) // maybe it's read-only
     fCurrentImage=fopen(path,"rb");
-#endif
   if(fCurrentImage) // image exists
   {
     ImageData=(BYTE*)malloc(IMAGE_SIZE); //max size
@@ -227,10 +225,8 @@ void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
   {
     TrackData[position]=mfm_data;
     SWAP_WORD(&TrackData[position]);
-#ifdef SSE_DISK_STW2
     if(!FloppyDrive[Id].ReadOnly)
       FloppyDrive[Id].WrittenTo=true;
-#endif
   }
 }
 

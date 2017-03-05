@@ -6,11 +6,11 @@ DESCRIPTION: Functions to handle tracing instructions in the debug version
 of Steem and displaying information on what happened.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: trace.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 trace_display_entry t_d_e[MAX_TRACE_DISPLAY_ENTRIES];
 unsigned short trace_sr_before,trace_sr_after;

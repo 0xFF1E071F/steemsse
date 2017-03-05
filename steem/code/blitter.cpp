@@ -2,13 +2,14 @@
 FILE: blitter.cpp
 MODULE: emu
 DESCRIPTION: Emulation of the STE only blitter chip.
+SS: The Mega ST also has a blitter. We emulate this.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: blitter.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 TBlitter Blit;
 #endif
 
@@ -172,17 +173,9 @@ void Blitter_Start_Line()
       && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))))
     ? TBlitter::PRIME : TBlitter::READ_SOURCE;
 #else
-    if (Blit.FXSR
-#if defined(SSE_BLT_380) //same rule as for normal fetches
-      && ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge)))
-#endif
-      ){
+    if (Blit.FXSR){
       abus=Blit.SrcAdr;
-      BLT_ABUS_ACCESS_READ; 
       Blitter_ReadSource(Blit.SrcAdr);
-#if defined(SSE_BLT_381)
-      INSTRUCTION_TIME(4);
-#endif
       Blit.SrcAdr+=Blit.SrcXInc;       
     }
 #endif
@@ -233,14 +226,13 @@ void ASMCALL Blitter_Start_Now()
     'Read destination' and 'write destination' are still done in one go.
 */
 
-
 void Blitter_Blit_Word()
 {
   ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
 
   switch(Blit.BlittingPhase)
   {
-  case TBlitter::PRIME:
+  case TBlitter::PRIME: // = prefetch = FXSR
     ASSERT( Blit.FXSR && Blit.XCount==Blit.XCounter
       &&((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))) );
     abus=Blit.SrcAdr;
@@ -377,36 +369,22 @@ void Blitter_Blit_Word()
 }
 
 
-#else
+#else // Steem 3.2
 
 
 void Blitter_Blit_Word()
 {
-  ASSERT(Blit.Busy && Blit.HasBus);//there's no stupid assert
-#if !defined(SSE_VAR_OPT_390E)
   if (Blit.Busy==0) return;
-#endif
 
   WORD SrcDat,DestDat=0,NewDat;  //internal data registers
   // The modes 0,3,12,15 are source only
   if (Blit.XCounter==1){
     Blit.Last=true;
-    if (Blit.XCount>1) Blit.Mask=Blit.EndMask[2]; //SS mask for last word
+    if (Blit.XCount>1) Blit.Mask=Blit.EndMask[2];
   }
-/*
-  In order to improve  performance  a  read  will  only  be performed if 
-  it is required.
-*/
   //won't read source for 0,5,10,15 or Hop=0,1 (unless 1 and smudge on)
-
-  if ((Blit.Op % 5)!=0 &&(Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
+  if ((Blit.Op % 5)!=0 && (Blit.Hop>1 || (Blit.Hop==1 && Blit.Smudge))){
     if (Blit.NFSR && Blit.Last){
-/*
-  NFSR stands  for No  Final Source  Read.   When this  bit is  set the last
-  source read of each line is not performed.  Note  that use  of this and/or
-  the FXSR  bit the  requires an  adjustment to  the SOURCE  Y INCREMENT and
-  SOURCE ADDRESS registers.
-*/
       if (Blit.SrcXInc>=0){
         Blit.SrcBuffer<<=16;
       }else{
@@ -414,82 +392,29 @@ void Blitter_Blit_Word()
       }
     }else{
       Blitter_ReadSource(Blit.SrcAdr);
-#if defined(SSE_MMU_ROUNDING_BUS)
-      abus=Blit.SrcAdr;
-      BLT_ABUS_ACCESS_READ;
-#else
       INSTRUCTION_TIME_ROUND(4);
-#endif
     }
-    if (Blit.Last){ // SS finishing a line, apply SrcYInc
-/*
-  SOURCE Y INCREMENT
-
-  This is  a signed  15-bit register,  the least significant bit is ignored,
-  specifying the offset in bytes to the address of the first source  word in
-  the next  line.   This value will be sign-extended and added to the SOURCE
-  ADDRESS register at the end of  the last  source word  fetch of  each line
-  (when the  X COUNT  register contains  a value  of one).   If  the X COUNT
-  register is loaded with a value of one this register  is used exclusively.
-  Byte instructions can not be used to read or write this register. 
-*/
+    if (Blit.Last){
       Blit.SrcAdr+=Blit.SrcYInc;
-    }else{ // SS after each word, apply SrcXInc
+    }else{
       if ((Blit.NFSR && Blit.XCounter==2)==0){
-/*
-  SOURCE X INCREMENT
-
-  This is  a signed  15-bit register,  the least significant bit is ignored,
-  specifying the offset in bytes to the address of the  next source  word in
-  the  current  line.    This  value  will be sign-extended and added to the
-  SOURCE ADDRESS register at the end of a source word fetch, whenever  the X
-  COUNT register  does not  contain a value of one.  If the X COUNT register
-  is  loaded  with  a  value  of  one  this  register  is  not  used.   Byte
-  instructions can not be used to read or write this register.
-*/
         Blit.SrcAdr+=Blit.SrcXInc;
       }
     }
   }
-/*
-  HALFTONE OPERATIONS
-
-  The  least  significant  two  bits  of  the  byte-wide register at FF 8A3A
-  specify the  source/halftone combination  rule according  to the following
-  table:
-
-           _____________________________
-          |    |                        |
-          | HOP| COMBINATION RULE       |
-          |    |                        |
-          | 0  | all ones               |
-          | 1  | halftone               |
-          | 2  | source                 |
-          | 3  | source AND halftone    |
-          |____|________________________|
-
-  How to combine Halftone-Data and copied data is given here. A "00" means all
-  copied bits will be set to "1" (blind copy), "01" means ONLY halftone content 
-  will be copied, "10" implies that ONLY source content will be copied 
-  (1:1 copy). "11" makes the halftone-pattern work as supposed and does a copy 
-  "Halftone AND source".
-*/
   switch (Blit.Hop){
     case 0:
-      SrcDat=WORD(0xffff); //SS fill
+      SrcDat=WORD(0xffff);
       break;
-    case 1: //SS only halftone
-      if (Blit.Smudge){  //SS strange but as documented
+    case 1:
+      if (Blit.Smudge){
         SrcDat=Blit.HalfToneRAM[WORD(Blit.SrcBuffer >> Blit.Skew) & (BIT_0 | BIT_1 | BIT_2 | BIT_3)];
       }else{
         SrcDat=Blit.HalfToneRAM[int(Blit.LineNumber)];
       }
       break;
-    default: //SS 2&3 with source
-      ASSERT(Blit.Skew<16);
-      //SS the 32b buffer is shifted and we take 16 low bits.
-      //that way, the eventual prefetch is included in the word to blit
-      SrcDat=WORD( Blit.SrcBuffer >> Blit.Skew); //SS depends on sign?
+    default:
+      SrcDat=WORD(Blit.SrcBuffer >> Blit.Skew);
       if (Blit.Hop==3){
         if (Blit.Smudge==0){
           SrcDat&=Blit.HalfToneRAM[int(Blit.LineNumber)];
@@ -501,98 +426,55 @@ void Blitter_Blit_Word()
   if (Blit.NeedDestRead || Blit.Mask!=0xffff){
     DestDat=Blitter_DPeek(Blit.DestAdr);
     NewDat=DestDat & WORD(~(Blit.Mask));
-#if defined(SSE_MMU_ROUNDING_BUS)
-    abus=Blit.DestAdr;
-    BLT_ABUS_ACCESS_READ;
-#else
     INSTRUCTION_TIME_ROUND(4);
-#endif
   }else{
     NewDat=0; //Blit.Mask is FFFF and we're in a source-only mode
   }
-  switch (Blit.Op){   // 3 shows the shit in white
-    case 0: // 0 0 0 0    - Target will be zeroed out (blind copy)
+
+  switch (Blit.Op){
+    case 0:
       NewDat|=WORD(0) & Blit.Mask; break;
-    case 1: // 0 0 0 1    - Source AND Target         (inverse copy)
+    case 1:
       NewDat|=WORD(SrcDat & DestDat) & Blit.Mask; break;
-    case 2: // 0 0 1 0    - Source AND NOT Target     (mask copy)
+    case 2:
       NewDat|=WORD(SrcDat & ~DestDat) & Blit.Mask; break;
-    case 3: // 0 0 1 1    - Source only               (replace copy)
+    case 3:
       NewDat|=SrcDat & Blit.Mask; break;
-    case 4: // 0 1 0 0    - NOT Source AND Target     (mask copy)
+    case 4:
       NewDat|=WORD(~SrcDat & DestDat) & Blit.Mask; break;
-    case 5: // 0 1 0 1    - Target unchanged          (null copy)
+    case 5:
       NewDat|=DestDat & Blit.Mask; break;
-    case 6: // 0 1 1 0    - Source XOR Target         (xor copy)
+    case 6:
       NewDat|=WORD(SrcDat ^ DestDat) & Blit.Mask; break;
-    case 7: // 0 1 1 1    - Source OR Target          (combine copy)
+    case 7:
       NewDat|=WORD(SrcDat | DestDat) & Blit.Mask; break;
-    case 8: // 1 0 0 0    - NOT Source AND NOT Target (complex mask copy)
+    case 8:
       NewDat|=WORD(~SrcDat & ~DestDat) & Blit.Mask; break;
-    case 9: // 1 0 0 1    - NOT Source XOR Target     (complex combine copy)
+    case 9:
       NewDat|=WORD(~SrcDat ^ DestDat) & Blit.Mask; break;
-    case 10: // 1 0 1 0    - NOT Target                (reverse, no copy)
+    case 10:
       NewDat=DestDat^Blit.Mask; break;  // ~DestAdr & Blit.Mask
-    case 11: // 1 0 1 1    - Source OR NOT Target      (mask copy)
+    case 11:
       NewDat|=WORD(SrcDat | ~DestDat) & Blit.Mask; break;
-    case 12: // 1 1 0 0    - NOT Source                (reverse direct copy)
+    case 12:
       NewDat|=WORD(~SrcDat) & Blit.Mask; break;
-    case 13: // 1 1 0 1    - NOT Source OR Target      (reverse combine)
+    case 13:
       NewDat|=WORD(~SrcDat | DestDat) & Blit.Mask; break;
-    case 14: // 1 1 1 0    - NOT Source OR NOT Target  (complex reverse copy)
+    case 14:
       NewDat|=WORD(~SrcDat | ~DestDat) & Blit.Mask; break;
-    case 15: // 1 1 1 1    - Target is set to "1"      (blind copy)
+    case 15:
       NewDat|=WORD(0xffff) & Blit.Mask; break;
   }
-#if defined(SSE_MMU_ROUNDING_BUS)
-  abus=Blit.DestAdr;
-  BLT_ABUS_ACCESS_WRITE; //+ bugfix, must be counted before the poke
-#endif
-  Blitter_DPoke(Blit.DestAdr,NewDat); //SS writing the word to dest
-#if !defined(SSE_MMU_ROUNDING_BUS)
+  Blitter_DPoke(Blit.DestAdr,NewDat);
   INSTRUCTION_TIME_ROUND(4);
-#endif
   if (Blit.Last){
-/*
-  DESTINATION Y INCREMENT
-
-  This is a signed 15-bit register,  the least  significant bit  is ignored,
-  specifying the  offset in  bytes to  the address  of the first destination
-  word in the next line.  This value will be sign-extended and  added to the
-  DESTINATION ADDRESS register at the end of the last destination word write
-  of each line (when the X COUNT register contains a value of one).   If the
-  X  COUNT  register  is  loaded  with  a value of one this register is used
-  exclusively.  Byte instructions cannot be used on this register.
-*/
     Blit.DestAdr+=Blit.DestYInc;
   }else{
-/*
-  DESTINATION X INCREMENT  
-
-  This is a signed 15-bit register,  the least  significant bit  is ignored,
-  specifying the offset in bytes to the address of the next destination word
-  in the current line.  This value will  be sign-extended  and added  to the
-  DESTINATION  ADDRESS  register  at  the  end  of a destination word write,
-  whenever the X COUNT register does not contain a value of one.   If  the X
-  COUNT register  is loaded  with a  value of one this register is not used.
-  Byte instructions can not be used to read or write this register.
-*/
     Blit.DestAdr+=Blit.DestXInc;
   }
   Blit.Mask=Blit.EndMask[1];
 
   if((--Blit.XCounter) <= 0){
-/*
-  LINE NUMBER
-
-  The least significant four bits  of  the  byte-wide  register  at  FF 8A3C
-  specify the  current halftone  mask.   The current value times two plus FF
-  8A00 gives the address of  the  current  halftone  mask.    This  value is
-  incremented or  decremented at  the end of each line and will wrap through
-  zero.   The sign  of the  DESTINATION Y  INCREMENT determines  if the line
-  number is  incremented or decremented (increment if positive, decrement if
-  negative).
-*/
     Blit.LineNumber+=char((Blit.DestYInc>=0) ? 1:-1);
     Blit.LineNumber&=15;
     Blit.YCounter--;
@@ -601,6 +483,7 @@ void Blitter_Blit_Word()
     Blitter_Start_Line();
   }
 }
+
 
 #endif
 
@@ -693,31 +576,28 @@ void Blitter_Draw() {
 }
 
 
-#else //!main loop
+#else // Steem 3.2
 
 
 void Blitter_Draw()
 {
-
 //  MEM_ADDRESS SrcAdr=Blit.SrcAdr,DestAdr=Blit.DestAdr;
+
 //  Blit.YCounter=int(Blit.YCount ? Blit.YCount:65536);
-#if !defined(SSE_BLT_381)
-  INSTRUCTION_TIME(BLITTER_START_WAIT);
-#endif
+  INSTRUCTION_TIME_ROUND(BLITTER_START_WAIT);
+
   if (Blit.YCount==0){  //see note in Blitter.txt - trying to restart with a ycount of zero results in no restart
-#if defined(SSE_BLT_380)
-    Blit.Busy=Blit.Hog=false; 
-#else
-    Blit.Busy=false; 
-#endif
-    dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Draw YCount==0 changing GPIP bit from "+
+/*
+     * If the BUSY flag is
+     * reset when the Y_Count is zero, the flag will remain clear
+     * indicating BLiTTER completion and the BLiTTER won't be restarted.
+*/
+    Blit.Busy=false;
+    log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Draw YCount==0 changing GPIP bit from "+
          bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
     return;
   }else{
-#if defined(SSE_BLT_390) //381?
-    INSTRUCTION_TIME(BLITTER_START_WAIT);
-#endif
     Blit.YCounter=Blit.YCount;
   }
 
@@ -725,155 +605,72 @@ void Blitter_Draw()
 //  bool Last;
 //  long Cycles=0;
 
-  dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING NOW --------------");
-  dbg_log(EasyStr("SrcAdr=$")+HEXSl(Blit.SrcAdr,6)+", SrcXInc="+Blit.SrcXInc+", SrcYInc="+Blit.SrcYInc);
-  dbg_log(EasyStr("DestAdr=$")+HEXSl(Blit.DestAdr,6)+", DestXInc="+Blit.DestXInc+", DestYInc="+Blit.DestYInc);
-  dbg_log(EasyStr("XCount=")+int(Blit.XCount ? Blit.XCount:65536)+", YCount="+Blit.YCount);
-  dbg_log(EasyStr("Skew=")+Blit.Skew+", NFSR="+(int)Blit.NFSR+", FXSR="+(int)Blit.FXSR);
-  dbg_log(EasyStr("Hog=")+Blit.Hog+", Op="+Blit.Op+", Hop="+Blit.Hop);
+  log(Str("BLITTER: ")+HEXSl(old_pc,6)+" ------------- BLITTING NOW --------------");
+  log(EasyStr("SrcAdr=$")+HEXSl(Blit.SrcAdr,6)+", SrcXInc="+Blit.SrcXInc+", SrcYInc="+Blit.SrcYInc);
+  log(EasyStr("DestAdr=$")+HEXSl(Blit.DestAdr,6)+", DestXInc="+Blit.DestXInc+", DestYInc="+Blit.DestYInc);
+  log(EasyStr("XCount=")+int(Blit.XCount ? Blit.XCount:65536)+", YCount="+Blit.YCount);
+  log(EasyStr("Skew=")+Blit.Skew+", NFSR="+(int)Blit.NFSR+", FXSR="+(int)Blit.FXSR);
+  log(EasyStr("Hog=")+Blit.Hog+", Op="+Blit.Op+", Hop="+Blit.Hop);
 
   // Turn off the "assigned a value that is never used" warning
 //#ifdef WIN32
 //  #pragma option -w-aus-
 //#endif
-
   Blit.HasBus=true;
-
-#if defined(SSE_BLT_BLIT_MODE_CYCLES)
-  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
-#else
   Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64;
-#endif
+
 //  while(Blit.Busy){
 //    Blitter_Blit_Word();
 //  }
-  // SS the blitter's own process loop!
-#if defined(SSE_BOILER_BLIT_WHEN_STOPPED)
-  while (1 ){ //Even if that was dangerous, only the Boiler build is affected
-    while (cpu_cycles>0 && 1){
-#else
+
   while (runstate==RUNSTATE_RUNNING){
     while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING){
-#endif
       if (Blit.HasBus){
         Blitter_Blit_Word();
       }else{
-#if defined(SSE_BOILER_HISTORY_TIMING)
-        pc_history_y[pc_history_idx]=scan_y;
-        pc_history_c[pc_history_idx]=LINECYCLES;
-#endif
         DEBUG_ONLY( pc_history[pc_history_idx++]=pc; )
         DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
+
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU
         m68k_PROCESS
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_BLITTER
-        CHECK_BREAKPOINT
-#if defined(SSE_BOILER_BLIT_IN_HISTORY3) 
-        if(Blit.HasBus) //eg in a TAS loop (TOS)
-        {
-          pc_history_y[pc_history_idx]=scan_y;
-          pc_history_c[pc_history_idx]=LINECYCLES;
-          pc_history[pc_history_idx++]=0x98764321; 
-          if (pc_history_idx>=HISTORY_SIZE) 
-            pc_history_idx=0;
-        }
-#endif
-      }
 
+        CHECK_BREAKPOINT
+      }
       if (Blit.Busy){
         if (Blit.Hog==0){ //not in hog mode, keep switching bus
           if (((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)){
-#if defined(SSE_BLT_390)
-            INSTRUCTION_TIME(GRAB_BUS_TIMING);
-#endif
-#if defined(SSE_BLT_381) // BLIT03C, experimental but true feature //no, minsinterpretation :)
-            if(OPTION_HACKS && !Blit.HasBus
-              &&(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)
-              && ((ir&0xf0c0)==0xc0c0 || (ir&0xf100)==0xd000))
-            {
-           //   INSTRUCTION_TIME(-(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus));
-              TRACE_LOG("No blit for you, fool IR %X tmg %d\n",ir,(ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus));
-            }
-            else
-#endif
             Blit.HasBus=!(Blit.HasBus);
-
-#if defined(DEBUG_BUILD) || !defined(SSE_BLITTER)
             if (Blit.HasBus){
-#if defined(SSE_BOILER_BLIT_WHEN_TRACING2) // do the blit before leaving...
-#if defined(SSE_BLT_390)
-              ASSERT(mode==STEM_MODE_CPU);
-              if(debug_in_trace)
-#endif
-                cpu_cycles+=BLITTER_BLIT_MODE_CYCLES;
-#endif
-#if defined(SSE_BOILER_BLIT_IN_HISTORY2)
-#if defined(SSE_BOILER_HISTORY_TIMING)
-              pc_history_y[pc_history_idx]=scan_y;
-              pc_history_c[pc_history_idx]=LINECYCLES;
-#endif
-              DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
-              DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
-#endif
-              dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
+              log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to blitter at "+ABSOLUTE_CPU_TIME);
             }else{
-              dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
+              log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Swapping bus to CPU at "+ABSOLUTE_CPU_TIME);
             }
-#endif
-
-#if defined(SSE_BLT_BLIT_MODE_CYCLES)
-#if defined(SSE_BLT_380)
-            Blit.TimeToSwapBus=ACT+BLITTER_BLIT_MODE_CYCLES; // + delay
-#else
-            Blit.TimeToSwapBus+=BLITTER_BLIT_MODE_CYCLES;
-#endif
-#else
             Blit.TimeToSwapBus+=64;
-#endif
           }
         }
       }else{
-        Blit.HasBus=false;  
+        Blit.HasBus=false;
         break;
       }
-    }//while (cpu_cycles>0
+    }
 
     if (cpu_cycles>0) break;
     if (Blit.Busy==0) break; //enough!
-#if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
-    if(!Blit.HasBus)
-    {
-#endif
+
     DEBUG_ONLY( if (runstate!=RUNSTATE_RUNNING) break; )
     DEBUG_ONLY( mode=STEM_MODE_INSPECT; )
-#if defined(SSE_BOILER_BLIT_WHEN_TRACING2)
-    }
-#endif
-    
 
     while (cpu_cycles<=0){
-#if defined(SSE_BOILER_TRACE_CONTROL)
-      if(TRACE_MASK2&TRACE_CONTROL_EVENT)
-        TRACE_EVENT(screen_event_vector);        
-#endif
       screen_event_vector();
       prepare_next_event();
-#if defined(SSE_BLT_HOG_MODE_INTERRUPT)
-/*  
-" The Hog-Mode of the Blitter does not allow the CPU to access to bus while 
-the Blitter is active - Not even for interrupts. "
-    Fixes Extreme Rage guest screen overscan logo. TODO check if it's still the case...
-*/
-      if(!Blit.Hog)
-#endif
-      if (cpu_cycles>0) check_for_interrupts_pending(); 
-
+      if (cpu_cycles>0) check_for_interrupts_pending();
     }
     CHECK_BREAKPOINT
-    DEBUG_ONLY( mode=STEM_MODE_CPU; )
 
+    DEBUG_ONLY( mode=STEM_MODE_CPU; )
 //---------------------------------------------------------------------------
   } //more CPU!
 
@@ -888,6 +685,7 @@ the Blitter is active - Not even for interrupts. "
 //  Blit.YCount=0;
 //  if (Blit.Hog) INSTRUCTION_TIME_ROUND(Cycles);
 }
+
 
 #endif //main loop?
 

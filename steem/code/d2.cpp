@@ -9,11 +9,11 @@ disa_d2 (see bottom of file) to disassemble an instruction and
 d2_routines_init to initialise the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: d2.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 LONG d2_peekvalid;
 EasyStr d2_src,d2_dest,d2_command,d2_pc_rel_ex;
 WORD d2_ap;

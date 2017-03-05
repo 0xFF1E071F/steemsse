@@ -49,18 +49,10 @@ This feature is emulated in Steem if SSE_DMA_DOUBLE_FIFO is defined, but it
 hasn't proved necessary yet.
 TODO: maybe use the feature and remove #define to make code more readable?
 */
-  BYTE Fifo[2][16
-#if defined(SSE_DMA_FIFO_READ_ADDRESS) && !defined(SSE_DMA_FIFO_READ_ADDRESS2)
-    +4 // see fdc.h, replaces fdc_read_address_buffer[20]//review this!
-#endif
-    ];
+  BYTE Fifo[2][16];
 #else
-  BYTE Fifo[16
-#if defined(SSE_DMA_FIFO_READ_ADDRESS) && !defined(SSE_DMA_FIFO_READ_ADDRESS2)
-    +4 // see fdc.h, replaces fdc_read_address_buffer[20]
+  BYTE Fifo[16];
 #endif
-    ];
-#endif//FIFO
   WORD MCR; // mode control register
   WORD Counter; // Counter register
   WORD ByteCount; // 1-512 for sectors
@@ -88,10 +80,9 @@ TODO: maybe use the feature and remove #define to make code more readable?
 #else
   void UpdateRegs(bool trace_them=false);
 #endif
-#if defined(SSE_STRUCTURE_DMA_INC_ADDRESS)
+
   void IncAddress();
-#define DMA_INC_ADDRESS Dma.IncAddress();
-#endif
+
 #if defined(SSE_DMA_FIFO)
   void AddToFifo(BYTE data);
 #if defined(SSE_DMA_DRQ) && defined(SSE_WD1772)

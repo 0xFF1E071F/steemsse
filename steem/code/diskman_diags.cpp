@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: The dialogs that can be shown by the Disk Manager.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: diskman_diags.cpp")
 #endif
 
@@ -1080,15 +1080,13 @@ LRESULT __stdcall TDiskManager::Dialog_WndProc(HWND Win,UINT Mess,WPARAM wPar,LP
         EnableWindow(This->Handle,true);
         break;
     }
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
   }else if (Win==This->ImportDiag){
     switch (Mess){
       case WM_COMMAND:
         switch (LOWORD(wPar)){
-#ifndef SSE_VAR_NO_WINSTON
           case IDOK:
             if (This->DoImport()==0) break;
-#endif
           case IDCANCEL:
             if (This->Importing){
               This->Importing=0;

@@ -2,7 +2,7 @@
 #if !defined(CPU_DECLA_H)
 #define CPU_DECLA_H
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include <binary.h>
 #include <setjmp.h>
 #include "conditions.h"
@@ -223,7 +223,7 @@ extern jmp_buf *pJmpBuf;
 // destructor when it goes out of scope, but GCC seems flakey on that sort of thing.
 #if defined(SSE_M68K_EXCEPTION_TRY_CATCH)
 /*  Using C++ try/catch works but it's dramatically slower in the debug build.
-    Check for example with the BIG Demo.
+    Check for example with the BIG Demo loader.
     There's certainly a performance hit in the release builds too, as try/catch
     does more than setjmp, but we don't need this work, because setjmp is only
     used to go through the calling stack, in other words it's appropriate. 
@@ -294,7 +294,7 @@ SR_TRACE_BIT=0xf};
 
 #if defined(SSE_VC_INTRINSICS_390A)
 #define SUPERFLAG (BITTEST(sr,SR_SUPER_BIT))
-#elif defined(SSE_VAR_REWRITE)
+#elif defined(SSE_COMPILER_WARNING)
 #define SUPERFLAG ( ((sr&SR_SUPER)!=0) ) // warning C4800
 #else
 #define SUPERFLAG ((bool)(sr&SR_SUPER))
@@ -340,7 +340,8 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 // Counting cycles //
 /////////////////////
 
-#if defined(SSE_BLT_BUS_ARBITRATION_391)
+
+#if defined(SSE_BLT_BUS_ARBITRATION)
 /*
     http://patpend.net/technical/68000/68000faq.txt
 
@@ -363,7 +364,6 @@ inline void InstructionTime(int t) {
   else
 #endif
   cpu_cycles-=(t);
-#if defined(SSE_BLT_BUS_ARBITRATION_391B) //overhead!
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -371,7 +371,6 @@ inline void InstructionTime(int t) {
     else
 #endif
     Blitter_Start_Now(); 
-#endif
 }
 
 #define INSTRUCTION_TIME(t)  InstructionTime(t)
@@ -384,7 +383,6 @@ inline void InstructionTime(int t) {
 
 inline void InstructionTimeCpuBus(int t) {
   cpu_cycles-=(t);
-#if defined(SSE_BLT_BUS_ARBITRATION_391B)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -392,16 +390,14 @@ inline void InstructionTimeCpuBus(int t) {
     else
 #endif
     Blitter_Start_Now(); 
-#endif
 }
 
 #define INSTRUCTION_TIME_BUS(t)  InstructionTimeCpuBus(t)
 
-
+// TODO have t always = 4?
 inline void InstructionTimeRamBus(int t) { // RAM + Shifter
   cpu_cycles-=(t);
   cpu_cycles&=-4; // MMU adds wait states if necessary
-#if defined(SSE_BLT_BUS_ARBITRATION_391B)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -409,9 +405,7 @@ inline void InstructionTimeRamBus(int t) { // RAM + Shifter
     else
 #endif
     Blitter_Start_Now(); 
-#endif
 }
-
 
 #define INSTRUCTION_TIME_ROUND(t)  InstructionTimeRamBus(t)
 
@@ -479,86 +473,6 @@ inline void InstructionTimeRound(int t) {
 
 
 #if defined(SSE_CPU)
-
-#if defined(SSE_BLT_BUS_ARBITRATION_391)
-/*  Clear "blit cycles" as soon as there's a bus access.
-    If counting for the blitter, no problem, blit cycles are computed after 
-    blit.
-*/
-/*  We do a single comparison here, but if the R/W is to Shifter registers,
-    rounding up happens in ior/iow.
-*/
-inline void FetchTiming() {
-#if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0; 
-#endif
-  if(pc<himem) 
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-}
-
-inline void FetchTimingL() {
-  FetchTiming();
-  FetchTiming();
-}
-
-
-inline void ReadBusTiming() {
-#if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0;
-#endif
-  if(abus<himem)
-   { INSTRUCTION_TIME_ROUND(4);}
-  else
-   { INSTRUCTION_TIME_BUS(4);}
-}
-
-
-inline void ReadBusTimingL() {
-  ReadBusTiming();
-  // shouldn't we do abus+=2? or should we transform CPU_ABUS_ACCESS_WRITE_L
-  // into 2 CPU_ABUS_ACCESS_WRITE?
-  // maybe also do 2 peekw instead of peekl?
-  // generally abus is +2, but in some cases it can be -2
-  // can't be done in a genral function...
-  ReadBusTiming();
-}
-
-
-inline void WriteBusTiming() {
-#if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0;
-#endif
-  if(abus<himem)
-   { INSTRUCTION_TIME_ROUND(4);}
-  else
-    {INSTRUCTION_TIME_BUS(4);}
-}
-
-inline void WriteBusTimingL() {
-  WriteBusTiming();
-  WriteBusTiming();
-}
-
-inline void StackTiming() {
-#if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0;
-#endif
-  if((MEM_ADDRESS)r[15]<himem)
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-}
-
-inline void StackTimingL() {
-  StackTiming();
-  StackTiming();
-}
-
-
-#elif defined(SSE_MMU_ROUNDING_BUS)
-
 /*
 Note on rounding
 
@@ -630,6 +544,81 @@ There are two data buses in the ST, the main CPU bus, and the RAM/SHIFTER
 connect or separate both buses. MMU is connected to the main data bus. 
 But it controls the buffers and the RAM address bus.
 */
+
+#if defined(SSE_BLT_BUS_ARBITRATION)
+/*  Clear "blit cycles" as soon as there's a bus access.
+    If counting for the blitter, no problem, blit cycles are computed after 
+    blit.
+*/
+/*  We do a single comparison here, but if the R/W is to Shifter registers,
+    rounding up happens in ior/iow.
+*/
+inline void FetchTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0; 
+#endif
+  if(pc<himem) 
+  {  INSTRUCTION_TIME_ROUND(4);}
+  else
+  {  INSTRUCTION_TIME_BUS(4);}
+}
+
+inline void FetchTimingL() {
+  FetchTiming();
+  FetchTiming();
+}
+
+
+inline void ReadBusTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0;
+#endif
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND(4);}
+  else
+   { INSTRUCTION_TIME_BUS(4);}
+}
+
+
+inline void ReadBusTimingL() {
+  ReadBusTiming();
+  ReadBusTiming();
+}
+
+
+inline void WriteBusTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0;
+#endif
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND(4);}
+  else
+    {INSTRUCTION_TIME_BUS(4);}
+}
+
+inline void WriteBusTimingL() {
+  WriteBusTiming();
+  WriteBusTiming();
+}
+
+inline void StackTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0;
+#endif
+  if((MEM_ADDRESS)r[15]<himem)
+  {  INSTRUCTION_TIME_ROUND(4);}
+  else
+  {  INSTRUCTION_TIME_BUS(4);}
+}
+
+inline void StackTimingL() {
+  StackTiming();
+  StackTiming();
+}
+
+
+#elif defined(SSE_MMU_ROUNDING_BUS)
+
 
 //pc is of course up-to-date
 //we don't round on palette, but it's done in ior (?)
@@ -1253,16 +1242,8 @@ inline void FetchWord(WORD &dest_word) {
 #if defined(SSE_CPU_FETCH_IO)
   // some programs like to set PC on Shifter or PSG registers!
   else if(pc>=MEM_IO_BASE)
-#if defined(SSE_CPU_FETCH_IO_391)
-/*  In Steem, pc is incremented after fetching, another variable is used.
-    White Spirit was broken because of this (wrong stack frame).
-    It makes no difference for the Union Demo and Warp that are happy provided
-    there's a crash.
-*/
+    //In Steem, pc is incremented after fetching, another variable is used.
     IR=io_read_w(pc+2); 
-#else
-    IR=io_read_w(pc);
-#endif
 #endif
 #if defined(SSE_CPU_FETCH_80000)
   // no crash if there's no RAM
@@ -1308,11 +1289,7 @@ inline void PrefetchIrc() {
   FetchTiming(); // (inline)
 #if defined(SSE_CPU_FETCH_IO)
   if(pc>=MEM_IO_BASE)
-#if defined(SSE_CPU_FETCH_IO_391)
     IRC=io_read_w(pc+2); // see FetchWord()
-#else
-    IRC=io_read_w(pc); 
-#endif
   else
 #endif
 #if defined(SSE_CPU_FETCH_80000)
@@ -2019,7 +1996,7 @@ inline void m68kGetSourceLongNotA() {
 
 #define m68k_IMMEDIATE_B (signed char)m68k_fetchB()   //ss very few calls
 #define m68k_IMMEDIATE_W (short)m68k_fetchW() //ss very few calls
-#if !defined(SSE_VAR_REWRITE)
+#if !defined(SSE_VAR_DEAD_CODE)
 #define m68k_IMMEDIATE_L (long)m68k_fetchL() // SS unused
 #endif
 
@@ -2047,7 +2024,6 @@ inline void m68kGetSourceLongNotA() {
 #if defined(SSE_CPU)
 #define SET_PC(ad) m68kSetPC(ad);
 #else
-//#define SET_PC(ad) set_pc(ad);// stack overflow!
 extern void set_pc(MEM_ADDRESS);
 #endif
 
@@ -2179,7 +2155,7 @@ inline void m68kPrefetchSetPC() {
 #endif
 
 //---------------------------------------------------------------------------
-#ifdef SSE_STRUCTURE_DECLA
+#ifdef SSE_BUILD
 #if defined(SSE_CPU)
 inline void change_to_user_mode()
 {

@@ -35,9 +35,6 @@ void TOption::Init() {
   Chipset1=true;
 #endif
   Chipset2=true;
-#if defined(SSE_SOUND_FILTER_STF)
-  PSGFilter=true;
-#endif
 #if defined(DEBUG_BUILD)  
   OutputTraceToFile=1;
 #endif
@@ -53,9 +50,6 @@ void TOption::Init() {
 #endif
   Chipset1=Chipset2=true;
   Microwire=0;
-#if defined(SSE_SOUND_FILTER_STF)
-  PSGFilter=1;
-#endif
   STModel=0;//STE;
   CaptureMouse=1;
   DisplaySize=0; // original Steem 3.2

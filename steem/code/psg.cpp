@@ -7,11 +7,11 @@ frame of sound to the output buffer. The I/O code isn't included here, see
 ior.cpp and iow.cpp for the lowest level emulation.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: psg.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #ifdef IN_EMU
 #define EXT
@@ -25,6 +25,7 @@ EXT int sound_variable_d INIT(208);
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
 #endif
+//TODO 44100hz
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 #if defined(SSE_VAR_RESIZE)
@@ -137,12 +138,12 @@ BYTE dma_sound_treble=6;
 int dma_sound_bass=6; // 6 is neutral value
 int dma_sound_treble=6;
 #endif
-#if !defined(SSE_SOUND_DMA_390A)// too many click problems (report Foebane)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME)
 TIirVolume MicrowireVolume[2]; 
 #endif
 TIirLowShelf MicrowireBass[2];
 TIirHighShelf MicrowireTreble[2];
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
 BYTE old_dma_sound_l_top_val,old_dma_sound_r_top_val;
 #endif
 #endif//microwire
@@ -161,27 +162,10 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
                                       69*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
 
-#if defined(SSE_YM2149_FIXED_VOL_TABLE) 
-/*  For this mod we use ljbk's table when we reckon we're playing samples.
-    This is the case when tone and noise generators are disabled.
-    Note that some games play samples on only some channel(s) or with another
-    technique. eg Goldrunner, for those the table isn't used, it's a
-    different sound.
-    This doesn't fix all sample playing problems.
-    ST-CNX scroller, ...
-    v3.7.0: table used all the time, eg also for Goldrunner
-*/
-
-#if !defined(SSE_YM2149_DYNAMIC_TABLE) || defined(SSE_YM2149_DYNAMIC_TABLE0)
-#if !defined(SSE_YM2149_DYNAMIC_TABLE0)
-const //const must be removed for linker 
-#endif
+#if defined(SSE_YM2149_DYNAMIC_TABLE0) // to create file ym2149_fixed_vol.bin
  WORD fixed_vol_3voices[16][16][16]= 
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
-
-#endif//SSE_YM2149_FIXED_VOL_TABLE
-
 
 const int psg_envelope_level[8][64]={
     {1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
@@ -251,15 +235,13 @@ DWORD psg_envelope_start_time=0xfffff000;
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE)
-#if defined(SSE_SOUND_DMA_390B)
+#if defined(SSE_SOUND_MICROWIRE) // for my half-arsed microwire emulation!
 #define LOW_SHELF_FREQ 80 // officially 50 Hz
+#if defined(SSE_SOUND_MICROWIRE_TREBLE)
 #define HIGH_SHELF_FREQ (min(2000,(int)dma_sound_freq/2)) // officially  15 kHz
-#else
-#define LOW_SHELF_FREQ 80 // 50
-#define HIGH_SHELF_FREQ (dma_sound_freq) // doesn't work very well
 #endif
 #endif
+
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -354,6 +336,34 @@ void SoundStopInternalSpeaker()
   internal_speaker_sound_by_period(0);
 }
 //---------------------------------------------------------------------------
+#if defined(SSE_SOUND_MICROWIRE)   // microwire this!
+
+inline void Microwire(int channel,int &val) {
+  double d_dsp_v=val;
+  if(dma_sound_bass!=6)
+    d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
+    dma_sound_bass-6);
+#if defined(SSE_SOUND_MICROWIRE_TREBLE)
+  if(dma_sound_treble!=6)
+    d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
+    ,dma_sound_treble-6);
+#endif
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
+  // we do it in the write loop
+#elif defined(SSE_SOUND_MICROWIRE_VOLUME)
+  if(dma_sound_volume<0x28
+    ||dma_sound_l_volume<0x14 &&!channel 
+    ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
+
+    d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
+    dma_sound_volume-0x28+dma_sound_l_volume-0x14);
+#endif
+
+  val=d_dsp_v;//v3.7
+}
+
+#endif
+//---------------------------------------------------------------------------
 #if defined(SSE_SOUND_INLINE)
 /*  We transform some macros into inline functions to make conditional 
     compilation easier.
@@ -431,17 +441,11 @@ This YM2149 filter provides the characteristic Atari ST sound at
   }
   else
 #endif
-#if defined(SSE_SOUND_FILTER_STF) 
-
-#if defined(SSE_SOUND_FILTER_STF5)
-  if(sound_mode==SOUND_MODE_MONITOR
-#else
-  if(PSG_FILTER_FIX // Option PSG Filter
-#endif
-    ) 
+#if defined(SSE_SOUND_FILTERS) 
+  if(sound_mode==SOUND_MODE_MONITOR) 
   {
-    v=SSE_SOUND_FILTER_STF_V;
-    dv=SSE_SOUND_FILTER_STF_DV;
+    v=SSE_SOUND_FILTER_MONITOR_V;
+    dv=SSE_SOUND_FILTER_MONITOR_DV;
   }
   else 
 #endif
@@ -475,15 +479,11 @@ inline void CalcVChip25Khz(int &v,int &dv,int *source_p) {
   }
   else
 #endif
-#if defined(SSE_SOUND_FILTER_STF) 
-#if defined(SSE_SOUND_FILTER_STF5)
+#if defined(SSE_SOUND_FILTERS) 
   if(sound_mode==SOUND_MODE_MONITOR)
-#else
-  if(PSG_FILTER_FIX) // Option PSG Filter
-#endif
   {
-    v=SSE_SOUND_FILTER_STF_V;
-    dv=SSE_SOUND_FILTER_STF_DV;
+    v=SSE_SOUND_FILTER_MONITOR_V;
+    dv=SSE_SOUND_FILTER_MONITOR_DV;
   }
   else 
 #endif
@@ -536,6 +536,7 @@ inline void CalcVEmu(int &v,int *source_p) {
 #else
 #define SINE_ONLY(s)
 #endif
+
 
 inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
@@ -658,52 +659,6 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #endif
 }
 
-#if defined(SSE_SOUND_MICROWIRE)   // microwire this!
-
-inline void Microwire(int channel,int &val) {
-#if !defined(SSE_SOUND_DMA_390C) && !defined(SSE_SOUND_DMA_391) // tested before
-  if(OPTION_MICROWIRE)
-#endif
-  {
-//    double d_dsp_v=val;
-#if defined(SSE_STF)
-    if(ST_TYPE==STE)
-    {
-#endif
-      double d_dsp_v=val;//v3.7
-      if(dma_sound_bass!=6)
-        d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,
-          dma_sound_bass-6);
-#if defined(SSE_SOUND_DMA_390B)
-/*  In v3.9.0, we use the optional dsp module for bass and treble,
-    but not for volume, because of some clicks.
-*/
-      if(dma_sound_treble!=6)
-        d_dsp_v=MicrowireTreble[channel].FilterAudio(d_dsp_v,HIGH_SHELF_FREQ
-         ,dma_sound_treble-6);
-#endif
-#if defined(SSE_SOUND_DMA_391)
-      // we do it in the write loop
-#elif defined(SSE_SOUND_DMA_390A)
-      // no "dsp" volume
-#else
-      if(dma_sound_volume<0x28
-        ||dma_sound_l_volume<0x14 &&!channel 
-        ||dma_sound_r_volume<0x14 &&channel)//3.6.1: 2 channels
-
-        d_dsp_v=MicrowireVolume[channel].FilterAudio(d_dsp_v,
-          dma_sound_volume-0x28+dma_sound_l_volume-0x14);
-#endif
-
-      val=d_dsp_v;//v3.7
-#if defined(SSE_STF)
-    }
-#endif
-    //val=d_dsp_v;
-  }
-}
-
-#endif
 
 /*  The function is called at VBL. The sounds have already been computed.
     The function adds an optional low-pass filter to PSG sound and adds
@@ -716,8 +671,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
   WORD**lp_max_dma_sound_channel) {
 
-
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
 /*  Try to avoid clicks when a program aggressively changes microwire volume
     (Sea of Colour).
     Now it won't work if a program does a lot of quick changes for effect.
@@ -734,8 +688,6 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       old_dma_sound_r_top_val--;
 #endif
 
-
-#if defined(SSE_SOUND_INLINE_390)
   // check size once (hopefully optimised?)
   if(Size==sizeof(BYTE)) //8bit
   {
@@ -766,17 +718,17 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
         val+= (**lp_dma_sound_channel);                           
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       { 
         Microwire(0,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
         if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
 #else
         if(dma_sound_l_top_val!=128)
 #endif
         {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           val*=old_dma_sound_l_top_val;
           val/=128;
 #else
@@ -785,9 +737,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
         }
       }
-#elif defined(SSE_SOUND_MICROWIRE)
-      Microwire(0,val);
-#endif
+#endif//#if defined(SSE_SOUND_MICROWIRE)
       if (val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -802,17 +752,17 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
         if(OPTION_MICROWIRE)
         {
           Microwire(1,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           if(dma_sound_r_top_val!=128 ||old_dma_sound_r_top_val!=dma_sound_r_top_val)
 #else
           if(dma_sound_r_top_val<128)
 #endif
           {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
             val*=old_dma_sound_r_top_val;
             val/=128;
 #else
@@ -821,9 +771,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
           }
         }
-#elif defined(SSE_SOUND_MICROWIRE)
-        Microwire(1,val);
-#endif
+#endif//#if defined(SSE_SOUND_MICROWIRE)
         if(val<VOLTAGE_FP(0))
           val=VOLTAGE_FP(0); 
         else if (val>VOLTAGE_FP(255))
@@ -864,18 +812,18 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
         val+= (**lp_dma_sound_channel);                           
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       {
        // TRACE_OSD("%d %d %d",val,dma_sound_l_top_val,old_dma_sound_l_top_val);
         Microwire(0,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
         if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
 #else
         if(dma_sound_l_top_val!=128)
 #endif
         {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           val*=old_dma_sound_l_top_val;
           val/=128;
 #else
@@ -884,9 +832,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
         }
       }
-#elif defined(SSE_SOUND_MICROWIRE)
-      Microwire(0,val);
-#endif
+#endif//#if defined(SSE_SOUND_MICROWIRE)
       if (val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
@@ -902,17 +848,17 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
         if(OPTION_MICROWIRE)
         {
           Microwire(1,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           if(dma_sound_r_top_val<128 ||old_dma_sound_r_top_val!=dma_sound_r_top_val)
 #else
           if(dma_sound_r_top_val<128)
 #endif
           {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
             val*=old_dma_sound_r_top_val;
             val/=128;
 #else
@@ -921,8 +867,6 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif
           }
         }
-#elif defined(SSE_SOUND_MICROWIRE)
-        Microwire(1,val);
 #endif
         if(val<VOLTAGE_FP(0))
           val=VOLTAGE_FP(0); 
@@ -938,170 +882,12 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       c--;                                                          
     }//wend
   }    
-#else
-  // the big loop, was harder to inline
-  while(c>0)
-  {       
-    AlterV(Alter_V,v,dv,*source_p);
-
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
-/*
-
-"In STe, YM sound is only audible when Input1 is selected (this is default TOS 
-setting). In case of Steem, whether you choose Input1/2/3/4 or Open YM is 
-always audible."
-                              0 0  = DMA + (YM2149 - 12 db)
-                              0 1  = DMA + YM2149
-                              1 0  = DMA only
-                              1 1  = reserved
-
-    Variable dma_sound_mixer was updated in iow.cpp, but not used.
-    Must be =1 to mix YM and DMA, -12db doesn't work.
-    SS: Pacemaker writes 0 then plays a PSG tune! -> 2 compensating bugs
-*/
-    if(OPTION_MICROWIRE 
-#if defined(SSE_STF)
-      && ST_TYPE==STE // only if option checked and we're on STE
-#endif
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE2)//3.8.0
-      && (dma_sound_on_this_screen||!OPTION_HACKS) // hack Sabotage
-#endif
-      )
-    {
-      if(dma_sound_mixer!=1)
-        v=0; // dma-only
-    }
-#endif//SSE_SOUND_MICROWIRE_MIXMODE
-
-    val=v; //inefficient?
-#if defined(SSE_SOUND_DMA_360)//no
-    if(dma_sound_on_this_screen) //bugfix v3.6.0
-#endif
-    {//3.6.1
-#if defined(SSE_OSD_CONTROL)
-      if(OSD_MASK3 & OSD_CONTROL_DMASND) 
-        TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
-#endif
-
-#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
-      if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) //dma
-#endif
-        val+= (**lp_dma_sound_channel);                           
-
-#if defined(SSE_SOUND_MICROWIRE)
-/*
-? I successfully wrote to the LMC1992, but now YM2149 sound output is pure 
-torture. What happened ?
-
-! Well, the LMC1992 is not a chip that controls the DMA-sound in its digital 
-form but manipulates the analogue sound that comes out of the DMA chip. If you 
-now put the mixer to mix YM2149 and DMA sound, the LMC1992 will also manipulate 
-the YM sound output. However, the YM2149 as a soundchip is not really meant to 
-have Bass and Trebble enhanced. This might result in a very ugly sound.
-*/
-#if defined(SSE_SOUND_DMA_390C)
-/*  If sound is mono and balance is changed, Steem applied only 50% of the
-    balance. We do the rest here. Fixes Beat Demo L/R.
-    We don't use 'dsp' gain adjustment anymore.
-    // trouble: Coreflakes
-*/
-      if(OPTION_MICROWIRE)
-      {
-        Microwire(0,val);
-        if(dma_sound_r_volume<20)
-        {
-          val*=dma_sound_r_volume;
-          val/=20;
-        }
-      }
-#else
-      Microwire(0,val);
-#endif
-#endif
-    }
-
-    if (val<VOLTAGE_FP(0))
-      val=VOLTAGE_FP(0); 
-    else if (val>VOLTAGE_FP(255))
-      val=VOLTAGE_FP(255); 
-
-    // "*(Out_P++)=Size(GetSize(&val))" : the trickiest part
-    if(Size==sizeof(BYTE))
-    {
-      *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
-      (*(BYTE**)Out_P)++;
-    }
-    else // WORD
-    {
-      *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-      (*(WORD**)Out_P)++;
-    }  
-
-    // stereo: do the same for right channel
-    if(sound_num_channels==2){    
-      
-      val=v;
-
-#if defined(SSE_SOUND_DMA_360)//no
-      if(dma_sound_on_this_screen) //bugfix v3.6
-#endif
-      {
-#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
-        if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
-#endif
-          val+= (*(*lp_dma_sound_channel+1)); 
-
-#if defined(SSE_SOUND_MICROWIRE)
-#if defined(SSE_SOUND_DMA_390C) // balance, not dsp
-        if(OPTION_MICROWIRE)
-        {
-          Microwire(1,val);
-          if(dma_sound_l_volume<20)
-          {
-            val*=dma_sound_l_volume;
-            val/=20;
-          }
-        }
-#else
-        Microwire(1,val);
-#endif
-#endif
-      }
-
-      if(val<VOLTAGE_FP(0))
-        val=VOLTAGE_FP(0); 
-      else if (val>VOLTAGE_FP(255))
-        val=VOLTAGE_FP(255); 
-
-      if(Size==sizeof(BYTE))
-      {
-        *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
-        (* (BYTE**)Out_P )++;
-      }
-      else
-      {
-        *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-        (*(WORD**)Out_P)++;
-      }    
-    }//right channel 
-
-    //TRACE_OSD("%d %d %d",v,(*(*lp_dma_sound_channel)),(*(*lp_dma_sound_channel+1)));
-    
-    WAVEFORM_ONLY(temp_waveform_display[((int)(*source_p-psg_channels_buf)+psg_time_of_last_vbl_for_writing) % MAX_temp_waveform_display_counter]=WORD_B_1(&val)); 
-    *(*source_p)++=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);
-    if(*lp_dma_sound_channel<*lp_max_dma_sound_channel) 
-      *lp_dma_sound_channel+=2;
-    c--;                                                          
-  }//wend
-#endif
 }
-
-
-
 #define WRITE_SOUND_LOOP(Alter_V,Out_P,Size,GetSize) WriteSoundLoop(Alter_V,(int*)&Out_P,sizeof(Size),c,val,v,dv,&source_p,&lp_dma_sound_channel,&lp_max_dma_sound_channel);
 
 #define WRITE_TO_WAV_FILE_B 1 
 #define WRITE_TO_WAV_FILE_W 2 
+
 
 inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
   int &v,int &dv,int **source_p,WORD**lp_dma_sound_channel,
@@ -1124,17 +910,17 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
     val=v;
     val+= (**lp_dma_sound_channel);    
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       {
         Microwire(0,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
         if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
 #else
         if(dma_sound_l_top_val<128)
 #endif
         {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           val*=old_dma_sound_l_top_val; // changed in live sound loop
           val/=128;
 #else
@@ -1143,8 +929,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #endif
         }
       }
-#elif defined(SSE_SOUND_MICROWIRE)
-    Microwire(0,val);
 #endif
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
@@ -1162,21 +946,20 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
     if(sound_num_channels==2){ // RIGHT CHANNEL
 
-#if defined(SSE_SOUND_RECORD_391)
-      val=v;//argh!
-#endif
+      val=v; // restore val! 
+
       val+= (*(*lp_dma_sound_channel+1)); 
-#if defined(SSE_SOUND_DMA_391)
+#if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       {
         Microwire(1,val);
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
         if(dma_sound_r_top_val!=128||old_dma_sound_r_top_val!=dma_sound_r_top_val)
 #else
         if(dma_sound_r_top_val<128)
 #endif
         {
-#if defined(SSE_SOUND_DMA_391B)
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
           val*=old_dma_sound_r_top_val;
           val/=128;
 #else
@@ -1185,8 +968,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 #endif
         }
       }
-#elif defined(SSE_SOUND_MICROWIRE)
-      Microwire(1,val);
 #endif
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
@@ -1212,7 +993,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     c--;   
   }//wend
 }
-
 #define SOUND_RECORD(Alter_V,WRITE) SoundRecord(Alter_V,WRITE,c,val,v,dv,&source_p,&lp_dma_sound_channel,&lp_max_dma_sound_channel,wav_file)
 
 #else // original macros
@@ -1681,7 +1461,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
       dma_sound_on_this_screen=1;
     }
   }
-#if defined(SSE_SOUND_DMA_380B) //hack for Light megademo screen by New Core
+#if defined(SSE_SOUND_DMA_LIGHT) //hack for Light megademo screen by New Core
   else if(OPTION_HACKS && (io_src_b&BIT_0) && !(dma_sound_control&BIT_1))
   {
     TRACE_LOG("DMA restart ");
@@ -1693,7 +1473,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
   TRACE_LOG(" Freq %d\n",dma_sound_freq);
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound control set to "+(io_src_b & 3)+" from "+(dma_sound_control & 3));
   dma_sound_control=io_src_b;
-#if !defined(SSE_SOUND_DMA_390E) //remove TOS condition
+#if !defined(SSE_SOUND_DMA) //remove TOS condition
   if (tos_version>=0x106) 
 #endif
   mfp_gpip_set_bit(MFP_GPIP_MONO_BIT,bool(COLOUR_MONITOR)^bool(dma_sound_control & BIT_0));
@@ -1874,7 +1654,7 @@ void dma_sound_fetch()
   //SS fill FIFO with up to 8 bytes
 
   for (int i=0;i<4;i++){
-#if defined(SSE_SOUND_DMA_380)
+#if defined(SSE_SOUND_DMA_INSANE)
 /*  If by any chance a DMA sound is started with frame end = frame start,
     the STE won't stop the sound at once.
     Funny bug in A Little Bit Insane by Lazer.
@@ -2007,56 +1787,138 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE  ((t*128 / psg_tonemodulo) & 1)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
+#if defined(SSE_SOUND_INLINE2)
 /*  Second round of inlining
     Necessary for SSE_YM2149_DELAY_RENDERING
 */
 
-#if defined(SSE_SOUND_INLINE2A)
-
 void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
   int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
       //int envperiod=1|psg_reg[PSGR_ENVELOPE_PERIOD_LOW]+((psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8);//buggy!
-    int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
-      af=envperiod;
-      af*=sound_freq;                  
-      af*=((double)(1<<13))/15625;                               
-      psg_envmodulo=(int)af; 
-      bf=(((DWORD)t)-psg_envelope_start_time); 
-      bf*=(double)(1<<17); 
-      psg_envstage=(int)floor(bf/af); 
-      bf=fmod(bf,af); /*remainder*/ 
-      psg_envcountdown=psg_envmodulo-(int)bf; 
-      envdeath=-1;                                                                  
-      if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  
-           (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                     
-        if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      
+  int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
+  af=envperiod;
+  af*=sound_freq;                  
+  af*=((double)(1<<13))/15625;                               
+  psg_envmodulo=(int)af; 
+  bf=(((DWORD)t)-psg_envelope_start_time); 
+  bf*=(double)(1<<17); 
+  psg_envstage=(int)floor(bf/af); 
+  bf=fmod(bf,af); /*remainder*/ 
+  psg_envcountdown=psg_envmodulo-(int)bf; 
+  envdeath=-1;                                                                  
+  if ((psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_CONT)==0 ||                  
+    (psg_reg[PSGR_ENVELOPE_SHAPE] & PSG_ENV_SHAPE_HOLD)){                     
+      if(psg_reg[PSGR_ENVELOPE_SHAPE]==11 || psg_reg[PSGR_ENVELOPE_SHAPE]==13){      
 #if defined(SSE_YM2149_DELAY_RENDERING)
-          envdeath=(OPTION_SAMPLED_YM)?31:psg_flat_volume_level[15];                                           
+        envdeath=(OPTION_SAMPLED_YM)?31:psg_flat_volume_level[15];                                           
 #else
-          envdeath=psg_flat_volume_level[15];                                           
+        envdeath=psg_flat_volume_level[15];                                           
 #endif
-        }else{       
+      }else{       
 #if defined(SSE_YM2149_DELAY_RENDERING) 
-          envdeath=(OPTION_SAMPLED_YM)?0:psg_flat_volume_level[0];                                       
+        envdeath=(OPTION_SAMPLED_YM)?0:psg_flat_volume_level[0];                                       
 #else                                                                    
-          envdeath=psg_flat_volume_level[0];     
+        envdeath=psg_flat_volume_level[0];     
 #endif                                         
-        }                                                                                   
-      }                                                                                      
-      envshape=psg_reg[PSGR_ENVELOPE_SHAPE] & 7;                    
-      if (psg_envstage>=32 && envdeath!=-1){                           
-        envvol=envdeath;                                             
-      }else{        
+      }                                                                                   
+  }                                                                                      
+  envshape=psg_reg[PSGR_ENVELOPE_SHAPE] & 7;                    
+  if (psg_envstage>=32 && envdeath!=-1){                           
+    envvol=envdeath;                                             
+  }else{        
 #if defined(SSE_YM2149_DELAY_RENDERING)  
-        envvol=(OPTION_SAMPLED_YM) 
-          ? psg_envelope_level3[envshape][psg_envstage & 63]
-          : psg_envelope_level[envshape][psg_envstage & 63] ;                   
+    envvol=(OPTION_SAMPLED_YM) 
+      ? psg_envelope_level3[envshape][psg_envstage & 63]
+    : psg_envelope_level[envshape][psg_envstage & 63] ;                   
 #else
-        envvol=psg_envelope_level[envshape][psg_envstage & 63];
+    envvol=psg_envelope_level[envshape][psg_envstage & 63];
 #endif
-      }																															\
+  }																			
 }
+
+
+void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
+    int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
+  int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));
+  af=((int)noiseperiod*sound_freq);                              
+  af*=((double)(1<<17))/15625; 
+  psg_noisemodulo=(int)af; 
+  bf=t;
+  bf*=(double)(1<<20); 
+  psg_noisecounter=(int)floor(bf/af); 
+  psg_noisecounter &= (PSG_NOISE_ARRAY-1); 
+  bf=fmod(bf,af); 
+  psg_noisecountdown=psg_noisemodulo-(int)bf; 
+  psg_noisetoggle=psg_noise[psg_noisecounter];
+}
+
+
+void psg_prepare_tone(int toneperiod,double &af,double &bf,
+                      int &psg_tonemodulo_2,int abc,DWORD t,
+                      int &psg_tonecountdown,bool &psg_tonetoggle) {
+  af=((int)toneperiod*sound_freq);                              
+  af*=((double)(1<<17))/15625;                               
+  psg_tonemodulo_2=(int)af; 
+  bf=(((DWORD)t)-psg_tone_start_time[abc]); 
+  bf*=(double)(1<<21); 
+  bf=fmod(bf,af*2); 
+  af=bf-af;               
+  if(af>=0){                  
+    psg_tonetoggle=false;       
+    bf=af;                      
+  }                           
+  psg_tonecountdown=psg_tonemodulo_2-(int)bf; 
+}
+
+
+void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+  psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
+  while (psg_envcountdown<0){           
+    psg_envcountdown+=psg_envmodulo;             
+    psg_envstage++;                   
+    if (psg_envstage>=32 && envdeath!=-1){                           
+      envvol=envdeath;                                             
+    }else{   
+#if defined(SSE_YM2149_DELAY_RENDERING)  
+      envvol=(OPTION_SAMPLED_YM) 
+        ? psg_envelope_level3[envshape][psg_envstage & 63]
+      : psg_envelope_level[envshape][psg_envstage & 63] ;                   
+#else                                                    
+      envvol=psg_envelope_level[envshape][psg_envstage & 63];
+#endif
+    }																															
+  }
+}
+
+
+void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tonetoggle) {
+  psg_tonecountdown-=TWO_MILLION;  
+  while (psg_tonecountdown<0){           
+    psg_tonecountdown+=psg_tonemodulo_2;             
+    psg_tonetoggle=!psg_tonetoggle;                   
+  }
+}
+
+
+void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_noisecounter,bool &psg_noisetoggle) {
+  psg_noisecountdown-=ONE_MILLION;   
+  while (psg_noisecountdown<0){   
+    psg_noisecountdown+=psg_noisemodulo;      
+    psg_noisecounter++;                        
+    if(psg_noisecounter>=PSG_NOISE_ARRAY){      
+      psg_noisecounter=0;                        
+    }                                             
+    psg_noisetoggle=psg_noise[psg_noisecounter];   
+  }
+}
+
+
 #define PSG_PREPARE_ENVELOPE psg_prepare_envelope(af,bf,psg_envmodulo,t,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
+#define PSG_PREPARE_TONE psg_prepare_tone(toneperiod,af,bf,psg_tonemodulo_2,abc,t,psg_tonecountdown,psg_tonetoggle);
+#define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
+#define PSG_TONE_ADVANCE psg_tone_advance(psg_tonemodulo_2,psg_tonecountdown,psg_tonetoggle);
+#define PSG_NOISE_ADVANCE  psg_noise_advance(psg_noisemodulo,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
 
 #else
 
@@ -2087,29 +1949,6 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
         envvol=psg_envelope_level[envshape][psg_envstage & 63];            \
       }																															\
 
-#endif//a
-
-
-#if defined(SSE_SOUND_INLINE2B)
-
-void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
-    int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
-      int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));
-      af=((int)noiseperiod*sound_freq);                              
-      af*=((double)(1<<17))/15625; 
-      psg_noisemodulo=(int)af; 
-      bf=t; \
-      bf*=(double)(1<<20); 
-      psg_noisecounter=(int)floor(bf/af); 
-      psg_noisecounter &= (PSG_NOISE_ARRAY-1); 
-      bf=fmod(bf,af); 
-      psg_noisecountdown=psg_noisemodulo-(int)bf; 
-      psg_noisetoggle=psg_noise[psg_noisecounter];
-
-}
-#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
-
-#else
 
 #define PSG_PREPARE_NOISE                                \
       int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));      \
@@ -2128,31 +1967,6 @@ void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
       if (abc==0) log_write(Str("toneperiod=")+toneperiod+" sound_freq="+sound_freq+" psg_tonemodulo_2="+psg_tonemodulo_2); \
       */
 
-#endif//b
-
-#if defined(SSE_SOUND_INLINE2C)
-
-void psg_prepare_tone(int toneperiod,double &af,double &bf,
-                      int &psg_tonemodulo_2,int abc,DWORD t,
-                      int &psg_tonecountdown,bool &psg_tonetoggle) {
-
-      af=((int)toneperiod*sound_freq);                              \
-      af*=((double)(1<<17))/15625;                               \
-      psg_tonemodulo_2=(int)af; \
-      bf=(((DWORD)t)-psg_tone_start_time[abc]); \
-      bf*=(double)(1<<21); \
-      bf=fmod(bf,af*2); \
-      af=bf-af;               \
-      if(af>=0){                  \
-        psg_tonetoggle=false;       \
-        bf=af;                      \
-      }                           \
-      psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
-}
-
-#define PSG_PREPARE_TONE psg_prepare_tone(toneperiod,af,bf,psg_tonemodulo_2,abc,t,psg_tonecountdown,psg_tonetoggle);
-
-#else
 
 #define PSG_PREPARE_TONE                                 \
       af=((int)toneperiod*sound_freq);                              \
@@ -2169,33 +1983,6 @@ void psg_prepare_tone(int toneperiod,double &af,double &bf,
       psg_tonecountdown=psg_tonemodulo_2-(int)bf; \
 
 
-#endif//c
-
-
-#if defined(SSE_SOUND_INLINE2D)
-void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
-          psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
-          while (psg_envcountdown<0){           \
-            psg_envcountdown+=psg_envmodulo;             \
-            psg_envstage++;                   \
-            if (psg_envstage>=32 && envdeath!=-1){                           \
-              envvol=envdeath;                                             \
-            }else{   
-#if defined(SSE_YM2149_DELAY_RENDERING)  
-        envvol=(OPTION_SAMPLED_YM) 
-          ? psg_envelope_level3[envshape][psg_envstage & 63]
-          : psg_envelope_level[envshape][psg_envstage & 63] ;                   
-#else                                                    
-              envvol=psg_envelope_level[envshape][psg_envstage & 63];
-#endif
-            }																															\
-          }
-}
-
-#define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
-
-#else
-
 #define PSG_ENVELOPE_ADVANCE                                   \
           psg_envcountdown-=TWO_TO_SEVENTEEN;  \
           while (psg_envcountdown<0){           \
@@ -2210,24 +1997,6 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
   //            envvol=(psg_envstage&255)*64;
 
 
-#endif//d
-
-
-#if defined(SSE_SOUND_INLINE2E)
-
-void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tonetoggle) {
-
-          psg_tonecountdown-=TWO_MILLION;  \
-          while (psg_tonecountdown<0){           \
-            psg_tonecountdown+=psg_tonemodulo_2;             \
-            psg_tonetoggle=!psg_tonetoggle;                   \
-          }
-}
-
-#define PSG_TONE_ADVANCE psg_tone_advance(psg_tonemodulo_2,psg_tonecountdown,psg_tonetoggle);
-
-#else
-
 #define PSG_TONE_ADVANCE                                   \
           psg_tonecountdown-=TWO_MILLION;  \
           while (psg_tonecountdown<0){           \
@@ -2235,26 +2004,6 @@ void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tone
             psg_tonetoggle=!psg_tonetoggle;                   \
           }
 
-#endif//e
-
-
-#if defined(SSE_SOUND_INLINE2F)
-
-void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_noisecounter,bool &psg_noisetoggle) {
-          psg_noisecountdown-=ONE_MILLION;   \
-          while (psg_noisecountdown<0){   \
-            psg_noisecountdown+=psg_noisemodulo;      \
-            psg_noisecounter++;                        \
-            if(psg_noisecounter>=PSG_NOISE_ARRAY){      \
-              psg_noisecounter=0;                        \
-            }                                             \
-            psg_noisetoggle=psg_noise[psg_noisecounter];   \
-          }
-}
-
-#define PSG_NOISE_ADVANCE  psg_noise_advance(psg_noisemodulo,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
-
-#else
 
 #define PSG_NOISE_ADVANCE                           \
           psg_noisecountdown-=ONE_MILLION;   \
@@ -2267,7 +2016,8 @@ void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_nois
             psg_noisetoggle=psg_noise[psg_noisecounter];   \
           }
 
-#endif//f
+
+#endif
 
 /*  SS:This function renders one PSG channel until timing to_t.
     v3.7.0, when option 'P.S.G.' is checked, rendering is delayed
@@ -2278,7 +2028,6 @@ void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_nois
 
 void psg_write_buffer(int abc,DWORD to_t)
 {
-
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
   // It was a request and I received no thanks no feedback from the amiga lamer
   if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
@@ -2307,7 +2056,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
   ASSERT( count>=0 );
-#if defined(SSE_YM2149_OPT1)
+#if defined(SSE_SOUND_OPT1)
   if(!count)
     return;
 #endif

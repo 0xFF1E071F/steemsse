@@ -478,7 +478,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         
 #if defined(SSE_SHIFTER_4BIT_SCROLL)
 /*  This is where we do the actual shift for those rare programs using the
-    4bit hardscroll trick (PYM/ST-CNX,D4/Nightmare,D4/NGC).
+    overscan 4bit hardscroll trick (PYM/ST-CNX,D4/Nightmare,D4/NGC).
     Notice it is quite simple, and also very efficient because it uses 
     the hscroll parameter of the assembly drawing routine (programmed by
     Steem authors, of course).

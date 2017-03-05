@@ -5,11 +5,11 @@ DESCRIPTION: Functions to load and save emulation variables. This is mainly
 for Steem's memory snapshots system.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: loadsave_emu.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 extern EasyStr RunDir,WriteDir,INIFile,ScreenShotFol;
 extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
 #if defined(SSE_VS2008)
@@ -254,13 +254,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
   ReadWrite(stemdos_Pexec_list_ptr);  //4
   ReadWriteArray(stemdos_Pexec_list); //SS 304
-#if defined(SSE_VAR_RESIZE)
-  int stemdos_current_drive_int=stemdos_current_drive;
-  ReadWrite(stemdos_current_drive_int);
-  stemdos_current_drive=stemdos_current_drive_int;
-#else
   ReadWrite(stemdos_current_drive);   //4
-#endif
   EasyStr NewROM=ROMFile;
   ReadWriteStr(NewROM);
   WORD NewROMVer=tos_version;
@@ -381,10 +375,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ACIA_MIDI.CR=0x95; // usually
     ACIA_MIDI.SR=2; // usually
   //}//3.8.0
-#if !defined(SSE_ACIA_380)
+#if !defined(SSE_ACIA_380) //TODO
     ACIA_IKBD.LineRxBusy=0;
-#endif
-#if !defined(SSE_ACIA_380)
     ACIA_IKBD.LineTxBusy=0;
 #endif
     }//3.8.0
@@ -624,7 +616,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=35){
     ReadWrite(psg_reg_data);
 
-#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     BYTE fdc_read_address_buffer_len=0;
 #endif
 
@@ -644,7 +636,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(SSE_DMA_FIFO_READ_ADDRESS2)
+#if defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
     {
       BYTE fdc_read_address_buffer_fake[20];
       ReadWriteArray(fdc_read_address_buffer_fake);
@@ -745,7 +737,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   BYTE *pasti_block=NULL;
   DWORD pasti_block_len=0;
 
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
   bool pasti_old_active;
 #else
   int pasti_old_active;
@@ -1162,12 +1154,12 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
   }
 #if SSE_VERSION>=390
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
   int NewROMCountry=Tos.DefaultCountry;
 #endif
   if(Version>=54) //390
   {
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
     if(LoadOrSave==LS_SAVE)
       NewROMCountry=ROM_PEEK(0x1D);
     ReadWrite(NewROMCountry);
@@ -1175,7 +1167,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
 #endif
 
-#if defined(SSE_BLT_390B) && defined(SSE_BLT_391)
+#if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;
 #endif
 
@@ -1220,7 +1212,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #ifndef ONEGAME
   if (ChangeTOS){
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer,NewROMCountry);
 #else
     int ret=LoadSnapShotChangeTOS(NewROM,NewROMVer);

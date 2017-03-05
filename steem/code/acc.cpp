@@ -4,11 +4,11 @@ MODULE: Steem
 DESCRIPTION: Completely random accessory functions.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: acc.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s

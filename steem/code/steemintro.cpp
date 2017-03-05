@@ -5,7 +5,7 @@ DESCRIPTION: The intro that appears when Steem is first run that allows the
 user to configure the most common options.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: steemintro.cpp")
 #endif
 

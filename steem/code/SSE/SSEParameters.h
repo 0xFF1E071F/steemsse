@@ -16,9 +16,7 @@
 #if defined(STRUCTURE_ALIGNMENT)
 #error STRUCTURE_ALIGNMENT defined!
 #endif
-#if defined(SSE_COMPILER_391__)
-#define STRUCTURE_ALIGNMENT 1
-#elif defined(SSE_X64)
+#if defined(SSE_X64)
 #define STRUCTURE_ALIGNMENT 16 //default in Win64
 #else
 #define STRUCTURE_ALIGNMENT 8 //default in Win32
@@ -165,6 +163,16 @@ Some STFs                32.02480    8.0071
 #define AVG_HBLS_SECTOR (200)
 #endif
 
+//////////
+// DISK //
+//////////
+
+/*  #bytes/track
+    The value generally seen is 6250.
+    The value for 11 sectors is 6256. It's possible if the clock is higher than
+    8mhz, which is the case on the ST.
+*/
+#define DISK_BYTES_PER_TRACK (6256)
 
 ///////////
 // DRIVE //
@@ -175,24 +183,6 @@ Some STFs                32.02480    8.0071
 #define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
 #define DRIVE_MAX_CYL 83
-
-#if defined(SSE_DISK_BYTES_PER_ROTATION)
-/*  #bytes/track
-    The value generally seen is 6250.
-    The value for 11 sectors is 6256. It's possible if the clock is higher than
-    8mhz, which is the case on the ST.
-*/
-
-#if defined(SSE_DISK_HBL_DRIFT) 
-#define DRIVE_BYTES_ROTATION (6256) // finally
-#else
-#define DRIVE_BYTES_ROTATION (6256+14)  //little hack...
-#endif
-
-#define DRIVE_BYTES_ROTATION_STW (6256)
-#else
-#define DRIVE_BYTES_ROTATION (8000) // 3.2 (!)
-#endif
 
 #if defined(SSE_DISK_STW_FAST) // hacky by definition
 #define SSE_STW_FAST_CYCLES_PER_BYTE 4
@@ -303,14 +293,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define HD6301_MAX_DIS_INSTR 2000 
 #endif
 
-#if defined(SSE_ACIA_EVENT)//380 //TODO
+#if defined(SSE_ACIA_EVENT)
+// hack for Froggies TODO
 //#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
 #define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
-#elif defined(SSE_ACIA_OVR_TIMING)
-// hack: we count more cycle when overrun is detected, for Froggies
-#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&&(ACIA_IKBD.overrun==ACIA_OVERRUN_COMING))?1380+30:1300)
-#define HD6301_CYCLES_TO_RECEIVE_BYTE HD6301_CYCLES_TO_SEND_BYTE
 #else
 #define HD6301_CYCLES_TO_SEND_BYTE (1350)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
@@ -399,9 +386,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // SOUND //
 ///////////
 
-#if defined(SSE_SOUND_FILTER_STF)
-#define SSE_SOUND_FILTER_STF_V ((*source_p+dv)/2)
-#define SSE_SOUND_FILTER_STF_DV (v)//((*source_p+dv)/2)
+#if defined(SSE_SOUND_FILTERS)
+#define SSE_SOUND_FILTER_MONITOR_V ((*source_p+dv)/2)
+#define SSE_SOUND_FILTER_MONITOR_DV (v)//((*source_p+dv)/2)
 #endif
 
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
@@ -421,7 +408,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 //#HBL/sec    15666.5 15789.85827 35809.14286
 
 #else 
-#if defined(SSE_FDC_PRECISE_HBL)//todo table
+#if defined(SSE_FDC_ACCURATE_TIMING)//todo table
 #define HBL_PER_FRAME ( (shifter_freq_at_start_of_vbl==50)?HBLS_50HZ: \
   ( (shifter_freq_at_start_of_vbl==60)? HBLS_60HZ : HBLS_72HZ))
 #else
@@ -455,7 +442,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // VERSION //
 /////////////
 
-#define SSE_VERSION 391
+#define SSE_VERSION 392
 
 
 ///////////
@@ -505,11 +492,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
-#if defined(SSE_VS2008_WARNING_382)
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
-#else
-#define ST_ASPECT_RATIO_DISTORTION 1.10 // multiplier for Y axis
-#endif
 #endif
 
 #if defined(SSE_VID_RECORD_AVI)//no, Fraps or other 3rd party programs will do a fantastic job

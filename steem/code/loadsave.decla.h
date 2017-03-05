@@ -47,7 +47,7 @@ extern int LoadSaveAllStuff(NOT_ONEGAME( FILE * ) ONEGAME_ONLY( BYTE* & ),
                               bool,int DEFVAL(-1),bool DEFVAL(true),int* DEFVAL(NULL));
 extern void LoadSnapShotUpdateVars(int);
 
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT_390)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
 extern int LoadSnapShotChangeTOS(Str NewROM,int NewROMVer,int NewROMCountry);
 #else
 extern int LoadSnapShotChangeTOS(Str,int);

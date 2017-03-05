@@ -5,11 +5,11 @@ CONDITION: DEBUG_BUILD
 DESCRIPTION: The edit box that is used to change values in the debugger.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: dwin_edit.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 void* DWin_edit_subject;
 int DWin_edit_subject_type;
 int DWin_edit_subject_index;

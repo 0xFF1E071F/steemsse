@@ -780,7 +780,6 @@ Closure STF2
     
     r1cycle=CycleOfLastChangeToShiftMode(1);//could be more generic
     if(r1cycle>=12 && r1cycle<=40)
-      //if(r1cycle>=8 && r1cycle<=40)
     {
       // look for switch to R0 after switch to R1
       r0cycle=NextShiftModeChange(r1cycle);

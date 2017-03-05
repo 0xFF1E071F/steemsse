@@ -10,13 +10,13 @@ data.
 
 #include "SSE/SSEDebug.h"
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: floppydrive.cpp")
 #endif
 
 //TODO refactor, much duplicate code here
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 TFloppyImage FloppyDrive[2]; //SS fascinating names of class and object:
   // it's hard to tell what is 'drive' from what is 'disk'.
   // there's the same problem in the SSE files
@@ -368,7 +368,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(SF314[1-drive].ImageType.Extension!=EXT_STX)
       pasti_active=false;
 #endif
-    Disk[drive].TrackBytes=DRIVE_BYTES_ROTATION_STW; //default
+    Disk[drive].TrackBytes=DISK_BYTES_PER_TRACK; //default
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_HFE;
     SF314[drive].State.reading=SF314[drive].State.writing=0;
@@ -428,7 +428,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     }
 #endif
     
-#if defined(SSE_FDC_390A)
+#if defined(SSE_DISK)
     Disk[drive].TrackBytes=TDisk::TRACK_BYTES; 
 #endif
 #ifdef SSE_DRIVE
@@ -743,13 +743,12 @@ Header:
       }
 
       fseek(nf,HeaderLen,SEEK_SET);
-#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK)
+#if defined(SSE_DISK)
       //this is pretty annoying, this RemoveDisk
       TImageType save_type=SF314[drive].ImageType;
 #endif
       RemoveDisk();
-#if defined(SSE_OSD_DRIVE_INFO_EXT) && defined(SSE_DISK)
-      //this is pretty annoying, this RemoveDisk
+#if defined(SSE_DISK)
       SF314[drive].ImageType=save_type;
 #endif
       f=nf;

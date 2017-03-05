@@ -6,7 +6,7 @@ these functions are used in the emulation of Steem for vital processes such
 as changing disk images and determining what files are disks.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: diskman.cpp")
 #endif
 
@@ -17,7 +17,7 @@ as changing disk images and determining what files are disks.
 #include <loadsave.decla.h>
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA) && defined(WIN32)
+#if defined(SSE_BUILD) && defined(WIN32)
 void TDiskManager::RefreshDiskView(EasyStr SelPath,bool EditLabel,EasyStr SelLinkPath,int iItem)
 {
   SetDir(DisksFol,0,SelPath,EditLabel,SelLinkPath,iItem);
@@ -108,12 +108,7 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
     && pasti_active
 #endif
     ){
-    if (ExtensionIsPastiDisk(Ext)
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && !defined(SSE_DISK_PASTI_AUTO_SWITCH_391)
-      // this is tested in ExtensionIsPastiDisk()
-    && (IsSameStr_I(Ext,DISK_EXT_STX)||!OPTION_PASTI_JUST_STX&&pasti_active)
-#endif
-    ){
+    if (ExtensionIsPastiDisk(Ext)){
       return DISK_PASTI;
     }else if (ret==DISK_COMPRESSED){
       return ret;
@@ -260,7 +255,7 @@ TDiskManager::TDiskManager()
 #endif
 
   DiskDiag=NULL;
-#if !defined(SSE_VAR_NO_WINSTON_390)
+#if !defined(SSE_VAR_NO_WINSTON)
   LinksDiag=NULL;
   ImportDiag=NULL;
 #endif
@@ -1894,20 +1889,12 @@ That will toggle bit x.
                     for(int i=0;i<Disk[0].PostIndexGap();i++) 
                       WD1772_WRITE(0x4E)
                     int sector; //used in trace
-#if defined(SSE_GUI_STW_CONVERT2) 
                     for(int sector2=1;sector2<=FloppyDrive[0].SectorsPerTrack;sector2++)
-#else
-                    for(sector=1;sector<=FloppyDrive[0].SectorsPerTrack;sector++)
-#endif
                     {
-#if defined(SSE_GUI_STW_CONVERT2)
-/*  We must use interleave 6 for 11 sectors
-    eg Pang -EMP
-*/
+                      //  We must use interleave 6 for 11 sectors, eg Pang -EMP
                       sector= ( FloppyDrive[0].SectorsPerTrack==11 
                         ? ((((sector2-1)*DRIVE_11SEC_INTERLEAVE)%11)+1) 
                         : sector2 );
-#endif
                       if(FloppyDrive[0].SeekSector(side,track,sector,false))
                         break; // not in source, write nothing more
 

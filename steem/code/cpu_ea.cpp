@@ -3,7 +3,7 @@
 
 void m68kReadBFromAddr();
 void m68kReadWFromAddr();
-#if !defined(SSE_CPU_SPLIT_RL9)
+#if !defined(SSE_CPU_SPLIT_RL)
 void m68kReadLFromAddr();
 #endif
 
@@ -167,9 +167,6 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 
 //read
 
-#if defined(SSE_CPU_SIMPLIFY_READ_DEST_)
-#elif defined(SSE_CPU_391)
-
 BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
   BYTE x;
   switch(ir&BITS_543){
@@ -310,7 +307,7 @@ WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
 }
 
 
-#if defined(SSE_CPU_SPLIT_RL1) //we read word by word, a bit fancy...
+#if defined(SSE_CPU_SPLIT_RL) //we read word by word, a bit fancy...
 
 LONG m68k_read_dest_l(){ //only used by tst.l, cmpi.l
   LONG x=0;
@@ -493,199 +490,6 @@ LONG m68k_read_dest_l(){
 #endif
 
 
-#else
-
-BYTE m68k_read_dest_b(){
-  BYTE x;
-  switch(ir&BITS_543){
-  case BITS_543_000:
-    return LOBYTE(r[PARAM_M]);
-  case BITS_543_001:
-    m68k_unrecognised();break;
-  case BITS_543_010:
-    CPU_ABUS_ACCESS_READ; //nr
-    return m68k_peek(areg[PARAM_M]);
-  case BITS_543_011:
-    CPU_ABUS_ACCESS_READ; //nr
-    x=m68k_peek(areg[PARAM_M]);areg[PARAM_M]++;
-    if(PARAM_M==7)areg[7]++;
-    return x;
-  case BITS_543_100:
-    areg[PARAM_M]--;
-    if (PARAM_M==7) areg[7]--;
-    INSTRUCTION_TIME(2); //n
-    CPU_ABUS_ACCESS_READ; //nr
-    return m68k_peek(areg[PARAM_M]);
-  case BITS_543_101:{
-    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ;//nr
-    x=m68k_peek(ad);
-    return x;
-  }case BITS_543_110:
-//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
-    INSTRUCTION_TIME(2);//n
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ;//nr
-    if(m68k_iriwo&BIT_b){  //.l
-      return m68k_peek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
-    }else{         //.w
-      return m68k_peek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]);
-    }
-  case BITS_543_111:
-    switch(ir&0x7){
-    case 0:{
-//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
-      CPU_ABUS_ACCESS_READ_FETCH;//np
-      register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-      CPU_ABUS_ACCESS_READ;//nr
-      x=m68k_peek(ad);
-      return x;
-    }case 1:{
-//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
-      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
-      register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-      CPU_ABUS_ACCESS_READ;//nr
-      x=m68k_peek(ad);
-      return x;
-    }default:
-      m68k_unrecognised();
-    }
-  }
-  return 0;
-}
-
-
-WORD m68k_read_dest_w(){
-  WORD x;
-  switch(ir&BITS_543){
-  case BITS_543_000:
-    return LOWORD(r[PARAM_M]);
-  case BITS_543_001:
-    m68k_unrecognised();break;
-  case BITS_543_010:
-    CPU_ABUS_ACCESS_READ;//nr
-    return m68k_dpeek(areg[PARAM_M]);
-  case BITS_543_011:
-    CPU_ABUS_ACCESS_READ;//nr
-    x=m68k_dpeek(areg[PARAM_M]);areg[PARAM_M]+=2;
-    return x;
-  case BITS_543_100:
-    INSTRUCTION_TIME(2);//n
-    CPU_ABUS_ACCESS_READ;//nr
-    areg[PARAM_M]-=2;
-    return m68k_dpeek(areg[PARAM_M]);
-  case BITS_543_101:{
-    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ;//nr
-    x=m68k_dpeek(ad);
-    return x;
-  }case BITS_543_110:
-//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
-    INSTRUCTION_TIME(2);//n
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ;//nr
-    if(m68k_iriwo&BIT_b){  //.l
-      return m68k_dpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
-    }else{         //.w
-      return m68k_dpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]);
-    }
-  case BITS_543_111:
-    switch(ir&ir&0x7){
-    case 0:{
-//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
-      CPU_ABUS_ACCESS_READ_FETCH;//np
-      register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-      CPU_ABUS_ACCESS_READ;//nr
-      x=m68k_dpeek(ad);
-      return x;
-    }case 1:{
-//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
-      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
-      register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-      CPU_ABUS_ACCESS_READ;//nr
-      x=m68k_dpeek(ad);
-      return x;
-    }default:
-      m68k_unrecognised();
-    }
-  }
-  return 0;
-}
-
-
-LONG m68k_read_dest_l(){
-  LONG x;
-  switch(ir&BITS_543){
-  case BITS_543_000:
-    return (r[PARAM_M]);
-  case BITS_543_001:
-    m68k_unrecognised();break;
-  case BITS_543_010:
-    CPU_ABUS_ACCESS_READ_L;//nR nr
-    return m68k_lpeek(areg[PARAM_M]);
-  case BITS_543_011:
-    CPU_ABUS_ACCESS_READ_L;//nR nr
-    x=m68k_lpeek(areg[PARAM_M]);areg[PARAM_M]+=4;
-    return x;
-  case BITS_543_100:
-    INSTRUCTION_TIME(2);//n
-    CPU_ABUS_ACCESS_READ_L;//nR nr
-    areg[PARAM_M]-=4;
-    return m68k_lpeek(areg[PARAM_M]);
-  case BITS_543_101:{
-    //  (d16,An)        | 101 | reg |  12(3/0)   |              np nR nr          
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    register MEM_ADDRESS ad=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ_L;//nR nr
-    x=m68k_lpeek(ad);
-    return x;
-  }case BITS_543_110:
-//  (d8,An,Xn)      | 110 | reg |  14(3/0)   |         n    np nR nr           
-    INSTRUCTION_TIME(2);//n
-    CPU_ABUS_ACCESS_READ_FETCH;//np
-    m68k_iriwo=m68k_fetchW();pc+=2; 
-    CPU_ABUS_ACCESS_READ_L;////nR nr
-    if(m68k_iriwo&BIT_b){  //.l
-      return m68k_lpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12]);
-    }else{         //.w
-      return m68k_lpeek(areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12]);
-    }
-  case BITS_543_111:
-    switch(ir&0x7){
-    case 0:{
-//  (xxx).W         | 111 | 000 |  12(3/0)   |              np nR nr      
-      CPU_ABUS_ACCESS_READ_FETCH;//np
-      register MEM_ADDRESS ad=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
-      pc+=2; 
-      CPU_ABUS_ACCESS_READ_L;//nR nr
-      x=m68k_lpeek(ad);
-      return x;
-    }case 1:{
-//(xxx).L         | 111 | 001 |  16(4/0)   |           np np nR nr           
-      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
-      register MEM_ADDRESS ad=m68k_fetchL()&0xffffff;
-      pc+=4;  
-      CPU_ABUS_ACCESS_READ_L;//nR nr
-      x=m68k_lpeek(ad);
-      return x;
-    }default:
-      m68k_unrecognised();
-    }
-  }
-  return 0;
-}
-
-#endif//#if defined(SSE_CPU_391)
 
 /*
 
@@ -842,7 +646,7 @@ void m68k_get_source_010_l(){ // .L (An)
   //  (An)            |          8(2/0) |                           nR nr         
 #if defined(SSE_MMU_ROUNDING_BUS)
   abus=areg[PARAM_M];
-#if defined(SSE_CPU_SPLIT_RL2) 
+#if defined(SSE_CPU_SPLIT_RL) 
   CPU_ABUS_ACCESS_READ; //nR
   m68k_READ_W(abus)
   m68k_src_l=m68k_src_w<<16;
@@ -903,7 +707,7 @@ void m68k_get_source_011_w(){ // .W (An)+
 
 void m68k_get_source_011_l(){ // .L (An)+
   //  (An)+           |          8(2/0) |                           nR nr           
-#if defined(SSE_CPU_SPLIT_RL3) 
+#if defined(SSE_CPU_SPLIT_RL) 
   abus=areg[PARAM_M];
   CPU_ABUS_ACCESS_READ; //nR
   m68k_READ_W(abus)
@@ -924,7 +728,7 @@ void m68k_get_source_011_l(){ // .L (An)+
   m68k_READ_L(areg[PARAM_M]) 
 #endif
   areg[PARAM_M]+=4; // for .L, we assume ++ post read
-#endif//#if defined(SSE_CPU_SPLIT_RL3) 
+#endif//#if defined(SSE_CPU_SPLIT_RL) 
 }
 
 // -(An)
@@ -973,7 +777,7 @@ void m68k_get_source_100_w(){ // .W -(An)
 
 void m68k_get_source_100_l(){ // .L -(An)
   //  -(An)           |         10(2/0) |                   n       nR nr           
-#if defined(SSE_CPU_SPLIT_RL4) 
+#if defined(SSE_CPU_SPLIT_RL) 
   INSTRUCTION_TIME(2);//n
   areg[PARAM_M]-=4;
   abus=areg[PARAM_M];
@@ -997,7 +801,7 @@ void m68k_get_source_100_l(){ // .L -(An)
   areg[PARAM_M]-=4;
   m68k_READ_L(areg[PARAM_M])  
 #endif
-#endif//#if defined(SSE_CPU_SPLIT_RL4)   
+#endif//#if defined(SSE_CPU_SPLIT_RL)   
 }
 
 
@@ -1038,7 +842,7 @@ void m68k_get_source_101_w(){ // .W (d16, An)
 
 void m68k_get_source_101_l(){ // .L (d16, An)
   //  (d16,An)        |         12(3/0) |                        np nR nr           
-#if defined(SSE_CPU_SPLIT_RL5)
+#if defined(SSE_CPU_SPLIT_RL)
   CPU_ABUS_ACCESS_READ_FETCH;//np
   register int fw=(signed short)m68k_fetchW();
   pc+=2;
@@ -1062,7 +866,7 @@ void m68k_get_source_101_l(){ // .L (d16, An)
   CPU_ABUS_ACCESS_READ_L;//nR nr
   m68k_READ_L(areg[PARAM_M]+fw);
 #endif
-#endif//#if defined(SSE_CPU_SPLIT_RL5)
+#endif//#if defined(SSE_CPU_SPLIT_RL)
 }
 
 // (d8,An,Xn)
@@ -1101,7 +905,7 @@ void m68k_get_source_110_w(){ // .W (d8,An,Xn)
 
 void m68k_get_source_110_l(){ // .L (d8,An,Xn)
   //  (d8,An,Xn)      |         14(3/0) |                   n    np nR nr           
-#if defined(SSE_CPU_SPLIT_RL6)
+#if defined(SSE_CPU_SPLIT_RL)
   INSTRUCTION_TIME(2);//n
   CPU_ABUS_ACCESS_READ_FETCH; //np
   WORD w=m68k_fetchW();
@@ -1130,7 +934,7 @@ void m68k_get_source_110_l(){ // .L (d8,An,Xn)
   }
   CPU_ABUS_ACCESS_READ_L; //nR nr
   m68k_READ_L_FROM_ADDR
-#endif//#if defined(SSE_CPU_SPLIT_RL6)
+#endif//#if defined(SSE_CPU_SPLIT_RL)
 }
 
 // (xxx).W, (xxx).L, (d16, PC), (d8, PC, Xn), #<data>
@@ -1312,7 +1116,7 @@ void m68k_get_source_111_w(){
   }
 }
 
-#if defined(SSE_CPU_SPLIT_RL7)
+#if defined(SSE_CPU_SPLIT_RL)
 
 void m68k_get_source_111_l(){
 
@@ -1487,7 +1291,7 @@ void m68k_get_source_111_l(){
   }
 }
 
-#endif//#if defined(SSE_CPU_SPLIT_RL7)
+#endif//#if defined(SSE_CPU_SPLIT_RL)
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -2123,7 +1927,7 @@ void m68kReadWFromAddr() {
     exception(BOMBS_BUS_ERROR,EA_READ,abus);
 }
 
-#if !defined(SSE_CPU_SPLIT_RL9)
+#if !defined(SSE_CPU_SPLIT_RL)
 void m68kReadLFromAddr() {
   abus&=0xffffff;                                   
 #if defined(SSE_CPU_RESTORE_ABUS)

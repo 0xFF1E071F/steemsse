@@ -1,4 +1,4 @@
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #ifndef STEEMKEYTEST
 // These are the characters that are produced by pressing Alt+[shift]+key.
@@ -509,7 +509,7 @@ void InitKeyTable()
 #if defined(SSE_VS2008_WARNING_390)
 #pragma warning (disable: 4310)
 #endif
-#if defined(SSE_VAR_REWRITE) // stops a warning L2 in VC6
+#if defined(SSE_COMPILER_WARNING) // stops a warning L2 in VC6
         char char_list[]= {(char)168,43,39,(char)248,(char)229,(char)230,0};
 #else
         char char_list[]= {168,43,39,248,229,230,0};        

@@ -2,7 +2,7 @@
 #ifndef ACC_DECLA_H
 #define ACC_DECLA_H
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include <stdio.h>
 #include <easystr.h>
 typedef EasyStr Str;//?!

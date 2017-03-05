@@ -6,11 +6,11 @@ GUI functions. It creates the main window in MakeGUI, handles translations
 and (for some reason) command-line options.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: gui.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #define EXT
 #define INIT(s) =s
@@ -436,7 +436,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "key_table.cpp" //temp!
 #endif
 
@@ -767,26 +767,16 @@ void GUIRefreshStatusBar() {
 
     // change text
 #if !defined(SSE_GUI_STATUS_BAR_ICONS)
-#if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
-    if(M68000.ProcessingState==TM68000::INTEL_CRASH)
-      strcpy(status_bar,T("STEEM CRASHED!"));  
-#endif
-
 #if defined(SSE_GUI_STATUS_BAR_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
       strcpy(status_bar,T("HALT"));
 #endif
-
     SendMessage(status_bar_win,WM_SETTEXT,0,(LPARAM)(LPCTSTR)status_bar);
 #endif
   }
 
 #if defined(SSE_GUI_STATUS_BAR_ICONS)
-#if defined(SSE_VAR_MAIN_LOOP1) && defined(SSE_CPU_HALT)
-    if(M68000.ProcessingState==TM68000::INTEL_CRASH)
-      strcpy(ansi_string,T("STEEM CRASHED!"));  
-#endif
 #if defined(SSE_GUI_STATUS_BAR_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
@@ -986,7 +976,7 @@ void GUIColdResetChangeSettings()
 #endif
     OptionBox.NewMonitorSel=-1;
   }
-#if defined(SSE_TOS_STE_FAST_BOOT2) //force recheck
+#if defined(SSE_TOS_STE_FAST_BOOT) //force recheck
   if(OPTION_HACKS && (tos_version==0x106||tos_version==0x162)
 #if USE_PASTI
     && !pasti_active

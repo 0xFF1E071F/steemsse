@@ -5,11 +5,11 @@ DESCRIPTION: The code for Steem's option dialog that allows the user to
 change Steem's many options to their heart's delight.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: options.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 bool TOptionBox::USDateFormat=0;
 WIN_ONLY( DirectoryTree TOptionBox::DTree; )
@@ -378,7 +378,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
   if (ds.Find(Fol+SLASH+"*.*")){
     EasyStr Path;
     do{
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT3) //3.6.1//options.cpp uses refactoring
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
       {//temp, todo
       Path=Tos.GetNextTos(ds);
 #else
@@ -404,12 +404,12 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
           }
         }
 #endif
-#endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
+#endif//SSE_TOS_SNAPSHOT_AUTOSELECT
 
         if (has_extension_list(Path,"IMG","ROM",NULL)){
           WORD Ver,Date;
           BYTE Country;
-#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT3)
+#if defined(SSE_TOS_SNAPSHOT_AUTOSELECT)
           Tos.GetTosProperties(Path,Ver,Country,Date);
 #else
           FILE *f=fopen(Path,"rb");
@@ -429,7 +429,7 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 
             fclose(f);
           }
-#endif//SSE_TOS_SNAPSHOT_AUTOSELECT3
+#endif//SSE_TOS_SNAPSHOT_AUTOSELECT
 
 #if defined(SSE_STF_MATCH_TOS)
           // remember paths of default TOS for STF and STE
@@ -1178,9 +1178,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
 #endif
-#if defined(SSE_GUI_OPTIONS_REFRESH) && !defined(SSE_STF_MEGASTF_390)
-            OptionBox.SSEUpdateIfVisible(); 
-#endif
 #if defined(SSE_STF_MATCH_TOS)
             // preselect a compatible TOS 
             if(KnownSTETosPath.Empty()||KnownSTFTosPath.Empty())
@@ -1224,21 +1221,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 This->NewMemConf0=-1;
               }
               CheckResetIcon();
-#if defined(SSE_GUI_OPTIONS_STF) && !defined(SSE_STF_MEGASTF_390)
-              This->MachineUpdateIfVisible();//it's on same page now, better so
-#endif
             }
 #endif
 #if defined(SSE_STF_MEGASTF)
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
-#if defined(SSE_ACSI_MEGASTF) && !defined(SSE_STF_MEGASTF_390)//gemdos likelier
-              if(SSEConfig.AcsiImg)
-                SSEOption.Acsi=true;
-              else
-#endif
-                HardDiskMan.DisableHardDrives=false; // v3.6.0
+              HardDiskMan.DisableHardDrives=false; // v3.6.0
             }
             else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
             {
@@ -1248,10 +1237,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             HardDiskMan.update_mount();
 #endif
           }
-#if defined(SSE_STF_MEGASTF_390)
-//          OptionBox.MachineUpdateIfVisible(); //anyway
           This->MachineUpdateIfVisible(); //anyway
-#endif
 	  break;
 #endif
 
@@ -1837,7 +1823,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
         case 7301: // Keyboard click on/off
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_KEYBOARD_CLICK=!OPTION_KEYBOARD_CLICK;
@@ -1852,19 +1838,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_SOUND_MICROWIRE) 
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
-            OPTION_MICROWIRE=!OPTION_MICROWIRE;
-            TRACE_LOG("Option Microwire %d\n",OPTION_MICROWIRE);
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_MICROWIRE,0);
-          }
-          break; 
-#endif
-
-#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
-        case 7303: // PSG Filter (more open)
-          if (HIWORD(wPar)==BN_CLICKED){
-            PSG_FILTER_FIX=!PSG_FILTER_FIX;
-            TRACE_LOG("Option PSG filter %d\n",PSG_FILTER_FIX);
-            SendMessage(HWND(lPar),BM_SETCHECK,PSG_FILTER_FIX,0);
+            //OPTION_MICROWIRE=!OPTION_MICROWIRE; 
+            SSEOption.Microwire=!SSEOption.Microwire;
+            TRACE_LOG("Option Microwire %d\n",SSEOption.Microwire);
+            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.Microwire,0);
           }
           break; 
 #endif
@@ -2630,7 +2607,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
           SendMessage(HWND(lPar),BM_SETCHECK,0,true);
         }
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
       }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9400){ // Ports
 #else
       }else if (LOWORD(wPar)>=9000 && LOWORD(wPar)<9300){ // Ports
@@ -2638,7 +2615,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         Str ErrorText,ErrorTitle;
         int Port=(LOWORD(wPar)-9000)/100;
         int Control=(LOWORD(wPar) % 100);
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
         if(Port==3)
         {
           STPort[Port].Type=SendMessage(HWND(lPar),CB_GETITEMDATA,

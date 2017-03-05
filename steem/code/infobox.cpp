@@ -4,7 +4,7 @@ MODULE: Steem
 DESCRIPTION: Steem's general information dialog.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: infobox.cpp")
 #endif
 
@@ -42,7 +42,7 @@ void TGeneralInfo::CreatePage(int pg)
       break;
   }
 }
-#if !defined(SSE_GUI_INFOBOX_390)
+#if !defined(SSE_GUI_INFOBOX_NO_THANKS)
 /* in v3.9.0 we remove the thanks because they're outdated, maybe some other
   people should be thanked more today, but making up a list, forgetting 
   someone... brr...
@@ -111,7 +111,7 @@ const char *Credits[40]={
 #endif
 
 
-#if defined(SSE_GUI_INFOBOX_390B)
+#if defined(SSE_GUI_INFOBOX_GREETINGS)
 /* so instead, same silly greetings as in demo SSE3.5, typo corrected for Mr JCVD!
 */
 const char *Credits[11]={
@@ -363,7 +363,7 @@ EasyStr TGeneralInfo::dp4_disp(int val)
 void TGeneralInfo::CreateAboutPage()
 {
   int y=10,h=4;
-#if !defined(SSE_GUI_INFOBOX_390) || defined(SSE_GUI_INFOBOX_390B)
+#if !defined(SSE_GUI_INFOBOX_NO_THANKS) || defined(SSE_GUI_INFOBOX_GREETINGS)
   HWND Win;
 #endif
 #if defined(SSE_GUI)
@@ -377,7 +377,7 @@ void TGeneralInfo::CreateAboutPage()
 #endif
   Text+="Written by Anthony && Russell Hayward\n";
 
-#if defined(SSE_GUI_INFOBOX_390)
+#if defined(SSE_GUI_INFOBOX)
 #if defined(SSE_X64_MISC)
   Text+="x64 ";
 #elif defined(WIN32)
@@ -414,7 +414,7 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Static",Text,WS_CHILD | WS_VISIBLE,
                       page_l,y,page_w,h,Handle,(HMENU)200,HInstance,NULL);
   y+=h;
-#if defined(SSE_GUI_INFOBOX_390)
+#if defined(SSE_GUI_INFOBOX_NO_THANKS)
   Text=T("Thanks to all the people who have helped make Steem better.");
 
 
@@ -424,7 +424,7 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Steem HyperLink",Text,WS_CHILD | WS_VISIBLE | HL_STATIC,
                           page_l,y,page_w,TextHeight,Handle,(HMENU)204,HInstance,NULL);
   y+=TextHeight;
-#if !defined(SSE_GUI_INFOBOX_390) || defined(SSE_GUI_INFOBOX_390B)
+#if !defined(SSE_GUI_INFOBOX_NO_THANKS) || defined(SSE_GUI_INFOBOX_GREETINGS)
   Scroller.CreateEx(512,WS_CHILD | WS_VSCROLL | WS_HSCROLL,page_l,y,page_w,INFOBOX_HEIGHT-y-(TextHeight+10+10),
                       Handle,203,HInstance);
   Scroller.SetBkColour(GetSysColor(COLOR_WINDOW));

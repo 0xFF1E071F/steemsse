@@ -105,7 +105,7 @@ EXT int HzIdxToHz[NUM_HZ];
 #pragma pack(push, STRUCTURE_ALIGNMENT)//391
 
 
-#if defined(SSE_VID_DD_REORDER_STRUCT)
+#if defined(SSE_COMPILER_STRUCT_391)
 
 
 class SteemDisplay
@@ -511,12 +511,7 @@ public:
 #endif
 #endif
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
-#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_RESIZE_391)
-// argh! caused options ignored + crash on taking JPG screenshot before changing format
-  BYTE ScreenShotFormatOpts; 
-#else
   int ScreenShotFormatOpts;
-#endif
 #endif
   Str ScreenShotExt;
 

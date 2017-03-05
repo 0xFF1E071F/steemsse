@@ -611,25 +611,18 @@ void TOptionBox::CreateSoundPage()
   const int LineHeight=30;
   const int HorizontalSeparation=10;
 #endif
-#if defined(SSE_SOUND_FILTER_STF)
+#if defined(SSE_SOUND_FILTERS)
   sound_mode_dd.additem(T("Filter 'coaxial' (Steem original)"));
-#else
-  sound_mode_dd.additem(T("Simulated ST Speaker"));
-#endif
-#if defined(SSE_SOUND_FILTER_STF5)
   sound_mode_dd.additem(T("Filter 'SCART'"));
-#endif
-#if defined(SSE_SOUND_FILTER_STF)
   sound_mode_dd.additem(T("Filter 'coaxial' tunes only"));
-#else
-  sound_mode_dd.additem(T("Direct"));
-  sound_mode_dd.additem(T("Sharp STFM Samples"));
-#endif
-#if defined(SSE_SOUND_FILTER_STF5)
   sound_mode_dd.additem(T("Filter 'coaxial' samples only"));
-#endif
 #if defined(SSE_SOUND_FILTER_HATARI)
   sound_mode_dd.additem(T("Filter 'Hatari'"));
+#endif
+#else
+  sound_mode_dd.additem(T("Simulated ST Speaker"));
+  sound_mode_dd.additem(T("Direct"));
+  sound_mode_dd.additem(T("Sharp STFM Samples"));
 #endif
   sound_mode_dd.changesel(sound_mode);
   y+=35;
@@ -737,7 +730,7 @@ void TOptionBox::CreateSoundPage()
 //  y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND)
+#if defined(SSE_TOS_KEYBOARD_CLICK) && defined(SSE_GUI_OPTIONS_SOUND)
   keyboard_click_but.create(XD,page_p,page_l+240,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1376,7 +1369,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_SOUND_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND)
+#if defined(SSE_TOS_KEYBOARD_CLICK) && !defined(SSE_GUI_OPTIONS_SOUND)
   keyboard_click_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Keyboard click"),4007,BkCol);
   int keyboard_click=( PEEK(0x484)&1 ); // get current setting
@@ -1403,16 +1396,6 @@ void TOptionBox::CreateSSEPage() {
   psg_samples_but.set_check(SSEOption.PSGFixedVolume);
   hints.add(psg_samples_but.handle,
     T("Punchier samples using a table by ljbk, thx dude!"),
-    page_p);
-  y+=LineHeight;
-#endif
-
-#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
-  psg_filter_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("Filter"),4008,BkCol);
-  psg_filter_but.set_check(PSG_FILTER_FIX);
-  hints.add(psg_filter_but.handle,
-    T("This makes PSG (YM-2149) chip tunes and samples sound less muffled but the sound of samples could be worse, depends."),
     page_p);
   y+=LineHeight;
 #endif

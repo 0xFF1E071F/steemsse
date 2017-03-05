@@ -5,11 +5,11 @@ DESCRIPTION: The code to load and save all Steem's options (and there are
 a lot of them) to and from the ini file.
 ---------------------------------------------------------------------------*/
 
-#if defined(SSE_STRUCTURE_INFO)
+#if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: dataloadsave.cpp")
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 ProfileSectionData ProfileSection[20]=
       {{"Machine and TOS",PSEC_MACHINETOS},{"Ports and MIDI",PSEC_PORTS},
        {"General",PSEC_GENERAL},{"Display, Fullscreen, Brightness and Contrast",PSEC_DISPFULL},
@@ -216,8 +216,8 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     pli.buffer=Buf;
     pli.bufSize=8192;
     pasti->LoadConfig(&pli,NULL);
-#if defined(SSE_DISK_PASTI_ONLY_STX) && defined(SSE_VAR_DATALOAD_391)
-    // SetDisk is called before OptionBox.LoadData
+#if defined(SSE_DISK_PASTI_ONLY_STX)
+    // SetDisk() is called before OptionBox.LoadData()
     OPTION_PASTI_JUST_STX=pCSF->GetInt("Pasti","PastiJustStx",OPTION_PASTI_JUST_STX);
 #endif
   }
@@ -233,20 +233,20 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     if (hPasti==NULL) pasti_active=false;
 #endif
 #endif
-#if defined(SSE_DISK_GHOST) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DISK_GHOST)
     OPTION_GHOST_DISK=pCSF->GetInt("Disks","GhostDisk",OPTION_GHOST_DISK);
 #endif
-#if defined(SSE_DRIVE_SOUND_SEEK_OPTION) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
     OPTION_DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",OPTION_DRIVE_SOUND_SEEK_SAMPLE);
 #endif
-#if defined(SSE_DRIVE_SOUND) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DRIVE_SOUND)
     SSEOption.DriveSound=pCSF->GetInt("Disks","DriveSound",SSEOption.DriveSound);
     SF314[0].Sound_Volume=SF314[1].Sound_Volume
       =pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
     SF314[0].Sound_ChangeVolume();
     SF314[1].Sound_ChangeVolume();
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_TOS_PRG_AUTORUN)
   OPTION_PRG_SUPPORT=pCSF->GetInt("Disks","PRG_support",OPTION_PRG_SUPPORT);
 #endif
 
@@ -376,7 +376,7 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
       p=val+strlen(val)+1;
     }
   }
-#if defined(SSE_DISK_PASTI_ONLY_STX) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DISK_PASTI_ONLY_STX)
   pCSF->SetStr("Pasti","PastiJustStx",EasyStr(OPTION_PASTI_JUST_STX));  
 #endif
 #endif
@@ -473,17 +473,17 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_GUI_DM_INSERT_DISK_B_LS)
   pCSF->SetInt("Disks","AutoInsert2",AutoInsert2);
 #endif
-#if defined(SSE_DISK_GHOST) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DISK_GHOST)
   pCSF->SetStr("Disks","GhostDisk",EasyStr(OPTION_GHOST_DISK)); 
 #endif
-#if defined(SSE_DRIVE_SOUND_SEEK_OPTION) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
   pCSF->SetStr("Disks","DriveSoundSeekSample",EasyStr(OPTION_DRIVE_SOUND_SEEK_SAMPLE));
 #endif
-#if defined(SSE_DRIVE_SOUND) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_DRIVE_SOUND)
   pCSF->SetStr("Disks","DriveSound",EasyStr(SSEOption.DriveSound));
   pCSF->SetStr("Disks","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) && defined(SSE_VAR_DATALOAD_391)
+#if defined(SSE_TOS_PRG_AUTORUN)
   pCSF->SetStr("Disks","PRG_support",EasyStr(OPTION_PRG_SUPPORT));
 #endif
 
@@ -862,9 +862,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     if (FirstLoad) CheckResetIcon();
 
 #if defined(SSE_STF)
-#if !defined(SSE_GUI_391)
-    OptionBox.Hide(); // hack
-#endif
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
     SSEConfig.SwitchSTType(ST_TYPE);
 #endif
@@ -933,20 +930,14 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       YM2149.FreeFixedVolTable();
 #endif
 #endif
-#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
-    PSG_FILTER_FIX=pCSF->GetInt("Sound","PsgFilter",PSG_FILTER_FIX);
-#endif
 #if defined(SSE_SOUND_MICROWIRE)
-    OPTION_MICROWIRE=pCSF->GetInt("Sound","Microwire",OPTION_MICROWIRE);
+    SSEOption.Microwire=pCSF->GetInt("Sound","Microwire",SSEOption.Microwire);
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
     OPTION_DRIVE_INFO=pCSF->GetInt("Options","OsdDriveInfo", OPTION_DRIVE_INFO);
 #endif
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
-#endif
-#if defined(SSE_DISK_PASTI_ONLY_STX) && !defined(SSE_VAR_DATALOAD_391)
-    OPTION_PASTI_JUST_STX=pCSF->GetInt("Pasti","PastiJustStx",OPTION_PASTI_JUST_STX);
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
     OPTION_INTERPOLATED_SCANLINES=pCSF->GetInt("Display","InterpolatedScanlines",OPTION_INTERPOLATED_SCANLINES);
@@ -963,25 +954,12 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_3BUFFER)
     OPTION_3BUFFER=pCSF->GetInt("Display","TripleBuffer",OPTION_3BUFFER);
 #endif
-#if defined(SSE_DRIVE_SOUND) && !defined(SSE_VAR_DATALOAD_391)
-    SSEOption.DriveSound=pCSF->GetInt("Disks","DriveSound",SSEOption.DriveSound);
-    SF314[0].Sound_Volume=SF314[1].Sound_Volume
-      =pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
-    SF314[0].Sound_ChangeVolume();
-    SF314[1].Sound_ChangeVolume();
-#endif
-#if defined(SSE_DISK_GHOST) && !defined(SSE_VAR_DATALOAD_391)
-    OPTION_GHOST_DISK=pCSF->GetInt("Disks","GhostDisk",OPTION_GHOST_DISK);
-#endif
 #if defined(SSE_VID_D3D_OPTION) &&!defined(SSE_VID_D3D_ONLY)
     OPTION_D3D=pCSF->GetInt("Options","Direct3D",OPTION_D3D);
     Disp.ScreenChange();
 #endif
 #if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK_OPTION) && !defined(SSE_VAR_DATALOAD_391)
-    OPTION_DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",OPTION_DRIVE_SOUND_SEEK_SAMPLE);
 #endif
 #if defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
 /*  Request
@@ -1025,9 +1003,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_INT_MFP_OPTION)
   OPTION_C2=pCSF->GetInt("Options","Chipset2",OPTION_C2);
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_VAR_DATALOAD_391)
-  OPTION_PRG_SUPPORT=pCSF->GetInt("Disks","PRG_support",OPTION_PRG_SUPPORT);
-#endif
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   OPTION_D3D_CRISP=pCSF->GetInt("Display","Direct3DCrisp",OPTION_D3D_CRISP);
 #endif
@@ -1035,7 +1010,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SSEOption.Acsi=pCSF->GetInt("HardDrives","Acsi",SSEOption.Acsi);
   SendMessage(GetDlgItem(DiskMan.Handle,11),BM_SETCHECK,SSEOption.Acsi,0);
 #endif//acsi
-#if defined(SSE_SOUND_KEYBOARD_CLICK) // option is persistent
+#if defined(SSE_TOS_KEYBOARD_CLICK) // option is persistent
   OPTION_KEYBOARD_CLICK=pCSF->GetInt("Sound","KeyboardClick",OPTION_KEYBOARD_CLICK);
 #endif
 #if defined(SSE_VID_FS_GUI_OPTION)
@@ -1271,7 +1246,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       MidiInList.Add(mic.szPname);
     }
 #endif
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
     for (int p=0;p<4;p++){
 #else
     for (int p=0;p<3;p++){
@@ -1466,9 +1441,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_YM2149_FIX_TABLES)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
 #endif
-#if defined(SSE_SOUND_FILTER_STF) && !defined(SSE_SOUND_FILTER_STF5)
-  pCSF->SetStr("Sound","PsgFilter",EasyStr(PSG_FILTER_FIX));  
-#endif
 #if defined(SSE_SOUND_MICROWIRE)
   pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
 #endif
@@ -1477,9 +1449,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
-#endif
-#if defined(SSE_DISK_PASTI_ONLY_STX) && !defined(SSE_VAR_DATALOAD_391)
-  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(OPTION_PASTI_JUST_STX));  
 #endif
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
   pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(OPTION_INTERPOLATED_SCANLINES));  
@@ -1496,21 +1465,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_3BUFFER)
   pCSF->SetStr("Display","TripleBuffer",EasyStr(OPTION_3BUFFER));
 #endif
-#if defined(SSE_DRIVE_SOUND) && !defined(SSE_VAR_DATALOAD_391)
-  pCSF->SetStr("Disks","DriveSound",EasyStr(SSEOption.DriveSound));
-  pCSF->SetStr("Disks","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
-#endif
-#if defined(SSE_DISK_GHOST) && !defined(SSE_VAR_DATALOAD_391)
-  pCSF->SetStr("Disks","GhostDisk",EasyStr(OPTION_GHOST_DISK)); 
-#endif
 #if defined(SSE_VID_D3D_OPTION)
   pCSF->SetStr("Display","Direct3D",EasyStr(OPTION_D3D)); 
 #endif
 #if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
-#endif
-#if defined(SSE_DRIVE_SOUND_SEEK_OPTION) && !defined(SSE_VAR_DATALOAD_391)
-  pCSF->SetStr("Disks","DriveSoundSeekSample",EasyStr(OPTION_DRIVE_SOUND_SEEK_SAMPLE));
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
   pCSF->SetStr("Options","TestingNewFeatures",EasyStr(SSEOption.TestingNewFeatures));
@@ -1527,16 +1486,13 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_INT_MFP_OPTION)//TODO
   pCSF->SetStr("Options","Chipset2",EasyStr(OPTION_C2));
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_VAR_DATALOAD_391)
-  pCSF->SetStr("Disks","PRG_support",EasyStr(OPTION_PRG_SUPPORT));
-#endif
 #if defined(SSE_VID_D3D_CRISP_OPTION)
   pCSF->SetStr("Display","Direct3DCrisp",EasyStr(OPTION_D3D_CRISP));
 #endif
 #if defined(SSE_ACSI_OPTION)
   pCSF->SetStr("HardDrives","Acsi",EasyStr(SSEOption.Acsi));
 #endif
-#if defined(SSE_SOUND_KEYBOARD_CLICK)
+#if defined(SSE_TOS_KEYBOARD_CLICK)
   pCSF->SetStr("Sound","KeyboardClick",EasyStr(OPTION_KEYBOARD_CLICK));
 #endif
 #if defined(SSE_VID_FS_GUI_OPTION)
@@ -1637,7 +1593,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   pCSF->SetStr("Sound","InternalSpeaker",Str(sound_internal_speaker));
 #endif
-#if defined(SSE_DONGLE_PORT3)
+#if defined(SSE_DONGLE_PORT)
   for (int p=0;p<4;p++){
 #else
   for (int p=0;p<3;p++){
