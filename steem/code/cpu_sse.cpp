@@ -572,12 +572,51 @@ void DebugCheckIOAccess() {
 #endif
 
 
+#if defined(NO_IO_W_DELAY)
+/*  This is intermediate refactoring.
+    Steem sets the destination of a CPU operation using a pointer.
+    If the destination is in the io zone, the pointer will be updated
+    in good time, but the write to io itself is delayed until the end
+    of the instruction. This is not really correct.
+    Not all instructions use this system. Notably not MOVE and the like.
+    We eliminate the delay at the price of more code inside CPU instructions.
+*/
+
+inline void check_io_write_b() {
+  if(ioaccess&1)
+    io_write_b(ioad,LOBYTE(iobuffer)); 
+}
+
+inline void check_io_write_w() {
+  if(ioaccess&2)
+    io_write_w(ioad,LOWORD(iobuffer)); 
+}
+
+inline void check_io_write_l() {
+  if(ioaccess&4)
+    io_write_l(ioad,iobuffer);
+}
+
+#define CHECK_IOW_B check_io_write_b()
+#define CHECK_IOW_W check_io_write_w()
+#define CHECK_IOW_L check_io_write_l()
+#else
+#define CHECK_IOW_B
+#define CHECK_IOW_W
+#define CHECK_IOW_L
+#endif
+
 inline void handle_ioaccess() {
   if (ioaccess){                             
-    switch (ioaccess & IOACCESS_NUMBER_MASK){                        
-      case 1: io_write_b(ioad,LOBYTE(iobuffer)); break;    
-      case 2: io_write_w(ioad,LOWORD(iobuffer)); break;    
-      case 4: io_write_l(ioad,iobuffer); break;      
+    switch (ioaccess & IOACCESS_NUMBER_MASK){     
+#if !defined(NO_IO_W_DELAY)
+      case 1: io_write_b(ioad,LOBYTE(iobuffer)); 
+        break;    
+      case 2: io_write_w(ioad,LOWORD(iobuffer)); 
+        break;    
+      case 4: io_write_l(ioad,iobuffer); 
+        break;      
+#endif
       case TRACE_BIT_JUST_SET: 
 #if !defined(SSE_CPU_TRACE_REFACTOR)
         m68k_trace();
@@ -690,6 +729,7 @@ void m68kProcess() {
 #endif
 
   old_pc=pc;  
+//  ASSERT(old_pc!=0xc374);
 
 #if defined(SSE_OSD_CONTROL)
   if(OSD_MASK_CPU & OSD_CONTROL_CPUIO) 
@@ -1081,6 +1121,7 @@ void                              m68k_ori_b(){
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
+    CHECK_IOW_B;
   }
 }
 
@@ -1115,6 +1156,7 @@ void                              m68k_ori_w(){
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
+    CHECK_IOW_W;
   }
 }
 
@@ -1147,6 +1189,7 @@ void                              m68k_ori_l(){
   m68k_DEST_L|=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
+  CHECK_IOW_L;
 }
 
 
@@ -1176,6 +1219,7 @@ void                              m68k_andi_b(){
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
+    CHECK_IOW_B;
   }
 }
 
@@ -1215,6 +1259,7 @@ void                              m68k_andi_w(){
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W
+    CHECK_IOW_W;
   }
 }
 
@@ -1239,6 +1284,7 @@ void                              m68k_andi_l(){
   m68k_DEST_L&=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L
+  CHECK_IOW_L;
 }
 
 
@@ -1257,6 +1303,7 @@ void                              m68k_subi_b(){
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
+  CHECK_IOW_B;
 }
 
 
@@ -1275,6 +1322,7 @@ void                              m68k_subi_w(){
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(SR_X);
+  CHECK_IOW_W;
 }
 
 
@@ -1295,6 +1343,7 @@ void                              m68k_subi_l(){
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(SR_X);
+  CHECK_IOW_L;
 }
 
 
@@ -1313,6 +1362,7 @@ void                              m68k_addi_b(){
   m68k_old_dest=m68k_DEST_B;
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
+  CHECK_IOW_B;
 }
 
 
@@ -1331,6 +1381,7 @@ void                              m68k_addi_w(){
   m68k_old_dest=m68k_DEST_W;
   m68k_DEST_W+=m68k_src_w;
   SR_ADD_W;
+  CHECK_IOW_W;
 }
 
 
@@ -1362,6 +1413,7 @@ void                              m68k_addi_l(){
   m68k_old_dest=m68k_DEST_L;
   m68k_DEST_L+=m68k_src_l;
   SR_ADD_L;
+  CHECK_IOW_L;
 }
 
 
@@ -1491,6 +1543,7 @@ void                              m68k_bchg(){
 #endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B^=(BYTE)m68k_src_b;
+    CHECK_IOW_B;
   }
 }
 
@@ -1560,6 +1613,7 @@ void                              m68k_bclr(){
 #endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B&=(BYTE)(~m68k_src_b);
+    CHECK_IOW_B;
   }
 }
 
@@ -1629,6 +1683,7 @@ void                              m68k_bset(){
 #endif
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B|=(BYTE)m68k_src_b;
+    CHECK_IOW_B;
   }
 }
 
@@ -1677,6 +1732,7 @@ void                              m68k_eori_b(){
     m68k_DEST_B^=m68k_src_b;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_B
+    CHECK_IOW_B;
   }
 }
 
@@ -1733,6 +1789,7 @@ void                              m68k_eori_w(){
     m68k_DEST_W^=m68k_src_w;
     SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
   }
 }
 
@@ -1765,6 +1822,7 @@ void                              m68k_eori_l(){
   m68k_DEST_L^=m68k_src_l;
   SR_CLEAR(SR_V+SR_C+SR_N+SR_Z);
   SR_CHECK_Z_AND_N_L;
+  CHECK_IOW_L;
 }
 
 #if defined(SSE_CPU_SIMPLIFY_READ_DEST_CMPI)
@@ -1866,6 +1924,7 @@ void                              m68k_cmpi_b(){
   m68k_dest=&compare_buffer;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(0);
+  CHECK_IOW_B;
 }
 
 
@@ -1878,6 +1937,7 @@ void                              m68k_cmpi_w(){
   m68k_dest=&compare_buffer;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
+  CHECK_IOW_W;
 }
 
 
@@ -1903,6 +1963,7 @@ void                              m68k_cmpi_l(){
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
+  CHECK_IOW_L;
 }
 
 #endif//#if defined(SSE_CPU_SIMPLIFY_READ_DEST_CMPI)
@@ -2106,6 +2167,7 @@ Dn,<ea> :         |                 |             |               |
 #endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B^=(signed char)(1<<(7&r[PARAM_N]));
+      CHECK_IOW_B;
     }
   }
 }
@@ -2188,6 +2250,7 @@ Dn,<ea> :         |                 |             |               |
 #endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B&=(signed char)~(1<<(7&r[PARAM_N]));
+      CHECK_IOW_B;
     }
   }
 }
@@ -2288,6 +2351,7 @@ Dn,<ea> :         |                 |             |               |
 #endif
       CPU_ABUS_ACCESS_WRITE; //nw
       m68k_DEST_B|=(signed char)(1<<(7&r[PARAM_N]));
+      CHECK_IOW_B;
     }
   }
 }
@@ -2355,6 +2419,7 @@ void                              m68k_negx_b(){
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   if(m68k_DEST_B & MSB_B)SR_SET(SR_N);
 #endif
+  CHECK_IOW_B;
 }
 
 
@@ -2399,7 +2464,7 @@ void                             m68k_negx_w(){
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   if(m68k_DEST_W & MSB_W)SR_SET(SR_N);
 #endif
-
+  CHECK_IOW_W;
 }
 
 void                             m68k_negx_l(){
@@ -2444,6 +2509,7 @@ void                             m68k_negx_l(){
   if((m68k_old_dest|m68k_DEST_L)&MSB_L)SR_SET(SR_C+SR_X);
   if(m68k_DEST_L & MSB_L)SR_SET(SR_N);
 #endif
+  CHECK_IOW_L;
 }
 
 
@@ -2481,6 +2547,7 @@ void                              m68k_clr_b(){
 #else
   SR_SET(SR_Z);
 #endif
+  CHECK_IOW_B;
 }
 
 
@@ -2518,6 +2585,7 @@ void                             m68k_clr_w(){
 #else
   SR_SET(SR_Z);
 #endif
+  CHECK_IOW_W;
 }
 
 
@@ -2559,6 +2627,7 @@ void                             m68k_clr_l(){
 #else
   SR_SET(SR_Z);
 #endif
+  CHECK_IOW_L;
 }
 
 
@@ -2595,6 +2664,7 @@ void                              m68k_neg_b(){
 #endif
   if((m68k_old_dest|m68k_DEST_B)&MSB_B)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_B;
+  CHECK_IOW_B;
 }
 
 
@@ -2631,6 +2701,7 @@ void                             m68k_neg_w(){
 #endif
   if((m68k_old_dest|m68k_DEST_W)&MSB_W)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_W;
+  CHECK_IOW_W;
 }
 
 
@@ -2669,6 +2740,7 @@ void                             m68k_neg_l(){
 #endif
   if((m68k_old_dest|m68k_DEST_L)&MSB_L)SR_SET(SR_C+SR_X);
   SR_CHECK_Z_AND_N_L;
+  CHECK_IOW_L;
 }
 
 void                              m68k_not_b(){
@@ -2696,6 +2768,7 @@ void                              m68k_not_b(){
   m68k_DEST_B=(BYTE)~m68k_DEST_B;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
+  CHECK_IOW_B;
 }
 
 
@@ -2724,6 +2797,7 @@ void                             m68k_not_w(){
   m68k_DEST_W=(WORD)~m68k_DEST_W;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_W;
+  CHECK_IOW_W;
 }
 
 
@@ -2754,6 +2828,7 @@ void                             m68k_not_l(){
   m68k_DEST_L=~m68k_DEST_L;
   SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
   SR_CHECK_Z_AND_N_L;
+  CHECK_IOW_L;
 }
 
 #if defined(SSE_CPU_SIMPLIFY_READ_DEST_TST)
@@ -3006,8 +3081,13 @@ NOTES :
       CPU_ABUS_ACCESS_WRITE; // nw
     } 
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
+
+
+//bool bit_is_set=(m68k_DEST_B&BIT_7)!=0;
+
     SR_CHECK_Z_AND_N_B;
     m68k_DEST_B|=MSB_B;
+    CHECK_IOW_B;//Good example where it could be important
     PREFETCH_IRC; // np
   }
 }
@@ -3043,6 +3123,7 @@ SR,<ea> :         |                 |               |
     CPU_ABUS_ACCESS_WRITE; // nw
   }
   m68k_DEST_W=sr;
+  CHECK_IOW_W; // move SR to io zone? why not!
 }
 
 
@@ -3162,6 +3243,7 @@ void                              m68k_nbcd(){
 #else
   if(m68k_DEST_B){SR_CLEAR(SR_Z);}
 #endif
+  CHECK_IOW_B;
 }
 
 
@@ -4799,6 +4881,7 @@ void                              m68k_addq_b(){
   }
   m68k_DEST_B+=m68k_src_b;
   SR_ADD_B;
+  CHECK_IOW_B;
 }
 
 void                             m68k_addq_w(){
@@ -4846,6 +4929,7 @@ NOTES :
     dbus=m68k_DEST_W;
 #endif
     SR_ADD_W;
+    CHECK_IOW_W;
   }
 }
 
@@ -4884,6 +4968,7 @@ void                             m68k_addq_l(){
     }
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
+    CHECK_IOW_L;
   }
 }
 
@@ -4915,6 +5000,7 @@ void                              m68k_subq_b(){
   }
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(SR_X);
+  CHECK_IOW_B;
 }
 
 
@@ -4951,6 +5037,7 @@ void                             m68k_subq_w(){
     }
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
+    CHECK_IOW_W;
   }
 }
 
@@ -4991,6 +5078,7 @@ void                             m68k_subq_l(){
     }
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
+    CHECK_IOW_L;
   }
 }
 
@@ -5114,6 +5202,7 @@ FLOWCHART :
       }
       m68k_DEST_B=0;
     }
+    CHECK_IOW_B;
   }
 }
 
@@ -5159,6 +5248,7 @@ void                              m68k_or_b_to_dN(){
   m68k_DEST_B|=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
+  CHECK_IOW_B;
 }
 
 
@@ -5409,7 +5499,8 @@ Dy,Dx :           |                 |
 #else
       SR_SET(SR_Z)
 #endif
-      break;
+    CHECK_IOW_B;
+    break;
   }default://or.b
 /*
 Dn,<ea> :         |                 |               | 
@@ -5433,6 +5524,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_B|=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
+    CHECK_IOW_B;
   }//sw
 }
 
@@ -5498,6 +5590,7 @@ void                             m68k_or_l_from_dN(){
     m68k_DEST_L|=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
+    CHECK_IOW_L;
   }
 }
 
@@ -5796,6 +5889,7 @@ Dy,Dx :           |                 |
     if(sr&SR_X)
       m68k_DEST_B--;
     SR_SUBX_B;
+    CHECK_IOW_B;
     break;
 
   default:
@@ -5822,6 +5916,7 @@ Dn,<ea> :         |                 |              /              |
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(SR_X);
+    CHECK_IOW_B;
   }
 }
 
@@ -5872,6 +5967,7 @@ Dy,Dx :           |                 |
     if(sr&SR_X)
       m68k_DEST_W--;
     SR_SUBX_W;
+    CHECK_IOW_W;
     break;
   default: //to memory
 /*
@@ -5896,6 +5992,7 @@ Dn,<ea> :         |                 |              /              |
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(SR_X);
+    CHECK_IOW_W;
   }
 }
 
@@ -5946,6 +6043,7 @@ Dy,Dx :           |                 |
     m68k_DEST_L-=m68k_src_l;
     if(sr&SR_X)m68k_DEST_L--;
     SR_SUBX_L;
+    CHECK_IOW_L;
     break;
   default:
 /*
@@ -5969,6 +6067,7 @@ Dy,Dx :           |                 |
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
     m68k_DEST_L-=m68k_src_l;
     SR_SUB_L(SR_X);
+    CHECK_IOW_L;
   }
 }
 
@@ -6150,6 +6249,7 @@ void                              m68k_eor_b(){ //or CMPM.B
     PREFETCH_IRC; //np
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(0);
+    CHECK_IOW_B;
   }else{
 /*
 -------------------------------------------------------------------------------
@@ -6180,6 +6280,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_B^=LOBYTE(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
+    CHECK_IOW_B;
   }
 }
 
@@ -6207,6 +6308,7 @@ void                             m68k_eor_w(){ //or CMPM.W
     PREFETCH_IRC; //np
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(0);
+    CHECK_IOW_W;
   }else{
 /*
 Dn,<ea> :         |                 |               |
@@ -6233,6 +6335,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_W^=LOWORD(r[PARAM_N]);
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
   }
 }
 
@@ -6285,6 +6388,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_L^=r[PARAM_N];
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
+    CHECK_IOW_L;
   }
 }
 
@@ -6316,6 +6420,7 @@ void                             m68k_cmpa_l(){
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
+  CHECK_IOW_L;
 }
 
 
@@ -6354,6 +6459,7 @@ void                              m68k_and_b_to_dN(){
   m68k_DEST_B&=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
+  CHECK_IOW_B;
 }
 
 
@@ -6553,6 +6659,7 @@ Dy,Dx :           |                 |
   else if(m68k_DEST_B<0)
     SR_SET(SR_N) // not sure of that, it's so in WinUAE
 #endif
+  CHECK_IOW_B;
   break;
   }
   default: // and.b from dn
@@ -6577,6 +6684,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_B&=m68k_src_b;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_B;
+    CHECK_IOW_B;
   }
 }
 
@@ -6629,6 +6737,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_W&=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
   }
 }
 
@@ -6676,6 +6785,7 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_L&=m68k_src_l;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_L;
+    CHECK_IOW_L;
   }
 }
 
@@ -6875,6 +6985,7 @@ Dy,Dx :           |                 |
     m68k_DEST_B+=m68k_src_b;
     if(sr&SR_X)m68k_DEST_B++;
     SR_ADDX_B;
+    CHECK_IOW_B;
     break;
 
   default:
@@ -6900,6 +7011,7 @@ Dn,<ea> :         |                 |              /              |
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_B+=m68k_src_b;
     SR_ADD_B;
+    CHECK_IOW_B;
   }
 }
 
@@ -6944,6 +7056,7 @@ Dy,Dx :           |                 |
     m68k_DEST_W+=m68k_src_w;
     if(sr&SR_X)m68k_DEST_W++;
     SR_ADDX_W;
+    CHECK_IOW_W;
     break;
 
   default:// ADD.W Dn,<EA>
@@ -6969,6 +7082,7 @@ Dn,<ea> :         |                 |              /              |
     CPU_ABUS_ACCESS_WRITE; //nw
     m68k_DEST_W+=m68k_src_w;
     SR_ADD_W;
+    CHECK_IOW_W;
   }
 }
 
@@ -7020,6 +7134,7 @@ Dy,Dx :           |                 |
     if(sr&SR_X)
       m68k_DEST_L++; 
     SR_ADDX_L;
+    CHECK_IOW_L;
     break;
 
   default:
@@ -7043,6 +7158,7 @@ Dy,Dx :           |                 |
     CPU_ABUS_ACCESS_WRITE_L; // nw nW
     m68k_DEST_L+=m68k_src_l;
     SR_ADD_L;
+    CHECK_IOW_L;
   }
 }
 
@@ -7774,6 +7890,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((signed short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   case BITS_ba9_001:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -7782,6 +7899,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -7799,6 +7917,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   }case BITS_ba9_011:{
     SR_CLEAR(SR_N+SR_V+SR_Z);
@@ -7818,6 +7937,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   }
 #if defined(SSE_DEBUG)  
@@ -7863,6 +7983,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((signed short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   case BITS_ba9_001:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -7871,6 +7992,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -7888,6 +8010,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   }case BITS_ba9_011:{
     SR_CLEAR(SR_N+SR_V+SR_Z);
@@ -7907,6 +8030,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
+    CHECK_IOW_W;
     break;
   }
 #if defined(SSE_DEBUG)    
