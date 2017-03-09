@@ -1729,7 +1729,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-
+#define SSE_BLT_392A // check blitter at read/write, not bus access timing
+#define SSE_CPU_392 // refactoring
+#define NO_IO_W_DELAY // see note in cpu_sse.cpp
+//#define NO_IO_W_DELAY2 // consequences for blitter?
 
 #endif//beta
 
@@ -1747,7 +1750,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
-
+#define SSE_BUGFIX_392
 
 #endif//bugfix
 

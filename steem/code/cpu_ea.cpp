@@ -11,6 +11,8 @@ void m68kReadLFromAddr();
 
 // peek
 
+//can be used generally, not only for pure emulation
+
 BYTE m68k_peek(MEM_ADDRESS ad){
   ad&=0xffffff;
 #if defined(SSE_MMU_RAM_TEST3)
@@ -167,6 +169,168 @@ LONG m68k_lpeek(MEM_ADDRESS ad){
 
 //read
 
+#if defined(SSE_CPU_392) // refactoring: one return 
+
+BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
+  BYTE x=0;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    x=LOBYTE(r[PARAM_M]);
+    break;
+  case BITS_543_001:
+    m68k_unrecognised();
+    break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    x=m68k_peek(abus);
+    break;
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    x=m68k_peek(abus);
+    areg[PARAM_M]++;
+    if(PARAM_M==7)
+      areg[7]++;
+    break;
+  case BITS_543_100:
+    areg[PARAM_M]--;
+    if (PARAM_M==7) 
+      areg[7]--;
+    INSTRUCTION_TIME(2); //n
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ; //nr
+    x=m68k_peek(abus);
+    break;
+  case BITS_543_101:{
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_peek(abus);
+    break;
+  }case BITS_543_110:
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_peek(abus);
+    break;
+  case BITS_543_111:
+    switch(ir&0x7){
+    case 0:{
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_peek(abus);
+      break;
+    }case 1:{
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_peek(abus);
+      break;
+    }default:
+      m68k_unrecognised();
+    }
+  }
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
+  return x;
+}
+
+
+WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
+  WORD x=0;
+  switch(ir&BITS_543){
+  case BITS_543_000:
+    x=LOWORD(r[PARAM_M]);
+    break;
+  case BITS_543_001:
+    m68k_unrecognised();
+    break;
+  case BITS_543_010:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    break;
+  case BITS_543_011:
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    areg[PARAM_M]+=2;
+    break;
+  case BITS_543_100:
+    INSTRUCTION_TIME(2);//n
+    areg[PARAM_M]-=2;
+    abus=areg[PARAM_M];
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    break;
+  case BITS_543_101:{
+    //  (d16,An)        | 101 | reg |   8(2/0)   |              np    nr     
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    abus=areg[PARAM_M]+(signed short)m68k_fetchW();pc+=2; 
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    break;
+  }case BITS_543_110:
+//  (d8,An,Xn)      |         10(2/0) |                   n    np    nr           
+    INSTRUCTION_TIME(2);//n
+    CPU_ABUS_ACCESS_READ_FETCH;//np
+    m68k_iriwo=m68k_fetchW();pc+=2; 
+    if(m68k_iriwo&BIT_b){  //.l
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(int)r[m68k_iriwo>>12];
+    }else{         //.w
+      abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_iriwo)+(signed short)r[m68k_iriwo>>12];
+    }
+    CPU_ABUS_ACCESS_READ;//nr
+    x=m68k_dpeek(abus);
+    break;
+  case BITS_543_111:
+    switch(ir&ir&0x7){
+    case 0:{
+//  (xxx).W         | 111 | 000 |   8(2/0)   |              np    nr       
+      CPU_ABUS_ACCESS_READ_FETCH;//np
+      abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
+      pc+=2; 
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_dpeek(abus);
+      break;
+    }case 1:{
+//  (xxx).L         | 111 | 001 |  12(3/0)   |           np np    nr    
+      CPU_ABUS_ACCESS_READ_FETCH_L;//np np
+      abus=m68k_fetchL()&0xffffff;
+      pc+=4;  
+      CPU_ABUS_ACCESS_READ;//nr
+      x=m68k_dpeek(abus);
+      break;
+    }default:
+      m68k_unrecognised();
+    }
+  }
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
+  return x;
+}
+
+
+#else
+
 BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
   BYTE x;
   switch(ir&BITS_543){
@@ -306,6 +470,7 @@ WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
   return 0;
 }
 
+#endif
 
 #if defined(SSE_CPU_SPLIT_RL) //we read word by word, a bit fancy...
 
@@ -415,6 +580,10 @@ LONG m68k_read_dest_l(){ //only used by tst.l, cmpi.l
     }
     break;
   }
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
   return x;
 }
 
