@@ -364,7 +364,7 @@ inline void InstructionTime(int t) {
   else
 #endif
   cpu_cycles-=(t);
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT) // test at least 4 cycles?
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
       Blitter_Draw();
@@ -383,6 +383,7 @@ inline void InstructionTime(int t) {
 
 inline void InstructionTimeCpuBus(int t) {
   cpu_cycles-=(t);
+#if !defined(SSE_BLT_392A)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -390,6 +391,7 @@ inline void InstructionTimeCpuBus(int t) {
     else
 #endif
     Blitter_Start_Now(); 
+#endif
 }
 
 #define INSTRUCTION_TIME_BUS(t)  InstructionTimeCpuBus(t)
@@ -398,6 +400,7 @@ inline void InstructionTimeCpuBus(int t) {
 inline void InstructionTimeRamBus(int t) { // RAM + Shifter
   cpu_cycles-=(t);
   cpu_cycles&=-4; // MMU adds wait states if necessary
+#if !defined(SSE_BLT_392A)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -405,6 +408,7 @@ inline void InstructionTimeRamBus(int t) { // RAM + Shifter
     else
 #endif
     Blitter_Start_Now(); 
+#endif
 }
 
 #define INSTRUCTION_TIME_ROUND(t)  InstructionTimeRamBus(t)
@@ -772,6 +776,10 @@ inline void m68k_poke_abus(BYTE x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
   }
 }
 
@@ -822,7 +830,10 @@ inline void m68k_dpoke_abus(WORD x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
-
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
   }
 }
 
@@ -863,7 +874,10 @@ inline void m68k_lpoke_abus(LONG x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
-
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
   }
 }
 
@@ -1299,6 +1313,10 @@ inline void PrefetchIrc() {
 #endif
     IRC=*lpfetch;
   prefetched_2=true;
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
 }
 
 #define PREFETCH_IRC PrefetchIrc();
@@ -2189,14 +2207,26 @@ inline void sr_check_z_n_l_for_r0()
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
 }
 
 inline void ReadW() {
   m68k_src_w=m68k_dpeek(abus);
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
 }
 
 inline void ReadL() {
   m68k_src_l=m68k_lpeek(abus);
+#if defined(SSE_BLT_392A)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+    Blitter_Start_Now(); 
+#endif
 }
 
 #else

@@ -1140,6 +1140,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     adapted, see LoadSnapShotUpdateVars()
     We use ioaccess as temporary variable, it's a hack that spares a variable.
 */
+#if defined(SSE_BUGFIX_392)
+    int save_ioaccess=ioaccess;
+#endif
     ioaccess=(Glue.screen_event.time-cpu_cycles);
     ReadWrite(ioaccess);
 #if defined(SSE_CPU_E_CLOCK)
@@ -1150,6 +1153,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     ReadWrite(M68000.cycles_for_eclock); 
     if(LoadOrSave==LS_SAVE)
       M68000.cycles_for_eclock+=ioaccess; // restore
+#endif
+#if defined(SSE_BUGFIX_392)
+    ioaccess=save_ioaccess;
 #endif
 
   }

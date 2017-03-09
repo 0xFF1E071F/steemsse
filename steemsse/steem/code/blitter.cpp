@@ -188,6 +188,10 @@ void ASMCALL Blitter_Start_Now()
 #if defined(SSE_BLT_390B) && !defined(SSE_BLT_MAIN_LOOP)
   Blit.TimeAtBlit=ACT;
 #endif
+#if defined(NO_IO_W_DELAY2)
+  if(ACT-Blit.TimeAtBlit<4)
+    return;
+#endif
   ioaccess=0;
   Blit.Busy=true;
   dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Start_Now changing GPIP bit from "+
@@ -553,6 +557,7 @@ void Blitter_Draw() {
           ASSERT(Blit.HasBus);
           Blit.HasBus=false;
           Blit.TimeToSwapBus=ACT+258; // CPU has more cycles...
+          //TRACE("stop at %d\n", ACT);
         }
       }
       else // finished
@@ -572,7 +577,7 @@ void Blitter_Draw() {
       prepare_next_event();
       // DON'T check interrupts, we're in the middle of an instruction!
     }
-  } 
+  }
 }
 
 
@@ -1115,7 +1120,12 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #endif
 #endif//dbg
           if (Blit.YCount)
+          {
             ioaccess|=IOACCESS_FLAG_DO_BLIT;
+#if defined(NO_IO_W_DELAY2)
+            Blit.TimeAtBlit=ACT;
+#endif
+          }
         }
       }else{ //there's already a blit in progress
 /*
