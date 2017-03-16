@@ -1912,6 +1912,9 @@ NOT_DEBUG(inline)
 #endif
 void stemdos_trap_1_Pexec_basepage(){
   TRACE_LOG("Call TOS $4B Pexec mode 5\n");
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
   m68k_PUSH_L(stemdos_Pexec_env);
   m68k_PUSH_L(stemdos_Pexec_com);
   m68k_PUSH_L(0);
@@ -1921,6 +1924,10 @@ void stemdos_trap_1_Pexec_basepage(){
   Debug.RecordInterrupt("TRP",1);
 #endif
   m68k_interrupt(os_gemdos_vector);             //want to return from this interrupt into GEMDOS
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
 }
 
 //ss not inlined in VC6

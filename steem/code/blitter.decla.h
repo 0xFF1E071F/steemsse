@@ -48,6 +48,10 @@ struct TBlitter{
 #if defined(SSE_BLT_RESTART)
   bool Restarted; // flag - cheat
 #endif
+#if defined(SSE_BLT_392)
+  BYTE Request; //0 1 2
+  BYTE BusAccessCounter; // count accesses by blitter and by CPU in blit mode
+#endif
   char LineNumber;
 
 };
@@ -127,8 +131,26 @@ extern void Blitter_Draw();
 BYTE Blitter_IO_ReadB(MEM_ADDRESS);
 void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 
+#if defined(SSE_BLT_392)
+/*  Because there are more checks for blitter start, we use a first flag
+    telling whether we should investigate or not.
+*/
+
+void Blitter_CheckRequest();
+
+inline void check_blitter_start() {
+  if(Blit.Request)
+    Blitter_CheckRequest();
+}
+#define CHECK_BLITTER_START check_blitter_start();
+
+#else
+
+#define CHECK_BLITTER_START
+
+#endif
+
 #undef EXT
 #undef INIT
-
 
 #endif//BLITTER_DECLA_H

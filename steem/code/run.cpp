@@ -236,15 +236,18 @@ void run()
           
 #define LOGSECTION LOGSECTION_CPU
           m68k_PROCESS 
+          
 #undef LOGSECTION
 
-#if defined(SSE_BLT_MAIN_LOOP)
+#if defined(SSE_BLT_MAIN_LOOP) && !defined(SSE_BLT_392)
 /*  "Little" drawback of our blitter refactoring, the run function has
     one more test... :)
     TOS restarts the blitter, but interrupts don't stop it, so it can
     go on during one. 
     Precise timing of this doesn't appear vital, so we check the blitter
     only between instructions.
+    update 3.9.2: for some test programs we need to check inside instructions
+    so we do now
 */
           if(Blit.Busy && !(ioaccess&IOACCESS_FLAG_DO_BLIT))
           {

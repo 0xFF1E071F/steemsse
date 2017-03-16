@@ -363,14 +363,13 @@ inline void InstructionTime(int t) {
     Blit.BlitCycles-=(t);
   else
 #endif
-  cpu_cycles-=(t);
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT) // test at least 4 cycles?
-#if defined(SSE_BLT_RESTART2)
-    if(Blit.Busy)
-      Blitter_Draw();
-    else
+  {
+    cpu_cycles-=(t);
+#if defined(SSE_CPU_392C)
+    M68000.ThinkingCycles+=t;
 #endif
-    Blitter_Start_Now(); 
+  }
+  CHECK_BLITTER_START
 }
 
 #define INSTRUCTION_TIME(t)  InstructionTime(t)
@@ -381,9 +380,11 @@ inline void InstructionTime(int t) {
     a blit either).
 */
 
-inline void InstructionTimeCpuBus(int t) {
-  cpu_cycles-=(t);
-#if !defined(SSE_BLT_392A)
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+
+inline void InstructionTimeCpuBus() {
+  cpu_cycles-=(4);
+#if !defined(SSE_BLT_392)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -391,16 +392,60 @@ inline void InstructionTimeCpuBus(int t) {
     else
 #endif
     Blitter_Start_Now(); 
+#endif
+#if defined(SSE_BLT_392)
+  // this counts for both CPU and blitter, see note in blitter.cpp
+  Blit.BusAccessCounter++;
+#endif
+}
+
+#define INSTRUCTION_TIME_BUS  InstructionTimeCpuBus()
+
+
+inline void InstructionTimeRamBus() { // RAM + Shifter
+  cpu_cycles-=(4);
+  cpu_cycles&=-4; // MMU adds wait states if necessary
+#if !defined(SSE_BLT_392)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+#if defined(SSE_BLT_RESTART2)
+    if(Blit.Busy)
+      Blitter_Draw();
+    else
+#endif
+    Blitter_Start_Now(); 
+#endif
+#if defined(SSE_BLT_392)
+  Blit.BusAccessCounter++; 
+#endif
+}
+
+#define INSTRUCTION_TIME_ROUND  InstructionTimeRamBus()
+
+#else
+
+inline void InstructionTimeCpuBus(int t) {
+  cpu_cycles-=(t);
+#if !defined(SSE_BLT_392)
+  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
+#if defined(SSE_BLT_RESTART2)
+    if(Blit.Busy)
+      Blitter_Draw();
+    else
+#endif
+    Blitter_Start_Now(); 
+#endif
+#if defined(SSE_BLT_392)
+  ASSERT(t==4);
+  Blit.BusAccessCounter++;
 #endif
 }
 
 #define INSTRUCTION_TIME_BUS(t)  InstructionTimeCpuBus(t)
 
-// TODO have t always = 4?
 inline void InstructionTimeRamBus(int t) { // RAM + Shifter
   cpu_cycles-=(t);
   cpu_cycles&=-4; // MMU adds wait states if necessary
-#if !defined(SSE_BLT_392A)
+#if !defined(SSE_BLT_392)
   if (ioaccess & IOACCESS_FLAG_DO_BLIT)
 #if defined(SSE_BLT_RESTART2)
     if(Blit.Busy)
@@ -409,9 +454,14 @@ inline void InstructionTimeRamBus(int t) { // RAM + Shifter
 #endif
     Blitter_Start_Now(); 
 #endif
+#if defined(SSE_BLT_392)
+  Blit.BusAccessCounter++; 
+#endif
 }
 
 #define INSTRUCTION_TIME_ROUND(t)  InstructionTimeRamBus(t)
+
+#endif
 
 #else
 
@@ -561,10 +611,20 @@ inline void FetchTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0; 
 #endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(pc<himem) 
+  {  INSTRUCTION_TIME_ROUND;}
+  else
+  {  INSTRUCTION_TIME_BUS;}
+#else
   if(pc<himem) 
   {  INSTRUCTION_TIME_ROUND(4);}
   else
   {  INSTRUCTION_TIME_BUS(4);}
+#endif
 }
 
 inline void FetchTimingL() {
@@ -577,10 +637,20 @@ inline void ReadBusTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;
 #endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND;}
+  else
+   { INSTRUCTION_TIME_BUS;}
+#else
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND(4);}
   else
    { INSTRUCTION_TIME_BUS(4);}
+#endif
 }
 
 
@@ -594,10 +664,20 @@ inline void WriteBusTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;
 #endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND;}
+  else
+   { INSTRUCTION_TIME_BUS;}
+#else
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND(4);}
   else
     {INSTRUCTION_TIME_BUS(4);}
+#endif
 }
 
 inline void WriteBusTimingL() {
@@ -609,10 +689,20 @@ inline void StackTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;
 #endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND;}
+  else
+   { INSTRUCTION_TIME_BUS;}
+#else
   if((MEM_ADDRESS)r[15]<himem)
   {  INSTRUCTION_TIME_ROUND(4);}
   else
   {  INSTRUCTION_TIME_BUS(4);}
+#endif
 }
 
 inline void StackTimingL() {
@@ -776,11 +866,8 @@ inline void m68k_poke_abus(BYTE x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_B(abus);
 #endif
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
   }
+  CHECK_BLITTER_START
 }
 
 
@@ -830,11 +917,8 @@ inline void m68k_dpoke_abus(WORD x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_W(abus);
 #endif
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
   }
+  CHECK_BLITTER_START
 }
 
 
@@ -874,11 +958,8 @@ inline void m68k_lpoke_abus(LONG x){
 #if defined(SSE_BOILER_MONITOR_VALUE2)
     DEBUG_CHECK_WRITE_L(abus);
 #endif
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
   }
+  CHECK_BLITTER_START
 }
 
 
@@ -1313,10 +1394,7 @@ inline void PrefetchIrc() {
 #endif
     IRC=*lpfetch;
   prefetched_2=true;
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
 }
 
 #define PREFETCH_IRC PrefetchIrc();
@@ -1365,8 +1443,6 @@ extern bool cpu_stopped;
 extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc
-//(old_pc+2)
-//(old_dpc+2)
 
 #if defined(SSE_CPU)
 
@@ -2207,26 +2283,17 @@ inline void sr_check_z_n_l_for_r0()
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
 }
 
 inline void ReadW() {
   m68k_src_w=m68k_dpeek(abus);
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
 }
 
 inline void ReadL() {
   m68k_src_l=m68k_lpeek(abus);
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
 }
 
 #else
@@ -2416,7 +2483,9 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
  VBI  Auto 168, Dragonnels/Happy Islands, 3615GEN4-CKM
 
 */
-
+#if defined(SSE_CPU_392B)
+  ASSERT(M68000.ProcessingState==TM68000::EXCEPTION);
+#endif
 // E-clock has already been added (temp, in fact this function is temp)
   INSTRUCTION_TIME(6); //  n nn
   CPU_ABUS_ACCESS_WRITE_PUSH; // ns 

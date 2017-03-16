@@ -391,6 +391,9 @@ void TGeneralInfo::CreateAboutPage()
 #if defined(SSE_VID_D3D)
   Text+="D3D ";
 #endif
+#if defined(SSE_BETA)
+  Text+="Beta ";
+#endif
 #if (_MSC_VER)
   Text+=EasyStr("VC") + _MSC_VER;
 #elif defined(BCC_BUILD)

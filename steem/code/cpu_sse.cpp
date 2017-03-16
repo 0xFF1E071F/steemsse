@@ -106,6 +106,10 @@ bool (*m68k_jump_condition_test[16])();
 #endif
 //---------------------------------------------------------------------------
 void m68k_interrupt(MEM_ADDRESS ad) {
+
+#if defined(SSE_CPU_392B)
+  ASSERT(M68000.ProcessingState==TM68000::EXCEPTION);
+#endif
   // we don't count cycles here, they are variable (trace, irq...)
   M68K_UNSTOP; // eg Hackabounds Demo intro (STOP in trace)
   WORD _sr=sr;
@@ -825,8 +829,18 @@ exception vector.
 #else
     TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
 #endif
+
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
+
     m68kTrapTiming();
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
   }
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_CPU 
@@ -3075,19 +3089,22 @@ NOTES :
    evaluation on real hardware confirms the 10 cycles timing.
 */
     CHECK_READ=true;
+#if defined(SSE_BLT_392) // no blitter during read-modify-write bus cycle
+    BYTE save=Blit.Request;
+    Blit.Request=0;
+#endif
     m68k_GET_DEST_B_NOT_A; // EA
     if(DEST_IS_REGISTER==0) {
       INSTRUCTION_TIME(2); // n
       CPU_ABUS_ACCESS_WRITE; // nw
     } 
     SR_CLEAR(SR_N+SR_Z+SR_V+SR_C);
-
-
-//bool bit_is_set=(m68k_DEST_B&BIT_7)!=0;
-
     SR_CHECK_Z_AND_N_B;
     m68k_DEST_B|=MSB_B;
     CHECK_IOW_B;//Good example where it could be important
+#if defined(SSE_BLT_392)
+    Blit.Request=save;
+#endif
     PREFETCH_IRC; // np
   }
 }
@@ -3557,6 +3574,7 @@ Dn :              |                 |               |
     PREFETCH_IRC; // np
   }
 }
+
 
 void                              m68k_movem_l_from_regs_or_ext_l(){
   if((ir&BITS_543)==BITS_543_000){  //ext.l
@@ -4285,6 +4303,9 @@ Not exactly the same... cases?
         //np n- nn ns nS ns np np np n np
         //   2  4  4  4  4  4  4  4  4  4  -> np + 38
 */
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
 #if defined(SSE_VC_INTRINSICS_390E)
       BITSET(sr,SR_N_BIT);
 #else
@@ -4297,6 +4318,9 @@ Not exactly the same... cases?
       INSTRUCTION_TIME_ROUND(38); //TODO
 #endif
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
     }else if((signed short)LOWORD(r[PARAM_N])>(signed short)m68k_src_w){
 /*
       Dn > Src :  |                 |            |
@@ -4313,6 +4337,9 @@ Not exactly the same... cases?
         //np    nn ns nS ns np np np n np
         //      4  4  4  4  4  4  4  4  4 -> np + 36
 */
+#if defined(SSE_CPU_392B)
+      M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
 #if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_N_BIT);
 #else
@@ -4324,6 +4351,9 @@ Not exactly the same... cases?
       INSTRUCTION_TIME_ROUND(36); //TODO
 #endif
       m68k_interrupt(LPEEK(BOMBS_CHK*4));
+#if defined(SSE_CPU_392B)
+      M68000.ProcessingState=TM68000::NORMAL;
+#endif
     }
     else // no trap
     {
@@ -4457,8 +4487,14 @@ void                              m68k_trap(){
 #if defined(DEBUG_BUILD) && defined(SSE_CPU) && defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRAP",(ir&0xF));
 #endif
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
   m68kTrapTiming();
   m68k_interrupt(Vector);
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
   intercept_os();
   debug_check_break_on_irq(BREAK_IRQ_TRAP_IDX);
 }
@@ -4643,6 +4679,7 @@ So EXG+STOP+INTR does pair, because EXG and INTR pair."
 
 
 void                              m68k_rte(){
+  //TRACE("rte\n");
   bool dont_intercept_os=false;
   if (SUPERFLAG){
     DEBUG_ONLY( int debug_old_sr=sr; )
@@ -4789,8 +4826,14 @@ NOTES :
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
     Debug.RecordInterrupt("TRAPV");
 #endif
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
     m68kTrapTiming();
     m68k_interrupt(LPEEK(BOMBS_TRAPV*4));
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::NORMAL;
+#endif
   }else{
     PREFETCH_IRC; //np
   }
@@ -5303,6 +5346,9 @@ void                             m68k_or_l_to_dN(){
 void                              m68k_divu(){
   m68k_GET_SOURCE_W_NOT_A; // EA
   if (m68k_src_w==0){ // div by 0
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
     // Clear V flag when dividing by zero. (from WinUAE)
     // also clear CC
 #if defined(SSE_VC_INTRINSICS_390E)
@@ -5324,6 +5370,9 @@ void                              m68k_divu(){
     INSTRUCTION_TIME_ROUND(38); //TODO
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::NORMAL;
+#endif
   }
   else
   {
@@ -5377,7 +5426,12 @@ FLOWCHART :
     unsigned short divisor = (unsigned short) m68k_src_w;
     // using ijor's timings (in 3rdparty\pasti)
     int cycles_for_instr=getDivu68kCycles(dividend,divisor) -4; // -prefetch
+#if defined(SSE_BLT_392)
+    INSTRUCTION_TIME(4);
+    INSTRUCTION_TIME(cycles_for_instr-4); 
+#else
     INSTRUCTION_TIME(cycles_for_instr); // fixes Pandemonium loader
+#endif
     q=(unsigned long)((unsigned long)dividend)/(unsigned long)((unsigned short)divisor);
     if(q&0xffff0000){
 #if defined(SSE_VC_INTRINSICS_390E)
@@ -5598,6 +5652,9 @@ void                             m68k_or_l_from_dN(){
 void                              m68k_divs(){
   m68k_GET_SOURCE_W_NOT_A; //EA
   if (m68k_src_w==0){
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
 #if defined(SSE_VC_INTRINSICS_390E)
     BITRESET(sr,SR_V_BIT);
     BITRESET(sr,SR_C_BIT);
@@ -5617,6 +5674,9 @@ void                              m68k_divs(){
     INSTRUCTION_TIME_ROUND(38); //TODO
 #endif
     m68k_interrupt(LPEEK(BOMBS_DIVISION_BY_ZERO*4));
+#if defined(SSE_CPU_392B)
+    M68000.ProcessingState=TM68000::NORMAL;
+#endif
   }else{
 /*
 -------------------------------------------------------------------------------
@@ -5675,7 +5735,12 @@ FLOWCHART :
     signed short divisor = (signed short) m68k_src_w;
     // using ijor's timings (in 3rdparty\pasti)
     int cycles_for_instr=getDivs68kCycles(dividend,divisor)-4; // -prefetch
+#if defined(SSE_BLT_392) //other places?
+    INSTRUCTION_TIME(4);
+    INSTRUCTION_TIME(cycles_for_instr-4); 
+#else
     INSTRUCTION_TIME(cycles_for_instr);   // fixes Dragonnels loader
+#endif
 #if defined(SSE_CPU_DIVS_OVERFLOW_PC)
     ASSERT(divisor);
 #if defined(BCC_BUILD) || (defined(VC_BUILD) && _MSC_VER < 1500) 
@@ -8767,6 +8832,7 @@ extern "C" void m68k_0110(){  //bCC + BSR
 #endif
 #if defined(SSE_MMU_ROUNDING_BUS)
       abus=new_pc;
+      
       m68k_READ_W(abus);
 #else
       m68k_READ_W(new_pc); // Check for bus/address errors
@@ -8902,6 +8968,9 @@ extern "C" void m68k_1001(){ //sub
 
 extern "C" void m68k_1010() //line-a
 {
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
   pc-=2;  //pc not incremented for illegal instruction
 //  log_write("CPU sees line-a instruction");
 //  intercept_line_a();//SS doesn't exist
@@ -8959,6 +9028,9 @@ P_MASK          equ     +50     ; pattern index mask
 #if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
 #endif
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
   debug_check_break_on_irq(BREAK_IRQ_LINEA_IDX);
 }
 
@@ -8984,6 +9056,9 @@ extern "C" void m68k_1110(){  //bit shift
 
 
 extern "C" void m68k_1111(){  //line-f emulator
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
 #if defined(SSE_CPU_LINE_F)
   interrupt_depth--; // compensate
   on_rte=ON_RTE_LINE_F;
@@ -8999,6 +9074,9 @@ extern "C" void m68k_1111(){  //line-f emulator
   m68k_interrupt(LPEEK(BOMBS_LINE_F*4));
 #if !defined(SSE_CPU_TRACE_LINE_A_F)
   m68k_do_trace_exception=0;
+#endif
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
 #endif
   debug_check_break_on_irq(BREAK_IRQ_LINEF_IDX);
 }

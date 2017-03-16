@@ -244,10 +244,7 @@ BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
       m68k_unrecognised();
     }
   }
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
   return x;
 }
 
@@ -321,10 +318,7 @@ WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
       m68k_unrecognised();
     }
   }
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
   return x;
 }
 
@@ -580,10 +574,7 @@ LONG m68k_read_dest_l(){ //only used by tst.l, cmpi.l
     }
     break;
   }
-#if defined(SSE_BLT_392A)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-    Blitter_Start_Now(); 
-#endif
+  CHECK_BLITTER_START
   return x;
 }
 
@@ -1669,6 +1660,9 @@ void m68k_get_dest_100_w(){
   dest_addr=  
 #endif
   abus=areg[PARAM_M];
+#if defined(SSE_BUGFIX_392)
+  CPU_ABUS_ACCESS_READ;//nr !
+#endif
   m68k_SET_DEST_W(abus);
 #else
   CPU_ABUS_ACCESS_READ;//nr
