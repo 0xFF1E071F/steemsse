@@ -33,13 +33,21 @@ EXT bool stemdos_intercept_datetime INIT(0);
 //#ifdef IN_EMU
 
 EXT EasyStr mount_gemdos_path[26];
-
+#if defined(SSE_CPU_392B)
+#define STEMDOS_TRAP_1     \
+  {M68000.ProcessingState=TM68000::EXCEPTION;\
+    MEM_ADDRESS original_return_address=m68k_lpeek(areg[7]+2);   \
+    SET_PC(original_return_address);                            \
+    m68k_interrupt(os_gemdos_vector);                              \
+    M68000.ProcessingState=TM68000::NORMAL;\
+  }
+#else
 #define STEMDOS_TRAP_1     \
   {MEM_ADDRESS original_return_address=m68k_lpeek(areg[7]+2);   \
     SET_PC(original_return_address);                            \
     m68k_interrupt(os_gemdos_vector);                              \
   }
-
+#endif
 
 #define GEMDOS_VECTOR LPEEK(0x84)
 

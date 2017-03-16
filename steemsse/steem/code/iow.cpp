@@ -1157,7 +1157,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 
 */
     case 0xff8800:{  //--------------------------------------- sound chip
-#if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
+#if defined(SSE_YM2149_BUS_NO_JAM_IF_NOT_RW)
 #if defined(SSE_YM2149_BUS_JAM_390B)
       if ((addr & 1) && io_word_access) 
 #else

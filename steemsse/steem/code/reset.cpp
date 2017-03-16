@@ -459,6 +459,10 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;//useful?
 #endif
+#if defined(SSE_BLT_392)
+  Blit.Request=0;
+#endif
+
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

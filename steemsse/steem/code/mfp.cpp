@@ -601,6 +601,10 @@ void mfp_interrupt(int irq) {
 
   M68K_UNSTOP;
 
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
+
   mfp_reg[MFPR_IPRA+mfp_interrupt_i_ab(irq)]&=BYTE(~mfp_interrupt_i_bit(irq));
   /*
   There are two end-of-interrupt modes: the automatic end-of-interrupt mode and
@@ -712,6 +716,11 @@ void mfp_interrupt(int irq) {
 #endif
   m68k_interrupt(LPEEK(vector));
   sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
+
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("  IRQ fired - vector=")+HEXSl(LPEEK(vector),6));
   debug_check_break_on_irq(irq);
 

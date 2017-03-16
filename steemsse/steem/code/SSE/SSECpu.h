@@ -56,6 +56,9 @@ so refactoring due!
 #if defined(SSE_CPU_TRUE_PC)
   MEM_ADDRESS Pc;
 #endif
+#if defined(SSE_CPU_392C)
+  int ThinkingCycles; // :) not Idle for 'cycles with no bus access'
+#endif
 #if defined(SSE_DEBUG)
   int IrAddress; // pc at start
   int nExceptions;
@@ -74,7 +77,6 @@ so refactoring due!
 #endif
   BYTE ProcessingState;
   bool tpend; // actual internal latch set when CPU should trace current instruction
-
   // FUNCTIONS
   TM68000();
   void Reset(bool Cold);

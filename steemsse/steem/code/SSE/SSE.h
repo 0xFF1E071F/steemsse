@@ -1729,10 +1729,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-#define SSE_BLT_392A // check blitter at read/write, not bus access timing
+#ifdef SSE_BLITTER
+
+#define SSE_BLT_392
+
+#endif
+#ifdef SSE_CPU
 #define SSE_CPU_392 // refactoring
-#define NO_IO_W_DELAY // see note in cpu_sse.cpp
-//#define NO_IO_W_DELAY2 // consequences for blitter?
+#define SSE_CPU_392B // add exception states
+#define SSE_CPU_392B2// no blit if exception state
+#define SSE_CPU_392C // thinking cycles...
+#define SSE_CPU_392D // bus access always 4 cycles
+#endif
+#define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
 #endif//beta
 

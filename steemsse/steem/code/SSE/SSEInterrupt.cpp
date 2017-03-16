@@ -313,6 +313,10 @@ void HBLInterrupt() {
   if (cpu_stopped)
     M68K_UNSTOP;
 
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
+
   // wobble?
 #if defined(SSE_INT_E_CLOCK)
   if(!OPTION_C1) // not if mode "E-Clock"
@@ -349,6 +353,11 @@ void HBLInterrupt() {
   // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
   debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); 
+
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
 }
 
 #endif
@@ -377,6 +386,10 @@ void VBLInterrupt() {
 
   if (cpu_stopped)
     M68K_UNSTOP;
+
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
 
   // wobble?
 
@@ -413,6 +426,12 @@ void VBLInterrupt() {
 
   debug_check_break_on_irq(BREAK_IRQ_VBL_IDX);
   ASSERT(!vbl_pending);
+
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::NORMAL;
+#endif
+
+
 }
 
 #endif

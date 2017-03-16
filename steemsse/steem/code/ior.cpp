@@ -669,7 +669,7 @@ Receiver Data Register is retained.
     /////////
 
     case 0xff8800:
-#if defined(SSE_YM2149_NO_JAM_IF_NOT_RW)
+#if defined(SSE_YM2149_BUS_NO_JAM_IF_NOT_RW)
 #if defined(SSE_YM2149_BUS_JAM_390B)
       if ((addr & 1) && io_word_access) 
 #else
