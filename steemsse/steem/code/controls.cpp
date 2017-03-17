@@ -1095,6 +1095,8 @@ LRESULT __stdcall TextDisplayTextBox_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPAR
 #else
   WNDPROC old_edit_WndProc=(WNDPROC)GetWindowLong(Win,GWL_USERDATA);
 #endif
+#if !defined(SSE_GUI_INFOBOX_CLIPBOARD) 
+  // it's regular read-only anyway, the feature saves code
   switch (Mess){
     case WM_SETFOCUS:    case WM_LBUTTONDOWN:
 
@@ -1109,6 +1111,7 @@ LRESULT __stdcall TextDisplayTextBox_WndProc(HWND Win,UINT Mess,WPARAM wPar,LPAR
       SetCursor(PCArrow);
       return 0;
   }
+#endif
   return CallWindowProc(old_edit_WndProc,Win,Mess,wPar,lPar);
 }
 
@@ -1126,8 +1129,14 @@ HWND CreateTextDisplay(HWND daddy,int x,int y,int w,int h,int id){
   WNDPROC old_gb_WndProc=(WNDPROC)SetWindowLong(gb,GWL_WNDPROC,(long)TextDisplayGroupBox_WndProc);
   SetWindowLong(gb, GWL_USERDATA, (long)old_gb_WndProc);
 #endif
+#if defined(SSE_GUI_INFOBOX_CLIPBOARD) // readonly, so I don't edit there!
+  HWND tb=CreateWindowEx(512,"Edit","", WS_CHILD | WS_VSCROLL | ES_MULTILINE 
+    | ES_NOHIDESEL | ES_AUTOVSCROLL | WS_VISIBLE | ES_READONLY,
+    0,0,w,h,gb,(HMENU)0,HInstance,NULL);
+#else
   HWND tb=CreateWindowEx(512,"Edit","",WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOVSCROLL | WS_VISIBLE,
                             0,0,w,h,gb,(HMENU)0,HInstance,NULL);
+#endif
 #if defined(SSE_X64_LPTR)
   WNDPROC old_edit_WndProc = (WNDPROC)SetWindowLongPtr(tb, GWLP_WNDPROC, (LONG_PTR)TextDisplayTextBox_WndProc);
   SetWindowLongPtr(tb, GWLP_USERDATA, (LONG_PTR)old_edit_WndProc);
