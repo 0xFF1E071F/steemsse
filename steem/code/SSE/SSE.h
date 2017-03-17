@@ -1732,6 +1732,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_BLITTER
 
 #define SSE_BLT_392
+//#define SSE_BLT_392B
 
 #endif
 #ifdef SSE_CPU
@@ -1741,6 +1742,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392C // thinking cycles...
 #define SSE_CPU_392D // bus access always 4 cycles
 #endif
+
+#define SSE_GUI_INFOBOX_CLIPBOARD
+
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
 #endif//beta
