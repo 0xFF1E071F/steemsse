@@ -109,6 +109,14 @@ BYTE ASMCALL io_read_b(MEM_ADDRESS addr)
 */
   DEBUG_CHECK_READ_IO_B(addr);
 
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+/*  Now we test the supervisor flag inside io_read and io_write functions
+    because the MonSTer expansion doesn't protect address $FFFE00.W.
+*/
+    if(!SUPERFLAG && (addr&0xfffffe)!=0xfffe00)
+      exception(BOMBS_BUS_ERROR,EA_READ,addr);
+#endif
+
 #ifdef ONEGAME
   if (addr>=OG_TEXT_ADDRESS && addr<OG_TEXT_ADDRESS+OG_TEXT_LEN){
     return BYTE(OG_TextMem[addr-OG_TEXT_ADDRESS]);
@@ -1156,6 +1164,28 @@ FF8240 - FF827F   palette, res
         }//sw
         break;
     }
+
+#if defined(SSE_MMU_MONSTER_ALT_RAM_IO)
+    case 0xfffe00: {
+      int offset=addr&0xFF;
+      if(mem_len!=0xC00000 || !io_word_access || offset>8 
+        || (offset==8 &&!SUPERFLAG))
+        exception(BOMBS_BUS_ERROR,EA_READ,addr);
+
+      else switch(offset) {
+        case 1:
+          ior_byte=(MMU.MonSTerHimem)?(MMU.MonSTerHimem/0x100000-4):0;
+          break;
+        case 8:
+          ior_byte=1; // "firmware version"
+          break;
+        default:
+          ior_byte=0;
+      }
+      break;
+    }
+#endif
+
     default: //not in allowed area
       exception(BOMBS_BUS_ERROR,EA_READ,addr);
   }//sw

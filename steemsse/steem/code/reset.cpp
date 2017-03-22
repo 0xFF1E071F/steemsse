@@ -462,7 +462,9 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_BLT_392)
   Blit.Request=0;
 #endif
-
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  MMU.MonSTerHimem=0;
+#endif
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
@@ -522,6 +524,9 @@ void reset_st(DWORD flags)
   aes_calls_since_reset=0;
   if (extended_monitor) extended_monitor=1; //first stage of extmon init
 #ifdef SSE_TOS_GEMDOS_EM_381B
+#ifdef SSE_BUGFIX_392
+if (extended_monitor)
+#endif
   m68k_lpoke(0x42E,mem_len); //phystop
 #endif
 #endif

@@ -685,6 +685,17 @@ What was in the buffers will go nowhere, the internal counter is reset.
 //    TRACE_LOG("BaseAddress");
     BaseAddress&=0x00ffff;
     BaseAddress|=((MEM_ADDRESS)io_src_b) << 16;
+
+#if defined(SSE_MMU_392) // DMA limited to 4M
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+    if (mem_len<14*0x100000) 
+#else
+    if (mem_len<=FOUR_MEGS) 
+#endif
+      BaseAddress&=0x3FFFFF;
+#endif
+
+
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6)); 
     TRACE_LOG("DMA base address: %X\n",BaseAddress);
     break;

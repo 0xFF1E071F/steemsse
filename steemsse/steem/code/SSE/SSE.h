@@ -1747,6 +1747,16 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
+#define SSE_MMU_392
+#if defined(SSE_MMU_392)
+#define SSE_MMU_MONSTER_ALT_RAM // HW hack for ST
+#endif
+
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+#define SSE_MMU_MONSTER_ALT_RAM_IO // $FFFE00
+#define SSE_MMU_MONSTER_ALT_RAM_IO2 // supervisor test
+#endif
+
 #endif//beta
 
 #ifdef SSE_BETA // long term

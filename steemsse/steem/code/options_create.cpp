@@ -178,15 +178,20 @@ compatible only with the STF"));
   CBAddString(Win,"512Kb",MAKELONG(MEMCONF_512,MEMCONF_0));
   CBAddString(Win,"1 MB",MAKELONG(MEMCONF_512,MEMCONF_512));
   CBAddString(Win,"2 MB",MAKELONG(MEMCONF_2MB,MEMCONF_0));
-#if defined(SSE_MMU_256K)
+#if defined(SSE_MMU_2560K)
   CBAddString(Win,"2.5 MB",MAKELONG(MEMCONF_512,MEMCONF_2MB));
 #endif
   CBAddString(Win,"4 MB",MAKELONG(MEMCONF_2MB,MEMCONF_2MB));
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  CBAddString(Win,"12 MB (MonSTer alt-RAM)",MAKELONG(MEMCONF_6MB,MEMCONF_6MB));
+#endif
 #ifdef  SSE_BUILD
   CBAddString(Win,"14 MB (hack)",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #else  
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #endif
+
+
   y+=30;
 
   Wid=GetTextSize(Font,T("Monitor")).Width;
@@ -305,7 +310,8 @@ void TOptionBox::MachineUpdateIfVisible()
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
 #endif
 #endif
-#if defined(SSE_MMU_256K) && defined(SSE_MMU_2560K) 
+#if (defined(SSE_MMU_256K) && defined(SSE_MMU_2560K)) \
+|| defined(SSE_MMU_MONSTER_ALT_RAM)
 /*  
 
 */
@@ -341,9 +347,18 @@ void TOptionBox::MachineUpdateIfVisible()
       case 4096*1024:
         memconf=5;
         break;
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      case 12*1024*1024:
+        memconf=6;
+        break;
+      case 14*1024*1024:
+        memconf=7;
+        break;
+#else
       case 14*1024*1024:
         memconf=6;
         break;
+#endif
       default: 
         BRK( mem error! );
         memconf=0;

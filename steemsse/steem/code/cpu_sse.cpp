@@ -317,8 +317,11 @@ FC2 FC1 FC0 Address Space
   }
 
 #endif
-
+#if defined(SSE_MMU_392)
+  if (sp<bytes_to_stack || sp>mem_len)
+#else
   if (sp<bytes_to_stack || sp>FOUR_MEGS)
+#endif
   {
     // Double bus error, CPU halt (we crash and burn)
     // This only has to be done here, m68k_PUSH_ will cause bus error if invalid
@@ -886,12 +889,22 @@ void m68kSetPC(MEM_ADDRESS ad) {
         }              
       }  
 #if defined(SSE_CPU_FETCH_80000)
+#ifdef SSE_BUGFIX_392
+      else //392
+#endif
       if(pc>=0x80000 && pc<0x3FFFFF)
       {
         lpfetch=lpDPEEK(xbios2); 
         lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2)); 
       }
-#endif       
+#endif
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      else if(ad<MMU.MonSTerHimem)
+      {
+        lpfetch=lpDPEEK(pc); 
+        lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));
+      }
+#endif
     }else{ 
       if (pc>=0xff8240 && pc<0xff8260){      
         lpfetch=lpPAL_DPEEK(pc-0xff8240); 

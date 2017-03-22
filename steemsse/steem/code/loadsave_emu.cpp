@@ -1174,7 +1174,15 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
 #if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0;
+  Blit.BlitCycles=0; //???
+#endif
+
+#if SSE_VERSION>=392
+  if(Version>=56) //392
+  {
+    ReadWriteStruct(MMU); // for MonSTer alt-RAM...
+    ASSERT(MMU.FreqMod[5]==2);
+  }
 #endif
 
 #endif//sse_build

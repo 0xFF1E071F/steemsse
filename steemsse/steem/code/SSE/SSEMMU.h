@@ -86,6 +86,9 @@ struct TMMU {
 
   //DATA
   MEM_ADDRESS VideoCounter; // to separate from rendering
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  MEM_ADDRESS MonSTerHimem;
+#endif
 #if defined(SSE_MMU_LOW_LEVEL)
   MEM_ADDRESS DecodedAddress;
 #endif
