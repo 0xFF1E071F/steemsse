@@ -675,6 +675,9 @@ bool Initialise()
     BYTE ConfigBank1=(BYTE)CSF.GetInt("Machine","Mem_Bank_1",MEMCONF_512);
     BYTE ConfigBank2=(BYTE)CSF.GetInt("Machine","Mem_Bank_2",MEMCONF_512);
     if (ConfigBank1!=MEMCONF_128 && ConfigBank1!=MEMCONF_512 &&
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+          ConfigBank1!=MEMCONF_6MB &&
+#endif
           ConfigBank1!=MEMCONF_2MB && ConfigBank1!=MEMCONF_7MB){
       // Invalid memory somehow
       ConfigBank1=MEMCONF_512;
@@ -1268,8 +1271,13 @@ void make_Mem(BYTE conf0,BYTE conf1)
   for (int y=0;y<64+PAL_EXTRA_BYTES;y++) palette_exec_mem[y]=0;
 
   himem=mem_len;
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  if(himem==0xC00000) //12MB
+    himem=FOUR_MEGS; //alt-RAM needs to be activated
+#endif
 
   mmu_confused=false;
+  //TRACE("make_Mem %X %X mmu %X len %X himem %X\n",conf0,conf1,mmu_memory_configuration,mem_len,himem);
 }
 //---------------------------------------------------------------------------
 void GetCurrentMemConf(BYTE MemConf[2])
@@ -1277,7 +1285,11 @@ void GetCurrentMemConf(BYTE MemConf[2])
   MemConf[0]=MEMCONF_512;
   MemConf[1]=MEMCONF_512;
   for (int i=0;i<2;i++){
-    for (BYTE n=0;n<5;n++){
+    for (BYTE n=0;n<5
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      +1
+#endif
+      ;n++){
       if (bank_length[i]==mmu_bank_length_from_config[n]){
         MemConf[i]=n;
         break;

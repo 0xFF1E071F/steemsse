@@ -384,6 +384,9 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
     if (Failed>1 && ShowErrorMess){
       Alert(T("Cannot load the snapshot, it is corrupt."),T("Load Memory Snapshot Failed"),MB_ICONEXCLAMATION);
     }
+#ifdef SSE_BUGFIX_392 // crash likely on reset
+    else
+#endif
     reset_st(RESET_COLD | RESET_STOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   }
 

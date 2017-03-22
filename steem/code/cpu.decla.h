@@ -829,14 +829,19 @@ inline void FetchTimingL() {
 
 #endif
 
+//TODO inline??
 
 inline void m68k_poke_abus(BYTE x){
   abus&=0xffffff;
   if(abus>=MEM_IO_BASE){
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+    io_write_b(abus,x);
+#else
     if(SUPERFLAG)
       io_write_b(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -847,7 +852,15 @@ inline void m68k_poke_abus(BYTE x){
       m68k_DEST_B=x;
     }else 
     if (abus>=FOUR_MEGS){
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        PEEK(abus)=x;
+        DEBUG_CHECK_WRITE_B(abus);
+      }
+      else
+#endif
+        exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
@@ -875,10 +888,14 @@ inline void m68k_dpoke_abus(WORD x){
   abus&=0xffffff;
   if(abus&1) exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+    io_write_w(abus,x);
+#else
     if(SUPERFLAG)
       io_write_w(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -888,7 +905,15 @@ inline void m68k_dpoke_abus(WORD x){
       mmu_confused_set_dest_to_addr(2,true);
       m68k_DEST_W=x;
     }else if(abus>=FOUR_MEGS){
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        DPEEK(abus)=x;
+        DEBUG_CHECK_WRITE_W(abus);
+      }
+      else
+#endif
+        exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
 #if !defined(SSE_BOILER_MONITOR_VALUE2)
@@ -926,10 +951,14 @@ inline void m68k_lpoke_abus(LONG x){
   abus&=0xffffff;
   if(abus&1)exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);
   else if(abus>=MEM_IO_BASE){
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+    io_write_l(abus,x);
+#else
     if(SUPERFLAG)
       io_write_l(abus,x);
     else
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -939,6 +968,14 @@ inline void m68k_lpoke_abus(LONG x){
       mmu_confused_set_dest_to_addr(4,true);
       m68k_DEST_L=x;
     }else if(abus>=FOUR_MEGS){
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        LPEEK(abus)=x;
+        DEBUG_CHECK_WRITE_L(abus);
+      }
+      else
+#endif
       exception(BOMBS_BUS_ERROR,EA_WRITE,abus);
     } //otherwise throw away
   }else{
@@ -1089,6 +1126,13 @@ extern MEM_ADDRESS pc_rel_stop_on_ref;
 inline void SetDestBToAddr() {
   abus&=0xffffff;                                   
   if(abus>=MEM_IO_BASE){               
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+      ioaccess&=IOACCESS_FLAGS_MASK; 
+      ioaccess|=1;                     
+      ioad=abus;                        
+      m68k_dest=&iobuffer;               
+      DWORD_B_0(&iobuffer)=io_read_b(abus);        
+#else
     if(SUPERFLAG){                        
       ioaccess&=IOACCESS_FLAGS_MASK; 
       ioaccess|=1;                     
@@ -1096,6 +1140,7 @@ inline void SetDestBToAddr() {
       m68k_dest=&iobuffer;               
       DWORD_B_0(&iobuffer)=io_read_b(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -1103,8 +1148,16 @@ inline void SetDestBToAddr() {
 #endif                            
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(1,true);           
-    }else if(abus>=FOUR_MEGS){                                                
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else if(abus>=FOUR_MEGS){
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        m68k_dest=lpPEEK(abus);
+        DEBUG_CHECK_WRITE_B(abus);
+      }
+      else
+#endif
+        exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             
     }                                       
@@ -1127,7 +1180,15 @@ inline void SetDestWToAddr() {
   abus&=0xffffff;                                   
   if(abus&1){                                      
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
-  }else if(abus>=MEM_IO_BASE){               
+  }else if(abus>=MEM_IO_BASE){    
+
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+    ioaccess&=IOACCESS_FLAGS_MASK; 
+    ioaccess|=2;                     
+    ioad=abus;                        
+    m68k_dest=&iobuffer;               
+    *((WORD*)&iobuffer)=io_read_w(abus);  
+#else
     if(SUPERFLAG){                        
       ioaccess&=IOACCESS_FLAGS_MASK; 
       ioaccess|=2;                     
@@ -1135,6 +1196,7 @@ inline void SetDestWToAddr() {
       m68k_dest=&iobuffer;               
       *((WORD*)&iobuffer)=io_read_w(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -1142,8 +1204,16 @@ inline void SetDestWToAddr() {
 #endif
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(2,true);           
-    }else if(abus>=FOUR_MEGS){                                                
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else if(abus>=FOUR_MEGS){   
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        m68k_dest=lpDPEEK(abus);
+        DEBUG_CHECK_WRITE_W(abus);
+      }
+      else
+#endif
+        exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             
     }                                       
@@ -1167,7 +1237,14 @@ inline void SetDestLToAddr() {
   abus&=0xffffff;                                   
   if(abus&1){                                      
     exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    
-  }else if(abus>=MEM_IO_BASE){               
+  }else if(abus>=MEM_IO_BASE){    
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+    ioaccess&=IOACCESS_FLAGS_MASK; 
+    ioaccess|=4;                     
+    ioad=abus;                         
+    m68k_dest=&iobuffer;               
+    iobuffer=io_read_l(abus); 
+#else
     if(SUPERFLAG){                        
       ioaccess&=IOACCESS_FLAGS_MASK; 
       ioaccess|=4;                     
@@ -1175,6 +1252,7 @@ inline void SetDestLToAddr() {
       m68k_dest=&iobuffer;               
       iobuffer=io_read_l(abus);        
     }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 
+#endif
 #if defined(SSE_MMU_RAM_TEST3)
   }else if(abus>=himem || mmu_confused) {
 #else
@@ -1182,8 +1260,16 @@ inline void SetDestLToAddr() {
 #endif 
     if(mmu_confused){                               
       mmu_confused_set_dest_to_addr(4,true);           
-    }else if(abus>=FOUR_MEGS){                                                
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
+    }else if(abus>=FOUR_MEGS){
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+      if(abus<MMU.MonSTerHimem)
+      {
+        m68k_dest=lpLPEEK(abus);
+        DEBUG_CHECK_WRITE_L(abus);
+      }
+      else
+#endif
+        exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               
     }else{                                                        
       m68k_dest=&iobuffer;                             
     }                                       

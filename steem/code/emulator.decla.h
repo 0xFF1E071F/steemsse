@@ -137,6 +137,9 @@ EXT int scan_y;
 #define MEMCONF_2MB_BANK1_CONF MEMCONF_0
 
 #define MEMCONF_7MB 4  
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+#define MEMCONF_6MB 5
+#endif
 
 #define MB2 (2*1024*1024)
 #define KB512 (512*1024)
@@ -155,7 +158,11 @@ EXT BYTE mmu_memory_configuration;
 EXT MEM_ADDRESS mmu_bank_length[2];
 EXT MEM_ADDRESS bank_length[2];
 
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+extern const MEM_ADDRESS mmu_bank_length_from_config[6];
+#else
 extern const MEM_ADDRESS mmu_bank_length_from_config[5];
+#endif
 
 extern void intercept_os();
 

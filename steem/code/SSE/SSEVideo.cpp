@@ -8,7 +8,10 @@
 #if defined(SSE_VIDEO_CHIPSET)
 // Video chipset made of GLUE, MMU, Shifter
 TGlue Glue;
-#if defined(SSE_MMU_LOW_LEVEL)
+
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+TMMU MMU={0,0,{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2},0,0};
+#elif defined(SSE_MMU_LOW_LEVEL)
 TMMU MMU={0,0,{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2},0,0};
 #elif defined(SSE_MMU_WU)
 TMMU MMU={0,{0,2,2,1,1,2},{0,2,4,3,1,2},{0,2,0,0,-2,2},{0,2,2,0,0,2},0,0};

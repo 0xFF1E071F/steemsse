@@ -44,6 +44,12 @@ WORD Blitter_DPeek(MEM_ADDRESS ad)
     if (ad>=MEM_EXPANSION_CARTRIDGE){
       if (cart && ad<MEM_EXPANSION_CARTRIDGE + 128*1024) return CART_DPEEK(ad-MEM_EXPANSION_CARTRIDGE);
     }
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+    if(abus<MMU.MonSTerHimem)
+    {
+      return DPEEK(ad);
+    }
+#endif
   }else{
     return DPEEK(ad);
   }
@@ -69,6 +75,13 @@ void Blitter_DPoke(MEM_ADDRESS abus,WORD x)
     DPEEK(abus)=x;
 #endif
   }
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  else if(abus<MMU.MonSTerHimem)
+  {
+    DEBUG_CHECK_WRITE_W(abus);
+    DPEEK(abus)=x;
+  }
+#endif
 }
 //---------------------------------------------------------------------------
 inline void Blitter_ReadSource(MEM_ADDRESS SrcAdr)

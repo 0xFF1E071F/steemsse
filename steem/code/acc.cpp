@@ -279,7 +279,11 @@ EasyStr read_string_from_memory(MEM_ADDRESS ad,int max_len)
   int n;
   char i;
   for (n=0;n<max_len;n++){
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+    if (ad<mem_len){
+#else
     if (ad<himem){
+#endif
       i=PEEK(ad);
     }else if (ad>=rom_addr && ad<rom_addr+tos_len){
       i=ROM_PEEK(ad-rom_addr);

@@ -89,9 +89,13 @@ WIN_ONLY( EXT CRITICAL_SECTION agenda_cs; )
 4         7 MB
 */
 
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+const MEM_ADDRESS mmu_bank_length_from_config[6]=
+                  {128*1024,512*1024,2*1024*1024,0,7*1024*1024,6*1024*1024};
+#else
 const MEM_ADDRESS mmu_bank_length_from_config[5]=
                   {128*1024,512*1024,2*1024*1024,0,7*1024*1024};
-
+#endif
 MEM_ADDRESS os_gemdos_vector=0,os_bios_vector=0,os_xbios_vector=0;
 bool emudetect_called=0,emudetect_write_logs_to_printer=0,emudetect_overscans_fixed=false;
 
@@ -759,6 +763,7 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 #ifdef SSE_DEBUG
   MEM_ADDRESS ad1=ad; // save for trace
 #endif
+  ASSERT(ad<FOUR_MEGS);
   int bank=0;
   if (ad>FOUR_MEGS){
     return 0xffffff;   //bus error

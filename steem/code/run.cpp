@@ -931,7 +931,11 @@ void event_scanline()
 /*  Enforce register limitations, so that "report SDP" isn't messed up
     in the debug build.
 */
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  if(mem_len<14*0x100000) 
+#else
   if(mem_len<=FOUR_MEGS) 
+#endif
     shifter_draw_pointer&=0x3FFFFE;
 #endif
 

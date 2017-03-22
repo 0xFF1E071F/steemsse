@@ -155,7 +155,11 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
 #endif
 
   // some bits will stay at 0 in the STE whatever you write
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+  if (addr==0xFF8205 && mem_len<14*0x100000) 
+#else
   if(mem_len<=FOUR_MEGS && addr==0xFF8205) 
+#endif
     io_src_b&=0x3F; // eg Delirious IV
   else if(addr==0xFF8209)
     io_src_b&=0xFE; // eg RGBeast

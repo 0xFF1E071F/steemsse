@@ -86,6 +86,13 @@ void ASMCALL io_write_b(MEM_ADDRESS addr,BYTE io_src_b)
   }
 #endif
 
+#ifdef SSE_MMU_MONSTER_ALT_RAM_IO2
+/*  Now we test the supervisor flag inside io_read and io_write functions
+    because the MonSTer expansion doesn't protect address $FFFE00.W.
+*/
+  if(!SUPERFLAG && (addr&0xfffffe)!=0xfffe00)
+    exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
+#endif
   
   switch (addr & 0xffff00){   //0xfffe00 SS: big switch for all byte writes
 
@@ -697,7 +704,7 @@ Even though the samples are built on a byte-base, the DMA chip also only
             switch (addr & 0xf){
               case 0x3:
                 next_dma_sound_start&=0x00ffff;
-                next_dma_sound_start|=io_src_b << 16;
+                next_dma_sound_start|=io_src_b << 16;//TODO
                 //next_dma_sound_start=(io_src_b << 16);
                 break;
               case 0x5:
@@ -736,7 +743,7 @@ this address, the DMA-sound system will either stop or loop.
           case 0xff8913:   //LoByte of frame end address
             switch (addr & 0xf){
               case 0xf:
-                next_dma_sound_end&=0x00ffff;
+                next_dma_sound_end&=0x00ffff;//TODO
                 next_dma_sound_end|=io_src_b << 16;break;
               case 0x1:next_dma_sound_end&=0xff00ff;next_dma_sound_end|=io_src_b << 8;break;
               case 0x3:
@@ -1566,7 +1573,11 @@ According to ST-CNX, those registers are in the MMU, not in the Shifter.
  bypassing the stock MMU with a replacement unit and the additional
  chips on a separate board fitting over it."
 */
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+          if (mem_len<14*0x100000)  // no limit only for 14MB hack
+#else
           if (mem_len<=FOUR_MEGS) 
+#endif
             io_src_b&=b00111111;
           DWORD_B_2(&xbios2)=io_src_b;
 #if defined(SSE_STF)
@@ -2193,7 +2204,21 @@ rasterline to allow horizontal fine-scrolling.
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
       }
       break;
-
+#if defined(SSE_MMU_MONSTER_ALT_RAM_IO)
+/*  MonSTer board special register to activate alt-RAM.
+    Specify size in megabytes.
+*/
+    }case 0xfffe00: {
+      int offset=addr&0xFF;
+      if(mem_len!=0xC00000 || !io_word_access || offset>3) //don't know reg size
+        exception(BOMBS_BUS_ERROR,EA_WRITE,addr); 
+      else if(offset==1)
+      {
+        if(io_src_b<=8) // max 8MB
+          MMU.MonSTerHimem=(4+io_src_b)*0x100000;
+      }
+      break;      
+#endif
     }default:{ //unrecognised
       exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
     }

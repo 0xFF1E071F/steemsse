@@ -4,7 +4,9 @@
 
 #if defined(SSE_VERSION)
 // rather silly but so we leave the define here
-#if SSE_VERSION>=390
+#if SSE_VERSION>=392
+#define SNAPSHOT_VERSION 56
+#elif SSE_VERSION>=391
 #define SNAPSHOT_VERSION 55
 #elif SSE_VERSION>=390
 #define SNAPSHOT_VERSION 54
