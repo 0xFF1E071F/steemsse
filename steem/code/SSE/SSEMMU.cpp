@@ -95,8 +95,13 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
       vc+=bytes_to_count;
       // The timing of this is a strange thing on a real STE - TODO
       if(ST_TYPE==STE
+#if defined(SSE_GLUE_392B) //they're included in Bytes
+        && CyclesIn>=Glue.CurrentScanline.EndCycle)
+        vc+=LINEWID*2;
+#else
         && CyclesIn>=Glue.CurrentScanline.EndCycle + (HSCROLL0?WordsToSkip*2:4))
         vc+=(LINEWID+WordsToSkip)*2;
+#endif
     }
     else if (c>=0){
       c&=-2;

@@ -34,8 +34,13 @@ struct TGlue {
   // ENUM
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
 
+#if defined(SSE_GLUE_392A)
+  enum {CHOOSE_FREQ,GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
+    ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
+#else
   enum {GLU_DE_ON,HBLANK_OFF,GLU_DE_OFF,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
+#endif
 
   // DATA
   int TrickExecuted; //make sure that each trick will only be applied once
