@@ -348,7 +348,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 #endif
     //60hz line with border, HSCROLL or not
+#if defined(SSE_GLUE_392A) // or we would need another variable to record 'choose' timing
+    if(Glue.CurrentScanline.StartCycle== ((shifter_hscroll_extra_fetch) // or HSCROLL? TODO
+      ? Glue.ScanlineTiming[TGlue::CHOOSE_FREQ][TGlue::FREQ_60]
+      : Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60]))
+#else
     if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
+#endif
       cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
     break;
   case DISPATCHER_SET_SHIFT_MODE:

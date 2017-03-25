@@ -775,9 +775,11 @@ void event_scanline()
     #if blocks.
 */
 
+#if !defined(SSE_GLUE_392D) //moved into AdaptScanlineValues()
 #if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
   if(OPTION_C2 && Glue.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
+#endif
 #endif
 
   if (scan_y<shifter_first_draw_line-1){
@@ -941,7 +943,8 @@ void event_scanline()
 
 #if defined(SSE_GLUE)
 /*  Refactoring of "add extra".
-    We don't use variable overscan_add_extra to adjust SDP anymore.
+    We don't use variable overscan_add_extra to adjust the video counter 
+    anymore.
     Too many interferences with rendering when writing to GLU and MMU registers,
     and too many hacks due to border size.
     Instead, the video counter is recomputed every scanline, based on
@@ -951,13 +954,17 @@ void event_scanline()
   if(!emudetect_falcon_mode && Glue.FetchingLine())
   {
 #if 0 && defined(SSE_MMU)
-    //looks nice but guess it takes more CPU power? (another CheckSideOverscan round)
+    //looks nice but takes more CPU power (another CheckSideOverscan round)
     MMU.UpdateVideoCounter(LINECYCLES);
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line=MMU.VideoCounter;
 #else
     short added_bytes=Glue.CurrentScanline.Bytes;
     if(ST_TYPE==STE && added_bytes)
+#if defined(SSE_GLUE_392B) // extra words for HSCROLL are in Bytes now
+      added_bytes+=LINEWID*2; 
+#else
       added_bytes+=(LINEWID+MMU.WordsToSkip)*2; 
+#endif
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_GLUE_017B)
     if((FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES))
       FrameEvents.Add(scan_y,LINECYCLES,'a',added_bytes);
@@ -1575,7 +1582,11 @@ void event_vbl_interrupt() //SS misleading name?
 
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
-#if !defined(SSE_INT_MFP_TIMER_B_390)
+
+#if defined(SSE_GLUE_392D) //oops
+  if(!OPTION_C2)
+    CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
+#elif !defined(SSE_INT_MFP_TIMER_B_390)
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 #endif
 // SS: this was so in the source

@@ -43,10 +43,46 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
   // on set sync or shift mode
   // on IncScanline (CyclesIn=-1)
 
-  //TODO: use values with WS correction everywhere
-
   if(FetchingLine())
   {
+#if defined(SSE_GLUE_392A)
+    //put the right values
+
+    if((m_ShiftMode&2)) //currently in HIRES
+    {
+      if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_72])
+      {
+        CurrentScanline.EndCycle=ScanlineTiming[GLU_DE_OFF][FREQ_72];
+        if(CyclesIn<=ScanlineTiming[CHOOSE_FREQ][FREQ_72])
+        {
+          CurrentScanline.StartCycle=ScanlineTiming[GLU_DE_ON][FREQ_72];
+          if(shifter_hscroll_extra_fetch)
+            CurrentScanline.StartCycle-=4;
+        }
+      }
+    } // not in HIRES
+    else if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_60] 
+      && !(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106
+      |TRICK_LINE_PLUS_44|TRICK_LINE_MINUS_2)))
+    {
+      CurrentScanline.EndCycle= (m_SyncMode&2)
+        ? ScanlineTiming[GLU_DE_OFF][FREQ_50]
+        : ScanlineTiming[GLU_DE_OFF][FREQ_60];
+      if(CyclesIn<=ScanlineTiming[CHOOSE_FREQ][FREQ_60]
+        && !(CurrentScanline.Tricks
+          &(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20|TRICK_0BYTE_LINE)))
+      {
+        CurrentScanline.StartCycle=(m_SyncMode&2)
+          ? ScanlineTiming[GLU_DE_ON][FREQ_50]
+          : ScanlineTiming[GLU_DE_ON][FREQ_60];
+        if(shifter_hscroll_extra_fetch) 
+          //CurrentScanline.StartCycle-=16; // med res too... 
+          CurrentScanline.StartCycle-=(m_ShiftMode&1)?8:16; // TODO test
+      }
+    }
+
+#else
+
     if((m_ShiftMode&2)&&CyclesIn==-1) // at IncScanline
     {
       CurrentScanline.StartCycle
@@ -59,7 +95,6 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
         && !(CurrentScanline.Tricks
           &(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20|TRICK_0BYTE_LINE)))
       {
-
         CurrentScanline.StartCycle=(m_SyncMode&2)?56:52;
         if(shifter_hscroll_extra_fetch) // -16 pixel left border trick, HSCROLL = 0
           CurrentScanline.StartCycle-=16; // only if HSCROLL...
@@ -69,8 +104,27 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
         &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44)))
         CurrentScanline.EndCycle=(m_SyncMode&2)?376:372;
     }
+#endif//#if defined(SSE_GLUE_392A)
 
-#if defined(SSE_MMU)
+#if defined(SSE_GLUE_392B)
+/*  With regular HSCROLL, fetching starts earlier and ends at the same time
+    as without scrolling.
+    The extra words should be counted at the start of the line, not the end, 
+    therefore it should "simply" be part of CurrentScanline.Bytes, but it
+    complicates emulation... :)
+*/
+    if(CyclesIn<=CurrentScanline.StartCycle)
+    {
+      if(MMU.ExtraBytesForHscroll)
+        CurrentScanline.Bytes-=MMU.ExtraBytesForHscroll;
+      MMU.ExtraBytesForHscroll=0;
+      if(shifter_hscroll_extra_fetch)
+      {
+        MMU.ExtraBytesForHscroll=(m_ShiftMode&2)?2:8-m_ShiftMode*4;
+        CurrentScanline.Bytes+=MMU.ExtraBytesForHscroll;
+      } 
+    }
+#elif defined(SSE_MMU)
 /*  The number of words skipped at the end of the scanline is determined 
     when DE is asserted.
 */    
@@ -98,6 +152,12 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     }
 #endif
   }
+
+#if defined(SSE_GLUE_392D)
+  if(OPTION_C2)
+    MC68901.CalcCyclesFromHblToTimerB();
+#endif
+
   if(CyclesIn<=cycle_of_scanline_length_decision)
   {
     CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz
@@ -114,6 +174,7 @@ void TGlue::CheckSideOverscan() {
     Those tricks can be used with two goals: use a larger display area
     (fullscreen demos are more impressive than borders-on demos), and/or
     scroll the screen by using "sync lines" (eg Enchanted Land, No Buddies Land).
+    This function is a big extension of draw_check_border_removal().
 */
 
 #if defined(SSE_VS2008_WARNING_390) && defined(SSE_DEBUG)
@@ -134,7 +195,7 @@ void TGlue::CheckSideOverscan() {
   // NO SYNC //
   /////////////
 
-#if defined(SSE_GLUE_EXT_SYNC)
+#if defined(SSE_GLUE_EXT_SYNC)//TODO other bit?
   if(m_SyncMode&1) // we emulate no genlock -> nothing displayed
     CurrentScanline.Tricks=TRICK_0BYTE_LINE;
 #endif
@@ -149,6 +210,7 @@ void TGlue::CheckSideOverscan() {
     decisions.
     R0 parts in black not emulated, and visibly other things, very trashy
     effect for the moment (I like it!)
+    I asked a member of AF for pics or vid but got nothing :(
 
     Eg: Monoscreen by Dead Braincells
     004:R0000 012:R0002                       -> 0byte ?
@@ -162,8 +224,14 @@ void TGlue::CheckSideOverscan() {
     int fetched_bytes_mod=0;
 
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+#if defined(SSE_GLUE_392A)
+      && CyclesIn>=ScanlineTiming[CHOOSE_FREQ][FREQ_72]
+      && !(ShiftModeAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_72])&2))
+#else
       && CyclesIn>=ScanlineTiming[GLU_DE_ON][FREQ_72]
       && !(ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72])&2))
+#endif
+      
     {
       CurrentScanline.Tricks|=TRICK_0BYTE_LINE;
       fetched_bytes_mod=-80;
@@ -203,7 +271,11 @@ void TGlue::CheckSideOverscan() {
 
   if(!(TrickExecuted&(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_0BYTE_LINE)))
   {
+#if defined(SSE_GLUE_392A)
+#define lim_r2 ScanlineTiming[CHOOSE_FREQ][FREQ_72]
+#else
 #define lim_r2 Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]
+#endif
 #define lim_r0 Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50]
     if(!(CurrentScanline.Tricks
       &(TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_24)))
@@ -234,32 +306,7 @@ void TGlue::CheckSideOverscan() {
     instead of 26, and the total overscan line is 224 bytes instead of 230. 
     224/8=28,no rest => no Shifter confusion.
 
-    Test cases: MOLZ, Riverside, (...)
-
-    Current explanation:
-
-    4  IF(RES == LO) PRELOAD will run until cycle 16  (56-16)/2 = +20 
-
-    WORDS_READ=0
-    WHILE(PRELOAD == TRUE) {
-      LOAD
-      WORDS_READ++
-      IF(RES == HIGH AND WORDS_READ=>1) PRELOAD = FALSE
-      IF(RES == LO AND WORDS_READ=>4) PRELOAD = FALSE
-    }
-    H = TRUE
-
-    During preload, no video memory is fetched if HSCROLL=0.
-    Instead the MMU feeds the Shifter with 0.
-
-cycle       0               4               8               12               12
-
-+26        00              VV              VV               VV               VV
-                           Preload stops, real fetching begins
-+20        00              00              00               00               VV
-                           Preload goes on until cycle 16  
-
-    Cycle of R2 doesn't count provided it respects limits.
+    Test cases: MOLZ, Riverside, EPSS...
 
     Observed on E605 planet, Sommarhack 2010 credits, Circus, no explanation
     yet: When HSCROLL is on, the switch to low-res may happen 4 cycles later.
@@ -271,7 +318,6 @@ cycle       0               4               8               12               12
             CurrentScanline.Tricks|=TRICK_LINE_PLUS_26;
         }
       }
-
     }
 
     // action for line+26 & line+20
@@ -285,7 +331,11 @@ cycle       0               4               8               12               12
         CurrentScanline.Bytes+=20;
 
 #if defined(SSE_VID_BORDERS)
+#if defined(SSE_GLUE_392C)
+        if(BigBorders)
+#else
         if(SideBorderSize!=ORIGINAL_BORDER_SIDE && border)
+#endif
         {
 #if defined(SSE_VID_BORDERS_LINE_PLUS_20)
 /*  Display border, not video memory as first pixels for the line +20:
@@ -315,8 +365,21 @@ cycle       0               4               8               12               12
         else
 #endif
           Shifter.HblPixelShift=-8;
+#ifdef SSE_GLUE_392B
+        if(shifter_hscroll_extra_fetch) // fetches at 2, 6, 10, 14
+        {
+          CurrentScanline.StartCycle=2;
+          // if we're at cycle 4>2, we must correct here, AdaptScanlineValues 
+          // won't do it... eg EPSS
+          CurrentScanline.Bytes-=MMU.ExtraBytesForHscroll;//-2
+          MMU.ExtraBytesForHscroll=8;
+          CurrentScanline.Bytes+=MMU.ExtraBytesForHscroll;//+8
+        }
+        else
+          CurrentScanline.StartCycle=18; // non-fetches at 2, 6, 10, 14
+#else
         CurrentScanline.StartCycle=16;
-
+#endif
       }
       else 
 #endif//#if defined(SSE_GLUE_LINE_PLUS_20)
@@ -348,8 +411,14 @@ cycle       0               4               8               12               12
 #if defined(SSE_VID_BORDERS_LINE_PLUS_20)
         left_border=0;
 #endif
-        CurrentScanline.StartCycle=(HSCROLL0?2:6);
 
+#if defined(SSE_GLUE_392A) // part of AdaptScanlineValues...
+        CurrentScanline.StartCycle=(shifter_hscroll_extra_fetch) 
+          ? ScanlineTiming[CHOOSE_FREQ][FREQ_72]
+          : ScanlineTiming[GLU_DE_ON][FREQ_72];
+#else
+        CurrentScanline.StartCycle=(HSCROLL0?2:6);
+#endif
         // additional hacks for left off
         /////////////////////////////////////////////////////////
 
@@ -557,8 +626,13 @@ Closure STF2
     )))
   {
 #define r2cycle ScanlineTiming[HBLANK_OFF][FREQ_50]
+#if defined(SSE_GLUE_392A)
+#define s0cycle ScanlineTiming[CHOOSE_FREQ][FREQ_60]
+#define s2cycle ScanlineTiming[CHOOSE_FREQ][FREQ_50]
+#else
 #define s0cycle ScanlineTiming[GLU_DE_ON][FREQ_60]
 #define s2cycle ScanlineTiming[GLU_DE_ON][FREQ_50]
+#endif
     ASSERT(s0cycle>0);
     ASSERT(s2cycle>0);
     if(ST_TYPE!=STE //our new hypothesis
@@ -813,7 +887,7 @@ Closure STF2
 #endif
 
   /////////////////
-  // LINE +4, +6 //
+  // LINE +4, +6 // //TODO
   /////////////////
 /*
     (60hz)
@@ -834,7 +908,11 @@ Closure STF2
     | TRICK_LINE_PLUS_20 | TRICK_4BIT_SCROLL | TRICK_OVERSCAN_MED_RES
     | TRICK_LINE_PLUS_4 | TRICK_LINE_PLUS_6)))
   {
+#if defined(SSE_GLUE_392A)
+    t=FreqAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_60]==50) ? 44: 40;
+#else
     t=FreqAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_60]==50) ? 44: 40;
+#endif
     if(ShiftModeChangeAtCycle(t)==2)
     {
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_6;
@@ -896,12 +974,21 @@ Closure STF2
     (TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_4|TRICK_LINE_PLUS_6
       |TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26)))
   {
+#if defined(SSE_GLUE_392A)
+    t=ScanlineTiming[CHOOSE_FREQ][FREQ_60];
+    if(CyclesIn>=t && FreqAtCycle(t)==60 
+      && ((CyclesIn<ScanlineTiming[GLU_DE_OFF][FREQ_60] && shifter_freq==50) 
+      || CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_60] 
+      && FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==50))
+#else
     t=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60];
     if(CyclesIn>=t && FreqAtCycle(t)==60 
       && ((CyclesIn<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] 
       && shifter_freq==50) 
       || CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] &&
       FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60])==50))
+#endif
+
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
   }
 
@@ -1144,7 +1231,11 @@ detect unstable: switch MED/LOW - Beeshift
   if(!(CurrentScanline.Tricks
     &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2))
     && CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_60]
+#if defined(SSE_GLUE_392A)
+    && FreqAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_60])!=60  //50,72?
+#else
     && FreqAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_60])!=60  //50,72?
+#endif
     && FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)
      CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
 
@@ -1266,7 +1357,11 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     right_border=0;
     TrickExecuted|=TRICK_LINE_PLUS_44;
     CurrentScanline.Bytes+=44;
+#if defined(SSE_GLUE_392A) // I thought it would break things...
+    CurrentScanline.EndCycle=ScanlineTiming[HSYNC_ON][FREQ_50];
+#else
     CurrentScanline.EndCycle=464;
+#endif
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
     if(OPTION_C2)
       MC68901.AdjustTimerB();
@@ -1300,7 +1395,7 @@ Dragonnels reset
 #if defined(SSE_SHIFTER_STABILISER)
 
   if(!(CurrentScanline.Tricks&TRICK_STABILISER) && CyclesIn>432)
-  {
+  { //TODO those constants...
     r2cycle=NextShiftModeChange(432); // can be 1 or 2
     if(r2cycle>432 && r2cycle<460) 
     {
@@ -1523,7 +1618,11 @@ void TGlue::EndHBL() {
 */
   if((CurrentScanline.Tricks&(TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_26))
     && !(CurrentScanline.Tricks&(TRICK_LINE_MINUS_2|TRICK_LINE_MINUS_106))
-    && CurrentScanline.EndCycle==372)     
+#if defined(SSE_GLUE_392A)
+    && CurrentScanline.EndCycle==ScanlineTiming[GLU_DE_OFF][FREQ_60])
+#else
+    && CurrentScanline.EndCycle==372)    
+#endif
   {
     CurrentScanline.Tricks&=~TRICK_LINE_PLUS_2;
     shifter_draw_pointer-=2; // eg SNYD/TCB at scan_y -29
@@ -1535,7 +1634,12 @@ void TGlue::EndHBL() {
   } 
   // no 'else', they're false alerts!
   if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
+#if defined(SSE_GLUE_392A)
+    && (CurrentScanline.StartCycle==ScanlineTiming[GLU_DE_ON][FREQ_60]
+    || CurrentScanline.EndCycle!=ScanlineTiming[GLU_DE_OFF][FREQ_60]))
+#else
     && (CurrentScanline.StartCycle==52 || CurrentScanline.EndCycle!=372))
+#endif
   {
     CurrentScanline.Tricks&=~TRICK_LINE_MINUS_2;
     shifter_draw_pointer+=2;
@@ -1647,7 +1751,9 @@ void TGlue::IncScanline() {
     NextScanline.Bytes=0;
   }
 
-
+#if defined(SSE_GLUE_392B)
+  MMU.ExtraBytesForHscroll=0;
+#endif
   AdaptScanlineValues(-1);
 
   ASSERT(CurrentScanline.Cycles>=224);
@@ -2225,7 +2331,24 @@ void TGlue::Update() {
   ScanlineTiming[GLU_DE_ON][FREQ_50]=GLU_DE_ON_50+WU_sync_modifier;
   for(int f=0;f<NFREQS;f++) // MMU DE OFF = MMU DE ON + DE cycles
     ScanlineTiming[GLU_DE_OFF][f]=ScanlineTiming[GLU_DE_ON][f]+DE_cycles[f];
-  
+
+
+#if defined(SSE_GLUE_392A)
+/*  On the STE, DE is asserted at the same time as on the STF, except
+    if HSCROLL<>0 (this is handled in AdaptScanlineValues()).
+    But the process is started at that earlier timing regardless.
+    This is why the thresholds for line +2 and line +26 are different.
+*/
+  ScanlineTiming[CHOOSE_FREQ][FREQ_72]=ScanlineTiming[GLU_DE_ON][FREQ_72];
+  ScanlineTiming[CHOOSE_FREQ][FREQ_60]=ScanlineTiming[GLU_DE_ON][FREQ_60];
+  ScanlineTiming[CHOOSE_FREQ][FREQ_50]=ScanlineTiming[GLU_DE_ON][FREQ_50];  
+  if(ST_TYPE==STE)
+  {
+    ScanlineTiming[CHOOSE_FREQ][FREQ_72]-=4;
+    ScanlineTiming[CHOOSE_FREQ][FREQ_60]-=16;
+    ScanlineTiming[CHOOSE_FREQ][FREQ_50]-=16;
+  }  
+#else
   // On the STE, DE test occurs sooner due to hardscroll possibility
   // but prefetch starts sooner only if HSCROLL <> 0.
   // If HSCROLL = 0, The Shifter is fed zeroes instead of video RAM.
@@ -2236,6 +2359,7 @@ void TGlue::Update() {
     ScanlineTiming[GLU_DE_ON][FREQ_60]-=16;
     ScanlineTiming[GLU_DE_ON][FREQ_50]-=16;
   }
+#endif
 
   // HBLANK
   // Cases: Overscan demos, Forest

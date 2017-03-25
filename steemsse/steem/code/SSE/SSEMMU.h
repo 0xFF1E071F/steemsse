@@ -87,7 +87,7 @@ struct TMMU {
   //DATA
   MEM_ADDRESS VideoCounter; // to separate from rendering
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
-  MEM_ADDRESS MonSTerHimem;
+  MEM_ADDRESS MonSTerHimem; // to reduce computing
 #endif
 #if defined(SSE_MMU_LOW_LEVEL)
   MEM_ADDRESS DecodedAddress;
@@ -100,8 +100,11 @@ struct TMMU {
 #if defined(SSE_MMU_LINEWID_TIMING)
   BYTE Linewid0;
 #endif
+#if defined(SSE_GLUE_392B)
+  BYTE ExtraBytesForHscroll; // for HSCROLL
+#else
   BYTE WordsToSkip; // for HSCROLL
-
+#endif
   // FUNCTIONS
   MEM_ADDRESS ReadVideoCounter(int CyclesIn);
   void ShiftSDP(int shift);  

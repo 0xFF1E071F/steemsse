@@ -1743,6 +1743,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392D // bus access always 4 cycles
 #endif
 
+#ifdef SSE_GLUE
+#define SSE_GLUE_392A //correct start & end cycles
+#define SSE_GLUE_392B //refactor hscroll extra fetch
+#define SSE_GLUE_392C //sundry
+#define SSE_GLUE_392D //timer B
+#endif
+
 #define SSE_GUI_INFOBOX_CLIPBOARD
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
