@@ -117,13 +117,23 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 #if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
 /*  For Sunny STE. We need the hack when emulation is more precise??
     Possible explanation: writing now forces some sync with MFP?
-    TODO
+    Update:
+
+	move.b #$8,$fffa1b                               ; 013A90: 13FC 0008 00FF FA1B 
+	cmpi.b #$ff,$fffa21                              ; 013A98: 0C39 00FF 00FF FA21 
+	bne .l -10 {$013A98}                             ; 013AA0: 6600 FFF6 
+	nop                                              ; 013AA4: 4E71 
+	nop                                              ; 013AA6: 4E71 
+  ...
+
+    The program reads the counter, which perhaps doesn't suffer from the same
+    jitter as the interrupt? -> test with SSE_INT_MFP_IRQ_WOBBLE
 */
-        + (OPTION_C2&&OPTION_HACKS?0:TB_TIME_WOBBLE);
+        + ((OPTION_C2&&OPTION_HACKS)?0:TB_TIME_WOBBLE); 
 #else
         +TB_TIME_WOBBLE;
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && !defined(SSE_GLUE_392D)
       if(OPTION_C2&&(Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
         && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
         time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
