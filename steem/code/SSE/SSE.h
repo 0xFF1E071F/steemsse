@@ -446,9 +446,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_GUI)
 
-#if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
+//#if !(defined(_DEBUG) && defined(VC_BUILD)) // it's Windows 'break' key
 #define SSE_GUI_F12 // F12 starts/stops emulation
-#endif
+//#endif
 #define SSE_GUI_MOUSE_CAPTURE_OPTION 
 #define SSE_GUI_MSA_CONVERTER // don't prompt if found
 #define SSE_GUI_OPTION_PAGE // a new page for all our options
@@ -1754,6 +1754,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
+#ifdef SSE_INT_MFP
+#define SSE_INT_MFP_IRQ_WOBBLE // apply wobble only for IRQ itself
+#endif
+
+#if defined(SSE_INT_MFP_IRQ_WOBBLE)
+#undef SSE_CPU_MFP_RATIO_STE
+#undef SSE_INT_MFP_GPIP_TO_IRQ_DELAY
+#undef SSE_INT_MFP_TIMER_B_WOBBLE_HACK
+#undef SSE_INT_MFP_TIMERS_WOBBLE
+#undef SSE_INT_MFP_TIMERS_WOBBLE_390
+//#undef SSE_INT_MFP_READ_DELAY //TODO - where does it make a difference?
+#endif
+
 #define SSE_MMU_392
 #if defined(SSE_MMU_392)
 #define SSE_MMU_MONSTER_ALT_RAM // HW hack for ST
@@ -1767,7 +1780,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//beta
 
 #ifdef SSE_BETA // long term
-//#undef SSE_CPU_MFP_RATIO_STE //dsots
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?

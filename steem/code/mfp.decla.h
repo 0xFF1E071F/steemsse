@@ -16,7 +16,9 @@ inline int abs_quick(int i) //was in emu.cpp (!)
   return -i;
 }
 
-#if defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
+#if defined(SSE_INT_MFP_IRQ_WOBBLE)
+#define TB_TIME_WOBBLE (0) // only for IRQ
+#elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
 #define TB_TIME_WOBBLE (rand() & 2)
 #else
 #define TB_TIME_WOBBLE (rand() & 4)

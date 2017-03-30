@@ -166,7 +166,23 @@ void ASMCALL check_for_interrupts_pending() {
                 ASSERT(mfp_reg[MFPR_IERA+i_ab] & i_bit);
                 ASSERT(!(mfp_reg[MFPR_ISRA+i_ab] & i_bit));
                 {
-#if defined(SSE_INT_MFP_IRQ_TIMING) && defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)
+#if defined(SSE_INT_MFP_IRQ_WOBBLE) 
+/*  Trying to generalise MFP IRQ jitter.
+    Check: DSoTS STE, Froggies/OVR, Sunny, TIMERB01.TOS
+*/
+                  int diff=ACT-MC68901.IrqSetTime; // not MC68901.IackTiming
+                  int rnd=rand() & ((irq==8)?4:2); //temp hack unfortunately :( TODO
+                  if(diff-rnd<0 && diff>=-4)
+                  {
+                    ioaccess|=IOACCESS_FLAG_DELAY_MFP;
+#if defined(SSE_INT_MFP_SPURIOUS)  
+                    no_real_irq=true; // don't trigger spurious interrupt!
+#endif
+                    //FrameEvents.Add(scan_y,LINECYCLES,'d',MC68901.NextIrq);
+                    //FrameEvents.Add(scan_y,LINECYCLES,'d',diff);
+                    continue; // examine lower irqs too
+                  }
+#elif defined(SSE_INT_MFP_IRQ_TIMING) && defined(SSE_INT_MFP_GPIP_TO_IRQ_DELAY)
 /*  If the GPIP input has just transitioned, IRQ hasn't fired 
     yet. Fixes V8 Music System.
 */
