@@ -1815,6 +1815,9 @@ not the 1st time one letter doesn't seem to be enough...
 #if defined(SSE_BETA_BUGFIX)
 
 #define SSE_BUGFIX_392
+#if defined(SSE_X64)
+#define SSE_X64_392
+#endif
 
 #endif//bugfix
 
