@@ -325,7 +325,12 @@ TMIDIIn::TMIDIIn(int Device,bool StartNow,LPMIDIINNOTEMPTYPROC NEP)
   }else{
     Reset();
     Sleep(100);
+#if defined(SSE_X64_392) //thx pongthrob
+    if ( midiInOpen(&Handle,Device,(DWORD_PTR)InProc,(DWORD_PTR)this,
+      CALLBACK_FUNCTION)==MMSYSERR_NOERROR ){
+#else
     if ( midiInOpen(&Handle,Device,(DWORD)InProc,(DWORD)this,CALLBACK_FUNCTION)==MMSYSERR_NOERROR ){
+#endif
       if (StartNow) Start();
     }else{
       ErrorText=T("Failed to open the MIDI device, it may already be in use.");
