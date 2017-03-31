@@ -149,13 +149,13 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84 //SS 84 = 56+28
 #define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
-#if !defined(SSE_INT_MFP_TIMER_B_AER)  // refactored 
+#if !defined(SSE_INT_MFP_TIMER_B_AER) || defined(SSE_INT_MFP_TIMER_B_392A) //Steem 3.2:
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) \
   switch (freq){ \
     case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; \
     case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; \
     default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); \
-} // 320+84 = 404, the same in Hatari
+}
 #endif
 
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz

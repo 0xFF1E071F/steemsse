@@ -16,7 +16,9 @@ inline int abs_quick(int i) //was in emu.cpp (!)
   return -i;
 }
 
-#if defined(SSE_INT_MFP_IRQ_WOBBLE)
+#if defined(SSE_INT_MFP_TIMER_B_392B)
+#define TB_TIME_WOBBLE (rand() % 7) //0-6 (TIMERB07.TOS)
+#elif defined(SSE_INT_MFP_IRQ_WOBBLE)
 #define TB_TIME_WOBBLE (0) // only for IRQ
 #elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
 #define TB_TIME_WOBBLE (rand() & 2)
@@ -169,7 +171,10 @@ struct TMC68901 {
   void Init();
   void Reset();
   int UpdateNextIrq(int at_time=-1);
-#if defined(SSE_INT_MFP_TIMER_B_AER)
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  enum {SettingTimer=-3,ChangingAer=-2,NewScanline=-1}; //for little cheats!
+  void ComputeNextTimerB(int info);
+#elif defined(SSE_INT_MFP_TIMER_B_AER)
 #if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
   void CalcCyclesFromHblToTimerB();
 #else
@@ -184,10 +189,12 @@ struct TMC68901 {
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
 
-#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
+#if !defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE) 
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB()
 #elif defined(SSE_INT_MFP_TIMER_B_AER)
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)
+#endif
 #endif
 
 extern TMC68901 MC68901; // declaring the singleton

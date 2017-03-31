@@ -607,7 +607,12 @@ void event_timer_d_timeout()
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b() 
 {
+  //debug1++;
+  //FrameEvents.Add(scan_y,LINECYCLES,'B',ACT-time_of_next_timer_b);
   if (scan_y<shifter_first_draw_line){
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
+#endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }else if (scan_y<shifter_last_draw_line){
     if (mfp_reg[MFPR_TBCR]==8){
@@ -623,13 +628,25 @@ void event_timer_b()
 #endif
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
+        //FrameEvents.Add(scan_y,LINECYCLES,'x',ACT-time_of_next_timer_b);
       }
     }
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
+#endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
         scanline_time_in_cpu_cycles_at_start_of_vbl + TB_TIME_WOBBLE;
   }else{
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
+#endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(OPTION_C2)
+    time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
+#endif
+
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
@@ -775,10 +792,12 @@ void event_scanline()
     #if blocks.
 */
 
+#if !defined(SSE_INT_MFP_TIMER_B_392) //MFD
 #if !defined(SSE_GLUE_392D) //moved into AdaptScanlineValues()
 #if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
   if(OPTION_C2 && Glue.FetchingLine())
     CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
+#endif
 #endif
 #endif
 
@@ -790,6 +809,9 @@ void event_scanline()
 #else
         draw_scanline_to_end();
 #endif
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+      if(!OPTION_C2)
+#endif
       time_of_next_timer_b=time_of_next_event+160000;  //put into future
     }
   }else if (scan_y<shifter_first_draw_line){ //next line is first visible
@@ -798,6 +820,9 @@ void event_scanline()
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
+#endif
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
@@ -808,6 +833,9 @@ void event_scanline()
 #else
       draw_scanline_to_end();
 #endif
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
+#endif
     time_of_next_timer_b=time_of_next_event
       +cpu_cycles_from_hbl_to_timer_b+TB_TIME_WOBBLE;
   }else if (scan_y<draw_last_scanline_for_border){
@@ -816,6 +844,9 @@ void event_scanline()
       Shifter.DrawScanlineToEnd();
 #else
       draw_scanline_to_end();
+#endif
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event+160000;  //put into future
   }

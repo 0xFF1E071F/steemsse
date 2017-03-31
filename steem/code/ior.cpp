@@ -469,12 +469,48 @@ Receiver Data Register is retained.
               mfp_calc_timer_counter(n-MFPR_TADR);
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
               if (n==MFPR_TBDR){
+                //TRACE("read TBDR y %d lc %d tontb %d ior_byte %x mfp_reg[MFPR_TBDR] %x\n",scan_y,LINECYCLES,time_of_next_timer_b-cpu_timer_at_start_of_hbl,ior_byte,mfp_reg[MFPR_TBDR]);
                 if (mfp_get_timer_control_register(1)==8){
                   // Timer B is in event count mode, check if it has counted down since the start of
                   // this instruction. Due to MFP delays this very, very rarely gets changed under 4
                   // cycles from the point of the signal.
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4){
-                    if (!ior_byte)
+                    if (!ior_byte
+#if defined(SSE_INT_MFP_TIMER_B_392C)
+/*  Finally a legit fix for Sunny STE.
+
+	clr.b $fffa1b                                    ; 013A82: 4239 00FF FA1B 
+	move.b #$0,$fffa21                               ; 013A88: 13FC 0000 00FF FA21 
+	move.b #$8,$fffa1b                               ; 013A90: 13FC 0008 00FF FA1B 
+	cmpi.b #$ff,$fffa21                              ; 013A98: 0C39 00FF 00FF FA21 
+	bne .l -10 {$013A98}                             ; 013AA0: 6600 FFF6 
+	nop                                              ; 013AA4: 4E71 
+	nop                                              ; 013AA6: 4E71 
+  ...
+	jmp 2(pc,D0.W)                                   ; 013CA4: 4EFB 0002 
+	nop                                              ; 013CA8: 4E71 
+	nop                                              ; 013CAA: 4E71 
+	nop                                              ; 013CAC: 4E71 
+  ...
+	nop                                              ; 013CD2: 4E71 
+	nop                                              ; 013CD4: 4E71 
+	nop                                              ; 013CD6: 4E71 
+	nop                                              ; 013CD8: 4E71 
+	move.w #$1b,d0                                   ; 013CDA: 303C 001B 
+	move.w (a2)+,(a1)                                ; 013CDE: 329A 
+	move.w (a2)+,(a1)                                ; 013CE0: 329A 
+
+    The program is currently synchronised on the video counter.
+    It sets up a one line timer B interrupt and expects no jitter trouble when
+    reading the counter. (a1) is palette 0, it is used to draw the scroller.
+    There is jitter but it will not cause one more test, the counter changes
+    during the read.
+    When it was loaded with 0 it counts down to $FF, not 0, that was the real
+    problem here
+*/
+                      && (mfp_reg[MFPR_TBDR]||!OPTION_C2)
+#endif
+                      )
                       ior_byte=mfp_reg[MFPR_TBDR];
                     else
                       ior_byte--;

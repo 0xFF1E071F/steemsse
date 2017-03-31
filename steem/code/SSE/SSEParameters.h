@@ -357,7 +357,11 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #define MFP_CLOCK 2457600
 #define MFP_IACK_LATENCY (28) 
+#if defined(SSE_INT_MFP_TIMER_B_392B)
+#define MFP_TIMER_DATA_REGISTER_ADVANCE (2)
+#else
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
+#endif
 #define MFP_TIMER_SET_DELAY (8) // see DSOTS
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
@@ -369,7 +373,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif//mfp
 
 
-
 /////////
 // OSD //
 /////////
@@ -378,7 +381,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define RED_LED_DELAY 1500 // Red floppy led for writing, in ms
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
-
 
 
 

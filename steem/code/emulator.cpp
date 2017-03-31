@@ -181,7 +181,9 @@ void init_timings()
   if (COLOUR_MONITOR==0) shifter_freq=MONO_HZ;
 
   CALC_SHIFTER_FREQ_IDX;
-  
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(!OPTION_C2)
+#endif
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
   
   screen_res_at_start_of_vbl=screen_res;
