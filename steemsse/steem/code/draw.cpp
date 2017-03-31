@@ -1363,6 +1363,9 @@ void init_screen()
   draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
 #endif
   // This is used to know where to cause the timer B event
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(!OPTION_C2)
+#endif
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 //  res_change(); //all this does is resize the window - do we want that to happen?
 

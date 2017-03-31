@@ -315,6 +315,9 @@ void reset_peripherals(bool Cold)
   shifter_fetch_extra_words=0; //unspecified
   shifter_first_draw_line=0;
   shifter_last_draw_line=shifter_y;
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(!OPTION_C2)
+#endif
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
   vbl_pending=false;
 

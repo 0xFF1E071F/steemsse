@@ -110,26 +110,22 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
 //---------------------------------------------------------------------------
 void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 {
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(OPTION_C2)
+  {
+    // use our new function instead
+    MC68901.ComputeNextTimerB(TMC68901::SettingTimer); 
+    return;
+  }
+#endif
+
   int cycles_in=int(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl);
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
-#if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK)
-/*  For Sunny STE. We need the hack when emulation is more precise??
-    Possible explanation: writing now forces some sync with MFP?
-    Update:
-
-	move.b #$8,$fffa1b                               ; 013A90: 13FC 0008 00FF FA1B 
-	cmpi.b #$ff,$fffa21                              ; 013A98: 0C39 00FF 00FF FA21 
-	bne .l -10 {$013A98}                             ; 013AA0: 6600 FFF6 
-	nop                                              ; 013AA4: 4E71 
-	nop                                              ; 013AA6: 4E71 
-  ...
-
-    The program reads the counter, which perhaps doesn't suffer from the same
-    jitter as the interrupt? -> test with SSE_INT_MFP_IRQ_WOBBLE
-*/
-        + ((OPTION_C2&&OPTION_HACKS)?0:TB_TIME_WOBBLE); 
+#if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK) 
+        // previous hack for Sunny invalidated by TIMERB08.TOS
+        + (OPTION_C2&&OPTION_HACKS?0:TB_TIME_WOBBLE);  // note syntax looks wrong
 #else
         +TB_TIME_WOBBLE;
 #endif
@@ -421,7 +417,6 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 
 #if defined(SSE_INT_MFP_CHECKTIMEOUT_ON_STOP) 
 /*  Idea, see just above, this version OK with LXS
-    TODO: eg Anomaly menu asserts on test Irq + extreme rage
 */
           if(OPTION_C2 && !new_val 
             && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
@@ -870,7 +865,59 @@ void TMC68901::AdjustTimerB() {
 }
 
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
+
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+/*  Unique function (option C2) that sets up the timing of next
+    "timer B event", as far as the MFP input is concerned.
+    It should be correct also when timing of DE is changed by
+    a "Shifter trick".
+*/
+
+void TMC68901::ComputeNextTimerB(int info) {
+  ASSERT(OPTION_C2);
+  int tontb=0;
+  if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+  {
+    // time of DE transition this scanline
+    cpu_cycles_from_hbl_to_timer_b = (mfp_reg[MFPR_AER]&8)
+    ? Glue.CurrentScanline.StartCycle // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
+    : Glue.CurrentScanline.EndCycle;
+
+    // Don't trigger a spurious Timer B tick. The exact timing could be later.
+    // There's a line with 2x TB ticks in 'Jambala', but it has no visible impact.
+    if(info==ChangingAer && LINECYCLES>cpu_cycles_from_hbl_to_timer_b)
+    {
+      TRACE_LOG("MFP AER change at %d, no timer B at %d\n",LINECYCLES,cpu_cycles_from_hbl_to_timer_b);
+    }
+    else
+    {
+      // add MFP delays (read + irq) (TIMERB07.TOS)
+#if defined(SSE_INT_MFP_TIMER_B_392B)
+      cpu_cycles_from_hbl_to_timer_b+=22+4; 
+#else
+      cpu_cycles_from_hbl_to_timer_b+=28;
+#endif
+      // absolute
+      tontb=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b;
+      // add jitter
+      tontb+=TB_TIME_WOBBLE; 
+    }
+  }
+  // In 'Jambala', the scanline event is much delayed on MOVEM.
+  // There are compromises in Steem due to the fact that events are checked
+  // between instructions. A bit of a hack. TODO
+  if(!tontb || info!=NewScanline && tontb-ACT<=0 
+    && time_of_next_event!=time_of_next_timer_b)
+  {
+    tontb=cpu_timer_at_start_of_hbl+160000;  //put into future
+  }
+  bool recheck_events=(time_of_next_timer_b!=tontb);
+  time_of_next_timer_b=tontb;
+  if(recheck_events)
+    prepare_next_event();
+}
+
+#elif defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
 /*  Timer B can be programmed to trigger on DE change (start or end of 
     video picture).
     However there's a delay between DE change and MFP IRQ.

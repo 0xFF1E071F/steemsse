@@ -1748,6 +1748,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_392B //refactor hscroll extra fetch
 #define SSE_GLUE_392C //sundry
 #define SSE_GLUE_392D //timer B
+
+/*
+TODO
+the timer b tick in framereport can be very useful
+add this in mask
+also, we should make info 2bytes, like TB, because
+B is already used by blitter.
+not the 1st time one letter doesn't seem to be enough...
+
+*/
+
+
 #endif
 
 #define SSE_GUI_INFOBOX_CLIPBOARD
@@ -1755,7 +1767,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
 #ifdef SSE_INT_MFP
-#define SSE_INT_MFP_IRQ_WOBBLE // apply wobble only for IRQ itself
+//#define SSE_INT_MFP_IRQ_WOBBLE // apply wobble only for IRQ itself //WRONG! MFD
+#define SSE_INT_MFP_TIMER_B_392 // refactoring
 #endif
 
 #if defined(SSE_INT_MFP_IRQ_WOBBLE)
@@ -1765,6 +1778,15 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_INT_MFP_TIMERS_WOBBLE
 #undef SSE_INT_MFP_TIMERS_WOBBLE_390
 //#undef SSE_INT_MFP_READ_DELAY //TODO - where does it make a difference?
+#endif
+
+#if defined(SSE_INT_MFP_TIMER_B_392)
+#define SSE_INT_MFP_TIMER_B_392A
+#define SSE_INT_MFP_TIMER_B_392B // jitter
+#define SSE_INT_MFP_TIMER_B_392C //sunny!
+#define SSE_INT_MFP_TIMER_B_392D // in SSEGlue
+#undef SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS
+#undef SSE_INT_MFP_TIMER_B_WOBBLE_HACK
 #endif
 
 #define SSE_MMU_392

@@ -153,9 +153,14 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 #endif
   }
 
-#if defined(SSE_GLUE_392D)
+#if defined(SSE_GLUE_392D) && !defined(SSE_INT_MFP_TIMER_B_392A) //MFD?
   if(OPTION_C2)
     MC68901.CalcCyclesFromHblToTimerB();
+#endif
+
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+  if(OPTION_C2)
+    MC68901.ComputeNextTimerB(CyclesIn);
 #endif
 
   if(CyclesIn<=cycle_of_scanline_length_decision)
@@ -176,6 +181,8 @@ void TGlue::CheckSideOverscan() {
     scroll the screen by using "sync lines" (eg Enchanted Land, No Buddies Land).
     This function is a big extension of draw_check_border_removal().
 */
+
+  ASSERT(FetchingLine());
 
 #if defined(SSE_VS2008_WARNING_390) && defined(SSE_DEBUG)
   int t=0;
@@ -530,7 +537,7 @@ Closure STF2
 #if !defined(SSE_VID_BORDERS_LINE_PLUS_20)
       left_border=0;
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
+#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && !defined(SSE_GLUE_392D)
       if(OPTION_C2)
         MC68901.AdjustTimerB(); //isn't it too late? TODO
 #endif
@@ -1327,12 +1334,17 @@ TODO Closure doesn't agree with 'Bees' for WS1?
 #endif
   +2;
 #endif
-  if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_50] 
+  if(CyclesIn</*=*/ScanlineTiming[GLU_DE_OFF][FREQ_50] 
     ||(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_2
     |TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44))
     || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)
     ; // no need to test
+#if defined(SSE_INT_MFP_TIMER_B_392D)
+  else if(CyclesIn==376 && !(m_SyncMode&2) // now!
+    || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
+#else
   else if(FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
+#endif
 #if defined(SSE_GLUE_RIGHT_OFF_BY_SHIFT_MODE)
 /*  Like Alien said, it is also possible to remove the right border by setting
     the shiftmode to 2. This may be done well before cycle 376.
@@ -1510,6 +1522,7 @@ Dragonnels reset
     }
   }
 #endif//0byte
+
 }
 
 
@@ -1571,6 +1584,9 @@ void TGlue::CheckVerticalOverscan() {
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+    if(!OPTION_C2)
+#endif
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
       + TB_TIME_WOBBLE; 
     if(on_overscan_limit==LIMIT_TOP) // top border off
@@ -1590,7 +1606,7 @@ void TGlue::CheckVerticalOverscan() {
     Fixes It's a girl 2 last screen
 */
       shifter_last_draw_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
-        ? 226 : 247;   
+        ? 226 : 247;   //+1???
   }
 
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_TRACE_CONTROL)
@@ -1755,6 +1771,8 @@ void TGlue::IncScanline() {
   MMU.ExtraBytesForHscroll=0;
 #endif
   AdaptScanlineValues(-1);
+  //debug1=0;
+  //FrameEvents.Add(scan_y,LINECYCLES,'b',time_of_next_timer_b-cpu_timer_at_start_of_hbl);
 
   ASSERT(CurrentScanline.Cycles>=224);
   TrickExecuted=0;
@@ -2249,7 +2267,9 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   if(shifter_last_draw_line==400 && !(m_ShiftMode&2) && screen_res<2)
     shifter_last_draw_line>>=1; // simplistic?
 #endif
+
   AdaptScanlineValues(CyclesIn);
+
 }
 
 
@@ -2280,6 +2300,9 @@ void TGlue::SetSyncMode(BYTE NewSync) {
 
 #if defined(SSE_SHIFTER_RENDER_SYNC_CHANGES) //no!
   Shifter.Render(CyclesIn,DISPATCHER_SET_SYNC);
+#elif defined(SSE_INT_MFP_TIMER_B_392D)
+  if(OPTION_C2 && FetchingLine())
+    CheckSideOverscan(); // force check to adapt timer B to right off...
 #endif
 
   shifter_freq_idx=(screen_res>=2) ? 2 : ((NewSync&2)?0:1);//TODO

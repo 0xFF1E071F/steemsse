@@ -443,8 +443,13 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                 mfp_reg[n]=io_src_b;
 #if defined(SSE_INT_MFP_TIMER_B_AER) // maybe Timer B's AER bit changed?
                 ASSERT(n==MFPR_AER || n==MFPR_DDR);
+#if defined(SSE_INT_MFP_TIMER_B_392A)
+                if(OPTION_C2 && n==MFPR_AER && (old_aer&8)!=(io_src_b&8))
+                  MC68901.ComputeNextTimerB(TMC68901::ChangingAer);
+#else
                 if(OPTION_C2)
                   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
+#endif
 #endif
               }
               BYTE new_gpip=BYTE(mfp_reg[MFPR_GPIP] & ~mfp_reg[MFPR_DDR]);
@@ -600,11 +605,10 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
 #endif
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
-            //SS this seems suspicious but it is actually needed: Super Hang-On TODO
             ioaccess=old_ioaccess;
 #if defined(SSE_INT_MFP)
-            if(OPTION_C2)
-                ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
+            if(OPTION_C2) // this just says "check interrupts after this instruction"
+              ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
             else
 #endif
             if ((ioaccess & (IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE | IOACCESS_FLAG_FOR_CHECK_INTRS |
