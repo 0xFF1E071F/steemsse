@@ -109,7 +109,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       do{
         EasyStr fn=zippy.filename_in_zip();
 //        TRACE_LOG("File in zip %s\n",fn.c_str());
-        ASSERT(Type==DISK_COMPRESSED);
+//        ASSERT(Type==DISK_COMPRESSED); //asserts if non-disk files in archive
         Type=FileIsDisk(fn); // SS this changes Type
         if (Type==DISK_UNCOMPRESSED || Type==DISK_PASTI){
           if (CompressedDiskName.Empty() || IsSameStr_I(CompressedDiskName,fn.Text)){

@@ -31,16 +31,25 @@
 #define FRAME_REPORT_MASK_BLITTER                  (1<<14)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS           (1<<13)
 #define FRAME_REPORT_MASK_SHIFTER_TRICKS_BYTES     (1<<12)
+#define FRAME_REPORT_MASK_TIMER_B                  (1<<11)
 #endif
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
+
 struct SFrameEvent {
   int Scanline; 
   int Cycle;
-  int Value; 
+  int Value;
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+  int Type;
+#else
   char Type;
+#endif
   inline void Add(int scanline,int cycle, char type, int value); 
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+  inline void Add(int scanline,int cycle, char *type, int value); //overload
+#endif
 };
 
 
@@ -54,6 +63,9 @@ public:
   struct SFrameEvent m_FrameEvent[MAX_EVENTS]; // it's public
   TFrameEvents();
   void Add(int scanline, int cycle, char type, int value);
+#if defined(SSE_BOILER_FRAME_REPORT_392) // overload
+  void Add(int scanline, int cycle, char *type, int value);
+#endif
 #if defined(SSE_BOILER_XBIOS2)
   DWORD GetShifterTricks(int y);
 #endif
@@ -72,12 +84,33 @@ public:
 
 extern TFrameEvents FrameEvents; // singleton
 
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+
 inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
   Scanline=scanline;
   Cycle=cycle;
   Type=type;
   Value=value;
 }
+
+inline void SFrameEvent::Add(int scanline,int cycle, char *type, int value) { // overload
+  Scanline=scanline;
+  Cycle=cycle;
+  Type=(type[0]<<8)+type[1];
+  Value=value;
+}
+
+
+#else
+
+inline void SFrameEvent::Add(int scanline,int cycle, char type, int value) {
+  Scanline=scanline;
+  Cycle=cycle;
+  Type=type;
+  Value=value;
+}
+
+#endif
 
 #endif
 
