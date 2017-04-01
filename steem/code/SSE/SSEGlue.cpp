@@ -1334,7 +1334,7 @@ TODO Closure doesn't agree with 'Bees' for WS1?
 #endif
   +2;
 #endif
-  if(CyclesIn</*=*/ScanlineTiming[GLU_DE_OFF][FREQ_50] 
+  if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_50] 
     ||(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_2
     |TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44))
     || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)

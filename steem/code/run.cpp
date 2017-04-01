@@ -607,8 +607,10 @@ void event_timer_d_timeout()
 #define LOGSECTION LOGSECTION_INTERRUPTS
 void event_timer_b() 
 {
-  //debug1++;
-  //FrameEvents.Add(scan_y,LINECYCLES,'B',ACT-time_of_next_timer_b);
+#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_TIMER_B)
+    FrameEvents.Add(scan_y,LINECYCLES,"TB",ACT-time_of_next_timer_b);
+#endif
   if (scan_y<shifter_first_draw_line){
 #if defined(SSE_INT_MFP_TIMER_B_392A)
     if(!OPTION_C2)
@@ -996,10 +998,6 @@ void event_scanline()
 #else
       added_bytes+=(LINEWID+MMU.WordsToSkip)*2; 
 #endif
-#if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_GLUE_017B)
-    if((FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES))
-      FrameEvents.Add(scan_y,LINECYCLES,'a',added_bytes);
-#endif
     shifter_draw_pointer_at_start_of_line+=added_bytes;
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line;
 #endif
@@ -1030,8 +1028,12 @@ void event_scanline()
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) && defined(SSE_VIDEO_CHIPSET)
   if(Glue.FetchingLine() && (FRAME_REPORT_MASK1&FRAME_REPORT_MASK_SDP_LINES)) 
   {
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+    FrameEvents.Add(scan_y,0,"VC",shifter_draw_pointer); 
+#else //why did I split?
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'@',(shifter_draw_pointer&0xFFFF) ); 
+#endif
   }
 #endif
 
@@ -1669,15 +1671,26 @@ void event_vbl_interrupt() //SS misleading name?
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SDP_LINES) 
   {
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+    FrameEvents.Add(scan_y,0,"VB",xbios2); 
+#else // split was useless... (int, not word)
     FrameEvents.Add(scan_y,0,'X',(xbios2&0x00FF0000)>>16 ); 
     FrameEvents.Add(scan_y,0,'X',(xbios2&0xFFFF) ); 
+#endif
   }
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT_MASK) // report starting res & sync
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
+    FrameEvents.Add(scan_y,0,"R=",Shifter.m_ShiftMode); 
+  if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
+    FrameEvents.Add(scan_y,0,"S=",Glue.m_SyncMode); 
+#else
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SHIFTMODE) 
     FrameEvents.Add(scan_y,0,'R',Shifter.m_ShiftMode); 
   if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_SYNCMODE)
     FrameEvents.Add(scan_y,0,'S',Glue.m_SyncMode); 
+#endif
 #endif
 #endif
 

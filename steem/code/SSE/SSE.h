@@ -1730,11 +1730,13 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA) //next version
 
 #ifdef SSE_BLITTER
-
 #define SSE_BLT_392
-//#define SSE_BLT_392B
-
 #endif
+
+#ifdef SSE_BOILER
+#define SSE_BOILER_FRAME_REPORT_392
+#endif
+
 #ifdef SSE_CPU
 #define SSE_CPU_392 // refactoring
 #define SSE_CPU_392B // add exception states
@@ -1748,18 +1750,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_392B //refactor hscroll extra fetch
 #define SSE_GLUE_392C //sundry
 #define SSE_GLUE_392D //timer B
-
-/*
-TODO
-the timer b tick in framereport can be very useful
-add this in mask
-also, we should make info 2bytes, like TB, because
-B is already used by blitter.
-not the 1st time one letter doesn't seem to be enough...
-
-*/
-
-
 #endif
 
 #define SSE_GUI_INFOBOX_CLIPBOARD

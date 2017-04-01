@@ -107,15 +107,31 @@ int TM68000::SyncEClock(int dispatcher) {
  // TRACE_OSD("%d %d",act,wait_states);
  
 #if defined(SSE_BOILER) 
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+  char cdispatcher[4]="VHA";
+#else
   char* sdispatcher[]={"VBL","HBL","ACIA"};
+#endif
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+#if defined(SSE_BOILER_FRAME_REPORT_392) //even if it's generally obvious
+  {
+    char string[3];
+    sprintf(string,"E%c",cdispatcher[dispatcher]);
+    FrameEvents.Add(scan_y,LINECYCLES,string,wait_states);
+  }
+#else
     FrameEvents.Add(scan_y,LINECYCLES,'E',wait_states);
+#endif
 #endif
 #if defined(SSE_BOILER_TRACE_CONTROL)
   if(wait_states && (TRACE_MASK2&TRACE_CONTROL_ECLOCK)) 
 #if defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+    TRACE_LOG("F%d y%d c%d %c E-Clock +%d\n",TIMING_INFO,cdispatcher[dispatcher],wait_states);
+#else
     TRACE_LOG("F%d y%d c%d %s E-Clock +%d\n",TIMING_INFO,sdispatcher[dispatcher],wait_states);
+#endif
 #else
     TRACE_LOG("F%d y%d c%d E-Clock +%d\n",TIMING_INFO,wait_states);
 #endif

@@ -43,6 +43,16 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 }
 
 
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+
+void TFrameEvents::Add(int scanline, int cycle, char *type, int value) {
+  m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
+  ASSERT(m_nEvents>0&&m_nEvents<MAX_EVENTS);
+  m_FrameEvent[m_nEvents].Add(scanline, cycle, type, value);
+}
+
+#endif
+
 
 #if defined(SSE_BOILER_REPORT_SDP_ON_CLICK)
 MEM_ADDRESS TFrameEvents::GetSDP(int x,int guessed_scan_y) {
@@ -151,19 +161,23 @@ int TFrameEvents::Report() {
         j=m_FrameEvent[i].Scanline;
         fprintf(fp,"\n%03d -",j);
       }
+#if defined(SSE_BOILER_FRAME_REPORT_392)
+      int first_letter=m_FrameEvent[i].Type>>8;
+      if(first_letter) // eg "TB" for Timer B
+        fprintf(fp," %03d:%c%c%04X",m_FrameEvent[i].Cycle,first_letter,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
+      else // eg 'S' for Sync
+        fprintf(fp," %03d:%c%04X",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
+#else
       if(m_FrameEvent[i].Type=='L' || m_FrameEvent[i].Type=='a'
         || m_FrameEvent[i].Type=='#') // decimal
         fprintf(fp," %03d:%c%04d",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
       else  // hexa
         fprintf(fp," %03d:%c%04X",m_FrameEvent[i].Cycle,m_FrameEvent[i].Type,m_FrameEvent[i].Value);
+#endif
     }//nxt
-#if 1 //wow, only saw this thx to VS2015! - was debug-only
+
     fprintf(fp, "\n--"); // so we know it was OK
     fclose(fp);
-#else
-    fclose(fp);
-    fprintf(fp,"\n--"); // so we know it was OK//sure that's OK :)
-#endif
   }
   m_nReports++;
   return m_nReports;
