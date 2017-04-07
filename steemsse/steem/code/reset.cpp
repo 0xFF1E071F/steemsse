@@ -468,6 +468,9 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
   MMU.MonSTerHimem=0;
 #endif
+#if defined(SSE_YM2149_MAMELIKE)
+  YM2149.Reset();
+#endif
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------

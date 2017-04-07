@@ -3196,12 +3196,22 @@ Windows 2000	5.0
   y-=LineHeight; // maybe it will be optimised away!
 #endif
   Offset=Wid+HorizontalSeparation;
+#if defined(SSE_YM2149_MAMELIKE)
+  Wid=GetCheckBoxSize(Font,T("C2: 68901/YM2149")).Width;
+  Win=CreateWindow("Button",T("C2: 68901/YM2149"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
+#else
   Wid=GetCheckBoxSize(Font,T("C2: 68901")).Width;
   Win=CreateWindow("Button",T("C2: 68901"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,OPTION_C2,0);
   ToolAddWindow(ToolTip,Win,
+#if defined(SSE_YM2149_MAMELIKE)
+    T("Chipset 2 - Check for a more precise emulation of the MFP and a lower level emulation of the YM2149."));
+#else
     T("Chipset 2 - Check for a more precise emulation of the MFP."));
+#endif
   y+=LineHeight;
 #endif
 
