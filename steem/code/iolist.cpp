@@ -316,7 +316,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
   iolist_add_entry(FAKE_IO_START,"Frame report1",2,
     "sync|shift|pal|rsdp|wsdp|sdp lines|hscroll|base|.|.|.|.|.|.|.|.");
   iolist_add_entry(FAKE_IO_START+2,"Frame report2",2, // problem +2 etc hardcoded
-    "int|blt|tricks|bytes|tb|.|.|.|.|.|.|.|.|.|.|.");
+    "irq|blt|tricks|bytes|tb|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_OSD_CONTROL)

@@ -474,7 +474,16 @@ Receiver Data Register is retained.
                   // Timer B is in event count mode, check if it has counted down since the start of
                   // this instruction. Due to MFP delays this very, very rarely gets changed under 4
                   // cycles from the point of the signal.
+#if defined(SSE_INT_MFP_TIMER_B_392E)
+/*  This gives the best result in TIMERB07.TOS without messing TIMERB01.TOS.
+    Maybe there's a problem with my test programs, because it implies IRQ 
+    occurs before the register is updated... doesn't make much sense. :)
+    Note SSE_INT_MFP_READ_DELAY is undef.
+*/
+                  if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) >= 2){
+#else
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4){
+#endif
                     if (!ior_byte
 #if defined(SSE_INT_MFP_TIMER_B_392C)
 /*  Finally a legit fix for Sunny STE.
@@ -499,6 +508,7 @@ Receiver Data Register is retained.
 	move.w #$1b,d0                                   ; 013CDA: 303C 001B 
 	move.w (a2)+,(a1)                                ; 013CDE: 329A 
 	move.w (a2)+,(a1)                                ; 013CE0: 329A 
+  ...
 
     The program is currently synchronised on the video counter.
     It sets up a one line timer B interrupt and expects no jitter trouble when
