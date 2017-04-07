@@ -98,14 +98,14 @@ BYTE TYM2149::PortA(){
 
 void TYM2149::Reset() {
   m_rng = 1;
-	m_output[0] = 0;
-	m_output[1] = 0;
-	m_output[2] = 0;
-	m_count[0] = 0;
-	m_count[1] = 0;
-	m_count[2] = 0;
-	m_count_noise = 0;
-	m_count_env = 0;
+  m_output[0] = 0;
+  m_output[1] = 0;
+  m_output[2] = 0;
+  m_count[0] = 0;
+  m_count[1] = 0;
+  m_count[2] = 0;
+  m_count_noise = 0;
+  m_count_env = 0;
   m_prescale_noise = 0;
   m_cycles=0; 
 }
@@ -162,7 +162,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
     // mix each channel
 
     m_count_noise++;
-    if (m_count_noise >= ( psg_reg[PSGR_NOISE_PERIOD] & 0x1f))
+    if (m_count_noise >= (psg_reg[PSGR_NOISE_PERIOD] & 0x1f))
     {
       /* toggle the prescaler output. Noise is no different to
        * channels.
@@ -187,6 +187,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
     {
       int envperiod=(((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) 
         + psg_reg[PSGR_ENVELOPE_PERIOD_LOW];
+
       m_count_env++;
       if (m_count_env >= envperiod ) // "m_step"=1 for YM2149
       {
@@ -225,7 +226,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
       bool enveloped=((psg_reg[abc+8] & BIT_4)!=0);
 
       m_count[abc]++;
-      if(m_count[abc]>=TONE_PERIOD(abc) &&m_count[abc]>=7 ) 
+      if(m_count[abc]>=TONE_PERIOD(abc)) 
       {
         m_output[abc] ^= 1;
         m_count[abc]=0;

@@ -14,16 +14,16 @@ struct TYM2149 {
 #endif
 #if defined(SSE_YM2149_MAMELIKE)
   enum {NUM_CHANNELS=3};
-	int m_count[NUM_CHANNELS];
-	int m_count_noise;
-	int m_count_env;
-	int m_rng;
+  int m_count[NUM_CHANNELS];
+  int m_count_noise;
+  int m_count_env;
+  int m_rng;
   int m_env_volume;
   int m_cycles; // added
   BYTE m_output[NUM_CHANNELS];
   BYTE m_env_step_mask;
-	char m_env_step;
-	BYTE m_hold,m_alternate,m_attack,m_holding;
+  char m_env_step;
+  BYTE m_hold,m_alternate,m_attack,m_holding;
   BYTE m_prescale_noise;
   BYTE m_vol_enabled[NUM_CHANNELS];
 #endif
