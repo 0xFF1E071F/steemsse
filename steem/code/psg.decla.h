@@ -253,7 +253,11 @@ void psg_write_buffer(int,DWORD);
 #define MOD_PSG_NOISE_ARRAY & 8191
 
 #ifndef ONEGAME
+#if defined(SSE_YM2149_MAMELIKE)
+#define PSG_WRITE_EXTRA 0
+#else
 #define PSG_WRITE_EXTRA 300
+#endif
 #else
 #define PSG_WRITE_EXTRA OGExtraSamplesPerVBL
 #endif

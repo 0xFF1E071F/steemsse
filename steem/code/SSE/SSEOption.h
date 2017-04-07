@@ -124,7 +124,7 @@ extern struct TOption SSEOption;
 #define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)
 #define OPTION_OSD_TIME (SSEOption.OsdTime)
 #define OPTION_FULLSCREEN_DEFAULT_HZ (SSEOption.FullScreenDefaultHz)
-
+#define OPTION_MAME_YM (SSEOption.SampledYM&&SSEOption.Chipset2)
 
 struct TConfig {
 

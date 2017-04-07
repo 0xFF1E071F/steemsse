@@ -25,8 +25,11 @@ EXT int sound_variable_d INIT(208);
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
 #endif
-//TODO 44100hz
+#if defined(SSE_YM2149_392)
+EXT int sound_freq INIT(44100),sound_comline_freq INIT(0),sound_chosen_freq INIT(44100);
+#else
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
+#endif
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE sound_bytes_per_sample INIT(1);
@@ -319,6 +322,7 @@ HRESULT Sound_Start() // SS called by
     psg_buf_pointer[abc]=0;
     psg_tone_start_time[abc]=0;
   }
+
   for (int i=0;i<PSG_CHANNEL_BUF_LENGTH;i++) psg_channels_buf[i]=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL);
   psg_envelope_start_time=0xff000000;
 
@@ -327,6 +331,13 @@ HRESULT Sound_Start() // SS called by
     sound_record_start_time=timer+200; //start recording in 200ms time
     sound_record_open_file();
   }
+#if defined(SSE_YM2149_MAMELIKE)// older snapshot for example
+  ASSERT(YM2149.m_rng);
+  if(!YM2149.m_rng) 
+    YM2149.m_rng++;
+  ASSERT(YM2149.m_env_step_mask==0x1f);
+  YM2149.m_env_step_mask=0x1f;
+#endif
 
   return DS_OK;
 }
@@ -1248,6 +1259,11 @@ HRESULT Sound_VBL()
 #endif
   dbg_log("SOUND: Working out data up to the end of this VBL plus a bit more for all channels");
   TRACE_PSG("VBL finishing sound buffers from %d to %d (%d)+ extra %d\n",psg_time_of_last_vbl_for_writing,time_of_next_vbl_to_write,time_of_next_vbl_to_write-psg_time_of_last_vbl_for_writing,PSG_WRITE_EXTRA);
+#if defined(SSE_YM2149_MAMELIKE)
+  if(OPTION_MAME_YM)
+    YM2149.psg_write_buffer(time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
+  else
+#endif
   for (int abc=2;abc>=0;abc--){
     psg_write_buffer(abc,time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
   }
@@ -1795,6 +1811,7 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 #define PSG_PULSE_TONE  ((t*128 / psg_tonemodulo) & 1)
 #define PSG_PULSE_TONE_t64  ((t*64 / psg_tonemodulo_2) & 1)
 
+
 #if defined(SSE_SOUND_INLINE2)
 /*  Second round of inlining
     Necessary for SSE_YM2149_DELAY_RENDERING
@@ -1802,7 +1819,6 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 
 void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
   int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
-      //int envperiod=1|psg_reg[PSGR_ENVELOPE_PERIOD_LOW]+((psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8);//buggy!
   int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
   af=envperiod;
   af*=sound_freq;                  
@@ -1844,10 +1860,9 @@ void psg_prepare_envelope(double &af,double &bf,int &psg_envmodulo,DWORD t,
   }																			
 }
 
-
 void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
     int &psg_noisecountdown, int &psg_noisecounter,bool &psg_noisetoggle) {
-  int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f));
+  int noiseperiod=(1+(psg_reg[PSGR_NOISE_PERIOD]&0x1f)); //TODO 1+...
   af=((int)noiseperiod*sound_freq);                              
   af*=((double)(1<<17))/15625; 
   psg_noisemodulo=(int)af; 
@@ -1859,7 +1874,6 @@ void psg_prepare_noise(double &af,double &bf,int &psg_noisemodulo,DWORD t,
   psg_noisecountdown=psg_noisemodulo-(int)bf; 
   psg_noisetoggle=psg_noise[psg_noisecounter];
 }
-
 
 void psg_prepare_tone(int toneperiod,double &af,double &bf,
                       int &psg_tonemodulo_2,int abc,DWORD t,
@@ -1879,11 +1893,12 @@ void psg_prepare_tone(int toneperiod,double &af,double &bf,
 }
 
 
-void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
+void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,
+         int &psg_envcountdown,int &envdeath,int &envshape,int &envvol) {
   psg_envcountdown-=TWO_TO_SEVENTEEN; //  131072
   while (psg_envcountdown<0){           
     psg_envcountdown+=psg_envmodulo;             
-    psg_envstage++;                   
+    psg_envstage++;                 
     if (psg_envstage>=32 && envdeath!=-1){                           
       envvol=envdeath;                                             
     }else{   
@@ -1898,8 +1913,8 @@ void psg_envelope_advance(int &psg_envmodulo,int &psg_envstage,int &psg_envcount
   }
 }
 
-
-void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tonetoggle) {
+void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,
+                      bool &psg_tonetoggle) {
   psg_tonecountdown-=TWO_MILLION;  
   while (psg_tonecountdown<0){           
     psg_tonecountdown+=psg_tonemodulo_2;             
@@ -1907,25 +1922,23 @@ void psg_tone_advance(int psg_tonemodulo_2,int &psg_tonecountdown,bool &psg_tone
   }
 }
 
-
 void psg_noise_advance(int psg_noisemodulo,int &psg_noisecountdown,int &psg_noisecounter,bool &psg_noisetoggle) {
   psg_noisecountdown-=ONE_MILLION;   
   while (psg_noisecountdown<0){   
-    psg_noisecountdown+=psg_noisemodulo;      
+    psg_noisecountdown+=psg_noisemodulo;   
     psg_noisecounter++;                        
     if(psg_noisecounter>=PSG_NOISE_ARRAY){      
       psg_noisecounter=0;                        
-    }                                             
+    }
     psg_noisetoggle=psg_noise[psg_noisecounter];   
   }
 }
 
-
 #define PSG_PREPARE_ENVELOPE psg_prepare_envelope(af,bf,psg_envmodulo,t,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
-#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
 #define PSG_PREPARE_TONE psg_prepare_tone(toneperiod,af,bf,psg_tonemodulo_2,abc,t,psg_tonecountdown,psg_tonetoggle);
 #define PSG_ENVELOPE_ADVANCE  psg_envelope_advance(psg_envmodulo,psg_envstage,psg_envcountdown,envdeath,envshape,envvol);
 #define PSG_TONE_ADVANCE psg_tone_advance(psg_tonemodulo_2,psg_tonecountdown,psg_tonetoggle);
+#define PSG_PREPARE_NOISE psg_prepare_noise(af,bf,psg_noisemodulo,t,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
 #define PSG_NOISE_ADVANCE  psg_noise_advance(psg_noisemodulo,psg_noisecountdown,psg_noisecounter,psg_noisetoggle);
 
 #else
@@ -2065,6 +2078,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[abc]),0);//SS don't exceed buffer
   ASSERT( count>=0 );
+  TRACE_PSG("write %d samples\n",count);
 #if defined(SSE_SOUND_OPT1)
   if(!count)
     return;
@@ -2155,7 +2169,6 @@ void psg_write_buffer(int abc,DWORD to_t)
           p++;
         } else
 #endif
-
         if(psg_noisetoggle){
           p++;
         }else{
@@ -2164,7 +2177,6 @@ void psg_write_buffer(int abc,DWORD to_t)
         ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
         PSG_NOISE_ADVANCE
       }
-
     }else{ //nothing enabled //SS playing samples
       for (;count>0;count--){
 #if defined(SSE_YM2149_DELAY_RENDERING)
@@ -2299,6 +2311,7 @@ void psg_write_buffer(int abc,DWORD to_t)
     psg_buf_pointer[abc]=to_t-psg_time_of_last_vbl_for_writing;
   }
 }
+
 //---------------------------------------------------------------------------
 #if !defined(SSE_YM2149_QUANTIZE_382)
 DWORD psg_quantize_time(int abc,DWORD t)
@@ -2323,11 +2336,11 @@ DWORD psg_adjust_envelope_start_time(DWORD t,DWORD new_envperiod)
 {
   double b,c;
   int envperiod=max( (((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) + psg_reg[PSGR_ENVELOPE_PERIOD_LOW],1);
+
 //  a=envperiod;
 //  a*=sound_freq;
 
   b=(t-psg_envelope_start_time);
-
   c=b*(double)new_envperiod;
   c/=(double)envperiod;
   c=t-c;         //new env start time
@@ -2386,6 +2399,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     dbg_log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
     return;
   }
+
   int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq; //160000 at 50hz
 
 #if SCREENS_PER_SOUND_VBL != 1
@@ -2398,23 +2412,51 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   a64*=psg_n_samples_this_vbl; //SS eg *882  (44100/50)
   a64/=cpu_cycles_per_vbl; //SS eg 160420
 
-  DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64;
+  DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64; //SS t's unit is #samples (total)
+
+
+
   dbg_log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
 
   TRACE_PSG("PSG set reg %d = $%X (was %X), t=%d\n",reg,new_val,old_val,t);
-  
+#if defined(SSE_YM2149_MAMELIKE)
+  if(OPTION_MAME_YM) 
+  {
+    YM2149.psg_write_buffer(t);
+    if(reg==PSGR_ENVELOPE_SHAPE) //note reg still has old value
+    {
+      ASSERT(YM2149.m_env_step_mask==0x1f);
+      YM2149.m_attack = (new_val & 0x04) ? YM2149.m_env_step_mask : 0x00;
+      if ((new_val & 0x08) == 0)
+      {
+        /* if Continue = 0, map the shape to the equivalent one which has Continue = 1 */
+        YM2149.m_hold = 1;
+        YM2149.m_alternate = YM2149.m_attack;
+      }
+      else
+      {
+        YM2149.m_hold = new_val & 0x01;
+        YM2149.m_alternate = new_val & 0x02;
+      }
+      YM2149.m_env_step = YM2149.m_env_step_mask;
+      ASSERT(YM2149.m_env_step==31);
+      YM2149.m_holding = 0;
+      YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
+    }
+  }
+  else
+#endif
   switch (reg){
     case 0:case 1:
     case 2:case 3:
     case 4:case 5:
     {
+
       int abc=reg/2;
       // Freq is double bufferred, it cannot change until the PSG reaches the end of the current square wave.
       // psg_tone_start_time[abc] is set to the last end of wave, so if it is in future don't do anything.
       // Overflow will be a problem, however at 50Khz that will take a day of non-stop output.
-
       if (t>psg_tone_start_time[abc]){
-
 #if defined(SSE_YM2149_QUANTIZE_382)
 /*  When the new period is long enough compared with progress of 
     current period, we wait until current wave finishes.
@@ -2423,6 +2465,13 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     This is based on pym2149 (http://ym2149.org/), or at least on how I read it.
     We need register info, so we don't call psg_quantize_time() anymore,
     we do the computing here.
+
+update, from MAME:
+Careful studies of the chip output prove that the chip counts up from 0
+until the counter becomes greater or equal to the period. This is an
+important difference when the program is rapidly changing the period to
+modulate the sound. This is worthwhile noting, since the datasheets
+say, that the chip counts down.
 */
         // before change
         int toneperiod1=(((int)psg_reg[abc*2+1] & 0xf) << 8) + psg_reg[abc*2];
@@ -2443,7 +2492,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
           // check progress of current wave
           if(!a2 || a2>=a_bis)
             t2=t-a_bis; // start at once
-          TRACE_PSG("Quantize start %d adjusted %d a %f a' %f\n",psg_tone_start_time[abc],t2,a,a_bis);
+          //TRACE_PSG("Quantize start %d adjusted %d a %f a' %f\n",psg_tone_start_time[abc],t2,a,a_bis);
+          //if(t2!=t) TRACE("t %d t2 %d\n",t,t2);
+          TRACE_PSG("quantize t %d->%d (%d)\n",t,t2,t2-t);
           t=t2;
         }
 
@@ -2463,7 +2514,6 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       break;
     case 7:  //mixer
 //      new_val|=b00111110;
-
       psg_write_buffer(0,t);
       psg_write_buffer(1,t);
       psg_write_buffer(2,t);
@@ -2525,9 +2575,12 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       }
 */
 //        t=psg_quantize_envelope_time(t,0,&new_envelope_start_time);
+
+      {
       psg_write_buffer(0,t);
       psg_write_buffer(1,t);
       psg_write_buffer(2,t);
+      }
       psg_envelope_start_time=t;
 /*
       for (int abc=0;abc<3;abc++){

@@ -1798,6 +1798,11 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_YM2149_SOUND
 #define SSE_SOUND_250K
 #define SSE_SOUND_MORE_SAMPLE_RATES
+#define SSE_YM2149_392
+#endif
+
+#if defined(SSE_YM2149_392)
+#define SSE_YM2149_MAMELIKE
 #endif
 
 #endif//beta
