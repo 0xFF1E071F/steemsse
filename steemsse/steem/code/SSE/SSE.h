@@ -1795,6 +1795,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_RESIZE_392
 #endif
 
+#ifdef SSE_YM2149_SOUND
+#define SSE_SOUND_250K
+#define SSE_SOUND_MORE_SAMPLE_RATES
+#endif
+
 #endif//beta
 
 #ifdef SSE_BETA // long term
@@ -1814,6 +1819,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_X64)
 #define SSE_X64_392
 #endif
+#define SSE_SOUND_DMA_390E//switch disappeared...
 
 #endif//bugfix
 
