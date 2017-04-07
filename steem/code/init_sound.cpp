@@ -436,6 +436,10 @@ HRESULT DSGetPrimaryBuffer()
 
       DS_SetFormat_freq=min((DWORD)(desired_freq),SoundCaps.dwMaxSecondarySampleRate);
       PrimaryFormat.nSamplesPerSec=DS_SetFormat_freq;
+#if defined(SSE_SOUND_MORE_SAMPLE_RATES) && defined(SSE_DEBUG)
+      if(DS_SetFormat_freq<(DWORD)sound_chosen_freq)
+        TRACE_INIT("max SR %d\n",DS_SetFormat_freq);
+#endif
       PrimaryFormat.nAvgBytesPerSec=PrimaryFormat.nSamplesPerSec*PrimaryFormat.nBlockAlign;
       Ret=PrimaryBuf->SetFormat(&PrimaryFormat);
       dbg_log(EasyStr("SOUND: SetFormat to ")+DS_SetFormat_freq+"Hz, it "+LPSTR(Ret==DS_OK ? "succeeded.":"failed."));
@@ -648,6 +652,9 @@ HRESULT SoundStartBuffer(int flatlevel1,int flatlevel2)
   SoundBuf->Play(0,0,DSBPLAY_LOOPING);
 
   SoundBufStartTime=timeGetTime();
+
+
+
 
   return DS_OK;
 }

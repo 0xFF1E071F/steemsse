@@ -181,7 +181,16 @@ EXT WORD dma_sound_internal_buf[4],dma_sound_last_word;
 EXT MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
+#if defined(SSE_SOUND_MORE_SAMPLE_RATES)
+//#define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2 *4 //ok->200k
+// in words, 2 words per sample, mono or stereo
+// we added asserts in debug builds
+#define DMA_SOUND_BUFFER_LENGTH (((384000*2)/50)*SCREENS_PER_SOUND_VBL)
+#else
 #define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2
+#endif
+
+
 EXT WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 EXT DWORD dma_sound_channel_buf_last_write_t;
 
@@ -252,7 +261,15 @@ void psg_write_buffer(int,DWORD);
 //#define PSG_WRITE_EXTRA 10
 
 //#define PSG_CHANNEL_BUF_LENGTH (2048*SCREENS_PER_SOUND_VBL)
+
+#if defined(SSE_SOUND_MORE_SAMPLE_RATES)
+//#define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2 *4 //ok->200k
+// like dma, but integers, and no stereo
+#define PSG_CHANNEL_BUF_LENGTH (((384000)/50)*SCREENS_PER_SOUND_VBL+64)
+#else
 #define PSG_CHANNEL_BUF_LENGTH (8192*SCREENS_PER_SOUND_VBL)
+#endif
+
 #define VOLTAGE_ZERO_LEVEL 0
 #define VOLTAGE_FIXED_POINT 256
 //must now be fixed at 256!
@@ -263,13 +280,10 @@ EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16]; //SS Steem will add channel
 EXT int psg_buf_pointer[3];
 EXT DWORD psg_tone_start_time[3];
 
-
 //DWORD psg_tonemodulo_2,psg_noisemodulo;
 //const short volscale[16]=  {0,1,1,2,3,4,5,7,12,20,28,44,70,110,165,255};
 
 EXT char psg_noise[PSG_NOISE_ARRAY];
-
-
 
 #define PSGR_NOISE_PERIOD 6
 #define PSGR_MIXER 7

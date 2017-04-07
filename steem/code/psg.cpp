@@ -1259,6 +1259,7 @@ HRESULT Sound_VBL()
 #endif
     WORD w[2]={dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2],dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-1]};
     for (int i=0;i<PSG_WRITE_EXTRA;i++){
+      ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[0];
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[1];
@@ -1291,6 +1292,7 @@ HRESULT Sound_VBL()
     int v=psg_voltage,dv=psg_dv; //restore from last time
     dbg_log(EasyStr("SOUND: Zeroing channels buffer up to ")+i);
     for (int j=0;j<i;j++){
+      ASSERT(j<PSG_CHANNEL_BUF_LENGTH);
       psg_channels_buf[j]=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL); //zero the start of the buffer
     }
     source_p=psg_channels_buf+i;
@@ -1371,6 +1373,7 @@ HRESULT Sound_VBL()
     }
 #endif
     SoundUnlock(DatAdr[0],LockLength[0],DatAdr[1],LockLength[1]);
+    ASSERT(source_p <= (psg_channels_buf+PSG_CHANNEL_BUF_LENGTH));
     while (source_p < (psg_channels_buf+PSG_CHANNEL_BUF_LENGTH)){
       *(source_p++)=VOLTAGE_FP(VOLTAGE_ZERO_LEVEL); //zero the rest of the buffer
     }
@@ -1449,6 +1452,7 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
           for (int i=0;i<loop;i++){
             dma_sound_output_countdown+=sound_freq;
             while (dma_sound_output_countdown>=0){
+              ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
               if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
               dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
               dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1610,6 +1614,7 @@ void dma_sound_fetch()
       w2=WORD((dma_sound_last_word & 0x00ff) << 6);
       // dma_sound_channel_buf always stereo, so put each mono sample in twice
       while (dma_sound_output_countdown>=0){
+        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
@@ -1617,6 +1622,7 @@ void dma_sound_fetch()
       }
       dma_sound_output_countdown+=sound_freq;
       while (dma_sound_output_countdown>=0){
+        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1638,6 +1644,7 @@ void dma_sound_fetch()
       }
       
       while (dma_sound_output_countdown>=0){
+        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1730,6 +1737,7 @@ void dma_mv16_fetch(WORD data) {
   while (dma_sound_samples_countdown>/*=*/0){
     dma_sound_output_countdown+=sound_freq;
     while (dma_sound_output_countdown>=0){
+      ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) 
         break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=dma_sound_last_word;
@@ -2051,6 +2059,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   double af,bf;
   bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
+  ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
   to_t=max(to_t,t);//SS can't go backwards
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
@@ -2098,6 +2107,7 @@ void psg_write_buffer(int abc,DWORD to_t)
           }else{
             *(p++)+=vol;
           }
+          ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
           PSG_TONE_ADVANCE
           PSG_NOISE_ADVANCE
         }
@@ -2121,6 +2131,7 @@ void psg_write_buffer(int abc,DWORD to_t)
           }else{
             *(p++)+=vol;
           }
+          ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
           PSG_TONE_ADVANCE
         }
       }
@@ -2150,6 +2161,7 @@ void psg_write_buffer(int abc,DWORD to_t)
         }else{
           *(p++)+=vol;
         }
+        ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
         PSG_NOISE_ADVANCE
       }
 
@@ -2166,6 +2178,7 @@ void psg_write_buffer(int abc,DWORD to_t)
         } else
 #endif
         *(p++)+=vol;
+        ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
       }
     }
     psg_buf_pointer[abc]=to_t-psg_time_of_last_vbl_for_writing;

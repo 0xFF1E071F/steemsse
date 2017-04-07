@@ -2413,10 +2413,24 @@ void TOptionBox::CreateSoundPage()
   if (sound_comline_freq){
     CBAddString(Win,Str(sound_comline_freq)+"Hz",sound_comline_freq);
   }
+#if defined(SSE_SOUND_MORE_SAMPLE_RATES)
+  CBAddString(Win,"384Khz",384000);
+#if defined(SSE_SOUND_250K)
+  CBAddString(Win,"250Khz",250000); //lol!
+#endif
+  CBAddString(Win,"192Khz",192000);
+  CBAddString(Win,"96Khz",96000);
+  CBAddString(Win,"50Khz",50066);
+  CBAddString(Win,"48Khz",48000);
+  CBAddString(Win,"44.1 Khz",44100);
+  CBAddString(Win,"25Khz",25033);
+  CBAddString(Win,"22Khz",22050);
+#else
   CBAddString(Win,"50066Hz",50066);
   CBAddString(Win,"44100Hz",44100);
   CBAddString(Win,"25033Hz",25033);
   CBAddString(Win,"22050Hz",22050);
+#endif
   if (CBSelectItemWithData(Win,sound_chosen_freq)==-1){
     SendMessage(Win,CB_SETCURSEL,CBAddString(Win,Str(sound_chosen_freq)+"Hz",sound_chosen_freq),0);
   }
