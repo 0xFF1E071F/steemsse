@@ -1791,6 +1791,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_MMU_MONSTER_ALT_RAM_IO2 // supervisor test
 #endif
 
+#ifdef SSE_VAR_RESIZE
+#define SSE_VAR_RESIZE_392
+#endif
+
 #endif//beta
 
 #ifdef SSE_BETA // long term

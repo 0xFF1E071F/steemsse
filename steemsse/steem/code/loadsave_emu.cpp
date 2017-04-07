@@ -21,9 +21,9 @@ extern EasyStr LastSnapShot,BootStateFile,StateHist[10],AutoSnapShotName;
 void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem ),
                         int LoadOrSave,int Type,int Version)
 {
-  bool SaveSize;   // SS Steem saves size, so we may extend structs with no worry
+  bool SaveSize;
   if (Type==0){ // Variable
-    SaveSize=(Version==17); //SS wasn't stupid either
+    SaveSize=(Version==17);
   }else if (Type==1){ // Array
     SaveSize=(Version>=3);
   }else{  // Struct
@@ -39,6 +39,31 @@ void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( B
     }
 //    log_write(Str(szVar));
   }else{
+#if defined(SSE_VAR_RESIZE_392)
+    if (Type==3)  // byte loaded/saved as int
+    {
+      ASSERT(szVar==4);
+      int temp=*(BYTE*)lpVar;
+      if (LoadOrSave==LS_SAVE){
+        fwrite(&temp,1,szVar,f);
+      }else{
+        fread(&temp,1,szVar,f);
+      }
+      *(BYTE*)lpVar=temp;
+    }
+    else if(Type==4) // word
+    {
+      ASSERT(szVar==4);
+      int temp=*(WORD*)lpVar;
+      if (LoadOrSave==LS_SAVE){
+        fwrite(&temp,1,szVar,f);
+      }else{
+        fread(&temp,1,szVar,f);
+      }
+      *(WORD*)lpVar=temp;
+    }
+    else
+#endif
     if (LoadOrSave==LS_SAVE){
       fwrite(&szVar,1,sizeof(szVar),f);
       fwrite(lpVar,1,szVar,f);
@@ -100,8 +125,11 @@ int ReadWriteEasyStr(EasyStr &s,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem
 
   return 0;
 }
-
 #define ReadWrite(var) ReadWriteVar(&(var),sizeof(var),f,LoadOrSave,0,Version)
+#if defined(SSE_VAR_RESIZE_392)
+#define ReadWriteByte(var) ReadWriteVar(&(var),sizeof(int),f,LoadOrSave,3,Version)
+#define ReadWriteWord(var) ReadWriteVar(&(var),sizeof(int),f,LoadOrSave,4,Version)
+#endif
 #define ReadWriteArray(var) ReadWriteVar(var,sizeof(var),f,LoadOrSave,1,Version)
 #define ReadWriteStruct(var) ReadWriteVar(&(var),sizeof(var),f,LoadOrSave,2,Version)
 #define ReadWriteStr(s) {int i=ReadWriteEasyStr(s,f,LoadOrSave,Version);if (i) return i; }
@@ -109,7 +137,6 @@ int ReadWriteEasyStr(EasyStr &s,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem
 int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
                       bool LoadOrSave,int Version,bool NOT_ONEGAME( ChangeDisksAndCart ),int *pVerRet)
 {
-//return 0;
   ONEGAME_ONLY( BYTE *pStartByte=f; )
   if (Version==-1) Version=SNAPSHOT_VERSION;
 
@@ -133,7 +160,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(on_rte);          //4
   ReadWrite(on_rte_interrupt_depth); //4
   ReadWrite(shifter_draw_pointer); //4
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+  ReadWriteByte(shifter_freq);         //4
+#elif defined(SSE_VAR_RESIZE)
   int shifter_freq_int=shifter_freq;
   ReadWrite(shifter_freq_int);         //4
   shifter_freq=shifter_freq_int;
@@ -144,7 +173,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
   ReadWrite(shifter_scanline_width_in_bytes); //4 //SS: unused
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+  ReadWriteByte(shifter_fetch_extra_words);       //4
+  ReadWriteByte(shifter_hscroll);                 //4
+#elif defined(SSE_VAR_RESIZE)
   {
     int tmp=shifter_fetch_extra_words;
     ReadWrite(tmp);       //4
@@ -188,7 +220,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   ReadWrite(mfp_gpip_no_interrupt); //1
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+  ReadWriteByte(psg_reg_select);        //4
+#elif defined(SSE_VAR_RESIZE)
   int i_psg_reg_select=psg_reg_select;
   ReadWrite(i_psg_reg_select);      //4
   psg_reg_select=i_psg_reg_select;
@@ -215,7 +249,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_address);       //4
 #if defined(SSE_DMA_OBJECT)
   {
-    int dma_sector_count_tmp=dma_sector_count;
+    int dma_sector_count_tmp=dma_sector_count;//word
     ReadWrite(dma_sector_count_tmp);
     dma_sector_count=dma_sector_count_tmp;
   }
@@ -239,7 +273,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     int floppy_mediach_tmp[2];
     floppy_mediach_tmp[0]=floppy_mediach[0];
     floppy_mediach_tmp[1]=floppy_mediach[1];
-    ReadWriteArray(floppy_mediach_tmp);//2
+    ReadWriteArray(floppy_mediach_tmp);//2 // it's an array, size saved
     floppy_mediach[0]=floppy_mediach_tmp[0];
     floppy_mediach[1]=floppy_mediach_tmp[1];
   }
@@ -482,7 +516,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool old_em=bool(extended_monitor);
   if (Version>=24){
 
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteWord(em_width);
+    ReadWriteWord(em_height);
+    ReadWriteByte(em_planes);
+    ReadWriteByte(extended_monitor);
+#elif defined(SSE_VAR_RESIZE)
     // what we win in pure size, we lose in code, but this function could be paged
     int em_ints[4];
     em_ints[0]=em_width;
@@ -559,7 +598,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=30){
     ReadWrite(MicroWire_Mask);
     ReadWrite(MicroWire_Data);
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(dma_sound_volume);
+    ReadWriteByte(dma_sound_l_volume);
+    ReadWriteByte(dma_sound_r_volume);
+    ReadWriteByte(dma_sound_l_top_val);
+    ReadWriteByte(dma_sound_r_top_val);
+    ReadWriteByte(dma_sound_mixer);
+#elif defined(SSE_VAR_RESIZE)
     int i_dma_sound_volume=dma_sound_volume;
     int i_dma_sound_l_volume=dma_sound_l_volume;
     int i_dma_sound_r_volume=dma_sound_r_volume;
@@ -598,7 +644,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool spin_up=bool(fdc_spinning_up);
   if (Version>=32) ReadWrite(spin_up);
   if (Version>=33){
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(fdc_spinning_up);
+#elif defined(SSE_VAR_RESIZE)
     {
       int fdc_spinning_up_tmp=fdc_spinning_up;
       ReadWrite(fdc_spinning_up_tmp);
@@ -627,7 +675,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #else
     ReadWrite(floppy_type1_command_active);
 #endif
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(fdc_read_address_buffer_len);
+#elif defined(SSE_VAR_RESIZE)
     int fdc_read_address_buffer_len_tmp=fdc_read_address_buffer_len;
     ReadWrite(fdc_read_address_buffer_len_tmp);
     fdc_read_address_buffer_len=fdc_read_address_buffer_len_tmp;
@@ -649,7 +699,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SSE_VAR_RESIZE)
     {
       int dma_bytes_written_for_sector_count_tmp=dma_bytes_written_for_sector_count;
-      ReadWrite(dma_bytes_written_for_sector_count_tmp);
+      ReadWrite(dma_bytes_written_for_sector_count_tmp);//word
       dma_bytes_written_for_sector_count=dma_bytes_written_for_sector_count_tmp;
     }
 #else
@@ -725,7 +775,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=39){
     ReadWriteArray(dma_sound_internal_buf);
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(dma_sound_internal_buf_len);
+#elif defined(SSE_VAR_RESIZE)
     int i_dma_sound_internal_buf_len=dma_sound_internal_buf_len;
     ReadWrite(i_dma_sound_internal_buf_len);
     dma_sound_internal_buf_len=i_dma_sound_internal_buf_len;
@@ -840,7 +892,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWrite(SampleRate); // global of 3rd party
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(dma_sound_bass);
+#elif defined(SSE_VAR_RESIZE)
     int i_dma_sound_bass=dma_sound_bass;
     ReadWrite(i_dma_sound_bass);
     dma_sound_bass=dma_sound_bass;
@@ -849,7 +903,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
     if(dma_sound_bass<0 || dma_sound_bass>=0xC)
       dma_sound_bass=6;
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE_392)
+    ReadWriteByte(dma_sound_treble);
+#elif defined(SSE_VAR_RESIZE)
     int i_dma_sound_treble=dma_sound_treble;
     ReadWrite(i_dma_sound_treble);
     dma_sound_treble=dma_sound_treble;
