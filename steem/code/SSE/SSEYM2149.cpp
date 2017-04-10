@@ -3,6 +3,7 @@
 #if defined(SSE_YM2149_OBJECT)
 /*  In v3.5.1, object YM2149 was only used for drive management (drive, side).
     In v3.7.0, sound functions were introduced (sampled soundchip, more realistic).
+    In v3.9.2, it harbours an alternative PSG emu based on MAME.
 */
 
 #include "../pch.h"
@@ -20,6 +21,10 @@
 TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   p_fixed_vol_3voices=NULL;
+#endif
+#if defined(SSE_YM2149_MAMELIKE)
+  m_rng=1; 
+  m_env_step_mask=0x1F; // 32 steps for envelope in YM
 #endif
 }
 
@@ -116,7 +121,7 @@ void TYM2149::Reset() {
 #define TONE_PERIOD(_chan)   \
   ( psg_reg[(_chan) << 1] | ((psg_reg[((_chan) << 1) | 1] & 0x0f) << 8) )
 
-void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
+void TYM2149::psg_write_buffer(DWORD to_t) {
   ASSERT(OPTION_MAME_YM); // C2 + Sampled YM2149
 #if defined(SSE_CARTRIDGE_BAT2)
 /*  B.A.T II plays the same samples on both the MV16 and the PSG, because
@@ -141,7 +146,9 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
   int time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
   int samples_sent=0;
   int ym2149_cycles_at_start_of_loop=m_cycles;
-
+#if defined(SSE_YM2149_MAMELIKE5)
+  *p=0;
+#endif
 /*  The following was inspired by MAME project, especially ay8910.cpp.
     thx Couriersud
 */
@@ -183,6 +190,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
 
     /* update envelope */
     ASSERT(m_env_step_mask==31);
+
     if (m_holding == 0)
     {
       int envperiod=(((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) 
@@ -219,7 +227,15 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
     }
     m_env_volume = (m_env_step ^ m_attack);
     ASSERT(m_env_volume<32);
-
+#if defined(SSE_YM2149_MAMELIKE2)
+    //as in psg's AlterV
+    BYTE index[3],interpolate[4];
+    *(int*)interpolate=0;
+    ASSERT( interpolate[0]==0 );
+    ASSERT( interpolate[1]==0 );
+    ASSERT( interpolate[2]==0 );
+    int vol=0;
+#endif
     for(int abc=0;abc<3;abc++)
     {
       // Tone
@@ -235,28 +251,106 @@ void TYM2149::psg_write_buffer(DWORD to_t) { //SAVED BEFORE WE MOVE TO YM
       // mixing
       m_vol_enabled[abc] = (m_output[abc] | TONE_ENABLEQ(abc)) 
         & (NOISE_OUTPUT() | NOISE_ENABLEQ(abc));
-      
-      int t=(enveloped) ? BIT_6 :0;
 
-      // pick correct volume or 0
+#if defined(SSE_YM2149_MAMELIKE3)
+      if(OPTION_SAMPLED_YM)
       {
-      if(!m_vol_enabled[abc])
-        ; // 0
-      else if (enveloped)
-        t|=m_env_volume; // vol 5bit
-      else
-        t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
-      t<<=8*abc;
-      *p|=t;
+#endif
+        int t=(enveloped) ? BIT_6 :0;
+
+        // pick correct volume or 0
+        if(!m_vol_enabled[abc])
+          ; // 0
+        else if (enveloped)
+          t|=m_env_volume; // vol 5bit
+        else
+          t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
+#if defined(SSE_YM2149_MAMELIKE2)
+        index[abc]=( ((t)>>1))&0xF; // 4bit volume
+        interpolate[abc]=((t&BIT_6) && index[abc]>0 && !(t&1) ) ? 1 : 0;
+        ASSERT( interpolate[abc]<=1 );
+        ASSERT( index[abc]<=15 );
+#else
+        t<<=8*abc;
+        *p|=t;
+#endif
+#if defined(SSE_YM2149_MAMELIKE3)
       }
+      else
+      {
+        if(!m_vol_enabled[abc])
+          ; // 0
+        else if (enveloped)
+          vol+=psg_envelope_level[7][m_env_volume];
+        else
+          vol+=psg_flat_volume_level[(psg_reg[abc+8] & 15)];
+      }
+#endif
+
     }//nxt abc
 
-    // note those samples are still 4bit or 5bit digital values
-    // they'll be converted later - TODO?
+#if defined(SSE_YM2149_MAMELIKE2)
+#if defined(SSE_YM2149_MAMELIKE3)
+    if(OPTION_SAMPLED_YM)
+    {
+#endif
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+      vol=p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]];
+#else //?
+      vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
+#endif
+      if(*(int*)(&interpolate[0]))
+      {
+        ASSERT( !((index[0]-interpolate[0])&0x80) );
+        ASSERT( !((index[1]-interpolate[1])&0x80) );
+        ASSERT( !((index[2]-interpolate[2])&0x80) );
+#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
+        int vol2=p_fixed_vol_3voices[ (16*16)*(index[2]-interpolate[2])
+          +16*(index[1]-interpolate[1])+(index[0]-interpolate[0])];
+#else
+        int vol2=fixed_vol_3voices[index[2]-interpolate[2]] 
+        [index[1]-interpolate[1]] [index[0]-interpolate[0]];
+#endif
+        vol= (int) sqrt( (float) vol * (float) vol2); 
+      }
+#if defined(SSE_YM2149_MAMELIKE3)
+    }
+#endif    
+
+
+#if defined(SSE_YM2149_MAMELIKE4) && defined(SSE_PRIVATE_BUILD)
+/*  at 44,1khz,makes no difference for Star Trek or Union Demo
+    but it does for Nostalgia credits... 
+*/
+    if(SSE_TEST_ON)
+    {
+      m_oversampling_count++; // won't overflow
+      *p+=vol; // adding 16bit values
+    }
+    else
+      *p=vol;
+#elif defined(SSE_YM2149_MAMELIKE4)
+    m_oversampling_count++;
+    *p+=vol;
+#else
+    *p=vol;
+#endif
+#endif//
     if(m_cycles-time_to_send_next_sample>=0)
     {
       ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+#if defined(SSE_YM2149_MAMELIKE4)
+      if(m_oversampling_count>1)
+      {
+        //TRACE_OSD("%d",m_oversampling_count);
+        *p/=m_oversampling_count;
+      }
+      m_oversampling_count=0;
+#endif
       p++;
+#if defined(SSE_YM2149_MAMELIKE5)
+      *p=0;
+#endif
       count--;
       samples_sent++;
       time_to_send_next_sample=ym2149_cycles_at_start_of_loop

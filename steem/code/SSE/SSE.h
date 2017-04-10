@@ -1811,6 +1811,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_YM2149_392)
 #define SSE_YM2149_MAMELIKE
+#define SSE_YM2149_MAMELIKE2 // no delayed rendering 
+#define SSE_YM2149_MAMELIKE3 // mame-like with steem's tables (temp?)
+#define SSE_YM2149_MAMELIKE4 // other attempt at oversampling
+#define SSE_YM2149_MAMELIKE5 // nasty bug
+
 #endif
 
 #endif//beta
