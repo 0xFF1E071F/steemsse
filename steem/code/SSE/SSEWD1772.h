@@ -2,8 +2,10 @@
 #ifndef WD1772_H
 #define WD1772_H
 #include "SSE.H"
-#include "SSEParameters.h"
 #include <conditions.h>
+#include <fdc.decla.h>
+#include "SSEParameters.h"
+
 
 /*
 This is from the WD1772 doc:
@@ -32,8 +34,16 @@ struct TWD1772IDField {
   BYTE len;
   BYTE CRC[2]; // not a WORD because ST was big-endian
   // FUCNTIONS
-  TWD1772IDField();
-  WORD nBytes();
+  inline TWD1772IDField() {
+#ifdef SSE_UNIX
+    memset(this,0,sizeof(TWD1772IDField));
+#else
+    ZeroMemory(this,sizeof(TWD1772IDField));
+#endif
+  }
+  inline WORD nBytes(){
+    return (1<<( (len&3) +7)); // other way: harder
+  }
 //#ifdef SSE_DEBUG
   void Trace(); // empty body if not debug
 //#endif  
@@ -59,8 +69,19 @@ struct TWD1772MFM {
 struct TWD1772Crc {
   DWORD crccnt;
   WORD crc;
-  void Reset();
-  void Add(BYTE data);
+/*  Contrary to what the doc states, the CRC Register isn't preset to ones 
+    ($FFFF) prior to data being shifted through the circuit, but to $CDB4.
+    This happens for each $A1 address mark (read or written), so the register
+    value after $A1 is the same no matter how many address marks.
+    When formatting the backup disk, Dragonflight writes a single $F5 (->$A1)
+    in its custom track headers and expects to read value $CDB4.
+*/
+  inline void Reset() {
+    crc=0xCDB4;
+  }
+  inline void Add(BYTE data) {
+    fdc_add_to_crc(crc,data); // we just call Steem's original function for now
+  }
   bool Check(TWD1772IDField *IDField);
 };
 

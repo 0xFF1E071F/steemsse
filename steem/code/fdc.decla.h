@@ -147,7 +147,11 @@ EXT BYTE fdc_read_address_buffer[20];
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
-#if defined(SSE_FLOPPY) //TODO direct variables
+#if defined(SSE_YM2149_DRIVE_392) // variables instead of function calls
+#define DRIVE (YM2149.SelectedDrive)
+#define CURRENT_SIDE (YM2149.SelectedSide)
+#define CURRENT_TRACK (floppy_head_track[DRIVE])
+#elif defined(SSE_FLOPPY)
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed
 #define CURRENT_SIDE floppy_current_side()
 #define CURRENT_TRACK (SF314[DRIVE].Track())

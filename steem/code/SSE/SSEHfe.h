@@ -7,7 +7,36 @@
 #include <hfe/libhxcfe.h> //3rdparty
 #include <hfe/hfe_format.h> //3rdparty
 
+#include "SSEDrive.h"
+
 #pragma pack(push, STRUCTURE_ALIGNMENT)
+
+#if defined(SSE_DISK_MFM0)
+
+struct  TImageHFE:public TImageMfm {
+  bool Open(char *path);
+  void Close();
+  bool LoadTrack(BYTE side,BYTE track,bool reload=false);
+  WORD GetMfmData(WORD position); 
+  void SetMfmData(WORD position, WORD mfm_data);
+#if defined(SSE_GUI_DM_HFE)
+  bool Create(char *path);
+#endif
+  // other functions
+  TImageHFE();
+  ~TImageHFE();
+  int ComputeIndex();
+  void Init();
+  WORD MirrorMFM(WORD mfm_word);
+  // variables
+  WORD *TrackData;
+  BYTE *ImageData;
+  picfileformatheader *file_header;
+  pictrack *track_header;
+  int image_size;
+};
+
+#else
 
 struct  TImageHFE {
   // interface (the same as for STW disk images)
@@ -37,6 +66,9 @@ struct  TImageHFE {
   WORD Position;
   BYTE Id; //0,1, same as drive
 };
-#pragma pack(pop)
+
+#endif
+
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//#ifndef SSEHFE_H

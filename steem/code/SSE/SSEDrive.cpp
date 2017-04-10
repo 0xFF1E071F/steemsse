@@ -306,6 +306,13 @@ void TSF314::Read() {
   ASSERT(Id==DRIVE);
 #if defined(SSE_DISK) && defined(SSE_DISK_STW)
   //it works but side could change again in the interval
+
+#if defined(SSE_DISK_MFM0) //proper C++
+  if(Disk[Id].current_side!=CURRENT_SIDE && ImageType.Manager==MNGR_WD1772)
+  {
+    MfmManager->LoadTrack(CURRENT_SIDE,Track());
+  }
+#else
   if(Disk[Id].current_side!=CURRENT_SIDE && (IMAGE_STW||IMAGE_HFE|IMAGE_SCP))
   {
     if(IMAGE_STW)
@@ -320,9 +327,14 @@ void TSF314::Read() {
 #endif
   }
 #endif
+#endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.reading;
+#if defined(SSE_DISK_MFM0A)
+  if(IMAGE_STW)
+    new_position=true; //temp
+#endif
 #endif
 
   if(!State.reading || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
@@ -344,6 +356,13 @@ void TSF314::Read() {
   }
   else // get next byte regardless of timing
     Disk[Id].current_byte++;
+#if defined(SSE_DISK_MFM0) //proper C++
+  if(ImageType.Manager==MNGR_WD1772)
+  {
+    WD1772.Mfm.encoded=MfmManager->GetMfmData(new_position
+      ?Disk[Id].current_byte:0xffff);
+  }
+#else
 #if defined(SSE_DISK_STW)
   if(IMAGE_STW)
     WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
@@ -358,7 +377,7 @@ void TSF314::Read() {
     WD1772.Mfm.encoded=ImageSCP[Id].GetMfmData(
       new_position?Disk[Id].current_byte:0xffff);
 #endif
-
+#endif
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND) && defined(SSE_WD1772_EMU)
   ASSERT(!(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1));
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
@@ -415,6 +434,10 @@ void TSF314::Write() {
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.writing;
+#if defined(SSE_DISK_MFM0A)
+  if(IMAGE_STW)
+    new_position=true; //temp
+#endif
 #endif
 
   if(!State.writing || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
@@ -434,6 +457,13 @@ void TSF314::Write() {
     ; 
   else
 #endif
+#if defined(SSE_DISK_MFM0) //proper C++
+  if(ImageType.Manager==MNGR_WD1772)
+  {
+    MfmManager->SetMfmData(new_position?Disk[Id].current_byte:0xffff,
+      WD1772.Mfm.encoded);
+  }
+#else
 #if defined(SSE_DISK_STW)
   if(IMAGE_STW)
     ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
@@ -447,6 +477,7 @@ void TSF314::Write() {
   else if(IMAGE_SCP)
     ImageSCP[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
       WD1772.Mfm.encoded);
+#endif
 #endif
 #if defined(SSE_WD1772_EMU)
   // set up next byte event
@@ -656,6 +687,41 @@ void TSF314::Sound_StopBuffers() {
 }
 
 #endif//sound
+
+////////////////////////////////// MFM MANAGERS ///////////////////////////////
+
+#if defined(SSE_DISK_MFM0) 
+
+TImageMfm::TImageMfm() {
+  Init();
+}
+
+
+void  TImageMfm::ComputePosition(WORD position) {
+  // when we start reading/writing, where on the disk?
+  ASSERT(Disk[Id].TrackBytes); // good old div /0 crashes the PC like it did the ST
+  position=position%Disk[Id].TrackBytes; // 0-~6256, safety
+  //TRACE_LOG("old position %d new position %d\n",Position,position);
+  Position=Disk[Id].current_byte=position;
+}
+
+
+
+void TImageMfm::IncPosition(){
+  ASSERT(Disk[Id].TrackBytes);
+  Position=(Position+1)%Disk[Id].TrackBytes;
+#if defined(SSE_DISK_HFE_TRIGGER_IP)// STW?
+  if(!Position)
+    SF314[Id].IndexPulse(true);
+#endif
+}
+
+
+void TImageMfm::Init() {
+  fCurrentImage=NULL;
+}
+
+#endif
 
 #endif//drive
 

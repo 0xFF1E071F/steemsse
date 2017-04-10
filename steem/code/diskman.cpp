@@ -1529,7 +1529,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
                 | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING,
                 2024,T("Configuration"));
-#if defined(SSE_GUI_DM_PASTI_ONLY_STX)
+#if defined(SSE_GUI_DM_PASTI_ONLY_STX_392) // present it the other way
+              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+                (!OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Run ST/MSA images"));
+#elif defined(SSE_GUI_DM_PASTI_ONLY_STX)
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
                 (OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
 #endif
@@ -3790,13 +3793,14 @@ void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 void TDiskManager::EjectDisk(int Drive)
 {
   FloppyDrive[Drive].RemoveDisk();
+#if !defined(SSE_TOS_PRG_AUTORUN_392)//eject not the right place
 #ifdef WIN32//ux382
 #ifdef SSE_TOS_PRG_AUTORUN2
   if(SF314[Drive].ImageType.Extension==EXT_PRG
     ||SF314[Drive].ImageType.Extension==EXT_TOS)
   {
     HardDiskMan.DisableHardDrives=true; // we suppose it's wanted
-#ifdef SSE_TOS_PRG_AUTORUN_390
+#if defined(SSE_TOS_PRG_AUTORUN_390) 
     stemdos_current_drive=0; // A:
 #endif
 #ifdef SSE_GUI_DM_HD_SELECTED // update GEMDOS HD icon
@@ -3806,6 +3810,8 @@ void TDiskManager::EjectDisk(int Drive)
   }
   SF314[Drive].ImageType.Extension=0;
 #endif
+#endif
+
   if (Handle){
     SendMessage(GetDlgItem(Handle,100+Drive),LVM_DELETEITEM,0,0);
     EnableWindow(GetDlgItem(GetDlgItem(Handle,98+Drive),100),AreNewDisksInHistory(Drive));

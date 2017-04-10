@@ -7,14 +7,29 @@
 #include "SSEParameters.h"
 #include "SSEDisk.h"
 
-/* How a floppy disk is structured (bytes/track, gaps...) is handled
-   here.
-   TODO review, simplify...
-   TODO separate native/pasti/etc... 
-   TODO much to move to Disk
+#pragma pack(push, STRUCTURE_ALIGNMENT)
+
+#if defined(SSE_DISK_MFM0) 
+/*  Base class for TImageHFE +...
 */
 
-#pragma pack(push, STRUCTURE_ALIGNMENT)
+struct  TImageMfm {
+  // interface
+  virtual WORD GetMfmData(WORD position)=0; 
+  virtual bool LoadTrack(BYTE side,BYTE track,bool reload=false)=0;
+  virtual void SetMfmData(WORD position,WORD mfm_data)=0;
+  void ComputePosition(WORD position);
+  void IncPosition();
+  // other functions
+  TImageMfm();
+  void Init();
+  // variables
+  FILE *fCurrentImage;
+  DWORD Position;
+  BYTE Id; //0,1, same as drive
+};
+
+#endif//mfm
 
 struct TSF314 {
 
@@ -24,6 +39,10 @@ struct TSF314 {
   enum {START,MOTOR,STEP,SEEK,NSOUNDS} ;
 #endif
   // DATA
+#if defined(SSE_DISK_MFM0) 
+  TImageMfm *MfmManager;
+#endif//mfm
+
 #if defined(SSE_DRIVE_SOUND)
 #ifdef WIN32
   IDirectSoundBuffer *Sound_Buffer[NSOUNDS]; // fixed array
@@ -89,7 +108,7 @@ struct TSF314 {
 
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//SSE_DRIVE_OBJECT
 #endif//#ifndef SSEDRIVE_H

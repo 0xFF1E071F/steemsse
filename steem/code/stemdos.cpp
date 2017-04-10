@@ -127,7 +127,7 @@ void stemdos_set_drive_reset()
 int stemdos_get_boot_drive()
 {
   if (stemdos_boot_drive<2) return 0;
-
+  
   // If there is a disk in drive A then boot from it except if
   // the control key is being held down
   bool NoControl=true;
@@ -144,8 +144,13 @@ int stemdos_get_boot_drive()
     ||SF314[0].ImageType.Extension==EXT_TOS)&& OPTION_PRG_SUPPORT)
     return AUTORUN_HD;
 #endif
-
+#ifdef SSE_DEBUG
+  int rv=int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
+  ASSERT(!(rv&&HardDiskMan.DisableHardDrives));
+  return rv;
+#else
   return int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
+#endif
 }
 //---------------------------------------------------------------------------
 bool stemdos_any_files_open()

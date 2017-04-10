@@ -247,7 +247,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     SF314[1].Sound_ChangeVolume();
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
-  OPTION_PRG_SUPPORT=pCSF->GetInt("Disks","PRG_support",OPTION_PRG_SUPPORT);
+    OPTION_PRG_SUPPORT=pCSF->GetInt("Disks","PRG_support",OPTION_PRG_SUPPORT);
 #endif
 
     SetNumFloppies(pCSF->GetInt("Disks","NumFloppyDrives",num_connected_floppies));

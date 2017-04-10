@@ -19,7 +19,6 @@
 #include <pasti/pasti.h>
 #endif
 #include <cpu.decla.h>
-#include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <iorw.decla.h>
 #include <mfp.decla.h>
@@ -664,21 +663,6 @@ void TWD1772::TraceStatus() {
 #if defined(SSE_WD1772_IDFIELD)
 //#if defined(SSE_DISK_STW) || defined(SSE_DISK_GHOST)
 
-TWD1772IDField::TWD1772IDField() {
-#ifdef SSE_UNIX
-  memset(this,0,sizeof(TWD1772IDField));
-#else
-  ZeroMemory(this,sizeof(TWD1772IDField));
-#endif
-}
-
-
-WORD TWD1772IDField::nBytes() {
-  WORD nbytes=1<<( (len&3) +7); // other way: harder
-  return nbytes;
-}
-
-
 void TWD1772IDField::Trace() {
 #ifdef SSE_DEBUG
 //  TRACE_LOG("ID track %d side %d num %d len %d CRC %X%X\n",track,side,num,len,CRC[0],CRC[1]);
@@ -700,17 +684,6 @@ void TWD1772IDField::Trace() {
 */
 
 #if defined(SSE_WD1772_MFM)
-
-#ifdef SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
-  // todo, also in bits
- for(int i=0;i<256;i++)
- {
-   WD1772.Mfm.data=i;
-   WD1772.Mfm.Encode();
-   TRACE("D %02X -> C %02X MFM %04X\n",i,WD1772.Mfm.clock,WD1772.Mfm.encoded);
- }
-#endif
-
 
 void TWD1772MFM::Decode() {
 
@@ -780,11 +753,6 @@ void TWD1772MFM::Encode(int mode) {
 
 #if defined(SSE_WD1772_CRC)
 
-void TWD1772Crc::Add(BYTE data) {
-  fdc_add_to_crc(crc,data); // we just call Steem's original function for now
-}
-
-
 bool TWD1772Crc::Check(TWD1772IDField *IDField) {
   bool ok=IDField->CRC[0]==HIBYTE(crc) && IDField->CRC[1]==LOBYTE(crc);
 #ifdef SSE_DEBUG
@@ -792,19 +760,6 @@ bool TWD1772Crc::Check(TWD1772IDField *IDField) {
     TRACE_LOG("CRC error - computed: %X - read: %X%X\n",crc,IDField->CRC[0],IDField->CRC[1]);
 #endif
   return ok;
-}
-
-
-/*  Contrary to what the doc states, the CRC Register isn't preset to ones 
-    ($FFFF) prior to data being shifted through the circuit, but to $CDB4.
-    This happens for each $A1 address mark (read or written), so the register
-    value after $A1 is the same no matter how many address marks.
-    When formatting the backup disk, Dragonflight writes a single $F5 (->$A1)
-    in its custom track headers and expects to read value $CDB4.
-*/
-
-void TWD1772Crc::Reset() {
-  crc=0xCDB4;
 }
 
 #endif
@@ -1311,11 +1266,17 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
 void TWD1772::OnUpdate() {
 
   update_time=time_of_next_event+n_cpu_cycles_per_second; // we come here anyway
-
+#if defined(SSE_DISK_MFM0)
+  if(SF314[DRIVE].ImageType.Manager!=MNGR_WD1772)
+  {
+    return;
+  }
+#else
   if(!(IMAGE_STW)&&!(IMAGE_SCP)&&!(IMAGE_HFE)) // only for those images
   {
-    return; 
+    return;
   }
+#endif
   switch(prg_phase)
   {
     
@@ -1433,7 +1394,13 @@ r1       r0            1772
 
     if(CR&CR_V)
     {
-      // that's not proper C++...
+#if defined(SSE_DISK_MFM0) //proper C++
+      if(SF314[DRIVE].ImageType.Manager==MNGR_WD1772)
+      {
+        SF314[DRIVE].MfmManager->LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+      }
+#else
+      // that's not proper C++... 
       if(IMAGE_STW)
       {
         ImageSTW[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
@@ -1450,7 +1417,7 @@ r1       r0            1772
         ImageHFE[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
       }
 #endif
-
+#endif
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
       update_time=time_of_next_event+ MsToCycles(15);
     }
@@ -2083,6 +2050,12 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
   if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
   {
+#if defined(SSE_DISK_MFM0) //proper C++
+      if(SF314[DRIVE].ImageType.Manager==MNGR_WD1772)
+      {
+        SF314[DRIVE].MfmManager->LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+      }
+#else
     // there's certainly a more elegant C++ way... TODO!
     if(IMAGE_STW)
       ImageSTW[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
@@ -2093,6 +2066,7 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 #if defined(SSE_DISK_HFE)
     else if(IMAGE_HFE)
       ImageHFE[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
+#endif
 #endif
   }
 
