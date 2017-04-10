@@ -2795,7 +2795,11 @@ void draw_init_resdependent()
 //TODO it's just lowres?
 int SteemDisplay::STXPixels() {
   int st_x_pixels=320+(border&1)*SideBorderSizeWin*2; //displayed
-  if(screen_res)
+  if(screen_res
+#if defined(SSE_BUGFIX_392)
+    || mixed_output
+#endif
+    )
     st_x_pixels*=2;
   return st_x_pixels;
 }
@@ -2803,7 +2807,11 @@ int SteemDisplay::STXPixels() {
 
 int SteemDisplay::STYPixels() {
   int st_y_pixels=200+(border&1)*(BORDER_TOP+BORDER_BOTTOM);
-  if(screen_res)
+  if(screen_res
+#if defined(SSE_BUGFIX_392)
+    || mixed_output
+#endif
+    )
     st_y_pixels*=2;
   return st_y_pixels;
 }
