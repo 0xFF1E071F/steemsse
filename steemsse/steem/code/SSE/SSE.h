@@ -1238,9 +1238,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_WD1772_EMU) && defined(SSE_DISK) && defined(WIN32)
 
-#define SSE_DISK_STW
-#define SSE_DISK_SCP // Supercard Pro disk image format support
-#define SSE_DISK_HFE // HxC floppy emulator HFE image support
+#define SSE_DISK_MFM
 
 #endif
 
@@ -1346,9 +1344,14 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if defined(SSE_DISK_STW)
+#if defined(SSE_DISK_MFM)
 
+#define SSE_DISK_STW
+#if defined(SSE_DISK_STW)
 #define SSE_DISK_STW_FAST // +HFE
+#endif
+#define SSE_DISK_SCP // Supercard Pro disk image format support
+#define SSE_DISK_HFE // HxC floppy emulator HFE image support
 #if defined(SSE_GUI_DISK_MANAGER)
 #define SSE_GUI_DM_STW //new context option
 #define SSE_GUI_STW_CONVERT // Convert to STW
@@ -1399,7 +1402,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_WD1772_F7_ESCAPE
 #define SSE_WD1772_BIT_LEVEL // necessary for SCP support
-//#define SSE_WD1772_MFM_PRODUCE_TABLE // one-shot switch...
 #define SSE_WD1772_390
 #define SSE_WD1772_390C
 
@@ -1745,6 +1747,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392D // bus access always 4 cycles
 #endif
 
+#define SSE_DISK_MFM0
+//#define SSE_DISK_MFM0A //temp
+
 #ifdef SSE_GLUE
 #define SSE_GLUE_392A //correct start & end cycles
 #define SSE_GLUE_392B //refactor hscroll extra fetch
@@ -1752,7 +1757,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_392D //timer B
 #endif
 
+#ifdef SSE_GUI
+#define SSE_GUI_DM_PASTI_ONLY_STX_392
 #define SSE_GUI_INFOBOX_CLIPBOARD
+#endif
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
@@ -1825,6 +1833,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_X64_392
 #endif
 #define SSE_SOUND_DMA_390E//switch disappeared...
+#define SSE_YM2149_DRIVE_392
+#define SSE_TOS_PRG_AUTORUN_392
 
 #endif//bugfix
 

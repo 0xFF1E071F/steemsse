@@ -1278,14 +1278,19 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
           SerialPort.SetDTR(io_src_b & BIT_4);
           SerialPort.SetRTS(io_src_b & BIT_3);
+#if defined(SSE_YM2149_DRIVE_392)
+          YM2149.SelectedSide=((io_src_b&BIT_0)==0); //0:side 1, 1:side 0
+          ASSERT(YM2149.SelectedSide==0||YM2149.SelectedSide==1);
+#endif
           if ((old_val & (BIT_1+BIT_2))!=(io_src_b & (BIT_1+BIT_2))){
 
 #if defined(SSE_YM2149_DRIVE)
-            // TODO not reliable
             YM2149.SelectedDrive=floppy_current_drive();
-            YM2149.SelectedSide=floppy_current_side(); //TODO out of here!! bit 0 not tested
+            ASSERT(YM2149.SelectedDrive==0||YM2149.SelectedDrive==1);
+#if !defined(SSE_YM2149_DRIVE_392)
+            YM2149.SelectedSide=floppy_current_side();
 #endif
-
+#endif
 
 #if defined(SSE_YM2149C)
 /*  turn on/off motor in drives

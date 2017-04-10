@@ -1146,6 +1146,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     YM2149.p_fixed_vol_3voices=tmp;
 #endif
+#if defined(SSE_YM2149_DRIVE_392)//older sapshot
+    YM2149.SelectedDrive=floppy_current_drive();
+    YM2149.SelectedSide=floppy_current_side();
+#endif
     }
 #endif
 

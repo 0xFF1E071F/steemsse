@@ -262,11 +262,18 @@ void TImageSCP::IncPosition() {
 
 
 void TImageSCP::Init() {
+#if defined(SSE_DISK_MFM0) 
+  TimeFromIndexPulse=NULL;
+  N_SIDES=2;
+  N_TRACKS=83; //max
+  nBytes=DISK_BYTES_PER_TRACK; //not really pertinent (TODO?)
+#else
   fCurrentImage=NULL;
   TimeFromIndexPulse=NULL;
   N_SIDES=2;
   N_TRACKS=83; //max
   nBytes=DISK_BYTES_PER_TRACK; //not really pertinent (TODO?)
+#endif
 }
 
 
@@ -473,7 +480,9 @@ file_header.IFF_HEADS,file_header.IFF_RSRVED,file_header.IFF_CHECKSUM);
 
   if(!ok)
     Close();
-
+#if defined(SSE_DISK_MFM0) //proper C++
+  else SF314[Id].MfmManager=this;
+#endif
   return ok;
 }
 

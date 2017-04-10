@@ -384,7 +384,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 */
   else if(PRG||TOS)
   {
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+    SSEConfig.old_DisableHardDrives=HardDiskMan.DisableHardDrives;
+#else
     bool old_DisableHardDrives=HardDiskMan.DisableHardDrives;
+#endif
     HardDiskMan.DisableHardDrives=false; // or mount path is wrong
     HardDiskMan.update_mount();
     Str PrgPath=mount_path[AUTORUN_HD]; // Z: (2+'Z'-'C')
@@ -413,7 +417,11 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       
     }//if
     else
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+      HardDiskMan.DisableHardDrives=SSEConfig.old_DisableHardDrives;
+#else
       HardDiskMan.DisableHardDrives=old_DisableHardDrives;
+#endif
   }
 #endif//prg  
 
@@ -1158,6 +1166,21 @@ int TFloppyImage::GetRawTrackData(int Side,int Track)
 #pragma warning (disable: 4701) //MSA vars
 void TFloppyImage::RemoveDisk(bool LoseChanges)
 {
+#if defined(WIN32) && defined(SSE_TOS_PRG_AUTORUN_392)
+#ifdef SSE_TOS_PRG_AUTORUN2
+  if(SF314[DRIVE].ImageType.Extension==EXT_PRG
+    ||SF314[DRIVE].ImageType.Extension==EXT_TOS)
+  {
+    SF314[DRIVE].ImageType.Extension=0;
+    HardDiskMan.DisableHardDrives=SSEConfig.old_DisableHardDrives;
+    HardDiskMan.update_mount(); // this was missing...
+#ifdef SSE_GUI_DM_HD_SELECTED // update GEMDOS HD icon
+    HWND icon_handle=GetDlgItem(DiskMan.Handle,10);
+    SendMessage(icon_handle,BM_SETCHECK,!HardDiskMan.DisableHardDrives,0);
+#endif
+  }
+#endif
+#endif
 
 #if  defined(SSE_VAR_DONT_REMOVE_NON_EXISTENT_IMAGES)
   if(Empty()) // nothing to do

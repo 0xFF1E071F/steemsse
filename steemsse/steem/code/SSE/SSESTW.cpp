@@ -108,6 +108,30 @@ bool TImageSTW::Create(char *path) {
 
 #endif
 
+#if defined(SSE_DISK_MFM0)
+
+WORD TImageSTW::GetMfmData(WORD position) {
+  WORD mfm_data=0xFFFF;
+  // must compute new starting point?
+  if(position!=mfm_data) //dubious optimisation, it's 0xFFFF
+    ComputePosition(position);
+  if(TrackData && Position<TRACKBYTES)
+  {
+    mfm_data=TrackData[Position];
+    SWAP_WORD(&mfm_data);
+    IncPosition();
+  }
+#ifdef SSE_DEBUG
+  else 
+  {
+    TRACE_LOG("GetMfmData(%c:%d) error\n",'A'+DRIVE,Position);
+    TRACE_OSD("STW ERR");
+  }
+#endif
+  return mfm_data;
+}
+
+#else
 
 WORD TImageSTW::GetMfmData(WORD position) {
   WORD mfm_data=0;
@@ -126,8 +150,17 @@ WORD TImageSTW::GetMfmData(WORD position) {
   return mfm_data;
 }
 
+#endif
 
 void TImageSTW::Init() {
+#if defined(SSE_DISK_MFM0) 
+  Version=0x0100; // 1.0
+  ImageData=NULL;
+  TrackData=NULL;
+  N_SIDES=2;
+  N_TRACKS=84;
+  TRACKBYTES=DISK_BYTES_PER_TRACK;
+#else
   Version=0x0100; // 1.0
   fCurrentImage=NULL;
   ImageData=NULL;
@@ -135,10 +168,14 @@ void TImageSTW::Init() {
   N_SIDES=2;
   N_TRACKS=84;
   TRACKBYTES=DISK_BYTES_PER_TRACK;
+#endif
 }
 
-
+#if defined(SSE_DISK_MFM0) 
+bool  TImageSTW::LoadTrack(BYTE side,BYTE track,bool) {
+#else
 bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
+#endif
   ASSERT(Id==0||Id==1);
   bool ok=false;
   if(side<N_SIDES && track<N_TRACKS && ImageData)  
@@ -216,9 +253,29 @@ bool TImageSTW::Open(char *path) {
   }//if(fCurrentImage)
   if(!ok)
     Close();
+#if defined(SSE_DISK_MFM0) //proper C++
+  else SF314[Id].MfmManager=this;
+#endif
   return ok;
 }
 
+#if defined(SSE_DISK_MFM0)
+
+void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
+  // must compute new starting point?
+  if(position!=0xFFFF)
+    ComputePosition(position);
+  if(TrackData && Position<TRACKBYTES)
+  {
+    TrackData[Position]=mfm_data;
+    SWAP_WORD(&TrackData[Position]);
+    if(!FloppyDrive[Id].ReadOnly)
+      FloppyDrive[Id].WrittenTo=true;
+    IncPosition();
+  }
+}
+
+#else
 
 void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
   if(TrackData && position<TRACKBYTES)
@@ -230,4 +287,7 @@ void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
   }
 }
 
+#endif
+
 #endif//defined(SSE_DISK_STW)
+
