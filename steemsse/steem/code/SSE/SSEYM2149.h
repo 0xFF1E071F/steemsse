@@ -26,6 +26,9 @@ struct TYM2149 {
   BYTE m_hold,m_alternate,m_attack,m_holding;
   BYTE m_prescale_noise;
   BYTE m_vol_enabled[NUM_CHANNELS];
+#if defined(SSE_YM2149_MAMELIKE4)
+  BYTE m_oversampling_count;
+#endif
 #endif
 #if defined(SSE_YM2149A)
   BYTE SelectedDrive; //0/1 (use Drive() to check validity)

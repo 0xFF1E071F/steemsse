@@ -337,6 +337,10 @@ HRESULT Sound_Start() // SS called by
     YM2149.m_rng++;
   ASSERT(YM2149.m_env_step_mask==0x1f);
   YM2149.m_env_step_mask=0x1f;
+#if defined(SSE_YM2149_MAMELIKE4)
+  YM2149.m_oversampling_count=0;
+#endif
+
 #endif
 
   return DS_OK;
@@ -593,6 +597,9 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     && YM2149.p_fixed_vol_3voices
 #endif
+#if defined(SSE_YM2149_MAMELIKE2)
+    && !OPTION_MAME_YM //already rendered
+#endif
     )
   {
 #if defined(SSE_SOUND_RECORD_391B)
@@ -627,7 +634,6 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #else
     int vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
 #endif
-
     if(*(int*)(&interpolate[0]))
     {
       ASSERT( !((index[0]-interpolate[0])&0x80) );
