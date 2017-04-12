@@ -2138,7 +2138,7 @@ void psg_write_buffer(int abc,DWORD to_t)
           }else{
             *(p++)+=vol;
           }
-          ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+          ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
           PSG_TONE_ADVANCE
           PSG_NOISE_ADVANCE
         }
@@ -2162,7 +2162,7 @@ void psg_write_buffer(int abc,DWORD to_t)
           }else{
             *(p++)+=vol;
           }
-          ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+          ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
           PSG_TONE_ADVANCE
         }
       }
@@ -2191,7 +2191,7 @@ void psg_write_buffer(int abc,DWORD to_t)
         }else{
           *(p++)+=vol;
         }
-        ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+        ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
         PSG_NOISE_ADVANCE
       }
     }else{ //nothing enabled //SS playing samples
@@ -2207,7 +2207,7 @@ void psg_write_buffer(int abc,DWORD to_t)
         } else
 #endif
         *(p++)+=vol;
-        ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+        ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
       }
     }
     psg_buf_pointer[abc]=to_t-psg_time_of_last_vbl_for_writing;

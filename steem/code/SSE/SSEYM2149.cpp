@@ -353,7 +353,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 #endif
     if(m_cycles-time_to_send_next_sample>=0)
     {
-      ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+      ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
 #if defined(SSE_YM2149_MAMELIKE4)
       if(m_oversampling_count>1)
         *p/=m_oversampling_count;
