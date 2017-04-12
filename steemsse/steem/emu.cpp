@@ -13,7 +13,7 @@ functions. Basically includes all the files that are in the object.
 #include "conditions.h"
 #include "SSE/SSEDebug.h" // SSE build or not
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "SSE/SSE.h"
 #include "SSE/SSEDecla.h"
 #include "SSE/SSEParameters.h"
@@ -36,12 +36,12 @@ typedef EasyStr Str;
 #include "dirsearch.h"
 #include "dynamicarray.h"
 #include "portio.h"
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "translate.decla.h"
 #else
 #include "translate.h"
 #endif
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #define EXT
 #define INIT(s) =s
 
@@ -69,7 +69,7 @@ EasyStr StripAndT(char *s)
 #include "onegame.h"
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "acc.decla.h"
 #include "gui.decla.h"
 #include "shortcutbox.decla.h"
@@ -99,7 +99,7 @@ void internal_speaker_sound_by_period(int){}
 
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "reset.decla.h"
 #include "display.decla.h"
 #include "steemh.decla.h"
@@ -109,7 +109,7 @@ void internal_speaker_sound_by_period(int){}
 #include "steemh.h"
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #ifdef IN_EMU
 #define EXT
@@ -231,7 +231,7 @@ EXT char m68k_src_b;
 #include "acia.decla.h"
 #endif
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 
 #include "cpu.decla.h"
 #include "run.decla.h"
@@ -318,7 +318,7 @@ EXT char m68k_src_b;
 #include "rs232.cpp"
 #include "emulator.cpp"
 
-#if defined(SSE_STRUCTURE_DECLA)
+#if defined(SSE_BUILD)
 #include "SSE/SSEInterrupt.cpp" // not an object (yet?)
 #ifdef SSE_VID_SDL
 #include "SSE/SSESDL.cpp"
