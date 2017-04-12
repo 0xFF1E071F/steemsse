@@ -500,6 +500,62 @@ HRESULT DSGetPrimaryBuffer()
     if (DS_GetFormat_Wrong) sound_freq=DS_SetFormat_freq;
   }
 
+#if defined(SSE_SOUND_DYNAMICBUFFERS)
+/*  Create dynamic buffer for PSG.
+    It will be deleted/recreated at each sound option change that provokes a
+    call to this function.
+    It will be deleted when Steem closes.
+    We do so because of higher sample rates, not to reserve too much memory
+    if SR isn't high. Still use an integer factor, so some memory will be
+    wasted.
+
+    22050               0.440             1
+    25033               0.500             1
+    44100               0.881             1
+    48000               0.959             1
+    50066               1.000             1
+    96000               1.917             2
+    192000              3.835             4
+    250000              4.993             5
+    384000              7.670             8
+*/
+
+  int factor=1;
+  if(sound_freq>50066)
+  {
+    double r=(double)sound_freq/50066;
+    factor=ceil(r);
+    ASSERT(factor==2||factor==4||factor==5||factor==8);
+  }
+  int samples_per_vbl=((sound_freq/50)+1)*SCREENS_PER_SOUND_VBL;
+  
+  if(psg_channels_buf_len+16!=samples_per_vbl)
+  {
+    if(psg_channels_buf!=NULL)
+      delete[] psg_channels_buf;
+    psg_channels_buf=new int[samples_per_vbl+16];
+    ASSERT(psg_channels_buf);
+    ZeroMemory(psg_channels_buf,(samples_per_vbl+16)*sizeof(int));
+    psg_channels_buf_len=samples_per_vbl;
+    TRACE_INIT("buffer for psg %dhz = %d x32bit =%d bytes\n",
+      sound_freq,psg_channels_buf_len,psg_channels_buf_len*sizeof(int));
+  }
+#if defined(SSE_SOUND_DYNAMICBUFFERS2) // same thing for DMA, *2 for stereo
+  samples_per_vbl=((sound_freq/50)+1)*SCREENS_PER_SOUND_VBL*2;
+  if(dma_sound_channel_buf_len+16!=samples_per_vbl)
+  {
+    if(dma_sound_channel_buf!=NULL)
+      delete[] dma_sound_channel_buf;
+    dma_sound_channel_buf=new WORD[samples_per_vbl+16];
+    ASSERT(dma_sound_channel_buf);
+    ZeroMemory(dma_sound_channel_buf,(samples_per_vbl+16)*sizeof(WORD));
+    dma_sound_channel_buf_len=samples_per_vbl;
+    TRACE_INIT("buffer for dma %dhz = %d x16bit =%d bytes\n",
+      sound_freq,dma_sound_channel_buf_len,dma_sound_channel_buf_len*sizeof(WORD));
+  }
+#endif
+#endif
+
   return DS_OK;
 }
 //---------------------------------------------------------------------------

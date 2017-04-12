@@ -3208,7 +3208,7 @@ Windows 2000	5.0
   SendMessage(Win,BM_SETCHECK,OPTION_C2,0);
   ToolAddWindow(ToolTip,Win,
 #if defined(SSE_YM2149_MAMELIKE)
-    T("Chipset 2 - Check for a more precise emulation of the MFP and a lower level emulation of the YM2149."));
+    T("Chipset 2 - Check for a more precise emulation of the MFP and a lower level emulation of the PSG."));
 #else
     T("Chipset 2 - Check for a more precise emulation of the MFP."));
 #endif

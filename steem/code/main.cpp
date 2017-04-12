@@ -1447,6 +1447,17 @@ void CleanUpSteem()
   if (TranslateUpperBuf) delete[] TranslateUpperBuf;
   TranslateBuf=NULL;TranslateUpperBuf=NULL;
 
+#if defined(SSE_SOUND_DYNAMICBUFFERS)
+  dbg_log("SHUTDOWN: Deleting sound buffers");
+  if(psg_channels_buf!=NULL)
+    delete[] psg_channels_buf;
+#if defined(SSE_SOUND_DYNAMICBUFFERS2)
+  if(dma_sound_channel_buf!=NULL)
+    delete[] dma_sound_channel_buf;
+#endif
+#endif
+
+
   dbg_log("SHUTDOWN: Closing logfile - bye!!!");
 
 #ifdef ENABLE_LOGFILE
@@ -1462,7 +1473,6 @@ void CleanUpSteem()
   if (hPasti) FreeLibrary(hPasti);
   hPasti=NULL;
 #endif
-
 }
 //---------------------------------------------------------------------------
 

@@ -1805,6 +1805,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_YM2149_SOUND
 #define SSE_SOUND_250K
+#define SSE_SOUND_DYNAMICBUFFERS //psg
+#define SSE_SOUND_DYNAMICBUFFERS2 //dma
+#define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
 #define SSE_SOUND_MORE_SAMPLE_RATES
 #define SSE_YM2149_392
 #endif
@@ -1815,7 +1818,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_MAMELIKE3 // mame-like with steem's tables (temp?)
 #define SSE_YM2149_MAMELIKE4 // other attempt at oversampling
 #define SSE_YM2149_MAMELIKE5 // nasty bug
-
+#define SSE_YM2149_MAMELIKE6 // pitch with boosted CPU
+#define SSE_YM2149_MAMELIKE7 // old snapshot...
 #endif
 
 #endif//beta

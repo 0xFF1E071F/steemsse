@@ -181,17 +181,22 @@ EXT WORD dma_sound_internal_buf[4],dma_sound_last_word;
 EXT MEM_ADDRESS dma_sound_fetch_address;
 
 // Max frequency/lowest refresh *2 for stereo
-#if defined(SSE_SOUND_MORE_SAMPLE_RATES)
+#if defined(SSE_SOUND_DYNAMICBUFFERS2)
+#elif defined(SSE_SOUND_MORE_SAMPLE_RATES)
 //#define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2 *4 //ok->200k
 // in words, 2 words per sample, mono or stereo
-// we added asserts in debug builds
 #define DMA_SOUND_BUFFER_LENGTH (((384000*2)/50)*SCREENS_PER_SOUND_VBL)
 #else
 #define DMA_SOUND_BUFFER_LENGTH 2600 * SCREENS_PER_SOUND_VBL * 2
 #endif
 
-
+#if defined(SSE_SOUND_DYNAMICBUFFERS2)
+EXT WORD *dma_sound_channel_buf;
+EXT int dma_sound_channel_buf_len;
+#define DMA_SOUND_BUFFER_LENGTH (dma_sound_channel_buf_len)
+#else
 EXT WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
+#endif
 EXT DWORD dma_sound_channel_buf_last_write_t;
 
 #define DMA_SOUND_CHECK_TIMER_A \
@@ -266,7 +271,8 @@ void psg_write_buffer(int,DWORD);
 
 //#define PSG_CHANNEL_BUF_LENGTH (2048*SCREENS_PER_SOUND_VBL)
 
-#if defined(SSE_SOUND_MORE_SAMPLE_RATES)
+#if defined(SSE_SOUND_DYNAMICBUFFERS)
+#elif defined(SSE_SOUND_MORE_SAMPLE_RATES)
 // like dma, but integers, and no stereo
 //#define PSG_CHANNEL_BUF_LENGTH (((384000)/50)*SCREENS_PER_SOUND_VBL+64)
 #define PSG_CHANNEL_BUF_LENGTH (8192*SCREENS_PER_SOUND_VBL*10) //overkill
@@ -280,7 +286,13 @@ void psg_write_buffer(int,DWORD);
 #define VOLTAGE_FP(x) ((x) << 8)
 
 //BYTE psg_channel_buf[3][PSG_CHANNEL_BUF_LENGTH];
+#if defined(SSE_SOUND_DYNAMICBUFFERS)
+EXT int *psg_channels_buf;
+EXT int psg_channels_buf_len;
+#define PSG_CHANNEL_BUF_LENGTH (psg_channels_buf_len)
+#else
 EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16]; //SS Steem will add channels into one integer
+#endif
 EXT int psg_buf_pointer[3];
 EXT DWORD psg_tone_start_time[3];
 
