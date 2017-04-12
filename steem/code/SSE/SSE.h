@@ -1768,6 +1768,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_392
 #define SSE_INT_MFP_TIMER_B_392 // refactoring
 #define SSE_INT_MFP_TIMERS_NO_BOOST
+#define SSE_INT_MFP_TIMERS_NO_BOOST2 // he he
 #undef SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT //obsolete!
 #endif
 
