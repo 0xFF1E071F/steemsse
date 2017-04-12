@@ -1708,7 +1708,15 @@ void prepare_cpu_boosted_event_plans()
 #endif
   int factor=n_millions_cycles_per_sec; //SS TODO optimise away
 #if defined(SSE_TIMING_MULTIPLIER)
+#if defined(SSE_INT_MFP_TIMERS_NO_BOOST)
+/*  Rather than multiplying prescales, which causes imprecision, we will
+    directly apply the multiplier to timer periods.
+    This change also affects screen_event.time (for the best hopefully).
+*/
+  cpu_cycles_multiplier=(double)factor/8;
+#else
   cpu_cycles_multiplier=factor/8;
+#endif
   ASSERT(cpu_cycles_multiplier>0);
 #elif defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
   if(factor>=512)
@@ -1727,16 +1735,20 @@ void prepare_cpu_boosted_event_plans()
 #endif
     scanline_time_in_cpu_cycles[idx]=(scanline_time_in_cpu_cycles_8mhz[idx]*factor)/8;
   }
+#if !defined(SSE_INT_MFP_TIMERS_NO_BOOST)
   for (int n=0;n<16;n++){
 #if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)
 /*  We leave the prescale unlimited, it won't mess timings if the value is small 
     enough... but what if it's big?
 */
     mfp_timer_prescale[n]=(mfp_timer_8mhz_prescale[n]*factor)/8;
+    //ASSERT((mfp_timer_8mhz_prescale[n]*factor)%8==0);
 #else
     mfp_timer_prescale[n]=min((mfp_timer_8mhz_prescale[n]*factor)/8,1000);
 #endif
   }
+#endif
+
 //  init_timings();
   mfp_init_timers();
   if (runstate==RUNSTATE_RUNNING) prepare_event_again();

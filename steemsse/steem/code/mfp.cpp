@@ -278,12 +278,15 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
                           // SS or pulse, but it's very unlikely (not emulated)
 
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME; //SS as modified
-
+#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
+          // a bit risky, the code isn't 100% the same
+#else
           mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]
             *mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK);
 //          mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+
 //              (mfp_timer_prescale[new_control]*(mfp_timer_counter[timer])*125)/MFP_CLK;
               //*8000/MFP_CLK for MFP cycles, /64 for counter resolution
+#endif
           mfp_timer_enabled[timer]=mfp_interrupt_enabled[mfp_timer_irq[timer]];
 
 #if defined(SSE_CPU_MFP_RATIO_PRECISION)
@@ -295,6 +298,10 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           double precise_cycles= mfp_timer_prescale[new_control]
                                   *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))
                                     *CPU_CYCLES_PER_MFP_CLK;
+#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
+          precise_cycles*=cpu_cycles_multiplier;
+          mfp_timer_timeout[timer]+=int(precise_cycles);
+#endif
           mfp_timer_period[timer]=(int)precise_cycles;
           if(OPTION_C2)
           {

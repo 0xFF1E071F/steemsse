@@ -55,7 +55,11 @@ EXT int extended_monitor INIT(0);//SS can't be bool
 #endif
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 #if defined(SSE_TIMING_MULTIPLIER)
+#if defined(SSE_INT_MFP_TIMERS_NO_BOOST)
+EXT double cpu_cycles_multiplier INIT(1.0);
+#else
 EXT BYTE cpu_cycles_multiplier INIT(1);
+#endif
 #endif
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;

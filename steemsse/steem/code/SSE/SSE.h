@@ -1765,17 +1765,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
 #ifdef SSE_INT_MFP
-//#define SSE_INT_MFP_IRQ_WOBBLE // apply wobble only for IRQ itself //WRONG! MFD
+#define SSE_INT_MFP_392
 #define SSE_INT_MFP_TIMER_B_392 // refactoring
-#endif
-
-#if defined(SSE_INT_MFP_IRQ_WOBBLE)
-#undef SSE_CPU_MFP_RATIO_STE
-#undef SSE_INT_MFP_GPIP_TO_IRQ_DELAY
-#undef SSE_INT_MFP_TIMER_B_WOBBLE_HACK
-#undef SSE_INT_MFP_TIMERS_WOBBLE
-#undef SSE_INT_MFP_TIMERS_WOBBLE_390
-//#undef SSE_INT_MFP_READ_DELAY //TODO - where does it make a difference?
+#define SSE_INT_MFP_TIMERS_NO_BOOST
+#undef SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT //obsolete!
 #endif
 
 #if defined(SSE_INT_MFP_TIMER_B_392)

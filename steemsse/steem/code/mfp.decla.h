@@ -2,13 +2,17 @@
 #ifndef MFP_DECLA_H
 #define MFP_DECLA_H
 
+
+
 #include "SSE/SSEOption.h"
 #include "SSE/SSEDebug.h"
+#include "SSE/SSEInterrupt.h"
+#include <steemh.decla.h>
+#include <emulator.decla.h>
+#include <binary.h>
 
 #define EXT extern
 #define INIT(s)
-
-#include <binary.h>
 
 inline int abs_quick(int i) //was in emu.cpp (!)
 {
@@ -18,8 +22,6 @@ inline int abs_quick(int i) //was in emu.cpp (!)
 
 #if defined(SSE_INT_MFP_TIMER_B_392B)
 #define TB_TIME_WOBBLE (rand() % 7) //0-6 (TIMERB07.TOS)
-#elif defined(SSE_INT_MFP_IRQ_WOBBLE)
-#define TB_TIME_WOBBLE (0) // only for IRQ
 #elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
 #define TB_TIME_WOBBLE (rand() & 2)
 #else
@@ -272,7 +274,23 @@ void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts();
 #endif
 
+#if defined(SSE_INT_MFP_392) // new mod, time to inline
+
+inline void mfp_calc_timer_period(int t) {
+  double precise_cycles= mfp_timer_prescale[mfp_get_timer_control_register(t)]
+  *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))*CPU_CYCLES_PER_MFP_CLK;
+#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
+  precise_cycles*=cpu_cycles_multiplier;
+#endif
+  mfp_timer_period[t]=(int)precise_cycles;
 #if defined(SSE_CPU_MFP_RATIO_PRECISION)
+  mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );
+  mfp_timer_period_current_fraction[t]=0;
+#endif
+}
+#define MFP_CALC_TIMER_PERIOD(t) mfp_calc_timer_period(t)
+
+#elif defined(SSE_CPU_MFP_RATIO_PRECISION)
 // the fraction is computed anyway but is used only if option C2 is checked
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
