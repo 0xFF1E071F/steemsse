@@ -107,7 +107,12 @@ WORD MicroWire_Data=0;
 int MicroWire_StartTime=0;
 WORD dma_sound_internal_buf[4],dma_sound_last_word;
 MEM_ADDRESS dma_sound_fetch_address;
+#if defined(SSE_SOUND_DYNAMICBUFFERS2)
+WORD *dma_sound_channel_buf=NULL;
+int dma_sound_channel_buf_len=0; // variable
+#else
 WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
+#endif
 DWORD dma_sound_channel_buf_last_write_t;
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE psg_reg_select;
@@ -151,7 +156,13 @@ BYTE old_dma_sound_l_top_val,old_dma_sound_r_top_val;
 #endif
 #endif//microwire
 
+#if defined(SSE_SOUND_DYNAMICBUFFERS)
+int *psg_channels_buf=NULL;
+int psg_channels_buf_len=0; // variable
+#else
 int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16];
+#endif
+
 int psg_buf_pointer[3];
 DWORD psg_tone_start_time[3];
 char psg_noise[PSG_NOISE_ARRAY];
@@ -238,7 +249,10 @@ DWORD psg_envelope_start_time=0xfffff000;
 extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE) // for my half-arsed microwire emulation!
+#if defined(SSE_SOUND_MICROWIRE_392)// for my half-arsed microwire emulation!
+#define LOW_SHELF_FREQ 80 // officially 50 Hz
+#define HIGH_SHELF_FREQ (min(10000,(int)sound_freq/2)) // officially  15 kHz
+#elif defined(SSE_SOUND_MICROWIRE) 
 #define LOW_SHELF_FREQ 80 // officially 50 Hz
 #if defined(SSE_SOUND_MICROWIRE_TREBLE)
 #define HIGH_SHELF_FREQ (min(2000,(int)dma_sound_freq/2)) // officially  15 kHz
@@ -331,6 +345,7 @@ HRESULT Sound_Start() // SS called by
     sound_record_start_time=timer+200; //start recording in 200ms time
     sound_record_open_file();
   }
+#if !defined(SSE_YM2149_MAMELIKE7)
 #if defined(SSE_YM2149_MAMELIKE)// older snapshot for example
   ASSERT(YM2149.m_rng);
   if(!YM2149.m_rng) 
@@ -340,7 +355,7 @@ HRESULT Sound_Start() // SS called by
 #if defined(SSE_YM2149_MAMELIKE4)
   YM2149.m_oversampling_count=0;
 #endif
-
+#endif
 #endif
 
   return DS_OK;
@@ -1281,7 +1296,6 @@ HRESULT Sound_VBL()
 #endif
     WORD w[2]={dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2],dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-1]};
     for (int i=0;i<PSG_WRITE_EXTRA;i++){
-      ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[0];
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[1];
@@ -1474,7 +1488,6 @@ Bit 0 controls Replay off/on, Bit 1 controls Loop off/on (0=off, 1=on).
           for (int i=0;i<loop;i++){
             dma_sound_output_countdown+=sound_freq;
             while (dma_sound_output_countdown>=0){
-              ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
               if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
               dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
               dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1538,7 +1551,9 @@ void dma_sound_set_mode(BYTE new_mode)
 
   dma_sound_mode=new_mode;
   dma_sound_freq=dma_sound_mode_to_freq[dma_sound_mode & 3];
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE_392)
+  SampleRate=sound_freq;
+#elif defined(SSE_SOUND_MICROWIRE)
   SampleRate=dma_sound_freq; // global of 3rd party dsp
 #endif
   log_to(LOGSECTION_SOUND,EasyStr("SOUND: ")+HEXSl(old_pc,6)+" - DMA sound mode set to $"+HEXSl(dma_sound_mode,2)+" freq="+dma_sound_freq);
@@ -1636,7 +1651,6 @@ void dma_sound_fetch()
       w2=WORD((dma_sound_last_word & 0x00ff) << 6);
       // dma_sound_channel_buf always stereo, so put each mono sample in twice
       while (dma_sound_output_countdown>=0){
-        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
@@ -1644,7 +1658,6 @@ void dma_sound_fetch()
       }
       dma_sound_output_countdown+=sound_freq;
       while (dma_sound_output_countdown>=0){
-        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1666,7 +1679,6 @@ void dma_sound_fetch()
       }
       
       while (dma_sound_output_countdown>=0){
-        ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w1;
         dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w2;
@@ -1759,7 +1771,6 @@ void dma_mv16_fetch(WORD data) {
   while (dma_sound_samples_countdown>/*=*/0){
     dma_sound_output_countdown+=sound_freq;
     while (dma_sound_output_countdown>=0){
-      ASSERT(dma_sound_channel_buf_last_write_t<DMA_SOUND_BUFFER_LENGTH);
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) 
         break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=dma_sound_last_word;

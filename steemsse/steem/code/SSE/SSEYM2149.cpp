@@ -14,6 +14,7 @@
 #include <stports.decla.h>
 #include "SSEYM2149.h"
 #include "SSEOption.h"
+#include "SSEInterrupt.h"
 
 
 //SOUND
@@ -22,7 +23,7 @@ TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   p_fixed_vol_3voices=NULL;
 #endif
-#if defined(SSE_YM2149_MAMELIKE)
+#if defined(SSE_YM2149_MAMELIKE) && !defined(SSE_YM2149_MAMELIKE7)
   m_rng=1; 
   m_env_step_mask=0x1F; // 32 steps for envelope in YM
 #endif
@@ -102,7 +103,7 @@ BYTE TYM2149::PortA(){
 #if defined(SSE_YM2149_MAMELIKE)
 
 void TYM2149::Reset() {
-  m_rng = 1;
+  m_rng = 1; //it will take 2exp17=131072 values
   m_output[0] = 0;
   m_output[1] = 0;
   m_output[2] = 0;
@@ -113,6 +114,13 @@ void TYM2149::Reset() {
   m_count_env = 0;
   m_prescale_noise = 0;
   m_cycles=0; 
+#if defined(SSE_YM2149_MAMELIKE7)
+  // 32 steps for envelope in YM - we do it at reset for old snapshots
+  m_env_step_mask=0x1f; 
+#if defined(SSE_YM2149_MAMELIKE4)
+  m_oversampling_count=0;
+#endif
+#endif
 }
 
 #define NOISE_ENABLEQ(_chan)  ((psg_reg[PSGR_MIXER] >> (3 + _chan)) & 1)
@@ -122,7 +130,7 @@ void TYM2149::Reset() {
   ( psg_reg[(_chan) << 1] | ((psg_reg[((_chan) << 1) | 1] & 0x0f) << 8) )
 
 void TYM2149::psg_write_buffer(DWORD to_t) {
-  ASSERT(OPTION_MAME_YM); // C2 + Sampled YM2149
+  ASSERT(OPTION_MAME_YM);
 #if defined(SSE_CARTRIDGE_BAT2)
 /*  B.A.T II plays the same samples on both the MV16 and the PSG, because
     the MV16 of B.A.T I wasn't included, it was just supported.
@@ -141,8 +149,16 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
   int *p=psg_channels_buf+psg_buf_pointer[0];
   ASSERT(sound_freq);
+  // YM2149 @2mhz = 1/4 * CPU clock
+#if defined(SSE_YM2149_MAMELIKE6)
+  // no reason a CPU boost hack would boost the PSG (or the FDC for that matter)
+  // eg Mega STE @16Mhz
   double ym2149_cycles_per_sample=
-    ((double)n_cpu_cycles_per_second/4)/(double)sound_freq; // casts are important
+  ((double)CpuNormalHz/4)/(double)sound_freq; // casts are important
+#else
+  double ym2149_cycles_per_sample=
+    ((double)n_cpu_cycles_per_second/4)/(double)sound_freq;
+#endif
   int time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
   int samples_sent=0;
   int ym2149_cycles_at_start_of_loop=m_cycles;
@@ -150,7 +166,9 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   *p=0;
 #endif
 /*  The following was inspired by MAME project, especially ay8910.cpp.
-    thx Couriersud
+    thx Couriersud.
+    Notice the emulation is both simple and short. It's possible that
+    this system is more efficient than Steem's way (PREPARE, ADVANCE...).
 */
 
   /* The 8910 has three outputs, each output is the mix of one of the three */
@@ -163,7 +181,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   /* buffering loop */
   while(count)
   {
-    m_cycles+=8;
+    m_cycles+=8; 
 
     // We compute noise then envelope, then we compute each tone and
     // mix each channel
@@ -175,6 +193,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
        * channels.
        */
       m_count_noise = 0;
+      ASSERT(!(m_prescale_noise&0xfe));
       m_prescale_noise ^= 1;
 
       if (m_prescale_noise)
@@ -190,6 +209,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
     /* update envelope */
     ASSERT(m_env_step_mask==31);
+    ASSERT(!(m_holding&0xfe));
 
     if (m_holding == 0)
     {
@@ -244,6 +264,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       m_count[abc]++;
       if(m_count[abc]>=TONE_PERIOD(abc)) 
       {
+        ASSERT(!(m_output[abc]&0xfe));
         m_output[abc] ^= 1;
         m_count[abc]=0;
       }
@@ -252,6 +273,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       m_vol_enabled[abc] = (m_output[abc] | TONE_ENABLEQ(abc)) 
         & (NOISE_OUTPUT() | NOISE_ENABLEQ(abc));
 
+      // from here on, specific to Steem rendering (different options)
 #if defined(SSE_YM2149_MAMELIKE3)
       if(OPTION_SAMPLED_YM)
       {
@@ -317,34 +339,24 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     }
 #endif    
 
-
-#if defined(SSE_YM2149_MAMELIKE4) && defined(SSE_PRIVATE_BUILD)
-/*  at 44,1khz,makes no difference for Star Trek or Union Demo
+#if defined(SSE_YM2149_MAMELIKE4)
+/*  At 44,1khz,makes no difference for Star Trek or Union Demo
     but it does for Nostalgia credits... 
 */
-    if(SSE_TEST_ON)
-    {
-      m_oversampling_count++; // won't overflow
-      *p+=vol; // adding 16bit values
-    }
-    else
-      *p=vol;
-#elif defined(SSE_YM2149_MAMELIKE4)
+    ASSERT(m_oversampling_count<0xff);
     m_oversampling_count++;
     *p+=vol;
+    ASSERT(!(*p&0x8000000));
 #else
     *p=vol;
 #endif
-#endif//
+#endif
     if(m_cycles-time_to_send_next_sample>=0)
     {
       ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
 #if defined(SSE_YM2149_MAMELIKE4)
       if(m_oversampling_count>1)
-      {
-        //TRACE_OSD("%d",m_oversampling_count);
         *p/=m_oversampling_count;
-      }
       m_oversampling_count=0;
 #endif
       p++;

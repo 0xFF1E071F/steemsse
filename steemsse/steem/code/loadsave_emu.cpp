@@ -890,8 +890,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   {
 #if defined(SSE_SOUND_MICROWIRE)
     ReadWrite(SampleRate); // global of 3rd party
+#if defined(SSE_SOUND_MICROWIRE_392)
+    SampleRate=sound_freq;
+#else
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
+#endif
 #if defined(SSE_VAR_RESIZE_392)
     ReadWriteByte(dma_sound_bass);
 #elif defined(SSE_VAR_RESIZE)
@@ -1149,6 +1153,13 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_YM2149_DRIVE_392)//older sapshot
     YM2149.SelectedDrive=floppy_current_drive();
     YM2149.SelectedSide=floppy_current_side();
+#endif
+#if defined(SSE_YM2149_MAMELIKE7)
+    if(Version<56)
+    {
+      ASSERT(LoadOrSave==LS_LOAD);
+      YM2149.Reset(); //restore sane values
+    }
 #endif
     }
 #endif
