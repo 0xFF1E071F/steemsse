@@ -316,6 +316,9 @@ register. This is of course correct in Steem but hey, I didn't even know that.
 */
           double precise_cycles= mfp_timer_prescale[new_control]
                                   *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))
+#if defined(SSE_TIMING_MULTIPLIER_392) //let's not forget this...
+                                    *cpu_cycles_multiplier
+#endif
                                     *CPU_CYCLES_PER_MFP_CLK;
           mfp_timer_period[timer]=(int)precise_cycles;
           if(OPTION_C2)
