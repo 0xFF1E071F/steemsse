@@ -101,11 +101,13 @@ The ACIA master clock is 500kHz.
 The master clock crystal and derived CPU clock table is:
 PAL (all variants)       32.084988   8.021247
 NTSC (pre-STE)           32.0424     8.0106
+Mega ST                  32.04245    8.0106125
 NTSC (STE)               32.215905   8.053976
 Peritel (STE) (as PAL)   32.084988   8.021247
 Some STFs                32.02480    8.0071
 */
 
+#define  CPU_STF_MEGA (8010613) //rounded
 
 #define  CPU_STF_PAL 8021247
 #define  CPU_STF_ALT (8007100) //ljbk's? 

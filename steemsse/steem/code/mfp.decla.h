@@ -207,11 +207,15 @@ extern TMC68901 MC68901; // declaring the singleton
 inline BYTE mfp_get_timer_control_register(int);
 
 #if defined(SSE_VAR_RESIZE)
+#if !defined(SSE_TIMING_MULTIPLIER_392)
 EXT const WORD mfp_timer_8mhz_prescale[16];
+#endif
 EXT const BYTE mfp_timer_irq[4];
 EXT const BYTE mfp_gpip_irq[8];
 #else
+#if !defined(SSE_TIMING_MULTIPLIER_392)
 EXT const int mfp_timer_8mhz_prescale[16];
+#endif
 EXT const int mfp_timer_irq[4];
 EXT const int mfp_gpip_irq[8];
 #endif
@@ -279,8 +283,8 @@ void mfp_check_for_timer_timeouts();
 inline void mfp_calc_timer_period(int t) {
   double precise_cycles= mfp_timer_prescale[mfp_get_timer_control_register(t)]
   *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))*CPU_CYCLES_PER_MFP_CLK;
-#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
-  precise_cycles*=cpu_cycles_multiplier;
+#if defined(SSE_TIMING_MULTIPLIER_392)
+  precise_cycles*=cpu_cycles_multiplier; //cpu_cycles_multiplier is a double
 #endif
   mfp_timer_period[t]=(int)precise_cycles;
 #if defined(SSE_CPU_MFP_RATIO_PRECISION)

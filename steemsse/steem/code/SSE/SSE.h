@@ -1766,9 +1766,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_INT_MFP
 #define SSE_INT_MFP_392
+#define SSE_CPU_MFP_RATIO_PRECISION_392
 #define SSE_INT_MFP_TIMER_B_392 // refactoring
-#define SSE_INT_MFP_TIMERS_NO_BOOST
-#define SSE_INT_MFP_TIMERS_NO_BOOST2 // he he
 #undef SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT //obsolete!
 #endif
 
@@ -1791,6 +1790,14 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
 #define SSE_MMU_MONSTER_ALT_RAM_IO // $FFFE00
 #define SSE_MMU_MONSTER_ALT_RAM_IO2 // supervisor test
+#endif
+
+#if defined(SSE_STF_MEGASTF)
+#define SSE_STF_MEGASTF_CLOCK
+#endif
+
+#if defined(SSE_TIMING_MULTIPLIER)
+#define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
 #endif
 
 #ifdef SSE_VAR_RESIZE

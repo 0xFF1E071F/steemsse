@@ -122,8 +122,21 @@ int TConfig::SwitchSTType(int new_type) {
     else
 #endif
     {
+#if defined(SSE_STF_MEGASTF_CLOCK)
+      if(ST_TYPE==MEGASTF)
+      {
+        CpuMfpRatio=((double)CPU_STF_MEGA-0.5)/(double)MFP_CLOCK; //it's rounded up in hz
+        CpuNormalHz=CPU_STF_MEGA;
+      }
+      else
+      {
+        CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLOCK;
+        CpuNormalHz=CPU_STF_PAL;
+      }
+#else
       CpuMfpRatio=(double)CPU_STF_PAL/(double)MFP_CLOCK;
       CpuNormalHz=CPU_STF_PAL;
+#endif
     }
 #endif
   }
