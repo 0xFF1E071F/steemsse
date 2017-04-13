@@ -19,12 +19,16 @@ EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 BYTE mfp_gpip_input_buffer=0;
 #if defined(SSE_VAR_RESIZE)
+#if !defined(SSE_TIMING_MULTIPLIER_392)
 const WORD mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,
                                         65535,4,10,16,50,64,100,200};
+#endif
 const BYTE mfp_timer_irq[4]={13,8,5,4};
 const BYTE mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 #else
+#if !defined(SSE_TIMING_MULTIPLIER_392)
 const int mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16,50,64,100,200};
+#endif
 const int mfp_timer_irq[4]={13,8,5,4};
 const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 #endif
@@ -265,7 +269,12 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
               ABSOLUTE_CPU_TIME+"; old timeout="+mfp_timer_timeout[timer]+";"
               "\r\n           ("+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)+
               " cycles into scanline #"+scan_y+")" );
-
+/*  MC68901 doc:
+"When the timer is stopped, counting is inhibited. The contents of the timer's
+main counter are not affected although any residual count in the prescaler is lost."
+-> When starting a timer, the MFP doesn't reload the main counter with the data
+register. This is of course correct in Steem but hey, I didn't even know that.
+*/
         // This ensures that mfp_timer_counter is set to the correct value just
         // in case the data register is read while timer is stopped or the timer
         // is restarted before a write to the data register.
@@ -278,12 +287,18 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
                           // SS or pulse, but it's very unlikely (not emulated)
 
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME; //SS as modified
-#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST2)
-          mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]
-            *mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK
-              *cpu_cycles_multiplier);
-#elif defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
-          // a bit risky, the code isn't 100% the same
+#if defined(SSE_TIMING_MULTIPLIER_392)
+          double precise_cycles0= 
+            (mfp_timer_prescale[new_control] * mfp_timer_counter[timer]/64)
+            * CPU_CYCLES_PER_MFP_CLK * cpu_cycles_multiplier;
+          mfp_timer_timeout[timer]+=(int)precise_cycles0;
+#if defined(SSE_CPU_MFP_RATIO_PRECISION_392)
+/*  As soon as there's a fractional part (almost all the time), that means
+    that the CPU can't be interrupted before next CPU cycle after IRQ.
+*/
+          if(precise_cycles0-(int)precise_cycles0)
+            mfp_timer_timeout[timer]++; 
+#endif
 #else
           mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]
             *mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK);
@@ -302,11 +317,6 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
           double precise_cycles= mfp_timer_prescale[new_control]
                                   *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))
                                     *CPU_CYCLES_PER_MFP_CLK;
-#if defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST2)
-#elif defined(SSE_TIMING_MULTIPLIER) && defined(SSE_INT_MFP_TIMERS_NO_BOOST)
-          precise_cycles*=cpu_cycles_multiplier;
-          mfp_timer_timeout[timer]+=int(precise_cycles);
-#endif
           mfp_timer_period[timer]=(int)precise_cycles;
           if(OPTION_C2)
           {
@@ -392,10 +402,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 #if defined(SSE_INT_MFP)
           if(OPTION_C2) 
           {
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
-/*  As soon as there's a fractional part (almost all the time), that means
-    that the CPU can't be interrupted before next CPU cycle after IRQ.
-*/
+#if defined(SSE_CPU_MFP_RATIO_PRECISION) && !defined(SSE_CPU_MFP_RATIO_PRECISION_392)
             if(mfp_timer_period_fraction[timer])
               mfp_timer_timeout[timer]++; 
 #endif
@@ -495,6 +502,40 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
     dbg_log(Str("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char(('A')+timer)+" data reg to "+new_val+" ($"+HEXSl(new_val,2)+") "+
           " at time="+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)+
           " cycles into scanline #"+scan_y+"); timeout is "+mfp_timer_timeout[timer]);
+
+#if defined(SSE_CPU_MFP_RATIO_PRECISION_392)
+    BYTE control=BYTE(mfp_get_timer_control_register(timer));
+    if (control==0){  // timer stopped
+      mfp_timer_counter[timer]=((int)BYTE_00_TO_256(new_val))*64;
+      // maybe useless as the timer is stopped     
+      double precise_cycles= mfp_timer_prescale[control]
+        *(int)(BYTE_00_TO_256(new_val))*CPU_CYCLES_PER_MFP_CLK;
+      mfp_timer_period[timer]=(int)precise_cycles;
+      if(OPTION_C2)
+      {
+        mfp_timer_period_fraction[timer]
+        =(precise_cycles-mfp_timer_period[timer])*1000;
+        mfp_timer_period_current_fraction[timer]=0;
+      }
+    }else if (control & 7){
+/*
+If the Timer Data Register is written while the timer is running, the new word
+is not loaded into the timer until it counts through H01.      
+*/      
+      // Need to calculate the period next time the timer times out
+      mfp_timer_period_change[timer]=true;
+      if (mfp_timer_enabled[timer]==0){
+        // If it is disabled it could be in the past, causing instant
+        // event_timer_?_timeout, so realign it
+        int stage=mfp_timer_timeout[timer]-ABSOLUTE_CPU_TIME;
+        ASSERT(stage>=0||mfp_timer_period[timer]);// div
+        if (stage<0) stage+=((-stage/mfp_timer_period[timer])+1)*mfp_timer_period[timer];
+        stage%=mfp_timer_period[timer];
+        mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+stage; //realign
+      }
+    }
+
+#else
     new_control=BYTE(mfp_get_timer_control_register(timer));
 
     if (new_control==0){  // timer stopped
@@ -516,6 +557,7 @@ is not loaded into the timer until it counts through H01.
         mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+stage; //realign
       }
     }
+#endif
     dbg_log(EasyStr("     Period is ")+mfp_timer_period[timer]+" cpu cycles");
     if (reg==MFPR_TDDR && new_val!=old_val){
       RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),new_control,0);

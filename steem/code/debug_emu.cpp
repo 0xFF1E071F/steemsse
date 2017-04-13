@@ -235,7 +235,11 @@ void debug_update_cycle_counts()
 #if defined(SSE_BOILER_DECRYPT_TIMERS)
         ASSERT(mfp_get_timer_control_register(t)>=0);
         ASSERT(mfp_get_timer_control_register(t)<16);
+#if defined(SSE_TIMING_MULTIPLIER_392)
+        debug_time_to_timer_prescale[t]=mfp_timer_prescale[mfp_get_timer_control_register(t)];
+#else
         debug_time_to_timer_prescale[t]=mfp_timer_8mhz_prescale[mfp_get_timer_control_register(t)];
+#endif
         debug_time_to_timer_data[t]=mfp_reg[MFPR_TADR+t]; //could directly point to it?
         debug_time_to_timer_ticks[t]=mfp_calc_timer_counter(t);
         debug_time_to_timer_count[t]=mfp_timer_counter[t]/64;
