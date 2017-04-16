@@ -781,7 +781,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   TRACE_INIT("Retrieving options\n");
   SEC(PSEC_MACHINETOS){
 #if defined(SSE_CPU_MFP_RATIO)
-#if defined(SSE_CPU_4GHZ)
+#if defined(SSE_CPU_HISPEED_392)
+    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),CPU_MAX_HERTZ),(int)CpuNormalHz);
+#elif defined(SSE_CPU_4GHZ) //MFD
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),4096000000),(int)CpuNormalHz);
 #elif defined(SSE_CPU_3GHZ)
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),3072000000),(int)CpuNormalHz);

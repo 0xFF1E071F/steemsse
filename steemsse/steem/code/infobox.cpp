@@ -124,7 +124,7 @@ const char *Credits[11]={
   "Jesse Ventura, Carl Weathers, Bill Duke, David Carradine, Bill Paxton, Jackie Chan, Harrison Ford, Viggo Mortensen,",
   "Sven-Ole Thorsen, Arnold Schwarzenegger, Vincent Klyn, Wesley Snipes, Vin Diesel, Alec Baldwin, Willem Dafoe,",
   "Harry Dean Stanton, Lee Major, Christopher Walken and James Woods.",
-  "RIP Paul Walker.",
+  "RIP Lee Van Cleef, Paul Walker.",
   NULL};
 #endif
 

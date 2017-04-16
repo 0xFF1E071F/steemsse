@@ -128,12 +128,12 @@ EXT BYTE mfp_gpip_input_buffer;
 #define MFP_S_BIT (mfp_reg[MFPR_VR] & BIT_3)
 
 
-//#if defined(SSE_INT_MFP_OBJECT) 
+#if defined(SSE_INT_MFP_OBJECT) 
 /*  We create this object for some additions, we don't transfer
     all MFP emu into it. We don't create a SSE file yet.
 */
 
-#if defined(SSE_INT_MFP)
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TMC68901IrqInfo {
   unsigned int IsGpip:1;
@@ -141,29 +141,24 @@ struct TMC68901IrqInfo {
   unsigned int Timer:4;
 };
 
-#endif
-
-#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TMC68901 {
-
-#if defined(SSE_INT_MFP)
 
   // DATA
   int IrqSetTime;
   int IackTiming;
   int WriteTiming;
-  WORD IPR;
+  WORD IPR;//unused
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
 #endif
   BYTE LastRegisterWritten;
   BYTE LastRegisterFormerValue;
   BYTE LastRegisterWrittenValue;
-  BYTE Vector;
+  BYTE Vector;//unused
   char NextIrq; //-1 reset
   char LastIrq;
-  char IrqInService;
+  char IrqInService;//unused
   bool Irq;  // asserted or not, problem, we're not in real-time
   bool WritePending;
   TMC68901IrqInfo IrqInfo[16];
@@ -186,10 +181,14 @@ struct TMC68901 {
 #if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
   void AdjustTimerB();
 #endif
-#endif
+
 };
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
+
+extern TMC68901 MC68901; // declaring the singleton
+
+#endif//#if defined(SSE_INT_MFP_OBJECT)
 
 #if !defined(SSE_INT_MFP_TIMER_B_392A)
 #if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE) 
@@ -199,7 +198,7 @@ struct TMC68901 {
 #endif
 #endif
 
-extern TMC68901 MC68901; // declaring the singleton
+
 
 //#endif//SSE_INT_MFP_OBJECT
 
@@ -228,7 +227,7 @@ EXT int mfp_timer_counter[4];
 EXT int mfp_timer_timeout[4];
 EXT bool mfp_timer_enabled[4];
 EXT int mfp_timer_period[4];
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 EXT int mfp_timer_period_fraction[4];
 EXT int mfp_timer_period_current_fraction[4];
 #endif
@@ -237,7 +236,7 @@ EXT bool mfp_timer_period_change[4];
 void mfp_set_timer_reg(int,BYTE,BYTE);
 int mfp_calc_timer_counter(int);
 void mfp_init_timers();
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_INLINE)
 bool mfp_set_pending(int,int);
 #else
 inline bool mfp_set_pending(int,int);
@@ -281,20 +280,23 @@ void mfp_check_for_timer_timeouts();
 #if defined(SSE_INT_MFP_392) // new mod, time to inline
 
 inline void mfp_calc_timer_period(int t) {
-  double precise_cycles= mfp_timer_prescale[mfp_get_timer_control_register(t)]
-  *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))*CPU_CYCLES_PER_MFP_CLK;
+  double precise_cycles= 
+    double(mfp_timer_prescale[mfp_get_timer_control_register(t)]
+    *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t])))
+    *CPU_CYCLES_PER_MFP_CLK;
 #if defined(SSE_TIMING_MULTIPLIER_392)
   precise_cycles*=cpu_cycles_multiplier; //cpu_cycles_multiplier is a double
 #endif
   mfp_timer_period[t]=(int)precise_cycles;
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
-  mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
+  //mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );
+  mfp_timer_period_fraction[t]=(int)(1000*precise_cycles-(double)mfp_timer_period[t]);
   mfp_timer_period_current_fraction[t]=0;
 #endif
 }
 #define MFP_CALC_TIMER_PERIOD(t) mfp_calc_timer_period(t)
 
-#elif defined(SSE_CPU_MFP_RATIO_PRECISION)
+#elif defined(SSE_INT_MFP_RATIO_PRECISION)
 // the fraction is computed anyway but is used only if option C2 is checked
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
@@ -341,7 +343,7 @@ inline BYTE mfp_get_timer_control_register(int n) //was in mfp.cpp
   }
 }
 
-#if !defined(SSE_INT_MFP)
+#if !defined(SSE_INT_MFP_INLINE)
 
 inline bool mfp_set_pending(int irq,int when_set) //was in mfp.cpp
 {

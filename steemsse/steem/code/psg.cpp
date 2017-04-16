@@ -169,7 +169,7 @@ char psg_noise[PSG_NOISE_ARRAY];
 
 #define VFP VOLTAGE_FIXED_POINT
 #define VZL VOLTAGE_ZERO_LEVEL
-#define VA VFP*(PSG_CHANNEL_AMPLITUDE) //SS 15360, 1/3 of 46k
+#define VA VFP*(PSG_CHANNEL_AMPLITUDE) //SS 15360, 1/3 of 46k  //256*60
 
 const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,
                                       17*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,48*VA/1000+VZL*VFP,
@@ -345,19 +345,6 @@ HRESULT Sound_Start() // SS called by
     sound_record_start_time=timer+200; //start recording in 200ms time
     sound_record_open_file();
   }
-#if !defined(SSE_YM2149_MAMELIKE7)
-#if defined(SSE_YM2149_MAMELIKE)// older snapshot for example
-  ASSERT(YM2149.m_rng);
-  if(!YM2149.m_rng) 
-    YM2149.m_rng++;
-  ASSERT(YM2149.m_env_step_mask==0x1f);
-  YM2149.m_env_step_mask=0x1f;
-#if defined(SSE_YM2149_MAMELIKE4)
-  YM2149.m_oversampling_count=0;
-#endif
-#endif
-#endif
-
   return DS_OK;
 }
 //---------------------------------------------------------------------------
@@ -612,7 +599,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     && YM2149.p_fixed_vol_3voices
 #endif
-#if defined(SSE_YM2149_MAMELIKE2)
+#if defined(SSE_YM2149_MAMELIKE)
     && !OPTION_MAME_YM //already rendered
 #endif
     )
@@ -865,11 +852,22 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         }
       }
 #endif//#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+      if (val<-VOLTAGE_FP(255))
+        val=-VOLTAGE_FP(255); 
+      else if (val>VOLTAGE_FP(255))
+        val=VOLTAGE_FP(255); 
+#else
       if (val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
+#endif
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+      *(short*)*(short**)Out_P=((short)val);
+#else
       *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
+#endif
       (*(WORD**)Out_P)++;
       // stereo: do the same for right channel
       if(sound_num_channels==2){    
@@ -900,11 +898,22 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           }
         }
 #endif
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+        if (val<-VOLTAGE_FP(255))
+          val=-VOLTAGE_FP(255); 
+        else if (val>VOLTAGE_FP(255))
+          val=VOLTAGE_FP(255); 
+#else
         if(val<VOLTAGE_FP(0))
           val=VOLTAGE_FP(0); 
         else if (val>VOLTAGE_FP(255))
           val=VOLTAGE_FP(255); 
+#endif
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+        *(short*)*(short**)Out_P=((short)val);
+#else
         *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
+#endif
         (*(WORD**)Out_P)++;
       }//right channel 
       WAVEFORM_ONLY(temp_waveform_display[((int)(*source_p-psg_channels_buf)+psg_time_of_last_vbl_for_writing) % MAX_temp_waveform_display_counter]=WORD_B_1(&val)); 
@@ -962,16 +971,26 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         }
       }
 #endif
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+    if(Write!=WRITE_TO_WAV_FILE_B && val<-VOLTAGE_FP(255))
+      val=-VOLTAGE_FP(255); 
+    else if(Write==WRITE_TO_WAV_FILE_B && val<VOLTAGE_FP(0))
+      val=VOLTAGE_FP(0);
+    else if (val>VOLTAGE_FP(255))
+      val=VOLTAGE_FP(255); 
+#else
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
     else if (val>VOLTAGE_FP(255))
       val=VOLTAGE_FP(255); 
-
+#endif
     if(Write==WRITE_TO_WAV_FILE_B) 
       fputc(BYTE(WORD_B_1(&(val))),wav_file);
     else 
     {
+#if !defined(SSE_SOUND_SIGNED_SAMPLES)
       val^=MSB_W;
+#endif
       fputc(LOBYTE(val),wav_file);
       fputc(HIBYTE(val),wav_file);
     }
@@ -1001,16 +1020,26 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         }
       }
 #endif
+#if defined(SSE_SOUND_SIGNED_SAMPLES)
+      if(Write!=WRITE_TO_WAV_FILE_B && val<-VOLTAGE_FP(255))
+        val=-VOLTAGE_FP(255); 
+      else if(Write==WRITE_TO_WAV_FILE_B && val<VOLTAGE_FP(0))
+        val=VOLTAGE_FP(0);
+      else if (val>VOLTAGE_FP(255))
+        val=VOLTAGE_FP(255); 
+#else
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
-
+#endif
       if(Write==WRITE_TO_WAV_FILE_B) 
         fputc(BYTE(WORD_B_1(&(val))),wav_file);
       else 
       {
+#if !defined(SSE_SOUND_SIGNED_SAMPLES)
         val^=MSB_W;
+#endif
         fputc(LOBYTE(val),wav_file);
         fputc(HIBYTE(val),wav_file);
       }
@@ -1282,7 +1311,10 @@ HRESULT Sound_VBL()
   TRACE_PSG("VBL finishing sound buffers from %d to %d (%d)+ extra %d\n",psg_time_of_last_vbl_for_writing,time_of_next_vbl_to_write,time_of_next_vbl_to_write-psg_time_of_last_vbl_for_writing,PSG_WRITE_EXTRA);
 #if defined(SSE_YM2149_MAMELIKE)
   if(OPTION_MAME_YM)
+  {
+    //TRACE_OSD("YM");
     YM2149.psg_write_buffer(time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
+  }
   else
 #endif
   for (int abc=2;abc>=0;abc--){
@@ -2089,7 +2121,7 @@ void psg_write_buffer(int abc,DWORD to_t)
   double af,bf;
   bool psg_tonetoggle=true,psg_noisetoggle;
   int *p=psg_channels_buf+psg_buf_pointer[abc];
-  ASSERT(p-psg_channels_buf<PSG_CHANNEL_BUF_LENGTH);
+  ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[abc]);//SS where we are now
   to_t=max(to_t,t);//SS can't go backwards
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);//SS don't exceed buffer
@@ -2393,10 +2425,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     new_val&=31;
   }
   if (reg>=PSGR_PORT_A) return; //SS 14,15
-  //ASSERT(!(old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE));
-#if !defined(SSE_YM2149_WRITE_SAME_VALUE) //test?
+
   if (old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE) return;
-#endif
+
   if (psg_capture_file){
     psg_capture_check_boundary();
     DWORD cycle=int(ABSOLUTE_CPU_TIME-psg_capture_cycle_base);
@@ -2431,8 +2462,6 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 
   DWORD t=psg_time_of_last_vbl_for_writing+(DWORD)a64; //SS t's unit is #samples (total)
 
-
-
   dbg_log(EasyStr("SOUND: PSG reg ")+reg+" changed to "+new_val+" at "+scanline_cycle_log()+"; samples "+t+"; vbl was at "+psg_time_of_last_vbl_for_writing);
 
   TRACE_PSG("PSG set reg %d = $%X (was %X), t=%d\n",reg,new_val,old_val,t);
@@ -2442,7 +2471,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     YM2149.psg_write_buffer(t);
     if(reg==PSGR_ENVELOPE_SHAPE) //note reg still has old value
     {
-      ASSERT(YM2149.m_env_step_mask==0x1f);
+      ASSERT(YM2149.m_env_step_mask==TYM2149::ENVELOPE_MASK);
       YM2149.m_attack = (new_val & 0x04) ? YM2149.m_env_step_mask : 0x00;
       if ((new_val & 0x08) == 0)
       {
@@ -2456,7 +2485,6 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
         YM2149.m_alternate = new_val & 0x02;
       }
       YM2149.m_env_step = YM2149.m_env_step_mask;
-      ASSERT(YM2149.m_env_step==31);
       YM2149.m_holding = 0;
       YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
     }

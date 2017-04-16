@@ -1154,7 +1154,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
     YM2149.SelectedDrive=floppy_current_drive();
     YM2149.SelectedSide=floppy_current_side();
 #endif
-#if defined(SSE_YM2149_MAMELIKE7)
+#if defined(SSE_YM2149_MAMELIKE)
     if(Version<56)
     {
       ASSERT(LoadOrSave==LS_LOAD);
@@ -1166,9 +1166,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 
 #if defined(SSE_INT_MFP_OBJECT)
     ReadWriteStruct(MC68901);
-#if defined(SSE_INT_MFP)
     if(LoadOrSave==LS_LOAD)
-#endif
       MC68901.Init(); // in case of bad snapshot
 #endif
 

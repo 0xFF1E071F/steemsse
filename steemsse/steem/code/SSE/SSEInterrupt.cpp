@@ -68,7 +68,7 @@ void ASMCALL check_for_interrupts_pending() {
     HBI and VBI as well as MFP interrupts.
 */
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_OBJECT)
 /*  For MFP interrupts, there are all sorts of tests before triggering the
     interrupt, the problem was that some of those tests were in mfp_interrupt().
     Here we place all the tests in check_for_interrupts_pending() and when
@@ -98,7 +98,7 @@ void ASMCALL check_for_interrupts_pending() {
 #if defined(SSE_INT_MFP_SPURIOUS) 
           bool no_real_irq=false; // if irq wasn't really set, there can be no spurious
 #endif
-#ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
+#if defined(SSE_INT_MFP_IACK)
 /*  Start the IACK cycle. We don't do the actual pushing yet.
     But we trigger any event during the cycle. This could change
     the irq, or clear two interrupts at once.
@@ -117,12 +117,14 @@ void ASMCALL check_for_interrupts_pending() {
           {
             iack_latency-=cpu_cycles;
             INSTRUCTION_TIME(cpu_cycles); // hop to event
+
+#if defined(SSE_BOILER)
 #if defined(SSE_BOILER_TRACE_EVENTS)
             TRACE_MFP(">IACK ");
             if(TRACE_ENABLED(LOGSECTION_MFP))
               TRACE_EVENT(screen_event_vector);
 #endif
-#if defined(SSE_OSD_CONTROL) && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
+#if defined(SSE_OSD_CONTROL)
             // not super-smart
             if(screen_event_vector==event_timer_a_timeout
               || screen_event_vector==event_timer_b_timeout
@@ -131,6 +133,8 @@ void ASMCALL check_for_interrupts_pending() {
               || screen_event_vector==event_timer_b)
               detect_iack_subst=MC68901.NextIrq;//maybe
 #endif
+#endif
+
             screen_event_vector();  // trigger event
 #if defined(SSE_INT_MFP_SPURIOUS)
 /*  As soon as an event clears IRQ during IACK, we go in panic mode. 
@@ -148,7 +152,7 @@ void ASMCALL check_for_interrupts_pending() {
             prepare_next_event();
           }//wend
           sr=oldsr;
-#endif//#ifndef SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION
+#endif//#if defined(SSE_INT_MFP_IACK)
 
           // check irq, starting with highest priority
           char irq; //signed
@@ -210,7 +214,11 @@ void ASMCALL check_for_interrupts_pending() {
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
             int iack_cycles=ACT-MC68901.IackTiming;
-            INSTRUCTION_TIME(50-iack_cycles); //?
+#if defined(SSE_CPU_BUS_ERROR_TIMING)
+            INSTRUCTION_TIME(70-iack_cycles);
+#endif
+            //INSTRUCTION_TIME(50-iack_cycles); //?
+            m68kInterruptTiming();
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
           }
@@ -246,7 +254,11 @@ void ASMCALL check_for_interrupts_pending() {
         }
         if (mfp_reg[MFPR_IPRA+i_ab] & i_bit){ //is this interrupt pending?
           if (mfp_reg[MFPR_IMRA+i_ab] & i_bit){ //is it not masked out?
+#if defined(SSE_INT_MFP)
+            mfp_interrupt(irq); //then cause interrupt
+#else
             mfp_interrupt(irq,ABSOLUTE_CPU_TIME); //then cause interrupt
+#endif
             break;        //lower priority interrupts not allowed now.
           }
         }

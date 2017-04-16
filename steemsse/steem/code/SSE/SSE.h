@@ -308,6 +308,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_CPU_MFP_RATIO) 
 
+#define SSE_CPU_MFP_RATIO_HIGH_SPEED
 #define SSE_CPU_MFP_RATIO_OPTION // user can fine tune CPU clock
 #define SSE_CPU_MFP_RATIO_OPTION2 // L/S
 #define SSE_CPU_MFP_RATIO_STE // different for STE, hack
@@ -600,40 +601,55 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_INT_MFP)
 
-#define SSE_CPU_MFP_RATIO_PRECISION // for short timers
-#define SSE_INT_MFP_TIMER_B 
+#define SSE_INT_MFP_INLINE //necessary
+#define SSE_INT_MFP_OPTION //performance/precision
+#define SSE_INT_MFP_OBJECT // struct
+#define SSE_INT_MFP_TIMERS
 #define SSE_INT_MFP_TxDR_RESET // they're not reset according to doc
 #define SSE_INT_MFP_RS232 //one little anti-hang bugfix
-#define SSE_INT_MFP_TIMERS_BASETIME
-#define SSE_CPU_MFP_RATIO_HIGH_SPEED
-#define SSE_INT_MFP_OBJECT // new MC68901 chip in out ST!
-#if defined(SSE_INT_MFP_OBJECT)
-#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
-#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
-#define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
-#define SSE_INT_MFP_OPTION //performance/precision
-#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #define SSE_INT_MFP_READ_DELAY 
-#define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
-#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
-#define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
-
-//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
-//#define SSE_INT_MFP_TIMERS_STARTING_DELAY //12->?
-#endif
-#define SSE_INT_MFP_SPURIOUS
-
-#define SSE_INT_MFP_TIMER_B_AER // from Hatari
-#ifdef SSE_VIDEO_CHIPSET
-#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
-#endif
-#define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
-#define SSE_INT_MFP_TIMERS_STARTING_DELAY //
-
-#define SSE_INT_MFP_TIMER_B_390
-#define SSE_INT_MFP_TIMERS_WOBBLE_390
 
 #endif//mfp
+
+#if defined(SSE_INT_MFP_OBJECT)
+
+#define SSE_INT_MFP_IACK
+#define SSE_INT_MFP_IRQ_TIMING //tracking it more precisely
+#define SSE_INT_MFP_GPIP_TO_IRQ_DELAY // only for GPIP interrupts
+#define SSE_INT_MFP_LATCH_DELAY
+#define SSE_INT_MFP_SPURIOUS
+
+#endif
+
+#if defined(SSE_INT_MFP_TIMERS)
+
+#define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
+#define SSE_INT_MFP_RATIO_PRECISION // for short timers
+#define SSE_INT_MFP_TIMER_B 
+#define SSE_INT_MFP_TIMERS_BASETIME
+#define SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT
+#define SSE_INT_MFP_TIMERS_RATIO1 //unimportant
+#define SSE_INT_MFP_TIMERS_STARTING_DELAY
+//#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
+#if defined(SSE_INT_MFP_OBJECT)
+#define SSE_INT_MFP_TIMERS_WOBBLE // trade off with timer set delay
+#define SSE_INT_MFP_TIMERS_WOBBLE_390
+#endif
+#endif
+
+#if defined(SSE_INT_MFP_TIMER_B)
+
+#define SSE_INT_MFP_TIMER_B_WOBBLE2 // 2 instead of 4
+#define SSE_INT_MFP_TIMER_B_WOBBLE_HACK //for Sunny
+#if defined(SSE_INT_MFP_OBJECT)
+#define SSE_INT_MFP_TIMER_B_390
+#endif
+#if defined(SSE_INT_MFP_OBJECT) && defined(SSE_VIDEO_CHIPSET)
+#define SSE_INT_MFP_TIMER_B_AER // from Hatari
+#define SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS // timer B should be updated
+#endif
+
+#endif
 
 
 #if defined(SSE_INT_VBL)
@@ -1566,10 +1582,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_DEBUG_LOG_OPTIONS // mine, boiler or _DEBUG
 
-#ifdef SSE_INT_MFP
-//#define SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION // to check cases
-#endif
-
 #if defined(SSE_MIDI)
 //#define SSE_MIDI_TRACE_BYTES_IN
 //#define SSE_MIDI_TRACE_BYTES_OUT
@@ -1754,7 +1766,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_392A //correct start & end cycles
 #define SSE_GLUE_392B //refactor hscroll extra fetch
 #define SSE_GLUE_392C //sundry
+#if defined(SSE_INT_MFP_TIMER_B)
 #define SSE_GLUE_392D //timer B
+#endif
 #endif
 
 #ifdef SSE_GUI
@@ -1764,10 +1778,15 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
+//if disable TB, disable SSE_GLUE_392D too
 #ifdef SSE_INT_MFP
 #define SSE_INT_MFP_392
-#define SSE_CPU_MFP_RATIO_PRECISION_392
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
+#define SSE_INT_MFP_RATIO_PRECISION_392
+#endif
+#if defined(SSE_INT_MFP_TIMER_B) && defined(SSE_INT_MFP_OBJECT)
 #define SSE_INT_MFP_TIMER_B_392 // refactoring
+#endif
 #undef SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT //obsolete!
 #endif
 
@@ -1798,6 +1817,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_TIMING_MULTIPLIER)
 #define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
+//#define SSE_TIMING_MULTIPLIER_392A
+#define SSE_TIMING_MULTIPLIER_392B
+#define SSE_TIMING_MULTIPLIER_392C
 #endif
 
 #ifdef SSE_VAR_RESIZE
@@ -1808,6 +1830,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_250K
 #define SSE_SOUND_DYNAMICBUFFERS //psg
 #define SSE_SOUND_DYNAMICBUFFERS2 //dma
+#if ! defined(SSE_LEAN_AND_MEAN)
+#define SSE_SOUND_DYNAMICBUFFERS3  //use factor, maybe? (larger, safer)
+#endif
 #define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
 #define SSE_SOUND_MORE_SAMPLE_RATES
 #define SSE_YM2149_392
@@ -1815,12 +1840,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_YM2149_392)
 #define SSE_YM2149_MAMELIKE
-#define SSE_YM2149_MAMELIKE2 // no delayed rendering 
-#define SSE_YM2149_MAMELIKE3 // mame-like with steem's tables (temp?)
-#define SSE_YM2149_MAMELIKE4 // other attempt at oversampling
-#define SSE_YM2149_MAMELIKE5 // nasty bug
-#define SSE_YM2149_MAMELIKE6 // pitch with boosted CPU
-#define SSE_YM2149_MAMELIKE7 // old snapshot...
+#define SSE_YM2149_MAMELIKE_AVG_SMP // oversampling by artihmetic averaging
 #endif
 
 #endif//beta
@@ -1834,6 +1854,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
+//#define SSE_SOUND_SIGNED_SAMPLES // fiction
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
@@ -1845,6 +1866,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_DMA_390E//switch disappeared...
 #define SSE_YM2149_DRIVE_392
 #define SSE_TOS_PRG_AUTORUN_392
+#define SSE_CPU_HISPEED_392
+#undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...
 
 #endif//bugfix
 

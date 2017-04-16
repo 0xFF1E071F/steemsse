@@ -38,7 +38,7 @@ int mfp_timer_counter[4];
 int mfp_timer_timeout[4];
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 int mfp_timer_period_fraction[4];
 int mfp_timer_period_current_fraction[4];
 #endif
@@ -172,10 +172,14 @@ inline bool mfp_set_pending(int irq,int when_set)
 }
 #endif
 
-#if defined(SSE_INT_MFP) 
+#if defined(SSE_INT_MFP_INLINE) 
 
 bool mfp_set_pending(int irq,int when_set) {
-  if(OPTION_C2 || (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
+  if(
+#if defined(SSE_INT_MFP_IACK)
+    OPTION_C2 || 
+#endif
+    (abs_quick(when_set-mfp_time_of_start_of_last_interrupt[irq])
     >=CYCLES_FROM_START_OF_MFP_IRQ_TO_WHEN_PEND_IS_CLEARED))
   {
 #if defined(SSE_DEBUG)
@@ -205,7 +209,9 @@ bool mfp_set_pending(int irq,int when_set) {
       else
         TRACE_MFP("%d MFP irq %d pending\n",when_set,irq);
 #endif
+#if defined(SSE_INT_MFP_OBJECT) 
       MC68901.UpdateNextIrq(when_set);
+#endif
     }
     return true;
   }
@@ -289,14 +295,14 @@ register. This is of course correct in Steem but hey, I didn't even know that.
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME; //SS as modified
 #if defined(SSE_TIMING_MULTIPLIER_392)
           double precise_cycles0= 
-            (mfp_timer_prescale[new_control] * mfp_timer_counter[timer]/64)
+            double(mfp_timer_prescale[new_control] * mfp_timer_counter[timer]/64)
             * CPU_CYCLES_PER_MFP_CLK * cpu_cycles_multiplier;
           mfp_timer_timeout[timer]+=(int)precise_cycles0;
-#if defined(SSE_CPU_MFP_RATIO_PRECISION_392)
+#if defined(SSE_INT_MFP_RATIO_PRECISION_392)
 /*  As soon as there's a fractional part (almost all the time), that means
     that the CPU can't be interrupted before next CPU cycle after IRQ.
 */
-          if(precise_cycles0-(int)precise_cycles0)
+          if(OPTION_C2 && precise_cycles0-(int)precise_cycles0)
             mfp_timer_timeout[timer]++; 
 #endif
 #else
@@ -308,7 +314,7 @@ register. This is of course correct in Steem but hey, I didn't even know that.
 #endif
           mfp_timer_enabled[timer]=mfp_interrupt_enabled[mfp_timer_irq[timer]];
 
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
 /*  Here we do exactly what Steem authors suggest just below, and it does bring
     the timing measurements at the same level as SainT and Hatari, at least in
     HWTST001.PRG by ljbk, so it's definitely an improvement, and it isn't 
@@ -402,14 +408,13 @@ register. This is of course correct in Steem but hey, I didn't even know that.
 #else
           mfp_timer_timeout[timer]+=cpu_time_of_first_mfp_tick;
 #endif
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_TIMERS)
           if(OPTION_C2) 
           {
-#if defined(SSE_CPU_MFP_RATIO_PRECISION) && !defined(SSE_CPU_MFP_RATIO_PRECISION_392)
+#if defined(SSE_INT_MFP_RATIO_PRECISION) && !defined(SSE_INT_MFP_RATIO_PRECISION_392)
             if(mfp_timer_period_fraction[timer])
               mfp_timer_timeout[timer]++; 
 #endif
-
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 /*  This should be confirmed (or not...), we consider that delay timers
     have some wobble, like timer B, maybe because of CPU/MFP clock sync.
@@ -443,6 +448,7 @@ register. This is of course correct in Steem but hey, I didn't even know that.
           if(OPTION_C2 && !new_val 
             && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
           {
+            ASSERT(old_val!=8); //TODO
             BYTE i_ab=mfp_interrupt_i_ab(mfp_timer_irq[timer]);
             BYTE i_bit=mfp_interrupt_i_bit(mfp_timer_irq[timer]);
             if(!(mfp_reg[MFPR_ISRA+i_ab]&i_bit) &&
@@ -500,13 +506,14 @@ register. This is of course correct in Steem but hey, I didn't even know that.
       TRACE_LOG("MFP: --------------- PULSE EXTENSION MODE!! -----------------\n");
 #endif
     prepare_event_again();
-  }else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
+  }
+  else if (reg>=MFPR_TADR && reg<=MFPR_TDDR){ //data reg change
     timer=reg-MFPR_TADR;
     dbg_log(Str("MFP: ")+HEXSl(old_pc,6)+" - Changing timer "+char(('A')+timer)+" data reg to "+new_val+" ($"+HEXSl(new_val,2)+") "+
           " at time="+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_timer_at_start_of_hbl)+
           " cycles into scanline #"+scan_y+"); timeout is "+mfp_timer_timeout[timer]);
 
-#if defined(SSE_CPU_MFP_RATIO_PRECISION_392)
+#if defined(SSE_INT_MFP_RATIO_PRECISION_392)
     BYTE control=BYTE(mfp_get_timer_control_register(timer));
     if (control==0){  // timer stopped
       mfp_timer_counter[timer]=((int)BYTE_00_TO_256(new_val))*64;
@@ -537,7 +544,10 @@ is not loaded into the timer until it counts through H01.
         mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+stage; //realign
       }
     }
-
+    dbg_log(EasyStr("     Period is ")+mfp_timer_period[timer]+" cpu cycles");
+    if (reg==MFPR_TDDR && new_val!=old_val){
+      RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),control,0);
+    }
 #else
     new_control=BYTE(mfp_get_timer_control_register(timer));
 
@@ -560,11 +570,11 @@ is not loaded into the timer until it counts through H01.
         mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME+stage; //realign
       }
     }
-#endif
     dbg_log(EasyStr("     Period is ")+mfp_timer_period[timer]+" cpu cycles");
     if (reg==MFPR_TDDR && new_val!=old_val){
       RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),new_control,0);
     }
+#endif
   }
 }
 
@@ -763,19 +773,21 @@ void mfp_interrupt(int irq) {
 #if defined(SSE_INT_MFP_IRQ_TIMING)
   if(OPTION_C2)
   {
-    MC68901.LastIrq=irq;
+    MC68901.LastIrq=irq;//unused
     MC68901.UpdateNextIrq();
   }
-#endif
-
   int iack_cycles=ACT-MC68901.IackTiming;
-
+#endif
 #if defined(SSE_MMU_ROUNDING_BUS)
+#if defined(SSE_INT_MFP_IRQ_TIMING) 
   INSTRUCTION_TIME(-iack_cycles);//temp
+#endif
   m68kInterruptTiming();
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-iack_cycles);
 #endif
+
+
   m68k_interrupt(LPEEK(vector));
   sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);
 
@@ -835,7 +847,7 @@ void mfp_interrupt(int irq,int when_fired)
 }
 #endif
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_OBJECT)
 
 TMC68901::TMC68901() {
   Init();
@@ -966,7 +978,11 @@ void TMC68901::ComputeNextTimerB(int info) {
   if(!tontb || info!=NewScanline && tontb-ACT<=0 
     && time_of_next_event!=time_of_next_timer_b)
   {
+#if defined(SSE_TIMING_MULTIPLIER_392C)
+    tontb=cpu_timer_at_start_of_hbl+160000*cpu_cycles_multiplier;  //put into future
+#else
     tontb=cpu_timer_at_start_of_hbl+160000;  //put into future
+#endif
   }
   bool recheck_events=(time_of_next_timer_b!=tontb);
   time_of_next_timer_b=tontb;
@@ -1014,6 +1030,7 @@ void TMC68901::CalcCyclesFromHblToTimerB() {
     cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
 #endif
   cpu_cycles_from_hbl_to_timer_b+=28; // an addition of MFP delays
+  //TRACE("F%d y%d calctb %d\n",FRAME,scan_y,cpu_cycles_from_hbl_to_timer_b);
 }
 
 #elif defined(SSE_INT_MFP_TIMER_B_AER)

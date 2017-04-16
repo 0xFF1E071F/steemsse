@@ -498,7 +498,12 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       CutButtonDown[1]=true;
       break;
     case 20:
+
+#if defined(SSE_CPU_HISPEED_392)
+      if (n_cpu_cycles_per_second<CPU_MAX_HERTZ){
+#else
       if (n_cpu_cycles_per_second<128000000){
+#endif
         n_cpu_cycles_per_second+=1000000;
         if (runstate==RUNSTATE_RUNNING) osd_init_run(0);
         prepare_cpu_boosted_event_plans();
