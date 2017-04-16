@@ -356,7 +356,7 @@ void event_acia();
 
 #endif//acia
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
 /*  v3.8
     We create an event for write to MFP registers, it adds load but the
     alternative is too complicated (previous versions).

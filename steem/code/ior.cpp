@@ -442,7 +442,7 @@ Receiver Data Register is retained.
           {
             int n=(addr-0xfffa01) >> 1;
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
 /*  If a write on the same register is pending, maybe it's time to
     execute it so that the register we read is the correct one.
 */

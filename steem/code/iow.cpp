@@ -408,7 +408,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
             int old_ioaccess=ioaccess;
             int n=(addr-0xfffa01) >> 1;
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
 /*    If we come here while a write is pending, it should mean that we're at
       least 4 cycles later, so there's been some delay.
       We have no choice anyway, registers must be correct at the end of the
@@ -464,7 +464,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                   bool new_1_to_0_detector_input=((new_gpip & mask) ^ (new_aer & mask))==mask;
                   if (old_1_to_0_detector_input && new_1_to_0_detector_input==0){
                     // Transition the right way! Set pending (interrupts happen later)
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_OBJECT) //used in that function
                     if(OPTION_C2) 
                       mfp_set_pending(irq,ACT); // update timing, Irq...
                     else
@@ -583,11 +583,12 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
               mfp_reg[n]=io_src_b;
             }
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
 /*  We execute the write now, but we'll update the register value after a
     while. We could do otherwise (delay everything), it was just faster that
     way.
-*/            if(OPTION_C2)
+*/            
+            if(OPTION_C2)
             {
               MC68901.WriteTiming=ACT;
               MC68901.LastRegisterWritten=n;
@@ -606,7 +607,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
             // The MFP doesn't update for about 8 cycles, so we should execute the next
             // instruction before causing any interrupts
             ioaccess=old_ioaccess;
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
             if(OPTION_C2) // this just says "check interrupts after this instruction"
               ioaccess|=IOACCESS_FLAG_DELAY_MFP; // we manage delay another way
             else

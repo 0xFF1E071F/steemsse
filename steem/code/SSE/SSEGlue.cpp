@@ -152,10 +152,11 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     }
 #endif
   }
-
+#ifdef SSE_INT_MFP_OBJECT
 #if defined(SSE_GLUE_392D) && !defined(SSE_INT_MFP_TIMER_B_392A) //MFD?
   if(OPTION_C2)
     MC68901.CalcCyclesFromHblToTimerB();
+#endif
 #endif
 
 #if defined(SSE_INT_MFP_TIMER_B_392A)
@@ -165,7 +166,11 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 
   if(CyclesIn<=cycle_of_scanline_length_decision)
   {
+#if defined(SSE_TIMING_MULTIPLIER_392B)
+    CurrentScanline.Cycles=scanline_time_in_cpu_cycles
+#else
     CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz
+#endif
       [(m_ShiftMode&2)&&((CyclesIn==-1)||PreviousScanline.Cycles!=224)
         ? 2 : shifter_freq_idx];
     prepare_next_event();
@@ -1340,7 +1345,7 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)
     ; // no need to test
 #if defined(SSE_INT_MFP_TIMER_B_392D)
-  else if(CyclesIn==376 && !(m_SyncMode&2) // now!
+  else if(CyclesIn==ScanlineTiming[GLU_DE_OFF][FREQ_50] && !(m_SyncMode&2) // now!
     || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
 #else
   else if(FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
@@ -1771,10 +1776,7 @@ void TGlue::IncScanline() {
   MMU.ExtraBytesForHscroll=0;
 #endif
   AdaptScanlineValues(-1);
-  //debug1=0;
-  //FrameEvents.Add(scan_y,LINECYCLES,'b',time_of_next_timer_b-cpu_timer_at_start_of_hbl);
-
-  ASSERT(CurrentScanline.Cycles>=224);
+  ASSERT(CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
   TrickExecuted=0;
   NextScanline.Tricks=0; // eg for 0byte lines mess
   shifter_skip_raster_for_hscroll = (HSCROLL!=0); // one more fetch at the end
@@ -2086,7 +2088,10 @@ void TGlue::GetNextScreenEvent() {
   screen_event.event=screen_event_vector;
 #endif
 
-#if defined(SSE_TIMING_MULTIPLIER)
+#if defined(SSE_TIMING_MULTIPLIER_392B) && !defined(SSE_TIMING_MULTIPLIER_392A)
+  if(cpu_cycles_multiplier>1 && screen_event_vector!=event_scanline)
+    screen_event.time*=cpu_cycles_multiplier;
+#elif defined(SSE_TIMING_MULTIPLIER)
   if(cpu_cycles_multiplier>1)
     screen_event.time*=cpu_cycles_multiplier;
 #else
@@ -2108,8 +2113,13 @@ void TGlue::GetNextScreenEvent() {
 void TGlue::Reset(bool Cold) {
 
   m_SyncMode=0; //60hz
+#if defined(SSE_TIMING_MULTIPLIER_392B)
+  CurrentScanline.Cycles=scanline_time_in_cpu_cycles[shifter_freq_idx];
+#else
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   ASSERT(CurrentScanline.Cycles<=512);
+#endif
+  
 
   if(Cold) // if warm, Glue keeps on running
   {
@@ -2477,7 +2487,7 @@ void TGlue::Vbl() {
   scan_y=-scanlines_above_screen[shifter_freq_idx];
   Status.hbi_done=Status.sdp_reload_done=false;
   Status.vbl_done=true;
-#if defined(SSE_SHIFTER_UNSTABLE)
+#if defined(SSE_SHIFTER_UNSTABLE)//TODO...
   if(time_of_next_event-cpu_time_of_last_vbl==133604) // according to ljbk ?
     Shifter.Preload=0; 
 #endif

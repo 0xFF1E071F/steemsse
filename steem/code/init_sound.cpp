@@ -506,7 +506,11 @@ HRESULT DSGetPrimaryBuffer()
     call to this function.
     It will be deleted when Steem closes.
     We do so because of higher sample rates, not to reserve too much memory
-    if SR isn't high. Still use an integer factor, so some memory will be
+    if SR isn't high. 
+*/
+#if defined(SSE_SOUND_DYNAMICBUFFERS3)
+/*
+    Still use an integer factor, so some memory will be
     wasted.
 
     22050               0.440             1
@@ -527,7 +531,11 @@ HRESULT DSGetPrimaryBuffer()
     factor=ceil(r);
     ASSERT(factor==2||factor==4||factor==5||factor==8);
   }
+  //factor*=4;
+  int samples_per_vbl=8192*SCREENS_PER_SOUND_VBL*factor; // Steem original
+#else  
   int samples_per_vbl=((sound_freq/50)+1)*SCREENS_PER_SOUND_VBL;
+#endif
   
   if(psg_channels_buf_len+16!=samples_per_vbl)
   {
@@ -537,11 +545,15 @@ HRESULT DSGetPrimaryBuffer()
     ASSERT(psg_channels_buf);
     ZeroMemory(psg_channels_buf,(samples_per_vbl+16)*sizeof(int));
     psg_channels_buf_len=samples_per_vbl;
-    TRACE_INIT("buffer for psg %dhz = %d x32bit =%d bytes\n",
+    TRACE_INIT("buffer for psg %dhz = %p, %d x32bit =%d bytes\n",psg_channels_buf,
       sound_freq,psg_channels_buf_len,psg_channels_buf_len*sizeof(int));
   }
 #if defined(SSE_SOUND_DYNAMICBUFFERS2) // same thing for DMA, *2 for stereo
+#if defined(SSE_SOUND_DYNAMICBUFFERS3)
+  samples_per_vbl=2600 * SCREENS_PER_SOUND_VBL * 2 * factor; // Steem original
+#else
   samples_per_vbl=((sound_freq/50)+1)*SCREENS_PER_SOUND_VBL*2;
+#endif
   if(dma_sound_channel_buf_len+16!=samples_per_vbl)
   {
     if(dma_sound_channel_buf!=NULL)
@@ -550,7 +562,7 @@ HRESULT DSGetPrimaryBuffer()
     ASSERT(dma_sound_channel_buf);
     ZeroMemory(dma_sound_channel_buf,(samples_per_vbl+16)*sizeof(WORD));
     dma_sound_channel_buf_len=samples_per_vbl;
-    TRACE_INIT("buffer for dma %dhz = %d x16bit =%d bytes\n",
+    TRACE_INIT("buffer for dma %dhz = %p, %d x16bit =%d bytes\n",dma_sound_channel_buf,
       sound_freq,dma_sound_channel_buf_len,dma_sound_channel_buf_len*sizeof(WORD));
   }
 #endif

@@ -416,7 +416,7 @@ void inline prepare_event_again() //might be an earlier one
     
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
     
@@ -467,7 +467,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 
     PREPARE_EVENT_CHECK_FOR_TIMER_B;
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
     PREPARE_EVENT_CHECK_FOR_MFP_WRITE;
 #endif
       
@@ -496,7 +496,7 @@ void inline prepare_next_event() //SS check this "inline" thing
 //---------------------------------------------------------------------------
 #define LOGSECTION LOGSECTION_MFP_TIMERS
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_INLINE)
 
 inline void handle_timeout(int tn) {
 
@@ -505,11 +505,13 @@ inline void handle_timeout(int tn) {
 
   if (mfp_timer_period_change[tn]){    
     // Audio Artistic, timer D would count through before the write
+#if defined(SSE_INT_MFP_OBJECT)
     if(MC68901.WritePending)
     {
       TRACE_MFP("Handle time-out Flush MFP event ");
       event_mfp_write(); //flush
     }
+#endif
     MFP_CALC_TIMER_PERIOD(tn);          
     mfp_timer_period_change[tn]=0;       
   }
@@ -530,7 +532,7 @@ inline void handle_timeout(int tn) {
 
   if(OPTION_C2)
   {
-#if defined(SSE_CPU_MFP_RATIO_PRECISION)
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
     mfp_timer_period_current_fraction[tn]+=mfp_timer_period_fraction[tn]; 
     // this guarantees that we're always at the right cycle, despite
     // the inconvenience of a ratio
@@ -573,7 +575,7 @@ inline void handle_timeout(int tn) {
 void event_timer_a_timeout()
 {
   HANDLE_TIMEOUT(0);
-#if !defined(SSE_INT_MFP)
+#if !defined(SSE_INT_MFP_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_A,mfp_timer_timeout[0]);
   mfp_timer_timeout[0]=new_timeout;
 #endif
@@ -581,7 +583,7 @@ void event_timer_a_timeout()
 void event_timer_b_timeout()
 {
   HANDLE_TIMEOUT(1);
-#if !defined(SSE_INT_MFP)
+#if !defined(SSE_INT_MFP_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_B,mfp_timer_timeout[1]);
   mfp_timer_timeout[1]=new_timeout;
 #endif
@@ -589,7 +591,7 @@ void event_timer_b_timeout()
 void event_timer_c_timeout()
 {
   HANDLE_TIMEOUT(2);
-#if !defined(SSE_INT_MFP)
+#if !defined(SSE_INT_MFP_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_C,mfp_timer_timeout[2]);
   mfp_timer_timeout[2]=new_timeout;
 #endif
@@ -597,7 +599,7 @@ void event_timer_c_timeout()
 void event_timer_d_timeout()
 {
   HANDLE_TIMEOUT(3);
-#if !defined(SSE_INT_MFP)
+#if !defined(SSE_INT_MFP_INLINE)
   mfp_interrupt_pend(MFP_INT_TIMER_D,mfp_timer_timeout[3]);
   mfp_timer_timeout[3]=new_timeout;
 #endif
@@ -646,7 +648,12 @@ void event_timer_b()
   }
 #if defined(SSE_INT_MFP_TIMER_B_392A)
   if(OPTION_C2)
+#if defined(SSE_TIMING_MULTIPLIER_392C)
+    time_of_next_timer_b=cpu_timer_at_start_of_hbl
+    +160000*cpu_cycles_multiplier;  //put into future
+#else
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
+#endif
 #endif
 
 }
@@ -725,7 +732,7 @@ void event_scanline_sub() {
     ASSERT(HD6301_OK);
     int n6301cycles;
 #if defined(SSE_GLUE)
-    ASSERT(Glue.CurrentScanline.Cycles>=224);
+    ASSERT(Glue.CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
     n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
 #else
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
@@ -1581,9 +1588,15 @@ void event_vbl_interrupt() //SS misleading name?
     cpu_time_of_first_mfp_tick+=160000; 
   }
 #endif
+#if defined(SSE_TIMING_MULTIPLIER_392C)
+  while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000*cpu_cycles_multiplier){
+    shifter_cycle_base+=60000*cpu_cycles_multiplier; //SS 60000?
+  }
+#else
   while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000){
     shifter_cycle_base+=60000; //SS 60000?
   }
+#endif
   shifter_pixel=shifter_hscroll;
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   overscan_add_extra=0;
@@ -1722,6 +1735,7 @@ void prepare_cpu_boosted_event_plans()
   if(factor>=512)
     SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
+#if !defined(SSE_TIMING_MULTIPLIER_392A)
   for (int idx=0;idx<3;idx++){ //3 frequencies
 #if !defined(SSE_GLUE)
     source=event_plan[idx];
@@ -1733,8 +1747,14 @@ void prepare_cpu_boosted_event_plans()
       source++;dest++;
     }
 #endif
+#if defined(SSE_TIMING_MULTIPLIER_392B)
+    scanline_time_in_cpu_cycles[idx]=
+      scanline_time_in_cpu_cycles_8mhz[idx]*cpu_cycles_multiplier;
+#else
     scanline_time_in_cpu_cycles[idx]=(scanline_time_in_cpu_cycles_8mhz[idx]*factor)/8;
+#endif
   }
+#endif
 #if !defined(SSE_TIMING_MULTIPLIER_392)
   for (int n=0;n<16;n++){
 #if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)
@@ -1917,7 +1937,7 @@ void event_acia() {
 
 #endif//acia
 
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
 
 int time_of_event_mfp_write=0;
 

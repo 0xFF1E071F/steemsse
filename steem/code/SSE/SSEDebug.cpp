@@ -824,7 +824,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_acia)
     TRACE("event_acia");
 #endif
-#if defined(SSE_INT_MFP)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
   else if(pointer==event_mfp_write)
     TRACE("event_mfp_write");
 #endif

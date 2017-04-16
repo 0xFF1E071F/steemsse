@@ -96,6 +96,25 @@ The ACIA master clock is 500kHz.
 
 #endif
 
+#if defined(SSE_CPU_HISPEED_392) //GHz!=1024MHz
+#if defined(SSE_CPU_4GHZ)
+#define CPU_MAX_HERTZ (4000000000)
+#elif defined(SSE_CPU_3GHZ)
+#define CPU_MAX_HERTZ (3000000000)
+#elif defined(SSE_CPU_2GHZ)
+#define CPU_MAX_HERTZ (2000000000) //v392
+#elif defined(SSE_CPU_1GHZ)
+#define CPU_MAX_HERTZ (1000000000)
+#elif defined(SSE_CPU_512MHZ)
+#define CPU_MAX_HERTZ (512000000)
+#elif defined(SSE_CPU_256MHZ)
+#define CPU_MAX_HERTZ (256000000)
+#else
+#define CPU_MAX_HERTZ (128000000) //Steem 3.2
+#endif
+#endif
+
+
 #if defined(SSE_CPU_MFP_RATIO) 
 /*
 The master clock crystal and derived CPU clock table is:

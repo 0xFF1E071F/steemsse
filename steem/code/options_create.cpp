@@ -118,8 +118,17 @@ compatible only with the STF"));
   
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST,
 	  page_l+5+Wid,y,page_w-(5+Wid),400,Handle,(HMENU)404,HInstance,NULL);
+#if defined(SSE_CPU_HISPEED_392)
+  EasyStr Mhz=T("Mhz");
+#if defined(SSE_CPU_MFP_RATIO)
+  CBAddString(Win,EasyStr("8 ")+Mhz+" ("+T("ST standard")+")",CpuNormalHz);
+#else
+  CBAddString(Win,EasyStr("8 ")+Mhz+" ("+T("ST standard")+")",8000000);
+#endif
+#else
   EasyStr Mhz=T("Megahertz");
   CBAddString(Win,EasyStr("8 ")+Mhz+" ("+T("ST standard")+")",8000000);
+#endif
   CBAddString(Win,EasyStr("9 ")+Mhz,9000000);
   CBAddString(Win,EasyStr("10 ")+Mhz,10000000);
   CBAddString(Win,EasyStr("11 ")+Mhz,11000000);
@@ -145,6 +154,20 @@ compatible only with the STF"));
 #if defined(SSE_CPU_512MHZ)
   CBAddString(Win,EasyStr("512 ")+Mhz,512000000);
 #endif
+#if defined(SSE_CPU_HISPEED_392)
+#if defined(SSE_CPU_1GHZ)
+  CBAddString(Win,EasyStr("1 Ghz"),1000000000);
+#endif
+#if defined(SSE_CPU_2GHZ)
+  CBAddString(Win,EasyStr("2 Ghz"),2000000000);
+#endif
+#if defined(SSE_CPU_3GHZ) //no!
+  CBAddString(Win,EasyStr("3 Ghz"),3000000000);
+#endif
+#if defined(SSE_CPU_4GHZ) //no!
+  CBAddString(Win,EasyStr("4 Ghz"),4000000000);
+#endif
+#else
 #if defined(SSE_CPU_1GHZ)
   CBAddString(Win,EasyStr("1 Ghz"),1024000000);
 #endif
@@ -157,7 +180,7 @@ compatible only with the STF"));
 #if defined(SSE_CPU_4GHZ) //no!
   CBAddString(Win,EasyStr("4 Ghz"),4096000000);
 #endif
-
+#endif
   if (CBSelectItemWithData(Win,n_cpu_cycles_per_second)<0){
     EasyStr Cycles=n_cpu_cycles_per_second;
     Cycles=Cycles.Lefts(Cycles.Length()-6);

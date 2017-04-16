@@ -23,10 +23,6 @@ TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   p_fixed_vol_3voices=NULL;
 #endif
-#if defined(SSE_YM2149_MAMELIKE) && !defined(SSE_YM2149_MAMELIKE7)
-  m_rng=1; 
-  m_env_step_mask=0x1F; // 32 steps for envelope in YM
-#endif
 }
 
 
@@ -64,7 +60,7 @@ bool TYM2149::LoadFixedVolTable() {
       ok=true;
     fclose(fp);
 #if defined(SSE_SOUND_MOVE_ZERO)
-    // move the zero to make it match DMA's (tentative)
+    // move the zero to make it match DMA's (tentative) //was bad idea
     for(int i=0;i<16*16*16;i++)
       p_fixed_vol_3voices[i]+=128;
 #endif
@@ -114,20 +110,27 @@ void TYM2149::Reset() {
   m_count_env = 0;
   m_prescale_noise = 0;
   m_cycles=0; 
-#if defined(SSE_YM2149_MAMELIKE7)
   // 32 steps for envelope in YM - we do it at reset for old snapshots
-  m_env_step_mask=0x1f; 
-#if defined(SSE_YM2149_MAMELIKE4)
+  m_env_step_mask=ENVELOPE_MASK; 
+#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
   m_oversampling_count=0;
 #endif
-#endif
+
 }
 
 #define NOISE_ENABLEQ(_chan)  ((psg_reg[PSGR_MIXER] >> (3 + _chan)) & 1)
 #define TONE_ENABLEQ(_chan)   ((psg_reg[PSGR_MIXER] >> (_chan)) & 1)
+
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS_NOISE)
+#define NOISE_OUTPUT() (((1<<11)&d2_dpeek(FAKE_IO_START+20))?0:(m_rng & 1))
+#else
 #define NOISE_OUTPUT()          (m_rng & 1)
+#endif
+
 #define TONE_PERIOD(_chan)   \
   ( psg_reg[(_chan) << 1] | ((psg_reg[((_chan) << 1) | 1] & 0x0f) << 8) )
+#define ENVELOPE_PERIOD()       ((psg_reg[PSGR_ENVELOPE_PERIOD_LOW] \
+  | (psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]<<8)))
 
 void TYM2149::psg_write_buffer(DWORD to_t) {
   ASSERT(OPTION_MAME_YM);
@@ -148,23 +151,15 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     return;
 
   int *p=psg_channels_buf+psg_buf_pointer[0];
+  *p=0;
   ASSERT(sound_freq);
-  // YM2149 @2mhz = 1/4 * CPU clock
-#if defined(SSE_YM2149_MAMELIKE6)
-  // no reason a CPU boost hack would boost the PSG (or the FDC for that matter)
-  // eg Mega STE @16Mhz
-  double ym2149_cycles_per_sample=
-  ((double)CpuNormalHz/4)/(double)sound_freq; // casts are important
-#else
-  double ym2149_cycles_per_sample=
-    ((double)n_cpu_cycles_per_second/4)/(double)sound_freq;
-#endif
+  // YM2149 @2mhz = 1/4 * 8mhz clock 
+  double ym2149_cycles_per_sample=((double)CpuNormalHz/4)/(double)sound_freq; 
+  // timing doesn't need to be cycle accurate provided values are correct
   int time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
   int samples_sent=0;
   int ym2149_cycles_at_start_of_loop=m_cycles;
-#if defined(SSE_YM2149_MAMELIKE5)
-  *p=0;
-#endif
+
 /*  The following was inspired by MAME project, especially ay8910.cpp.
     thx Couriersud.
     Notice the emulation is both simple and short. It's possible that
@@ -208,16 +203,14 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     }
 
     /* update envelope */
-    ASSERT(m_env_step_mask==31);
+    ASSERT(m_env_step_mask==ENVELOPE_MASK);
     ASSERT(!(m_holding&0xfe));
 
     if (m_holding == 0)
     {
-      int envperiod=(((int)psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]) <<8) 
-        + psg_reg[PSGR_ENVELOPE_PERIOD_LOW];
-
       m_count_env++;
-      if (m_count_env >= envperiod ) // "m_step"=1 for YM2149
+      //TRACE_OSD("%d/%d",m_count_env,ENVELOPE_PERIOD());
+      if (m_count_env >= ENVELOPE_PERIOD() ) // "m_step"=1 for YM2149
       {
         m_count_env = 0;
         m_env_step--;
@@ -247,15 +240,12 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     }
     m_env_volume = (m_env_step ^ m_attack);
     ASSERT(m_env_volume<32);
-#if defined(SSE_YM2149_MAMELIKE2)
+
     //as in psg's AlterV
     BYTE index[3],interpolate[4];
     *(int*)interpolate=0;
-    ASSERT( interpolate[0]==0 );
-    ASSERT( interpolate[1]==0 );
-    ASSERT( interpolate[2]==0 );
     int vol=0;
-#endif
+
     for(int abc=0;abc<3;abc++)
     {
       // Tone
@@ -274,32 +264,41 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
         & (NOISE_OUTPUT() | NOISE_ENABLEQ(abc));
 
       // from here on, specific to Steem rendering (different options)
-#if defined(SSE_YM2149_MAMELIKE3)
-      if(OPTION_SAMPLED_YM)
+      if(OPTION_SAMPLED_YM) // one table for all [A,B,C] volume sets
       {
-#endif
         int t=(enveloped) ? BIT_6 :0;
-
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+        if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
+          ; // 0: skip this channel
+        else
+#endif
         // pick correct volume or 0
         if(!m_vol_enabled[abc])
           ; // 0
         else if (enveloped)
-          t|=m_env_volume; // vol 5bit
-        else
-          t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit
-#if defined(SSE_YM2149_MAMELIKE2)
-        index[abc]=( ((t)>>1))&0xF; // 4bit volume
-        interpolate[abc]=((t&BIT_6) && index[abc]>0 && !(t&1) ) ? 1 : 0;
-        ASSERT( interpolate[abc]<=1 );
-        ASSERT( index[abc]<=15 );
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS_ENV)
+        {
+          if((1<<10)&d2_dpeek(FAKE_IO_START+20)) 
+            ; //0: 'mute env'
+          else
+            t|=m_env_volume; // vol 5bit
+        }
 #else
-        t<<=8*abc;
-        *p|=t;
+          t|=m_env_volume; // vol 5bit
 #endif
-#if defined(SSE_YM2149_MAMELIKE3)
+        else
+          t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit shifted
+
+        index[abc]=(t>>1)&0xF; // 4bit volume
+        interpolate[abc]=((t&BIT_6) && index[abc]>0 && !(t&1) ) ? 1 : 0;
       }
-      else
+      else // Steem's orignal tables per channel
       {
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+        if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
+          ; // 0: skip this channel
+        else
+#endif
         if(!m_vol_enabled[abc])
           ; // 0
         else if (enveloped)
@@ -307,67 +306,46 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
         else
           vol+=psg_flat_volume_level[(psg_reg[abc+8] & 15)];
       }
-#endif
-
     }//nxt abc
 
-#if defined(SSE_YM2149_MAMELIKE2)
-#if defined(SSE_YM2149_MAMELIKE3)
-    if(OPTION_SAMPLED_YM)
+    if(OPTION_SAMPLED_YM) // now we have 3 indexes (vol on 4bit)
     {
-#endif
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
-      vol=p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]];
-#else //?
-      vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
-#endif
+      vol=p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]]; // assume SSE_YM2149_DYNAMIC_TABLE
       if(*(int*)(&interpolate[0]))
       {
-        ASSERT( !((index[0]-interpolate[0])&0x80) );
-        ASSERT( !((index[1]-interpolate[1])&0x80) );
-        ASSERT( !((index[2]-interpolate[2])&0x80) );
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
         int vol2=p_fixed_vol_3voices[ (16*16)*(index[2]-interpolate[2])
           +16*(index[1]-interpolate[1])+(index[0]-interpolate[0])];
-#else
-        int vol2=fixed_vol_3voices[index[2]-interpolate[2]] 
-        [index[1]-interpolate[1]] [index[0]-interpolate[0]];
-#endif
         vol= (int) sqrt( (float) vol * (float) vol2); 
       }
-#if defined(SSE_YM2149_MAMELIKE3)
     }
-#endif    
 
-#if defined(SSE_YM2149_MAMELIKE4)
+#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
 /*  At 44,1khz,makes no difference for Star Trek or Union Demo
     but it does for Nostalgia credits... 
 */
     ASSERT(m_oversampling_count<0xff);
     m_oversampling_count++;
     *p+=vol;
-    ASSERT(!(*p&0x8000000));
 #else
     *p=vol;
 #endif
-#endif
+
     if(m_cycles-time_to_send_next_sample>=0)
     {
       ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
-#if defined(SSE_YM2149_MAMELIKE4)
+#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
       if(m_oversampling_count>1)
         *p/=m_oversampling_count;
       m_oversampling_count=0;
+      //TRACE_OSD("%d",*p);
 #endif
-      p++;
-#if defined(SSE_YM2149_MAMELIKE5)
-      *p=0;
-#endif
+      *(++p)=0; //overshoot by 1 is OK
       count--;
       samples_sent++;
       time_to_send_next_sample=ym2149_cycles_at_start_of_loop
         +(int)(((double)samples_sent+1)*ym2149_cycles_per_sample);
     }
+
   }//wend count
   psg_buf_pointer[0]=to_t-psg_time_of_last_vbl_for_writing;
   psg_buf_pointer[2]=psg_buf_pointer[1]=psg_buf_pointer[0];

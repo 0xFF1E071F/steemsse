@@ -7,7 +7,7 @@
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TYM2149 {
-  enum {NO_VALID_DRIVE=0xFF};
+  enum {NO_VALID_DRIVE=0xFF,ENVELOPE_MASK=31};
   // DATA
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
   WORD *p_fixed_vol_3voices;
@@ -26,7 +26,7 @@ struct TYM2149 {
   BYTE m_hold,m_alternate,m_attack,m_holding;
   BYTE m_prescale_noise;
   BYTE m_vol_enabled[NUM_CHANNELS];
-#if defined(SSE_YM2149_MAMELIKE4)
+#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
   BYTE m_oversampling_count;
 #endif
 #endif
