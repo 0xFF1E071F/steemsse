@@ -152,9 +152,9 @@ void run()
   bool ExcepHappened;
 
   Disp.RunStart();
-
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
   if (psg_always_capture_on_start) psg_capture(true,"test.stym");
-
+#endif
   GUIRunStart();
 
   DEBUG_ONLY( debug_run_start(); )
@@ -382,7 +382,9 @@ void run()
     RunWhenStop=0;
   }
 #endif
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
   psg_capture(0,"");
+#endif
 }
 //---------------------------------------------------------------------------
 #ifdef DEBUG_BUILD
@@ -505,7 +507,7 @@ inline void handle_timeout(int tn) {
 
   if (mfp_timer_period_change[tn]){    
     // Audio Artistic, timer D would count through before the write
-#if defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP_LATCH_DELAY)
     if(MC68901.WritePending)
     {
       TRACE_MFP("Handle time-out Flush MFP event ");

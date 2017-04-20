@@ -1833,12 +1833,14 @@ Beta: not SSE_PRIVATE_BUILD
 #if ! defined(SSE_LEAN_AND_MEAN)
 #define SSE_SOUND_DYNAMICBUFFERS3  //use factor, maybe? (larger, safer)
 #endif
-#define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
 #define SSE_SOUND_MORE_SAMPLE_RATES
+#define SSE_SOUND_16BIT_CENTRED
 #define SSE_YM2149_392
 #endif
 
 #if defined(SSE_YM2149_392)
+#define SSE_YM2149_DISABLE_CAPTURE_FILE // never noticed this before...
+#define SSE_YM2149_FIX_ENV_TABLE // interpolated from fixed volume values
 #define SSE_YM2149_MAMELIKE
 #define SSE_YM2149_MAMELIKE_AVG_SMP // oversampling by artihmetic averaging
 #endif
@@ -1854,7 +1856,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
-//#define SSE_SOUND_SIGNED_SAMPLES // fiction
 #endif
 
 #if defined(SSE_BETA_BUGFIX)
@@ -1864,10 +1865,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_X64_392
 #endif
 #define SSE_SOUND_DMA_390E//switch disappeared...
+#define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
 #define SSE_YM2149_DRIVE_392
 #define SSE_TOS_PRG_AUTORUN_392
 #define SSE_CPU_HISPEED_392
 #undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...
+#define SSE_VID_D3D_392 //trash again fullscreen when changing modes
 
 #endif//bugfix
 

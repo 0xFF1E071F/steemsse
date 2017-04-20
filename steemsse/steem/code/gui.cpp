@@ -1654,7 +1654,9 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;
       case ARG_SCREENSHOTALWAYSADDNUM: Disp.ScreenShotAlwaysAddNum=true; break;
       case ARG_ALLOWLPTINPUT: comline_allow_LPT_input=true; break;
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
       case ARG_PSGCAPTURE: psg_always_capture_on_start=true; break;
+#endif
       case ARG_CROSSMOUSE: no_set_cursor_pos=true; break;
 #if defined(UNIX) && !defined(NO_RTAUDIO)
       case ARG_RTBUFSIZE: rt_buffer_size=atoi(Path); break;

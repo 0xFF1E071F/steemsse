@@ -3793,8 +3793,10 @@ void TDiskManager::ExtractArchiveToSTHardDrive(Str Path)
 void TDiskManager::EjectDisk(int Drive)
 {
   FloppyDrive[Drive].RemoveDisk();
+#ifdef WIN32
+
 #if !defined(SSE_TOS_PRG_AUTORUN_392)//eject not the right place
-#ifdef WIN32//ux382
+
 #ifdef SSE_TOS_PRG_AUTORUN2
   if(SF314[Drive].ImageType.Extension==EXT_PRG
     ||SF314[Drive].ImageType.Extension==EXT_TOS)
@@ -3810,6 +3812,7 @@ void TDiskManager::EjectDisk(int Drive)
   }
   SF314[Drive].ImageType.Extension=0;
 #endif
+
 #endif
 
   if (Handle){
@@ -3819,9 +3822,10 @@ void TDiskManager::EjectDisk(int Drive)
 #if defined(SSE_GUI_STATUS_BAR_DISK_NAME)
   GUIRefreshStatusBar();
 #endif
+
 #elif defined(UNIX)
   UpdateDiskNames(Drive);
-#endif
+#endif//win32
 }
 
 void TDiskManager::ExtractDisks(Str Path)

@@ -1016,9 +1016,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
 #if defined(SSE_CPU_HISPEED_392)
 #if defined(SSE_CPU_MFP_RATIO)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),
+            n_cpu_cycles_per_second=max(min((int)SendMessage(HWND(lPar),
               CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),
-              CPU_MAX_HERTZ+1),CpuNormalHz+1);
+              (int)CPU_MAX_HERTZ+1),(int)CpuNormalHz+1);
 #else
             n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),
               CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),

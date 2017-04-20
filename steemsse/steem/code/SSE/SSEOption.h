@@ -126,6 +126,10 @@ extern struct TOption SSEOption;
 #define OPTION_FULLSCREEN_DEFAULT_HZ (SSEOption.FullScreenDefaultHz)
 #define OPTION_MAME_YM (SSEOption.Chipset2) //C2 commands MFP and PSG mods
 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+#define RENDER_SIGNED_SAMPLES (sound_num_bits==16)
+#endif
+
 struct TConfig {
 
   int FullscreenMask; // mask?

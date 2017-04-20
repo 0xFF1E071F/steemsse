@@ -419,6 +419,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define MICROWIRE_LATENCY_CYCLES (128+16)
 #endif
 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+#define DMA_SOUND_MULTIPLIER (32) // <<5 ?
+#endif
+
 
 /////////////
 // TIMINGS //
