@@ -381,7 +381,14 @@ void reset_peripherals(bool Cold)
   dma_sound_freq=dma_sound_mode_to_freq[0];
   dma_sound_output_countdown=0;
   dma_sound_samples_countdown=0;
+#if defined(SSE_SOUND_16BIT_CENTRED)
+  if(RENDER_SIGNED_SAMPLES)
+    dma_sound_last_word=MAKEWORD(0,0);
+  else
+    dma_sound_last_word=MAKEWORD(128,128);
+#else
   dma_sound_last_word=MAKEWORD(128,128);
+#endif
 #if defined(SSE_SOUND_DMA) //unimportant
   dma_sound_internal_buf_len=0;
 #endif

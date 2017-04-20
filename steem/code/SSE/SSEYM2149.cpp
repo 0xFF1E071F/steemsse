@@ -17,8 +17,6 @@
 #include "SSEInterrupt.h"
 
 
-//SOUND
-
 TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   p_fixed_vol_3voices=NULL;
@@ -59,6 +57,19 @@ bool TYM2149::LoadFixedVolTable() {
     if(nwords==16*16*16)
       ok=true;
     fclose(fp);
+#if defined(SSE_SOUND_16BIT_CENTRED)
+/*  In previous versions, the zero (silence) was a very negative value,
+    for sampled YM (here) as well as for 'Steem native' (using the tables
+    in psg.cpp).
+    If we want the zero to be set at the zero of a signed 16bit wave, we
+    must reduce the range in both tables.
+    So we simply lose the last bit to half the range.
+    I doubt the ST has a 16bit dynamic range anyway :), we lose nothing.
+    All values are positive, the signed sound wave will be totally lopsided.
+*/
+    for(int i=0;i<16*16*16;i++)
+      p_fixed_vol_3voices[i]>>=1; 
+#endif
 #if defined(SSE_SOUND_MOVE_ZERO)
     // move the zero to make it match DMA's (tentative) //was bad idea
     for(int i=0;i<16*16*16;i++)
@@ -80,7 +91,6 @@ bool TYM2149::LoadFixedVolTable() {
 
 #endif//SSE_YM2149_DYNAMIC_TABLE
 
-//DRIVE
 
 BYTE TYM2149::Drive(){
   BYTE drive=NO_VALID_DRIVE; // different from floppy_current_drive()
@@ -115,7 +125,7 @@ void TYM2149::Reset() {
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
   m_oversampling_count=0;
 #endif
-
+//  psg_reg[PSGR_MIXER]=0x77; //? sc68
 }
 
 #define NOISE_ENABLEQ(_chan)  ((psg_reg[PSGR_MIXER] >> (3 + _chan)) & 1)
@@ -151,6 +161,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     return;
 
   int *p=psg_channels_buf+psg_buf_pointer[0];
+  ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
   *p=0;
   ASSERT(sound_freq);
   // YM2149 @2mhz = 1/4 * 8mhz clock 
@@ -176,7 +187,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   /* buffering loop */
   while(count)
   {
-    m_cycles+=8; 
+    m_cycles+=8;  //the driver is clocked with clock / 8
 
     // We compute noise then envelope, then we compute each tone and
     // mix each channel
@@ -210,7 +221,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     {
       m_count_env++;
       //TRACE_OSD("%d/%d",m_count_env,ENVELOPE_PERIOD());
-      if (m_count_env >= ENVELOPE_PERIOD() ) // "m_step"=1 for YM2149
+      if (m_count_env >= ENVELOPE_PERIOD()) // "m_step"=1 for YM2149
       {
         m_count_env = 0;
         m_env_step--;
@@ -234,12 +245,13 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
             m_env_step &= m_env_step_mask;
           }
+          ASSERT(m_env_step>=0);
         }
 
       }
     }
     m_env_volume = (m_env_step ^ m_attack);
-    ASSERT(m_env_volume<32);
+    ASSERT(m_env_volume>=0 && m_env_volume<32);
 
     //as in psg's AlterV
     BYTE index[3],interpolate[4];
@@ -294,6 +306,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       }
       else // Steem's orignal tables per channel
       {
+
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
           ; // 0: skip this channel
@@ -302,14 +315,16 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
         if(!m_vol_enabled[abc])
           ; // 0
         else if (enveloped)
-          vol+=psg_envelope_level[7][m_env_volume];
+          vol+=psg_envelope_level[4][m_env_volume];
         else
           vol+=psg_flat_volume_level[(psg_reg[abc+8] & 15)];
+
       }
     }//nxt abc
 
     if(OPTION_SAMPLED_YM) // now we have 3 indexes (vol on 4bit)
     {
+      // because of averaging, we "render" the 4/5bit samples now
       vol=p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]]; // assume SSE_YM2149_DYNAMIC_TABLE
       if(*(int*)(&interpolate[0]))
       {
@@ -320,7 +335,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     }
 
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-/*  At 44,1khz,makes no difference for Star Trek or Union Demo
+/*  At 44.1khz, makes no difference for Star Trek or Union Demo
     but it does for Nostalgia credits... 
 */
     ASSERT(m_oversampling_count<0xff);
@@ -351,7 +366,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   psg_buf_pointer[2]=psg_buf_pointer[1]=psg_buf_pointer[0];
 }
 
-#endif
+#endif//mame-like
 
 #endif//SSE_YM2149_OBJECT
 

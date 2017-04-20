@@ -149,15 +149,13 @@ EXT DWORD temp_waveform_play_counter;
 #endif
 
 EXT void dma_sound_get_last_sample(WORD*,WORD*);
-
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
 EXT void psg_capture(bool,Str),psg_capture_check_boundary();
 EXT FILE *psg_capture_file INIT(NULL);
 EXT int psg_capture_cycle_base INIT(0);
-
 EXT bool psg_always_capture_on_start INIT(0);
+#endif
 
-
-//#ifdef IN_EMU
 //---------------------------------------------------------------------------
 HRESULT Sound_VBL();
 //--------------------------------------------------------------------------- DMA Sound
@@ -286,12 +284,13 @@ void psg_write_buffer(int,DWORD);
 #define VOLTAGE_FP(x) ((x) << 8)
 
 //BYTE psg_channel_buf[3][PSG_CHANNEL_BUF_LENGTH];
+//SS Steem will add channels into one integer
 #if defined(SSE_SOUND_DYNAMICBUFFERS)
 EXT int *psg_channels_buf;
 EXT int psg_channels_buf_len;
 #define PSG_CHANNEL_BUF_LENGTH (psg_channels_buf_len)
 #else
-EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16]; //SS Steem will add channels into one integer
+EXT int psg_channels_buf[PSG_CHANNEL_BUF_LENGTH+16];
 #endif
 EXT int psg_buf_pointer[3];
 EXT DWORD psg_tone_start_time[3];
@@ -335,7 +334,11 @@ EXT char psg_noise[PSG_NOISE_ARRAY];
 #define PSG_ENV_SHAPE_ATTACK BIT_2
 #define PSG_ENV_SHAPE_CONT BIT_3
 
-#define PSG_CHANNEL_AMPLITUDE 60 //SS what is this?
+#if defined(SSE_SOUND_16BIT_CENTRED) // see note in TYM2149::LoadFixedVolTable() 
+#define PSG_CHANNEL_AMPLITUDE 40
+#else
+#define PSG_CHANNEL_AMPLITUDE 60
+#endif
 
 //#define PSG_VOLSCALE(vl) (volscale[vl]/4+VOLTAGE_ZERO_LEVEL)
 /*
@@ -365,8 +368,6 @@ void psg_set_reg(int,BYTE,BYTE&);
 
 EXT DWORD psg_envelope_start_time;
 //---------------------------------------------------------------------------
-
-//#endif//inemu
 
 #undef EXT
 #undef INIT

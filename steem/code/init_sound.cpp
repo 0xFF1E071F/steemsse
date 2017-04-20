@@ -739,6 +739,9 @@ HRESULT Sound_Stop(bool Immediate)
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   if (sound_internal_speaker) SoundStopInternalSpeaker();
 #endif
+#if defined(SSE_SOUND_16BIT_CENTRED)
+  DSReleaseAllBuffers();
+#else
   if (Immediate || sound_click_at_start || sound_write_primary){
     DSReleaseAllBuffers();
   }else if (SoundBuf && DSOpen){
@@ -800,6 +803,7 @@ HRESULT Sound_Stop(bool Immediate)
       DSReleaseAllBuffers();
     }
   }
+#endif
   return DS_OK;
 }
 //---------------------------------------------------------------------------

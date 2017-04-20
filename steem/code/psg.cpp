@@ -81,10 +81,11 @@ EXT DWORD temp_waveform_play_counter;
 
 #endif
 
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
 EXT FILE *psg_capture_file INIT(NULL);
 EXT int psg_capture_cycle_base INIT(0);
-
 EXT bool psg_always_capture_on_start INIT(0);
+#endif
 
 //not all are used
 #define ONE_MILLION 1048576
@@ -176,10 +177,33 @@ const int psg_flat_volume_level[16]={0*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,8*VA/10
                                       69*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,
                                       287*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP};
 
+
 #if defined(SSE_YM2149_DYNAMIC_TABLE0) // to create file ym2149_fixed_vol.bin
  WORD fixed_vol_3voices[16][16][16]= 
 #include "../../3rdparty/various/ym2149_fixed_vol.h" //more bloat...
 #endif
+
+#if defined(SSE_YM2149_FIX_ENV_TABLE) // must have values like the fixed volume table
+//0	0	2	4	6	8	10	12	14	17	20	24	29	35	41	48	58	69	81	95	115	139	163	191	234	287	342	407	514	648	805	1000
+const int psg_envelope_level[8][64]={
+    {1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
+    {1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP},
+    {1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
+    {1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
+    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
+    {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP},
+    {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP,VA+VZL*VFP},
+    {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    1000*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
+    {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,4*VA/1000+VZL*VFP,6*VA/1000+VZL*VFP,8*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,12*VA/1000+VZL*VFP,14*VA/1000+VZL*VFP,17*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,24*VA/1000+VZL*VFP,29*VA/1000+VZL*VFP,35*VA/1000+VZL*VFP,41*VA/1000+VZL*VFP,53*VA/1000+VZL*VFP,58*VA/1000+VZL*VFP,69*VA/1000+VZL*VFP,81*VA/1000+VZL*VFP,95*VA/1000+VZL*VFP,115*VA/1000+VZL*VFP,139*VA/1000+VZL*VFP,163*VA/1000+VZL*VFP,191*VA/1000+VZL*VFP,234*VA/1000+VZL*VFP,287*VA/1000+VZL*VFP,342*VA/1000+VZL*VFP,407*VA/1000+VZL*VFP,514*VA/1000+VZL*VFP,648*VA/1000+VZL*VFP,805*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
+    VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
+
+#else
 
 const int psg_envelope_level[8][64]={
     {1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,
@@ -198,7 +222,7 @@ const int psg_envelope_level[8][64]={
     1000*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP},
     {0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,0*VA/1000+VZL*VFP,1*VA/1000+VZL*VFP,2*VA/1000+VZL*VFP,3*VA/1000+VZL*VFP,5*VA/1000+VZL*VFP,10*VA/1000+VZL*VFP,20*VA/1000+VZL*VFP,30*VA/1000+VZL*VFP,50*VA/1000+VZL*VFP,55*VA/1000+VZL*VFP,65*VA/1000+VZL*VFP,70*VA/1000+VZL*VFP,80*VA/1000+VZL*VFP,88*VA/1000+VZL*VFP,100*VA/1000+VZL*VFP,110*VA/1000+VZL*VFP,125*VA/1000+VZL*VFP,149*VA/1000+VZL*VFP,178*VA/1000+VZL*VFP,210*VA/1000+VZL*VFP,250*VA/1000+VZL*VFP,290*VA/1000+VZL*VFP,354*VA/1000+VZL*VFP,420*VA/1000+VZL*VFP,510*VA/1000+VZL*VFP,590*VA/1000+VZL*VFP,707*VA/1000+VZL*VFP,841*VA/1000+VZL*VFP,1000*VA/1000+VZL*VFP,
     VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP,VZL*VFP}};
-
+#endif
 
 #if defined(SSE_YM2149_DELAY_RENDERING)
 /*  Rendering is done later, we save the 5bit digital value instead of the 
@@ -300,9 +324,11 @@ HRESULT Sound_Start() // SS called by
   WORD dma_l,dma_r;
   dma_sound_get_last_sample(&dma_l,&dma_r);
   int current_l=HIBYTE(flatlevel)+HIBYTE(dma_l),current_r=HIBYTE(flatlevel)+HIBYTE(dma_r);
+#if !defined(SSE_SOUND_16BIT_CENTRED)
   if (sound_num_bits==16){
     current_l^=128;current_r^=128;
   }
+#endif
   if (SoundStartBuffer((signed char)current_l,(signed char)current_r)!=DS_OK){
     return DDERR_GENERIC;
   }
@@ -348,10 +374,12 @@ HRESULT Sound_Start() // SS called by
   return DS_OK;
 }
 //---------------------------------------------------------------------------
+#if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 void SoundStopInternalSpeaker()
 {
   internal_speaker_sound_by_period(0);
 }
+#endif
 //---------------------------------------------------------------------------
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
@@ -606,6 +634,9 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
   {
 #if defined(SSE_SOUND_RECORD_391B)
     BYTE index[3],interpolate[3];
+#if defined(SSE_YM2149_392)
+    *(int*)interpolate=0;
+#endif
     for(int abc=0;abc<3;abc++)
     {
       index[abc]=( ((source)>>1))&0xF; // 4bit volume
@@ -733,6 +764,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       if(dma_sound_on_this_screen&&(OSD_MASK3 & OSD_CONTROL_DMASND)) 
         TRACE_OSD("F%d %cV%d %d %d B%d T%d",dma_sound_freq,(dma_sound_mode & BIT_7)?'M':'S',dma_sound_volume,dma_sound_l_volume,dma_sound_r_volume,dma_sound_bass,dma_sound_treble);
 #endif
+
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
@@ -826,11 +858,18 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
       //LEFT-16bit
       val=v; //inefficient?
-
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      char dma_sample=**lp_dma_sound_channel; 
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
-        val+= (**lp_dma_sound_channel);                           
+        val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#else
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+      if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
+#endif
+        val+= (**lp_dma_sound_channel);    
+#endif //dc                      
 #if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       {
@@ -852,32 +891,38 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         }
       }
 #endif//#if defined(SSE_SOUND_MICROWIRE)
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-      if (val<-VOLTAGE_FP(255))
-        val=-VOLTAGE_FP(255); 
-      else if (val>VOLTAGE_FP(255))
-        val=VOLTAGE_FP(255); 
+
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if(val>32767)
+        val=32767;
 #else
       if (val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
 #endif
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-      *(short*)*(short**)Out_P=((short)val);
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      *(WORD*)*(WORD**)Out_P=((WORD)val);
 #else
       *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-#endif
+#endif//dc
       (*(WORD**)Out_P)++;
       // stereo: do the same for right channel
       if(sound_num_channels==2){    
         //RIGHT-16bit
         val=v;
-
+#if defined(SSE_SOUND_16BIT_CENTRED)
+        char dma_sample=*(*lp_dma_sound_channel+1); 
+#if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
+        if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
+#endif
+          val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#else
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
 #endif
           val+= (*(*lp_dma_sound_channel+1)); 
+#endif//dc
 #if defined(SSE_SOUND_MICROWIRE)
         if(OPTION_MICROWIRE)
         {
@@ -898,22 +943,20 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           }
         }
 #endif
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-        if (val<-VOLTAGE_FP(255))
-          val=-VOLTAGE_FP(255); 
-        else if (val>VOLTAGE_FP(255))
-          val=VOLTAGE_FP(255); 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+        if(val>32767)
+          val=32767;
 #else
         if(val<VOLTAGE_FP(0))
           val=VOLTAGE_FP(0); 
         else if (val>VOLTAGE_FP(255))
           val=VOLTAGE_FP(255); 
 #endif
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-        *(short*)*(short**)Out_P=((short)val);
+#if defined(SSE_SOUND_16BIT_CENTRED)
+        *(WORD*)*(WORD**)Out_P=((WORD)val);
 #else
         *(WORD*)*(WORD**)Out_P=((WORD)val) ^ MSB_W;
-#endif
+#endif//dc
         (*(WORD**)Out_P)++;
       }//right channel 
       WAVEFORM_ONLY(temp_waveform_display[((int)(*source_p-psg_channels_buf)+psg_time_of_last_vbl_for_writing) % MAX_temp_waveform_display_counter]=WORD_B_1(&val)); 
@@ -950,34 +993,40 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     }
 #endif//SSE_SOUND_MICROWIRE_MIXMODE
     val=v;
-    val+= (**lp_dma_sound_channel);    
+
+#if defined(SSE_SOUND_16BIT_CENTRED)
+    if(RENDER_SIGNED_SAMPLES)
+    {
+      char dma_sample=**lp_dma_sound_channel; 
+      val+=dma_sample*DMA_SOUND_MULTIPLIER;
+    }
+    else
+#endif
+    val+= (**lp_dma_sound_channel);  
+
 #if defined(SSE_SOUND_MICROWIRE)
-      if(OPTION_MICROWIRE)
+    if(OPTION_MICROWIRE)
+    {
+      Microwire(0,val);
+#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
+      if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
+#else
+      if(dma_sound_l_top_val<128)
+#endif
       {
-        Microwire(0,val);
 #if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
-        if(dma_sound_l_top_val!=128||old_dma_sound_l_top_val!=dma_sound_l_top_val)
+        val*=old_dma_sound_l_top_val; // changed in live sound loop
+        val/=128;
 #else
-        if(dma_sound_l_top_val<128)
+        val*=dma_sound_l_top_val;
+        val/=128;
 #endif
-        {
-#if defined(SSE_SOUND_MICROWIRE_VOLUME_SLOW)
-          val*=old_dma_sound_l_top_val; // changed in live sound loop
-          val/=128;
-#else
-          val*=dma_sound_l_top_val;
-          val/=128;
-#endif
-        }
       }
+    }
 #endif
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-    if(Write!=WRITE_TO_WAV_FILE_B && val<-VOLTAGE_FP(255))
-      val=-VOLTAGE_FP(255); 
-    else if(Write==WRITE_TO_WAV_FILE_B && val<VOLTAGE_FP(0))
-      val=VOLTAGE_FP(0);
-    else if (val>VOLTAGE_FP(255))
-      val=VOLTAGE_FP(255); 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+    if(val>32767)
+      val=32767;
 #else
     if (val<VOLTAGE_FP(0))
       val=VOLTAGE_FP(0); 
@@ -988,9 +1037,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       fputc(BYTE(WORD_B_1(&(val))),wav_file);
     else 
     {
-#if !defined(SSE_SOUND_SIGNED_SAMPLES)
+#if !defined(SSE_SOUND_16BIT_CENTRED)
       val^=MSB_W;
-#endif
+#endif//dc
       fputc(LOBYTE(val),wav_file);
       fputc(HIBYTE(val),wav_file);
     }
@@ -999,7 +1048,16 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
 
       val=v; // restore val! 
 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if(RENDER_SIGNED_SAMPLES)
+      {
+        char dma_sample=*(*lp_dma_sound_channel+1); 
+        val+=dma_sample*DMA_SOUND_MULTIPLIER;
+      }
+      else
+#endif
       val+= (*(*lp_dma_sound_channel+1)); 
+
 #if defined(SSE_SOUND_MICROWIRE)
       if(OPTION_MICROWIRE)
       {
@@ -1020,13 +1078,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         }
       }
 #endif
-#if defined(SSE_SOUND_SIGNED_SAMPLES)
-      if(Write!=WRITE_TO_WAV_FILE_B && val<-VOLTAGE_FP(255))
-        val=-VOLTAGE_FP(255); 
-      else if(Write==WRITE_TO_WAV_FILE_B && val<VOLTAGE_FP(0))
-        val=VOLTAGE_FP(0);
-      else if (val>VOLTAGE_FP(255))
-        val=VOLTAGE_FP(255); 
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if(val>32767)
+        val=32767;
 #else
       if(val<VOLTAGE_FP(0))
         val=VOLTAGE_FP(0); 
@@ -1037,9 +1091,9 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
         fputc(BYTE(WORD_B_1(&(val))),wav_file);
       else 
       {
-#if !defined(SSE_SOUND_SIGNED_SAMPLES)
+#if !defined(SSE_SOUND_16BIT_CENTRED)
         val^=MSB_W;
-#endif
+#endif //dc
         fputc(LOBYTE(val),wav_file);
         fputc(HIBYTE(val),wav_file);
       }
@@ -1251,10 +1305,11 @@ HRESULT Sound_VBL()
     }
   }
 #endif
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
   if (psg_capture_file){
     psg_capture_check_boundary();
   }
-
+#endif
   // This just clears up some clicks when Sound_VBL is called very soon after Sound_Start
   if (sound_first_vbl){
     sound_first_vbl=0;
@@ -1326,12 +1381,14 @@ HRESULT Sound_VBL()
     if(SSEConfig.mv16)
       dma_sound_freq=sound_freq;
 #endif
+#if (PSG_WRITE_EXTRA>0)
     WORD w[2]={dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-2],dma_sound_channel_buf[dma_sound_channel_buf_last_write_t-1]};
     for (int i=0;i<PSG_WRITE_EXTRA;i++){
       if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[0];
       dma_sound_channel_buf[dma_sound_channel_buf_last_write_t++]=w[1];
     }
+#endif
 #if defined(SSE_CARTRIDGE_BAT)
   }else if(SSEConfig.mv16){
     dma_sound_channel_buf[0]=dma_sound_channel_buf[1]=dma_sound_last_word;
@@ -1672,6 +1729,9 @@ void dma_sound_fetch()
         dma_sound_last_word&=0xff00;
         dma_sound_last_word|=BYTE(b2);
       }
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if(!RENDER_SIGNED_SAMPLES)
+#endif
       dma_sound_last_word^=WORD((128 << 8) | 128); // unsign
     }
     dma_sound_output_countdown+=sound_freq;
@@ -1679,8 +1739,21 @@ void dma_sound_fetch()
     WORD w2;
 
     if (Mono){       //mono, play half as many words
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if (RENDER_SIGNED_SAMPLES)
+      {
+        w1=WORD((dma_sound_last_word & 0xff00)>>8);
+        w2=WORD((dma_sound_last_word & 0x00ff));
+      }
+      else
+      {
+        w1=WORD((dma_sound_last_word & 0xff00) >> 2);
+        w2=WORD((dma_sound_last_word & 0x00ff) << 6);
+      }
+#else
       w1=WORD((dma_sound_last_word & 0xff00) >> 2);
       w2=WORD((dma_sound_last_word & 0x00ff) << 6);
+#endif
       // dma_sound_channel_buf always stereo, so put each mono sample in twice
       while (dma_sound_output_countdown>=0){
         if (dma_sound_channel_buf_last_write_t>=DMA_SOUND_BUFFER_LENGTH) break;
@@ -1703,8 +1776,18 @@ void dma_sound_fetch()
 */
       if (sound_num_channels==1){
         //average the channels out
+#if defined(SSE_SOUND_16BIT_CENTRED)
+        if (RENDER_SIGNED_SAMPLES)
+          w1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8))>>8 );
+        else
+#endif
         w1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8)) << 5);
         w2=0; // skipped
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      }else if (RENDER_SIGNED_SAMPLES){
+        w1=WORD((dma_sound_last_word & 0xff00)>>8);
+        w2=WORD((dma_sound_last_word & 0x00ff));
+#endif
       }else{
         w1=WORD((dma_sound_last_word & 0xff00) >> 2);
         w2=WORD((dma_sound_last_word & 0x00ff) << 6);
@@ -1825,16 +1908,39 @@ void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 {
   if (dma_sound_mode & BIT_7){
     // ST plays HIBYTE, LOBYTE, so last sample is LOBYTE
+#if defined(SSE_SOUND_16BIT_CENTRED)
+    if (RENDER_SIGNED_SAMPLES)
+      *pw1=WORD((dma_sound_last_word & 0x00ff));
+    else
+#endif
     *pw1=WORD((dma_sound_last_word & 0x00ff) << 6);
     *pw2=*pw1; // play the same in both channels, or ignored in when sound_num_channels==1
   }else{
     if (sound_num_channels==1){
       //average the channels out
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if (RENDER_SIGNED_SAMPLES)
+        *pw1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8))>>8);
+      else
+#endif
       *pw1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8)) << 5);
       *pw2=0; // skipped
     }else{
+#if defined(SSE_SOUND_16BIT_CENTRED)
+      if (RENDER_SIGNED_SAMPLES)
+      {
+        *pw1=WORD((dma_sound_last_word & 0xff00)>>8);
+        *pw2=WORD((dma_sound_last_word & 0x00ff));
+      }
+      else
+      {
+        *pw1=WORD((dma_sound_last_word & 0xff00) >> 2);
+        *pw2=WORD((dma_sound_last_word & 0x00ff) << 6);
+      }
+#else
       *pw1=WORD((dma_sound_last_word & 0xff00) >> 2);
       *pw2=WORD((dma_sound_last_word & 0x00ff) << 6);
+#endif
     }
   }
 }
@@ -2427,7 +2533,8 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
   if (reg>=PSGR_PORT_A) return; //SS 14,15
 
   if (old_val==new_val && reg!=PSGR_ENVELOPE_SHAPE) return;
-
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
+  ASSERT(!psg_capture_file); // should disable code
   if (psg_capture_file){
     psg_capture_check_boundary();
     DWORD cycle=int(ABSOLUTE_CPU_TIME-psg_capture_cycle_base);
@@ -2442,7 +2549,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     fwrite(&reg_byte,1,sizeof(reg_byte),psg_capture_file);
     fwrite(&new_val,1,sizeof(new_val),psg_capture_file);
   }
-
+#endif
   if (SoundActive()==0){
     dbg_log(Str("SOUND: ")+HEXSl(old_pc,6)+" - PSG reg "+reg+" changed to "+new_val+" at "+scanline_cycle_log());
     return;
@@ -2471,7 +2578,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     YM2149.psg_write_buffer(t);
     if(reg==PSGR_ENVELOPE_SHAPE) //note reg still has old value
     {
-      ASSERT(YM2149.m_env_step_mask==TYM2149::ENVELOPE_MASK);
+      ASSERT(YM2149.m_env_step_mask==TYM2149::ENVELOPE_MASK); //32 steps
       YM2149.m_attack = (new_val & 0x04) ? YM2149.m_env_step_mask : 0x00;
       if ((new_val & 0x08) == 0)
       {
@@ -2486,7 +2593,11 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       }
       YM2149.m_env_step = YM2149.m_env_step_mask;
       YM2149.m_holding = 0;
-      YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
+      ASSERT(YM2149.m_env_step>=0);
+      //YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
+      // notice MAME doesn't reset the envelope counter
+      //YM2149.m_count_env = 0;
+      //YM2149.m_count_env = 0x10000; //in sc68 source as temp test
     }
   }
   else
@@ -2637,6 +2748,8 @@ say, that the chip counts down.
   }
 }
 
+#if !defined(SSE_YM2149_DISABLE_CAPTURE_FILE)
+
 void psg_capture(bool start,Str file)
 {
   if (psg_capture_file){
@@ -2674,6 +2787,8 @@ void psg_capture_check_boundary()
     fwrite(&new_val,1,sizeof(new_val),psg_capture_file);
   }
 }
+
+#endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

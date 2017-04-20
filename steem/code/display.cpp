@@ -2868,13 +2868,16 @@ bool SteemDisplay::D3DBlit() {
 #endif
       pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
 #endif
-
+#if defined(SSE_VID_D3D_392)
+    d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
+#else
     bool use_scr_rect=(FullScreen && OPTION_D3D_CRISP && !OPTION_INTERPOLATED_SCANLINES
       && (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE));
     if(use_scr_rect)
       d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
     else
       d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
+#endif
     d3derr=pD3DSprite->End();
     d3derr=pD3DDevice->EndScene();
 #ifdef SSE_VID_D3D_WINDOW
