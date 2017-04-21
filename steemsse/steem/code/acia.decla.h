@@ -22,11 +22,20 @@ extern "C" {  // necessary for VC6
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct ACIA_STRUCT{ // removed _ ..
+
 #if defined(SSE_VAR_RESIZE) // problem is memory snapshots, structure: more complicated
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  COUNTER_VAR last_tx_write_time;
+  COUNTER_VAR last_rx_read_time;
+#if defined(SSE_ACIA_EVENT)
+  COUNTER_VAR time_of_event_incoming, time_of_event_outgoing;
+#endif
+#else
   int last_tx_write_time;
   int last_rx_read_time;
 #if defined(SSE_ACIA_EVENT)
   int time_of_event_incoming, time_of_event_outgoing;
+#endif
 #endif
   BYTE clock_divide;
   BYTE rx_irq_enabled;

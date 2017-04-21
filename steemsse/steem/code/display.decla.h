@@ -2,6 +2,8 @@
 #ifndef DISPLAY_DECLA_H
 #define DISPLAY_DECLA_H
 
+#include "SSE/SSEDecla.h"
+
 #define EXT extern
 #define INIT(s)
 
@@ -178,7 +180,7 @@ public: //temp
   BOOL BlitIfVBlank(); // our polling function
 #endif
 #if defined(SSE_VID_3BUFFER_WIN)
-  long VSyncTiming; // must be public
+  COUNTER_VAR VSyncTiming; // must be public
 #endif
 
 

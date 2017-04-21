@@ -35,7 +35,14 @@ const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,
                             65535,4,10,16,50,64,100,200};
 int mfp_timer_counter[4];
+#if defined(SSE_TIMINGS_CPUTIMER64)
+COUNTER_VAR mfp_timer_timeout[4];
+COUNTER_VAR mfp_time_of_start_of_last_interrupt[16];
+#else
 int mfp_timer_timeout[4];
+int mfp_time_of_start_of_last_interrupt[16];
+#endif
+
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
@@ -44,7 +51,7 @@ int mfp_timer_period_current_fraction[4];
 #endif
 bool mfp_timer_period_change[4]={0,0,0,0};
 bool mfp_interrupt_enabled[16];
-int mfp_time_of_start_of_last_interrupt[16];
+
 #if !defined(SSE_INT_MFP_TIMERS_BASETIME)
 int cpu_time_of_first_mfp_tick;
 #endif
@@ -174,7 +181,16 @@ inline bool mfp_set_pending(int irq,int when_set)
 
 #if defined(SSE_INT_MFP_INLINE) 
 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+
+bool mfp_set_pending(int irq,COUNTER_VAR when_set) {
+
+#else
+
 bool mfp_set_pending(int irq,int when_set) {
+
+#endif
+
   if(
 #if defined(SSE_INT_MFP_IACK)
     OPTION_C2 || 
@@ -869,7 +885,7 @@ void TMC68901::Init() {
 }
 
 
-int TMC68901::UpdateNextIrq(int at_time) {
+int TMC68901::UpdateNextIrq(COUNTER_VAR at_time) {
 /*  This logic is instant (?) on the MFP.
     The IRQ line depends only on MFP registers, not on IPL in the CPU.
     It may be asserted then later negated without the CPU handling it.
@@ -944,7 +960,7 @@ void TMC68901::AdjustTimerB() {
 
 void TMC68901::ComputeNextTimerB(int info) {
   ASSERT(OPTION_C2);
-  int tontb=0;
+  COUNTER_VAR tontb=0;
   if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE))
   {
     // time of DE transition this scanline

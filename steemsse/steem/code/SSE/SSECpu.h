@@ -51,7 +51,7 @@ so refactoring due!
   // DATA
 #if defined(SSE_CPU_E_CLOCK)
   int cycles_for_eclock; // because of integer overflow problems
-  int cycles0; // to record ACT
+  COUNTER_VAR cycles0; // to record ACT
 #endif
 #if defined(SSE_CPU_TRUE_PC)
   MEM_ADDRESS Pc;

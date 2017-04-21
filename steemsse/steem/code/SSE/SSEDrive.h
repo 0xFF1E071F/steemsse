@@ -51,8 +51,8 @@ struct TSF314 {
 #endif
   int cycles_per_byte;
 #if defined(SSE_WD1772)
-  int time_of_next_ip;
-  int time_of_last_ip;
+  COUNTER_VAR time_of_next_ip;
+  COUNTER_VAR time_of_last_ip;
 #endif
   TImageType ImageType; //WORD size, 3.6.2
 #if defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)//debug only

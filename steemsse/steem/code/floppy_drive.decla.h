@@ -80,7 +80,7 @@ public:
 
   ~TFloppyImage()            { RemoveDisk(); }
 
-#if defined(SSE_DISK_PASTI_NO_RESET)
+#if defined(SSE_DISK_PASTI_NO_RESET) || defined(SSE_DISK_GHOST)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
   int SetDisk(EasyStr,EasyStr="",BPBINFO* = NULL,BPBINFO* = NULL);

@@ -197,7 +197,7 @@ struct TWD1772 {
   // DATA
 #if defined(SSE_WD1772_EMU)
   int prg_phase;
-  int update_time; // when do we need to come back?
+  COUNTER_VAR update_time; // when do we need to come back?
   WORD ByteCount; // guessed
   // definition is outside the class but objects belong to the class
   TWD1772IDField IDField; // to R/W those fields

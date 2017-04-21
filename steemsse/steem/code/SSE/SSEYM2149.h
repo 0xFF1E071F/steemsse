@@ -19,7 +19,7 @@ struct TYM2149 {
   int m_count_env;
   int m_rng;
   DWORD m_env_volume;
-  int m_cycles; // added
+  COUNTER_VAR m_cycles; // added
   BYTE m_output[NUM_CHANNELS];
   BYTE m_env_step_mask;
   char m_env_step;

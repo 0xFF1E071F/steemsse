@@ -74,8 +74,13 @@ EXT BYTE shifter_fetch_extra_words;
 EXT int shifter_fetch_extra_words;
 #endif
 EXT bool shifter_hscroll_extra_fetch;
+#if defined(SSE_VAR_RESIZE_392)
+EXT BYTE screen_res INIT(0);
+EXT short scan_y;
+#else
 EXT int screen_res INIT(0);
 EXT int scan_y;
+#endif
 
 EXT BYTE mmu_memory_configuration;
 
@@ -222,7 +227,7 @@ void init_timings()
 
   cpu_time_of_last_vbl=ABSOLUTE_CPU_TIME;
 #if defined(SSE_TIMING_MULTIPLIER_392C)
-    time_of_next_timer_b=cpu_time_of_last_vbl+160000*cpu_cycles_multiplier;
+  time_of_next_timer_b=cpu_time_of_last_vbl+160000*cpu_cycles_multiplier;
 #else
   time_of_next_timer_b=cpu_time_of_last_vbl+160000;
 #endif

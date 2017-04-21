@@ -39,7 +39,7 @@ void ReadWriteVar(void *lpVar,DWORD szVar,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( B
     }
 //    log_write(Str(szVar));
   }else{
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     if (Type==3)  // byte loaded/saved as int
     {
       ASSERT(szVar==4);
@@ -126,7 +126,7 @@ int ReadWriteEasyStr(EasyStr &s,NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &pMem
   return 0;
 }
 #define ReadWrite(var) ReadWriteVar(&(var),sizeof(var),f,LoadOrSave,0,Version)
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
 #define ReadWriteByte(var) ReadWriteVar(&(var),sizeof(int),f,LoadOrSave,3,Version)
 #define ReadWriteWord(var) ReadWriteVar(&(var),sizeof(int),f,LoadOrSave,4,Version)
 #endif
@@ -160,9 +160,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(on_rte);          //4
   ReadWrite(on_rte_interrupt_depth); //4
   ReadWrite(shifter_draw_pointer); //4
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   ReadWriteByte(shifter_freq);         //4
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   int shifter_freq_int=shifter_freq;
   ReadWrite(shifter_freq_int);         //4
   shifter_freq=shifter_freq_int;
@@ -173,10 +173,10 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_x);            //4
   ReadWrite(shifter_y);            //4
   ReadWrite(shifter_scanline_width_in_bytes); //4 //SS: unused
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   ReadWriteByte(shifter_fetch_extra_words);       //4
   ReadWriteByte(shifter_hscroll);                 //4
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   {
     int tmp=shifter_fetch_extra_words;
     ReadWrite(tmp);       //4
@@ -189,6 +189,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(shifter_fetch_extra_words);       //4
   ReadWrite(shifter_hscroll);                 //4
 #endif
+#if defined(SSE_VAR_RESIZE_392)
+  ReadWrite(screen_res);                //1
+#else
   if (Version==17 || Version==18){ // The unreleased freak versions!
     ReadWrite(screen_res);
   }else{
@@ -196,7 +199,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     ReadWrite(temp);                //1
     screen_res=temp;
   }
-
+#endif
   ReadWrite(mmu_memory_configuration);  //1
 
   ReadWriteArray(mfp_reg);//SS 24
@@ -220,9 +223,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   ReadWrite(mfp_gpip_no_interrupt); //1
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   ReadWriteByte(psg_reg_select);        //4
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   int i_psg_reg_select=psg_reg_select;
   ReadWrite(i_psg_reg_select);      //4
   psg_reg_select=i_psg_reg_select;
@@ -247,7 +250,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(dma_mode);          //2
   ReadWrite(dma_status);        //1
   ReadWrite(dma_address);       //4
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA_OBJECT) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   {
     int dma_sector_count_tmp=dma_sector_count;//word
     ReadWrite(dma_sector_count_tmp);
@@ -261,14 +264,16 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   ReadWrite(fdc_sr);            //1
   ReadWrite(fdc_str);           //1
   ReadWrite(fdc_dr);                     //1
+#if !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
 #if defined(SSE_WD1772_REGS_FOR_FDC)
   BYTE dummy_byte;
   ReadWrite(dummy_byte);
 #else
   ReadWrite(fdc_last_step_inwards_flag); //1
 #endif
+#endif
   ReadWriteArray(floppy_head_track);
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   {
     int floppy_mediach_tmp[2];
     floppy_mediach_tmp[0]=floppy_mediach[0];
@@ -329,7 +334,8 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=5) ReadWriteArray(ST_Key_Down);
 
-#if defined(SSE_VAR_RESIZE) // problem is memory snapshots, structure: more complicated
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
+  // problem is memory snapshots, structure: more complicated
   struct {
     int clock_divide;
     int rx_delay__unused;
@@ -516,12 +522,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool old_em=bool(extended_monitor);
   if (Version>=24){
 
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteWord(em_width);
     ReadWriteWord(em_height);
     ReadWriteByte(em_planes);
     ReadWriteByte(extended_monitor);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     // what we win in pure size, we lose in code, but this function could be paged
     int em_ints[4];
     em_ints[0]=em_width;
@@ -598,14 +604,14 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   if (Version>=30){
     ReadWrite(MicroWire_Mask);
     ReadWrite(MicroWire_Data);
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(dma_sound_volume);
     ReadWriteByte(dma_sound_l_volume);
     ReadWriteByte(dma_sound_r_volume);
     ReadWriteByte(dma_sound_l_top_val);
     ReadWriteByte(dma_sound_r_top_val);
     ReadWriteByte(dma_sound_mixer);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int i_dma_sound_volume=dma_sound_volume;
     int i_dma_sound_l_volume=dma_sound_l_volume;
     int i_dma_sound_r_volume=dma_sound_r_volume;
@@ -644,9 +650,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   bool spin_up=bool(fdc_spinning_up);
   if (Version>=32) ReadWrite(spin_up);
   if (Version>=33){
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(fdc_spinning_up);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     {
       int fdc_spinning_up_tmp=fdc_spinning_up;
       ReadWrite(fdc_spinning_up_tmp);
@@ -668,16 +674,16 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     BYTE fdc_read_address_buffer_len=0;
 #endif
 
-#if defined(SSE_WD1772_REGS_FOR_FDC)
+#if defined(SSE_WD1772_REGS_FOR_FDC) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int floppy_type1_command_active_tmp=floppy_type1_command_active;
     ReadWrite(floppy_type1_command_active_tmp);
     floppy_type1_command_active=floppy_type1_command_active_tmp;
 #else
     ReadWrite(floppy_type1_command_active);
 #endif
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(fdc_read_address_buffer_len);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int fdc_read_address_buffer_len_tmp=fdc_read_address_buffer_len;
     ReadWrite(fdc_read_address_buffer_len_tmp);
     fdc_read_address_buffer_len=fdc_read_address_buffer_len_tmp;
@@ -696,7 +702,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
 
 
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     {
       int dma_bytes_written_for_sector_count_tmp=dma_bytes_written_for_sector_count;
       ReadWrite(dma_bytes_written_for_sector_count_tmp);//word
@@ -775,9 +781,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 
   if (Version>=39){
     ReadWriteArray(dma_sound_internal_buf);
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(dma_sound_internal_buf_len);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int i_dma_sound_internal_buf_len=dma_sound_internal_buf_len;
     ReadWrite(i_dma_sound_internal_buf_len);
     dma_sound_internal_buf_len=i_dma_sound_internal_buf_len;
@@ -896,9 +902,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     if(SampleRate<6258 || SampleRate>50066)
       SampleRate=12517;
 #endif
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(dma_sound_bass);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int i_dma_sound_bass=dma_sound_bass;
     ReadWrite(i_dma_sound_bass);
     dma_sound_bass=dma_sound_bass;
@@ -907,9 +913,9 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #endif
     if(dma_sound_bass<0 || dma_sound_bass>=0xC)
       dma_sound_bass=6;
-#if defined(SSE_VAR_RESIZE_392)
+#if defined(SSE_VAR_RESIZE_392) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     ReadWriteByte(dma_sound_treble);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
     int i_dma_sound_treble=dma_sound_treble;
     ReadWrite(i_dma_sound_treble);
     dma_sound_treble=dma_sound_treble;
@@ -969,7 +975,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
       OPTION_C1=0;
 #endif
 #if defined(SSE_ACIA)
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VAR_RESIZE) && !defined(SSE_VAR_SNAPSHOTS_INCOMPATIBLE)
   old_acia[NUM_ACIA_MIDI].clock_divide=ACIA_MIDI.clock_divide;
   old_acia[NUM_ACIA_MIDI].rx_irq_enabled=ACIA_MIDI.rx_irq_enabled;
   old_acia[NUM_ACIA_MIDI].rx_not_read=ACIA_MIDI.rx_not_read;
@@ -984,14 +990,12 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   old_acia[NUM_ACIA_MIDI].ByteWaitingRx=ACIA_MIDI.ByteWaitingRx;
   old_acia[NUM_ACIA_MIDI].ByteWaitingTx=ACIA_MIDI.ByteWaitingTx;
   old_acia[NUM_ACIA_MIDI].LineTxBusy=ACIA_MIDI.LineTxBusy;
-#if defined(SSE_ACIA)
   old_acia[NUM_ACIA_MIDI].CR=ACIA_MIDI.CR;
   old_acia[NUM_ACIA_MIDI].SR=ACIA_MIDI.SR;
   old_acia[NUM_ACIA_MIDI].RDR=ACIA_MIDI.RDR;
   old_acia[NUM_ACIA_MIDI].TDR=ACIA_MIDI.TDR;
   old_acia[NUM_ACIA_MIDI].RDRS=ACIA_MIDI.RDRS;
   old_acia[NUM_ACIA_MIDI].TDRS=ACIA_MIDI.TDRS;
-#endif
 
   ReadWriteStruct(old_acia[NUM_ACIA_MIDI]);
 
@@ -1212,7 +1216,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_BUGFIX_392)
     int save_ioaccess=ioaccess;
 #endif
-    ioaccess=(Glue.screen_event.time-cpu_cycles);
+    ioaccess=(Glue.screen_event.time-cpu_cycles); //<32bit
     ReadWrite(ioaccess);
 #if defined(SSE_CPU_E_CLOCK)
     M68000.cycles_for_eclock-=ioaccess;
@@ -1224,7 +1228,8 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       M68000.cycles_for_eclock+=ioaccess; // restore
 #endif
 #if defined(SSE_BUGFIX_392)
-    ioaccess=save_ioaccess;
+    if(LoadOrSave==LS_SAVE)
+      ioaccess=save_ioaccess;
 #endif
 
   }

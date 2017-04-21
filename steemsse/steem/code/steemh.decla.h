@@ -12,6 +12,7 @@ allow Steem to perform emulation.
 #define EXT extern
 #define INIT(s)
 
+#include "SSE/SSEDecla.h"
 
 extern "C"
 {
@@ -36,9 +37,7 @@ EXT bool tos_high;            //140
 EXT bool mmu_confused;        //144 
 EXT unsigned long hbl_count INIT(0);
 
-#if defined(SSE_IKBD_6301)
-// it's silly but I need to place those 'C' declarations here
-EXT int cpu_timer;  
+#if defined(SSE_IKBD_6301) //TODO
 EXT BYTE stick[8];
 #endif
 
@@ -241,8 +240,8 @@ EXT void* m68k_dest;
 EXT MEM_ADDRESS abus;
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
-
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR cpu_timer;
 #else
 EXT int cpu_timer;
 #endif

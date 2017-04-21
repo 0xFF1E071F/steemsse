@@ -114,9 +114,13 @@ EXT BYTE shifter_fetch_extra_words;
 EXT int shifter_fetch_extra_words;
 #endif
 EXT bool shifter_hscroll_extra_fetch;
+#if defined(SSE_VAR_RESIZE_392)
+EXT BYTE screen_res INIT(0);
+EXT short scan_y;
+#else
 EXT int screen_res INIT(0);
 EXT int scan_y;
-
+#endif
 #define SVmemvalid 0x420
 #define SVmemctrl 0x424
 #define SVphystop 0x42e

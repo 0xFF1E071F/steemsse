@@ -46,7 +46,11 @@ EXT bool floppy_access_started_ff INIT(0);
 
 #if USE_PASTI
 EXT HINSTANCE hPasti INIT(NULL);
+#if defined(SSE_TIMINGS_CPUTIMER64) //TODO: if/when pasti64 is available
+EXT COUNTER_VAR pasti_update_time;
+#else
 EXT int pasti_update_time;
+#endif
 EXT const struct pastiFUNCS *pasti INIT(NULL);
 EXT char pasti_file_exts[160];
 EXT WORD pasti_store_byte_access;

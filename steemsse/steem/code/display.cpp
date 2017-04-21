@@ -2131,7 +2131,12 @@ HRESULT SteemDisplay::SaveScreenShot()
     if(pNeoFile)
     {
       ASSERT(!ToClipboard);
+#if defined(SSE_VAR_RESIZE_392)
+      WORD screen_res_as_word=screen_res;
+      pNeoFile->resolution=change_endian(screen_res_as_word);
+#else
       pNeoFile->resolution=change_endian(screen_res);//bugfix v...
+#endif
       // palette was already copied (sooner=better)
       for(int i=0;i<16000;i++)
         pNeoFile->data[i]=change_endian(DPEEK(xbios2+i*2));

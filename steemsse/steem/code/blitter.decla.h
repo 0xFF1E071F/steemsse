@@ -14,16 +14,21 @@
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct TBlitter{ 
-  
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  COUNTER_VAR TimeToSwapBus,TimeAtBlit;
+  int BlitCycles;
+#endif
   MEM_ADDRESS SrcAdr,DestAdr;
 #if defined(SSE_BLT_YCOUNT)
   DWORD YCount; // hack, we need more than 16 bit for the 0=65536 thing //TODO
 #endif
   DWORD SrcBuffer;
   int XCounter,YCounter; //internal counters
+#if !defined(SSE_TIMINGS_CPUTIMER64)
   int TimeToSwapBus;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_390B) 
   int TimeAtBlit,BlitCycles;
+#endif
 #endif
   WORD HalfToneRAM[16];
   WORD EndMask[3];

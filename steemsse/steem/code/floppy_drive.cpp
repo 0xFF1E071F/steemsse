@@ -166,7 +166,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               PRG=OPTION_PRG_SUPPORT && has_extension(fn,DISK_EXT_PRG);
               TOS=OPTION_PRG_SUPPORT && has_extension(fn,DISK_EXT_TOS);
 #endif
-#if defined(SSE_FLOPPY) && defined(WIN32)
+#if defined(SSE_DISK_PASTI)
               if(OPTION_PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
                 pasti_active=false;
 #endif

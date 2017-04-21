@@ -35,7 +35,7 @@ struct TDongle {
   enum {NONE,BAT2,MUSIC_MASTER,URC,LEADERBOARD,TENTHFRAME,MULTIFACE,PROSOUND,
     CRICKET,RUGBY,SOCCER};
   //BYTE ID;
-  int Timing;
+  COUNTER_VAR Timing;
   WORD Value;
 };
 extern TDongle Dongle;

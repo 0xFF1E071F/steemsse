@@ -105,7 +105,11 @@ EXT MEM_ADDRESS dma_sound_start=0,next_dma_sound_start=0,
 
 WORD MicroWire_Mask=0x07ff;
 WORD MicroWire_Data=0;
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR MicroWire_StartTime=0;
+#else
 int MicroWire_StartTime=0;
+#endif
 WORD dma_sound_internal_buf[4],dma_sound_last_word;
 MEM_ADDRESS dma_sound_fetch_address;
 #if defined(SSE_SOUND_DYNAMICBUFFERS2)
@@ -633,9 +637,11 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     )
   {
 #if defined(SSE_SOUND_RECORD_391B)
-    BYTE index[3],interpolate[3];
 #if defined(SSE_YM2149_392)
+    BYTE index[3],interpolate[4];
     *(int*)interpolate=0;
+#else
+    BYTE index[3],interpolate[3];
 #endif
     for(int abc=0;abc<3;abc++)
     {

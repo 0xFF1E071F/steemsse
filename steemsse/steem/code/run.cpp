@@ -52,9 +52,15 @@ EXT BYTE mixed_output INIT(0);
 #else
 EXT int mixed_output INIT(0);
 #endif
-EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 
+
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR cpu_time_of_last_vbl,shifter_cycle_base;
+EXT COUNTER_VAR cpu_timer_at_start_of_hbl;
+#else
+EXT int cpu_time_of_last_vbl,shifter_cycle_base;
 EXT int cpu_timer_at_start_of_hbl;
+#endif
 
 #if defined(SSE_GLUE)
 // no more plans!
@@ -65,16 +71,34 @@ screen_event_struct*screen_event_pointer,*event_plan[4],*event_plan_boosted[4];
 #endif
 EVENTPROC event_mfp_timer_timeout[4]={event_timer_a_timeout,event_timer_b_timeout,
                           event_timer_c_timeout,event_timer_d_timeout};
-int time_of_next_event;
-EVENTPROC screen_event_vector;
-int cpu_time_of_start_of_event_plan;
 
-//int cpu_time_of_next_hbl_interrupt=0;
+#if defined(SSE_TIMINGS_CPUTIMER64)
+COUNTER_VAR time_of_next_event;
+COUNTER_VAR cpu_time_of_start_of_event_plan;
+COUNTER_VAR time_of_next_timer_b=0;
+COUNTER_VAR time_of_last_hbl_interrupt;
+#if defined(SSE_INT_VBL_IACK)
+COUNTER_VAR time_of_last_vbl_interrupt;
+#endif
+COUNTER_VAR cpu_timer_at_res_change;
+#else
+int time_of_next_event;
+int cpu_time_of_start_of_event_plan;
 int time_of_next_timer_b=0;
 int time_of_last_hbl_interrupt;
 #if defined(SSE_INT_VBL_IACK)
 int time_of_last_vbl_interrupt;
 #endif
+int cpu_timer_at_res_change;
+#endif
+
+EVENTPROC screen_event_vector;
+
+
+//int cpu_time_of_next_hbl_interrupt=0;
+
+
+
 #if defined(SSE_VAR_RESIZE)
 BYTE screen_res_at_start_of_vbl;
 BYTE shifter_freq_at_start_of_vbl;
@@ -85,7 +109,7 @@ int shifter_freq_at_start_of_vbl;
 int scanline_time_in_cpu_cycles_at_start_of_vbl;
 bool hbl_pending;
 
-int cpu_timer_at_res_change;
+
 
 #if USE_PASTI
 void event_pasti_update();
@@ -530,7 +554,7 @@ inline void handle_timeout(int tn) {
     stage%=mfp_timer_period[tn]; 
   }
 
-  int new_timeout=ABSOLUTE_CPU_TIME+stage; 
+  COUNTER_VAR new_timeout=ABSOLUTE_CPU_TIME+stage; 
 
   if(OPTION_C2)
   {
@@ -1591,7 +1615,13 @@ void event_vbl_interrupt() //SS misleading name?
   }
 #endif
 #if defined(SSE_TIMING_MULTIPLIER_392C)
-  while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000*cpu_cycles_multiplier){
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  while ( abs((int)(ABSOLUTE_CPU_TIME-shifter_cycle_base))
+    >160000*cpu_cycles_multiplier){
+#else
+  while ( abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)
+    >160000*cpu_cycles_multiplier){
+#endif
     shifter_cycle_base+=60000*cpu_cycles_multiplier; //SS 60000?
   }
 #else
@@ -1709,8 +1739,9 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 #endif
 
-#if defined(SSE_CPU_E_CLOCK)
-  M68000.UpdateCyclesForEClock(); // this function is called at least each VBL
+#if defined(SSE_CPU_E_CLOCK) && !defined(SSE_TIMINGS_CPUTIMER64_C)
+  // call to refresh, overkill in 64bit build
+  M68000.UpdateCyclesForEClock(); 
 #endif
 
 }
@@ -1901,7 +1932,7 @@ void event_driveB_ip() {
 #if defined(SSE_ACIA_EVENT)
 //  ACIA events to handle IO with both 6301 and MIDI
 
-int time_of_event_acia=0;
+COUNTER_VAR time_of_event_acia=0;
 
 void event_acia() {
   time_of_event_acia=time_of_next_event+n_cpu_cycles_per_second; 
@@ -1941,7 +1972,7 @@ void event_acia() {
 
 #if defined(SSE_INT_MFP_LATCH_DELAY)
 
-int time_of_event_mfp_write=0;
+COUNTER_VAR time_of_event_mfp_write=0;
 
 void event_mfp_write() {
   

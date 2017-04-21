@@ -128,8 +128,9 @@ int draw_first_scanline_for_border,draw_last_scanline_for_border; //calculated f
 int draw_first_possible_line=0,draw_last_possible_line=200;
 
 int scanline_drawn_so_far;
+#ifndef SSE_VAR_DEAD_CODE
 int cpu_cycles_when_shifter_draw_pointer_updated;
-
+#endif
 int left_border=BORDER_SIDE,right_border=BORDER_SIDE;
 #if !defined(SSE_VIDEO_CHIPSET)
 bool right_border_changed=0;//we use the border mask instead
@@ -140,8 +141,11 @@ bool right_border_changed=0;//we use the border mask instead
 int overscan_add_extra;
 #endif
 LPPIXELWISESCANPROC jump_draw_scanline[3][4][3],draw_scanline,draw_scanline_lowres,draw_scanline_medres;
-
+#if defined(SSE_TIMINGS_CPUTIMER64)
+COUNTER_VAR shifter_freq_change_time[32];
+#else
 int shifter_freq_change_time[32];
+#endif
 #if defined(SSE_VAR_RESIZE)
 BYTE shifter_freq_change[32];
 BYTE shifter_freq_change_idx=0;
@@ -152,7 +156,7 @@ int shifter_freq_change_idx=0;
 
 #if defined(SSE_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
-int shifter_shift_mode_change_time[32];
+COUNTER_VAR shifter_shift_mode_change_time[32];
 #if defined(SSE_VAR_RESIZE)
 BYTE shifter_shift_mode_change[32];
 BYTE shifter_shift_mode_change_idx=0;
