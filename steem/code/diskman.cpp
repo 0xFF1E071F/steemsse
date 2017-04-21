@@ -1171,10 +1171,13 @@ void TDiskManager::AddFileOrFolderContextMenu(HMENU Pop,DiskManFileInfo *Inf)
 #if defined(SSE_GUI_STW_CONVERT)
 /*  To help our MFM disk image format, we add a right click option to convert
     regular images to STW.
-    pasti_active would interfere in SetDisk.
     Works with archives too.
 */
-        if(!Inf->Folder && !Inf->UpFolder && !pasti_active)
+        if(!Inf->Folder && !Inf->UpFolder 
+#if USE_PASTI
+          && !pasti_active // pasti_active would interfere in SetDisk
+#endif
+          )
         {
           char *ext=NULL;
           char *dot=strrchr(Inf->Path,'.');
@@ -1554,8 +1557,13 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #endif
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
+#if USE_PASTI 
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
+#else //64bit build
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+              (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN) 

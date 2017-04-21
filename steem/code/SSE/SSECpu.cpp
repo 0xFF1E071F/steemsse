@@ -145,8 +145,8 @@ int TM68000::SyncEClock(int dispatcher) {
     so cycles_for_eclock should never overflow or go negative.
 */
 void TM68000::UpdateCyclesForEClock() {
-  int cycles1=ACT; // current CPU cycles (can be negative)
-  int ncycles=cycles1-cycles0; // elapsed CPU cycles since last refresh
+  COUNTER_VAR cycles1=ACT; // current CPU cycles (can be negative)
+  COUNTER_VAR ncycles=cycles1-cycles0; // elapsed CPU cycles since last refresh
   cycles_for_eclock+=ncycles; // update counter for E-clock
   cycles_for_eclock%=(10*16); // remove high bits
   cycles0=cycles1; // record current CPU cycles

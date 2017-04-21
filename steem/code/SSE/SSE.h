@@ -174,7 +174,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_FLOPPY)
 #define SSE_DISK       // Disk images
-#if defined(WIN32)
+#if defined(WIN32) && !defined(SSE_X64)
 #define SSE_DISK_PASTI // Improvements in Pasti support (STX disk images)
 #endif
 #define SSE_DRIVE      // SF314 floppy disk drives
@@ -1815,11 +1815,22 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STF_MEGASTF_CLOCK
 #endif
 
+#if defined(SSE_TIMINGS)
 #if defined(SSE_TIMING_MULTIPLIER)
 #define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
 //#define SSE_TIMING_MULTIPLIER_392A
 #define SSE_TIMING_MULTIPLIER_392B
 #define SSE_TIMING_MULTIPLIER_392C
+#endif
+#if defined(SSE_X64)
+#define SSE_TIMINGS_CPUTIMER64 //but also all similar counters... TODO
+#endif
+#endif
+
+#if defined(SSE_TIMINGS_CPUTIMER64)
+#define SSE_TIMINGS_CPUTIMER64_B // (temp?) consequences for emudetect
+#define SSE_TIMINGS_CPUTIMER64_C // consequences for e-clock
+#define SSE_VAR_SNAPSHOTS_INCOMPATIBLE
 #endif
 
 #ifdef SSE_VAR_RESIZE
@@ -1837,6 +1848,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_16BIT_CENTRED
 #define SSE_YM2149_392
 #endif
+
+#define SSE_VAR_RESIZE_392
 
 #if defined(SSE_YM2149_392)
 #define SSE_YM2149_DISABLE_CAPTURE_FILE // never noticed this before...

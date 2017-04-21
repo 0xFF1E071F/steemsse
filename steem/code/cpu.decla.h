@@ -251,7 +251,7 @@ extern int m68k_divu_cycles,m68k_divs_cycles;
 #endif
 
 #if defined(SSE_VAR_OPT_390A)
-extern int act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
+extern COUNTER_VAR act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
 #endif
 
 #if defined(SSE_CPU_DATABUS)

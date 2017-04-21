@@ -2,6 +2,8 @@
 #ifndef RUN_DECLA_H
 #define RUN_DECLA_H
 
+#include "SSE/SSEDecla.h"
+
 #define EXT extern
 #define INIT(s)
 
@@ -57,10 +59,13 @@ EXT BYTE mixed_output INIT(0);
 EXT int mixed_output INIT(0);
 #endif
 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR cpu_time_of_last_vbl,shifter_cycle_base;
+EXT COUNTER_VAR cpu_timer_at_start_of_hbl;
+#else
 EXT int cpu_time_of_last_vbl,shifter_cycle_base;
-
 EXT int cpu_timer_at_start_of_hbl;
-
+#endif
 
 //#ifdef IN_EMU
 
@@ -237,10 +242,17 @@ typedef void(*EVENTPROC)();
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+typedef struct{
+  EVENTPROC event;
+  COUNTER_VAR time;
+}screen_event_struct;
+#else
 typedef struct{
   EVENTPROC event;
   int time;
 }screen_event_struct;
+#endif
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
 
@@ -281,16 +293,31 @@ void event_hbl(); //just HBL, don't draw yet, don't increase scan_y
 void event_scanline_last_line_of_60Hz(),event_scanline_last_line_of_70Hz();
 #endif
 EXT EVENTPROC event_mfp_timer_timeout[4];
-EXT int time_of_next_event;
-EXT EVENTPROC screen_event_vector;
-EXT int cpu_time_of_start_of_event_plan;
 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR time_of_next_event;
+EXT COUNTER_VAR cpu_time_of_start_of_event_plan;
+//int cpu_time_of_next_hbl_interrupt=0;
+EXT COUNTER_VAR time_of_next_timer_b;
+EXT COUNTER_VAR time_of_last_hbl_interrupt;
+#if defined(SSE_INT_VBL_IACK)
+EXT COUNTER_VAR time_of_last_vbl_interrupt;
+#endif
+EXT COUNTER_VAR cpu_timer_at_res_change;
+#else
+EXT int time_of_next_event;
+EXT int cpu_time_of_start_of_event_plan;
 //int cpu_time_of_next_hbl_interrupt=0;
 EXT int time_of_next_timer_b;
 EXT int time_of_last_hbl_interrupt;
 #if defined(SSE_INT_VBL_IACK)
 EXT int time_of_last_vbl_interrupt;
 #endif
+EXT int cpu_timer_at_res_change;
+#endif
+
+EXT EVENTPROC screen_event_vector;
+
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE screen_res_at_start_of_vbl;
 EXT BYTE shifter_freq_at_start_of_vbl;
@@ -301,7 +328,7 @@ EXT int shifter_freq_at_start_of_vbl;
 EXT int scanline_time_in_cpu_cycles_at_start_of_vbl;
 EXT bool hbl_pending;
 
-EXT int cpu_timer_at_res_change;
+
 
 #ifdef DEBUG_BUILD
 #define CHECK_BREAKPOINT                     \
@@ -331,7 +358,7 @@ void event_driveB_ip();
 #endif
 
 #if defined(SSE_ACIA_EVENT)
-extern int time_of_event_acia;
+extern COUNTER_VAR time_of_event_acia;
 void event_acia();
 
 #define PREPARE_EVENT_CHECK_FOR_ACIA     \
@@ -366,7 +393,7 @@ void event_acia();
 */
 
 void event_mfp_write();
-extern int time_of_event_mfp_write; //temp?
+extern COUNTER_VAR time_of_event_mfp_write; //temp?
 
 #define PREPARE_EVENT_CHECK_FOR_MFP_WRITE       \
   if ((time_of_next_event-time_of_event_mfp_write) >= 0){                 \

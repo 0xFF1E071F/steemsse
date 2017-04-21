@@ -1830,7 +1830,7 @@ void TGlue::AddShiftModeChange(int mode) {
 
 int TGlue::FreqChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   // loop while it's later than cycle, with safety
   for(i=shifter_freq_change_idx,j=0;
@@ -1844,7 +1844,7 @@ int TGlue::FreqChangeAtCycle(int cycle) {
 
 int TGlue::ShiftModeChangeAtCycle(int cycle) {
   // if there was a change at this cycle, return it, otherwise -1
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   // loop while it's later than cycle, with safety
   for(i=shifter_shift_mode_change_idx,j=0;
@@ -1858,10 +1858,8 @@ int TGlue::ShiftModeChangeAtCycle(int cycle) {
 }
 
 int TGlue::FreqAtCycle(int cycle) {
-
   ASSERT(cycle<=LINECYCLES);
-
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_freq_change_idx,j=0
     ; shifter_freq_change_time[i]-t>0 && j<32
@@ -1874,7 +1872,7 @@ int TGlue::FreqAtCycle(int cycle) {
 
 int TGlue::ShiftModeAtCycle(int cycle) {
   // what was the shift mode at this cycle?
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
     ; shifter_shift_mode_change_time[i]-t>0 && j<32
@@ -1909,7 +1907,7 @@ int TGlue::NextShiftModeChange(int cycle,int value) {
   // if value=-1, return any change
   // if none is found, return -1
   ASSERT(value>=-1 && value <=2);
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j,rv=-1;
   // we start from now, go back in time
   for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
@@ -1931,7 +1929,7 @@ int TGlue::NextChangeToHi(int cycle) {
   // return cycle of next change after this cycle
   // if none is found, return -1
 
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j,rv=-1;
   // we start from now, go back in time
   for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
@@ -1950,7 +1948,7 @@ int TGlue::NextChangeToHi(int cycle) {
 
 
 int TGlue::NextChangeToLo(int cycle) {
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j,rv=-1;
   // we start from now, go back in time
   for(i=shifter_shift_mode_change_idx,j=0; j<32; i--,i&=31,j++)
@@ -1969,7 +1967,7 @@ int TGlue::NextChangeToLo(int cycle) {
 
 
 int TGlue::PreviousChangeToHi(int cycle) {
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
   for(idx=-1,i=shifter_shift_mode_change_idx,j=0
     ; idx==-1 && j<32
@@ -1982,7 +1980,7 @@ int TGlue::PreviousChangeToHi(int cycle) {
 }
 
 int TGlue::PreviousChangeToLo(int cycle) {
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int idx,i,j;
   for(idx=-1,i=shifter_shift_mode_change_idx,j=0
     ; idx==-1 && j<32
@@ -2011,7 +2009,7 @@ int TGlue::PreviousFreqChange(int cycle) {
 
 int TGlue::PreviousShiftModeChange(int cycle) {
   // return cycle of previous change before this cycle
-  int t=cycle+LINECYCLE0; // convert to absolute
+  COUNTER_VAR t=cycle+LINECYCLE0; // convert to absolute
   int i,j;
   for(i=shifter_shift_mode_change_idx,j=0
     ; shifter_shift_mode_change_time[i]-t>=0 && j<32

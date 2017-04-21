@@ -172,7 +172,12 @@ EXT MEM_ADDRESS dma_sound_start,next_dma_sound_start,
 
 EXT WORD MicroWire_Mask;
 EXT WORD MicroWire_Data;
+
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR MicroWire_StartTime;
+#else
 EXT int MicroWire_StartTime;
+#endif
 
 #define CPU_CYCLES_PER_MW_SHIFT 8
 EXT WORD dma_sound_internal_buf[4],dma_sound_last_word;

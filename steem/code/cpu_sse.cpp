@@ -53,8 +53,8 @@ bool m68k_do_trace_exception;
 #endif
 signed int compare_buffer;
 
-#if defined(SSE_VAR_OPT_390A)
-int act; 
+#if defined(SSE_VAR_OPT_390A) //TODO
+COUNTER_VAR act; 
 #endif
 
 #if defined(SSE_CPU_RESTORE_ABUS)

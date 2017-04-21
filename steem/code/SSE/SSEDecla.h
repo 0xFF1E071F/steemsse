@@ -81,6 +81,13 @@ typedef unsigned __int64	uint64_t;
 // CPU //
 /////////
 
+
+#if defined(SSE_TIMINGS_CPUTIMER64)
+#define COUNTER_VAR __int64
+#else
+#define COUNTER_VAR int 
+#endif
+
 #define ACT ABSOLUTE_CPU_TIME
 
 #if !defined(SSE_CPU)

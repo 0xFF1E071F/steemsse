@@ -2,6 +2,8 @@
 #ifndef DRAW_DECLA_H
 #define DRAW_DECLA_H
 
+#include "SSE/SSEDecla.h"
+
 #define EXT extern
 #define EXTC extern "C"
 #define INIT(s)
@@ -187,8 +189,9 @@ void inline draw_scanline_to(int);
 #endif
 
 EXT int scanline_drawn_so_far;
+#ifndef SSE_VAR_DEAD_CODE
 EXT int cpu_cycles_when_shifter_draw_pointer_updated;
-
+#endif
 EXT int left_border,right_border;
 #if !defined(SSE_VIDEO_CHIPSET)
 EXT bool right_border_changed;
@@ -274,7 +277,11 @@ void ASMCALL draw_scanline_24_hires(int,int,int,int),draw_scanline_32_hires(int,
           }                           \
           s+=overscan_add_extra;
 #endif
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR shifter_freq_change_time[32];
+#else
 EXT int shifter_freq_change_time[32];
+#endif
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq_change[32];
 EXT BYTE shifter_freq_change_idx;
@@ -285,7 +292,7 @@ EXT int shifter_freq_change_idx;
 
 #if defined(SSE_SHIFTER_TRICKS)
 // keeping a record for shift mode changes as well
-EXT int shifter_shift_mode_change_time[32];
+EXT COUNTER_VAR shifter_shift_mode_change_time[32];
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_shift_mode_change[32];
 EXT BYTE shifter_shift_mode_change_idx;

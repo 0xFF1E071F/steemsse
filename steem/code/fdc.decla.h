@@ -2,6 +2,8 @@
 #ifndef FDC_DECLA_H
 #define FDC_DECLA_H
 
+#include "SSE/SSEDecla.h"
+
 #if !(defined(SSE_DMA_OBJECT))
 #include <conditions.h> // MEM_ADDRESS
 #endif
@@ -60,7 +62,11 @@ EXT void pasti_motor_proc(BOOL);
 EXT void pasti_log_proc(const char *);
 EXT void pasti_warn_proc(const char *);
 EXT HINSTANCE hPasti INIT(NULL);
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR pasti_update_time;
+#else
 EXT int pasti_update_time;
+#endif
 EXT const struct pastiFUNCS *pasti INIT(NULL);
 //EXT bool pasti_use_all_possible_disks INIT(0);
 EXT char pasti_file_exts[160];

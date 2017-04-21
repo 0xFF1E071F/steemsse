@@ -145,9 +145,9 @@ struct TMC68901IrqInfo {
 struct TMC68901 {
 
   // DATA
-  int IrqSetTime;
-  int IackTiming;
-  int WriteTiming;
+  COUNTER_VAR IrqSetTime;
+  COUNTER_VAR IackTiming;
+  COUNTER_VAR WriteTiming;
   WORD IPR;//unused
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
@@ -167,7 +167,7 @@ struct TMC68901 {
   TMC68901();
   void Init();
   void Reset();
-  int UpdateNextIrq(int at_time=-1);
+  int UpdateNextIrq(COUNTER_VAR at_time=-1);
 #if defined(SSE_INT_MFP_TIMER_B_392A)
   enum {SettingTimer=-3,ChangingAer=-2,NewScanline=-1}; //for little cheats!
   void ComputeNextTimerB(int info);
@@ -224,7 +224,31 @@ void calc_time_of_next_timer_b();
 EXT int mfp_timer_prescale[16];
 
 EXT int mfp_timer_counter[4];
+
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR mfp_timer_timeout[4];
+#if defined(SSE_INT_MFP_INLINE)
+bool mfp_set_pending(int,COUNTER_VAR);
+#else
+inline bool mfp_set_pending(int,COUNTER_VAR);
+#endif
+EXT COUNTER_VAR mfp_time_of_start_of_last_interrupt[16];
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
+EXT COUNTER_VAR cpu_time_of_first_mfp_tick;
+#endif
+#else
 EXT int mfp_timer_timeout[4];
+#if defined(SSE_INT_MFP_INLINE)
+bool mfp_set_pending(int,int);
+#else
+inline bool mfp_set_pending(int,int);
+#endif
+EXT int mfp_time_of_start_of_last_interrupt[16];
+#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
+EXT int cpu_time_of_first_mfp_tick;
+#endif
+#endif
+
 EXT bool mfp_timer_enabled[4];
 EXT int mfp_timer_period[4];
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
@@ -236,18 +260,10 @@ EXT bool mfp_timer_period_change[4];
 void mfp_set_timer_reg(int,BYTE,BYTE);
 int mfp_calc_timer_counter(int);
 void mfp_init_timers();
-#if defined(SSE_INT_MFP_INLINE)
-bool mfp_set_pending(int,int);
-#else
-inline bool mfp_set_pending(int,int);
-#endif
+
 void mfp_gpip_set_bit(int,bool);
 
 EXT bool mfp_interrupt_enabled[16];
-EXT int mfp_time_of_start_of_last_interrupt[16];
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
-EXT int cpu_time_of_first_mfp_tick;
-#endif
 
 #define MFP_CALC_INTERRUPTS_ENABLED	\
 {	\

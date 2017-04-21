@@ -246,8 +246,13 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           if(acia_num==NUM_ACIA_IKBD)
           {
             // If send new byte before last one has finished being sent
+#if defined(SSE_TIMINGS_CPUTIMER64)
+            if (abs((int)(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time))
+              <ACIA_CYCLES_NEEDED_TO_START_TX){
+#else
             if (abs(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time)
               <ACIA_CYCLES_NEEDED_TO_START_TX){
+#endif
                 // replace old byte with new one
                 int n=agenda_get_queue_pos(agenda_ikbd_process);
                 if (n>=0){
@@ -786,7 +791,11 @@ This address is being used to feed the National LMC both address and data
  Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
             if(OPTION_HACKS  // TODO option microwire
+#if defined(SSE_TIMINGS_CPUTIMER64)
+              && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
+#else
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break; // fixes XMas 2004 scroller
@@ -797,7 +806,11 @@ This address is being used to feed the National LMC both address and data
           case 0xff8923: // Set low byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
             if(OPTION_HACKS 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+              && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
+#else
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
@@ -1029,7 +1042,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           case 0xff8924:  // Set high byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
             if(OPTION_HACKS 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+              && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
+#else
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;
@@ -1041,7 +1058,11 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
             if(OPTION_HACKS 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+              && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES)
+#else
               && abs(ACT-MicroWire_StartTime) <MICROWIRE_LATENCY_CYCLES) 
+#endif
             {
               TRACE_LOG("Microwire write %X at %X denied, %d cycles after write\n",io_src_b,addr,ACT-MicroWire_StartTime);
               break;// fixes XMas 2004 scroller

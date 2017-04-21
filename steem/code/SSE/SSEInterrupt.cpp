@@ -345,7 +345,7 @@ void HBLInterrupt() {
 #if defined(SSE_INT_E_CLOCK)
   if(OPTION_C1)
   {
-    int current_cycles=ACT;
+    COUNTER_VAR current_cycles=ACT;
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=M68000.SyncEClock(TM68000::ECLOCK_HBL);
     INSTRUCTION_TIME(current_cycles-ACT);
@@ -420,7 +420,7 @@ void VBLInterrupt() {
 #if defined(SSE_CPU_E_CLOCK)
   if(OPTION_C1)
   { 
-    int current_cycles=ACT;
+    COUNTER_VAR current_cycles=ACT;
     INSTRUCTION_TIME(ECLOCK_AUTOVECTOR_CYCLE);
     BYTE e_clock_wait_states=M68000.SyncEClock(TM68000::ECLOCK_VBL);
     INSTRUCTION_TIME(current_cycles-ACT);

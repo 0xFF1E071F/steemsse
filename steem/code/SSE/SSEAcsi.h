@@ -29,7 +29,7 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
   // member variables
   int nSectors; //total
 #if defined(SSE_ACSI_TIMING)
-  int time_of_irq;
+  COUNTER_VAR time_of_irq;
 #endif
 #if defined(SSE_ACSI_INQUIRY)
   char inquiry_string[32];

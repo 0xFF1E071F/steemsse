@@ -176,7 +176,12 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
         if(OPTION_C1)
         {
           ior_byte=acia[acia_num].SR; 
+#if defined(SSE_TIMINGS_CPUTIMER64)
+          if(abs((int)(ACT-acia[acia_num].last_tx_write_time))
+            <ACIA_TDR_COPY_DELAY)
+#else
           if(abs(ACT-acia[acia_num].last_tx_write_time)<ACIA_TDR_COPY_DELAY)
+#endif
           {
             TRACE_LOG("ACIA %d SR TDRE not set yet (%d)\n",acia_num,ACT-acia[acia_num].last_tx_write_time);
             ior_byte&=~BIT_1; // eg Nightdawn STF
@@ -1183,6 +1188,7 @@ FF8240 - FF827F   palette, res
             ior_byte= BYTE((((12000/avg_frame_time)*100)/shifter_freq) & 0xff);
           ior_byte= 0;
           break;
+#if !defined(SSE_TIMINGS_CPUTIMER64_B)
         case 0xffc10c: ior_byte= HIBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
         case 0xffc10d: ior_byte= LOBYTE(HIWORD(ABSOLUTE_CPU_TIME)); break;
         case 0xffc10e: ior_byte= HIBYTE(LOWORD(ABSOLUTE_CPU_TIME)); break;
@@ -1197,7 +1203,7 @@ FF8240 - FF827F   palette, res
         case 0xffc115: ior_byte= LOBYTE(HIWORD(cpu_timer_at_start_of_hbl)); break;
         case 0xffc116: ior_byte= HIBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
         case 0xffc117: ior_byte= LOBYTE(LOWORD(cpu_timer_at_start_of_hbl)); break;
-
+#endif
         case 0xffc118: ior_byte= HIBYTE( (short) (scan_y)); break;
         case 0xffc119: ior_byte= LOBYTE( (short) (scan_y)); break;
         case 0xffc11a: ior_byte= emudetect_write_logs_to_printer; break;
