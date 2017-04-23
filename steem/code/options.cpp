@@ -1185,9 +1185,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             ST_TYPE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             TRACE_LOG("Option ST type = %d\n",ST_TYPE);
             SSEConfig.SwitchSTType(ST_TYPE);
-#if defined(SSE_MMU_WU_RESET_ON_SWITCH_ST)
             OPTION_WS=0;
-#endif
 #if defined(SSE_STF_MATCH_TOS)
             // preselect a compatible TOS 
             if(KnownSTETosPath.Empty()||KnownSTFTosPath.Empty())
@@ -1237,12 +1235,19 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if(ST_TYPE==MEGASTF)
             {
               This->NewMonitorSel=1; // preselect monochrome (v3.5.4)
+#if defined(SSE_STF_MEGASTF_CLOCK) //same switch, different purpose (temp)
+              SSEConfig.old_DisableHardDrives=HardDiskMan.DisableHardDrives;
+#endif
               HardDiskMan.DisableHardDrives=false; // v3.6.0
             }
-            else if(old_st_type==MEGASTF) //v3.6.0: go colour, no HD by default)
+            else if(old_st_type==MEGASTF)
             {
-              This->NewMonitorSel=0;
+              This->NewMonitorSel=0; // by default
+#if defined(SSE_STF_MEGASTF_CLOCK)
+              HardDiskMan.DisableHardDrives=SSEConfig.old_DisableHardDrives;
+#else
               HardDiskMan.DisableHardDrives=true;
+#endif
             }
             HardDiskMan.update_mount();
 #endif

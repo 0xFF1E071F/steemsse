@@ -195,12 +195,13 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   bool fetching=fl 
     && CyclesIn>=Glue.CurrentScanline.StartCycle +MMU_PREFETCH_LATENCY
     && CyclesIn<Glue.CurrentScanline.EndCycle+MMU_PREFETCH_LATENCY;
- if(!fetching)
+  if(!fetching)
     shifter_draw_pointer=VideoCounter;
 }
 
-#if defined(SSE_MMU_LOW_LEVEL)
+#if defined(SSE_MMU_LOW_LEVEL) //no
 //for future version?
+//but maybe it's the GLUE that decodes the address in the first place?
 void TMMU::DecodeAddress() {
 
   ASSERT(abus<FOUR_MEGS);

@@ -119,7 +119,7 @@ struct TMMU {
 #endif
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif
 #endif//#ifndef SSEMMU_H

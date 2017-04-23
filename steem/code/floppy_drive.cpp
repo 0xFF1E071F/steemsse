@@ -432,10 +432,13 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
     if(SF314[drive].ImageType.Extension==EXT_PRG
       || SF314[drive].ImageType.Extension==EXT_TOS)
     {
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+      HardDiskMan.DisableHardDrives=SSEConfig.old_DisableHardDrives;
+#else
       HardDiskMan.DisableHardDrives=true; // we guess
+#endif
     }
 #endif
-    
 #if defined(SSE_DISK)
     Disk[drive].TrackBytes=TDisk::TRACK_BYTES; 
 #endif
@@ -1193,10 +1196,12 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   DiskMan.AutoInsert2&=~2; //TODO def
 #endif
 
+#if !defined(SSE_VAR_OPT_392)
   static bool Removing=0;
   ASSERT(!Removing);//there must be a reason (doesn't assert)
   if (Removing) return;
   Removing=true;
+#endif
 
 #if defined(SSE_DISK) 
   int drive=-1;
@@ -1530,8 +1535,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   FormatMostSectors=0;FormatLargestSector=0;
   STT_File=0;
   DIM_File=0;
-
+#if !defined(SSE_VAR_OPT_392)
   Removing=0;
+#endif
 }
 #pragma warning (default: 4701)
 //---------------------------------------------------------------------------

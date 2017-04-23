@@ -691,7 +691,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
 #endif
 
 
-void TShifter::RoundCycles(int& cycles_in) {
+void TShifter::RoundCycles(int& cycles_in) { //TODO
   cycles_in-=CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN;
   if(shifter_hscroll_extra_fetch && !HSCROLL) 
     cycles_in+=16;
@@ -826,7 +826,5 @@ FF825E
 }
 
 #undef LOGSECTION
-
-//TShifter Shifter;
 
 #endif//#if defined(SSE_SHIFTER)

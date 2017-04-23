@@ -79,7 +79,7 @@ public:
 #endif
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 
 extern TFrameEvents FrameEvents; // singleton

@@ -52,7 +52,7 @@ struct TYM2149 {
 #endif
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif
 

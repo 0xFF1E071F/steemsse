@@ -102,7 +102,7 @@ TODO: maybe use the feature and remove #define to make code more readable?
 #endif//fifo
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//dma object
 #endif//SSEDMA_H

@@ -68,7 +68,7 @@ struct TGhostDisk {
   bool FindIDField(TWD1772IDField *IDField);
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//#if defined(SSE_DISK_GHOST)
 

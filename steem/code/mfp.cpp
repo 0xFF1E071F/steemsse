@@ -32,8 +32,14 @@ const int mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16
 const int mfp_timer_irq[4]={13,8,5,4};
 const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 #endif
+
+#if defined(SSE_TIMING_MULTIPLIER_392)
+const int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,
+                            65535,4,10,16,50,64,100,200};
+#else
 int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,
                             65535,4,10,16,50,64,100,200};
+#endif
 int mfp_timer_counter[4];
 #if defined(SSE_TIMINGS_CPUTIMER64)
 COUNTER_VAR mfp_timer_timeout[4];
@@ -462,9 +468,13 @@ register. This is of course correct in Steem but hey, I didn't even know that.
 /*  Idea, see just above, this version OK with LXS
 */
           if(OPTION_C2 && !new_val 
-            && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
+            && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0
+#if defined(SSE_INT_MFP_392)
+            && old_val!=8 
+#endif
+            )
           {
-            ASSERT(old_val!=8); //TODO
+            //ASSERT(old_val!=8); //TODO
             BYTE i_ab=mfp_interrupt_i_ab(mfp_timer_irq[timer]);
             BYTE i_bit=mfp_interrupt_i_bit(mfp_timer_irq[timer]);
             if(!(mfp_reg[MFPR_ISRA+i_ab]&i_bit) &&
@@ -1071,6 +1081,10 @@ void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
 void TMC68901::Reset() {
   Irq=false;
   IrqSetTime=ACT;
+#ifdef SSE_DEBUG
+  //test for corruption
+  ASSERT(IrqInfo[8].Timer==1 && IrqInfo[7].IsGpip && IrqInfo[13].IsTimer);
+#endif
 }
 
 #endif

@@ -167,9 +167,9 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   // YM2149 @2mhz = 1/4 * 8mhz clock 
   double ym2149_cycles_per_sample=((double)CpuNormalHz/4)/(double)sound_freq; 
   // timing doesn't need to be cycle accurate provided values are correct
-  int time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
+  COUNTER_VAR time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
   int samples_sent=0;
-  int ym2149_cycles_at_start_of_loop=m_cycles;
+  COUNTER_VAR ym2149_cycles_at_start_of_loop=m_cycles;
 
 /*  The following was inspired by MAME project, especially ay8910.cpp.
     thx Couriersud.
