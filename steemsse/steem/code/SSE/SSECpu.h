@@ -86,8 +86,7 @@ so refactoring due!
 #endif
 };
 
-
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 
 #define PREFETCH_CLASS(n) M68000.PrefetchClass=(n)

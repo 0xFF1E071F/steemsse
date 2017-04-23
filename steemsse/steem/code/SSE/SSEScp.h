@@ -125,7 +125,7 @@ struct  TImageSCP {
 
 #endif
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//scp
 

@@ -43,7 +43,7 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
   BYTE Active; // can't be bool, can be 2
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 extern BYTE acsi_dev;
 extern TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // each object is <64 bytes

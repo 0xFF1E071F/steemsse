@@ -85,7 +85,7 @@ struct ACIA_STRUCT{ // removed _ ..
 #endif
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 extern struct ACIA_STRUCT acia[2]; 
 

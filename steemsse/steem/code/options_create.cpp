@@ -53,6 +53,20 @@ void TOptionBox::CreateMachinePage()
   Wid=get_text_width(T("ST model"));
   CreateWindow("Static",T("ST model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+
+#if defined(SSE_VAR_REFACTOR_392)
+
+  Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+    page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
+
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[0]));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[1]));
+#if defined(SSE_STF_MEGASTF)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[2]));
+#endif
+  SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
+
+#else
   Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
 #if defined(SSE_X64_390) //TODO also for x86
@@ -69,6 +83,7 @@ void TOptionBox::CreateMachinePage()
 #endif
 #endif
   SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
+#endif//ref
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
@@ -85,6 +100,20 @@ compatible only with the STF"));
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+
+#if defined(SSE_VAR_REFACTOR_392)
+
+  Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+    page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
+
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Ignore"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("DL3 WU2 WS2"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("DL4 WU2 WS4"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("DL5 WU1 WS3"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("DL6 WU1 WS1"));
+  SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
+
+#else
   Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
 #if defined(SSE_X64_390)
@@ -101,6 +130,7 @@ compatible only with the STF"));
   SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL6 WU1 WS1"));
 #endif//x64
   SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
+#endif//ref
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
     T("Check Hints for cases"));
@@ -321,6 +351,20 @@ void TOptionBox::MachineUpdateIfVisible()
 
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
+#if defined(SSE_VAR_REFACTOR_392)
+#if defined(SSE_GUI_OPTIONS_STF)//390
+#if defined(SSE_STF)
+  HWND Win=GetDlgItem(Handle,211); //ST Model
+  if(Win!=NULL) 
+    SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
+#endif
+#if defined(SSE_MMU_WU)
+  Win=GetDlgItem(Handle,212); //WU
+  if(Win!=NULL) 
+    SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
+#endif
+#endif
+#else
 #if defined(SSE_GUI_OPTIONS_STF)//390
 #if defined(SSE_STF)
   HWND Win=GetDlgItem(Handle,211); //ST Model
@@ -331,6 +375,7 @@ void TOptionBox::MachineUpdateIfVisible()
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
+#endif
 #endif
 #endif
 #if (defined(SSE_MMU_256K) && defined(SSE_MMU_2560K)) \

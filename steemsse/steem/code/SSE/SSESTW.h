@@ -64,6 +64,6 @@ private:
 
 #endif
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//#ifndef SSE_STW_H

@@ -283,8 +283,6 @@ struct TWD1772 {
 #endif//emu
 };
 
-//#endif
-
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//#ifndef WD1772_H

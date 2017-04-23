@@ -8,7 +8,7 @@
 
 #include "../pch.h"
 
-#if !defined(BIG_ENDIAN_PROCESSOR)
+#if !defined(BIG_ENDIAN_PROCESSOR) // Intel = little endian
 #include <acc.decla.h>
 #define SWAP_WORD(val) *val=change_endian(*val);
 #else

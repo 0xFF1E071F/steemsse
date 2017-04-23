@@ -14,9 +14,7 @@ extern "C" {
 }
 #endif
 
-#ifdef UNIX
-//typedef unsigned char BYTE
-#endif
+#pragma pack(push, STRUCTURE_ALIGNMENT)
 
 struct THD6301 {
  enum  {
@@ -26,15 +24,37 @@ struct THD6301 {
    CUSTOM_PROGRAM_RUNNING
  }custom_program_tag;
 
+  //DATA 
+  short MouseVblDeltaX; // must keep separate for true emu
+  short MouseVblDeltaY;
+#if defined(SSE_DEBUG) 
+  short CurrentCommand;
+#endif
+  BYTE Initialised; // we do need a rom
+  BYTE Crashed; // oops
+#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+  BYTE click_x,click_y; // current click
+#endif
+#if defined(SSE_IKBD_6301_380) 
+  // lower case because uppercase are constants in 6301 emu itself
+  BYTE rdr,rdrs,tdr,tdrs; 
+#endif
+#if defined(SSE_DEBUG) 
+  BYTE LastCommand;
+  BYTE CurrentParameter; //0-5
+  BYTE nParameters; //0-6
+  BYTE Parameter[6]; // max 6
+  BYTE CustomProgram;
+#endif
+#if defined(SSE_ACIA_EVENT)
+  char LineRxFreeTime; // cycles in (0-63)
+  char LineTxFreeTime; // cycles in (0-63)
+#endif
+
+  //FUNCTIONS
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
-#if defined(SSE_DEBUG)
-  void InterpretCommand(BYTE ByteIn);
-#if defined(SSE_DEBUG)
-  void ReportCommand();
-#endif
-#endif
   void ReceiveByte(BYTE data);
   void ResetChip(int Cold);
   void ResetProgram();
@@ -42,40 +62,18 @@ struct THD6301 {
 #if defined(SSE_IKBD_6301_VBL)
   void Vbl();
 #endif
+#if defined(SSE_DEBUG)
+  void InterpretCommand(BYTE ByteIn);
+  void ReportCommand();
+#endif
 
 #endif//c++?
 
-  BYTE Initialised; // we do need a rom
-  BYTE Crashed; // oops
-  short MouseVblDeltaX; // must keep separate for true emu
-  short MouseVblDeltaY;
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-  BYTE click_x,click_y; // current click
-#endif
 
-#if defined(SSE_IKBD_6301_380) 
-  // lower case because uppercase are constants in 6301 emu itself
-  BYTE rdr,rdrs,tdr,tdrs; 
-#endif
-
-#if defined(SSE_ACIA_EVENT)
-  char LineRxFreeTime; // cycles in (0-63)
-  char LineTxFreeTime; // cycles in (0-63)
-#endif
-
-#if defined(SSE_DEBUG) 
-  short CurrentCommand;
-  BYTE LastCommand;
-  BYTE CurrentParameter; //0-5
-  BYTE nParameters; //0-6
-  BYTE Parameter[6]; // max 6
-  BYTE CustomProgram;
-#endif
 };
 
-#ifdef __cplusplus
-//extern "C" 
-#endif
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
+
 extern 
 #ifdef __cplusplus
 "C" 

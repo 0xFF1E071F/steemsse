@@ -87,6 +87,6 @@ struct TDisk {
 
 #endif//#if defined(SSE_DISK)
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//#ifndef SSEDISK_H

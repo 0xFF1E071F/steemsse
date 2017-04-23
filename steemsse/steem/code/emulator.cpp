@@ -590,9 +590,9 @@ void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
 #if defined(SSE_CPU_E_CLOCK)
     if(OPTION_C1)
     {
-      INSTRUCTION_TIME(wait_states); 
+      INSTRUCTION_TIME(wait_states); // 6
       wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
-      INSTRUCTION_TIME(wait_states);
+      INSTRUCTION_TIME(wait_states); // +...
     }
     else
 #endif

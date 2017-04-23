@@ -1274,13 +1274,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if defined(SSE_STF) && defined(SSE_MMU_WU)
-
-#define SSE_MMU_WU_RESET_ON_SWITCH_ST
-
-#endif
-
-
 #if defined(SSE_STF) && defined(SSE_SHIFTER)
 
 #define SSE_SHIFTER_PALETTE_NOISE //UMD8730 STF
@@ -1823,7 +1816,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TIMING_MULTIPLIER_392C
 #endif
 #if defined(SSE_X64)
-#define SSE_TIMINGS_CPUTIMER64 //but also all similar counters... TODO
+#define SSE_TIMINGS_CPUTIMER64
 #endif
 #endif
 
@@ -1833,6 +1826,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_SNAPSHOTS_INCOMPATIBLE
 #endif
 
+#define SSE_VAR_OPT_392
+#define SSE_VAR_REFACTOR_392
+#define SSE_VAR_RESIZE_392
 #ifdef SSE_VAR_RESIZE
 #define SSE_VAR_RESIZE_392
 #endif
@@ -1848,8 +1844,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_16BIT_CENTRED
 #define SSE_YM2149_392
 #endif
-
-#define SSE_VAR_RESIZE_392
 
 #if defined(SSE_YM2149_392)
 #define SSE_YM2149_DISABLE_CAPTURE_FILE // never noticed this before...

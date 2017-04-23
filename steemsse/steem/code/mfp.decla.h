@@ -106,8 +106,12 @@ MFP_GPIP_MONO_BIT =7
 EXT BYTE mfp_gpip_input_buffer;
 
 #define MFP_CLK 2451
-#define MFP_CLK_EXACT 2451134 // Between 2451168 and 2451226 cycles
 
+#if defined(SSE_INT_MFP_392)
+#define MFP_CLK_EXACT MFP_CLOCK // (2457600) it is used in rs232
+#else
+#define MFP_CLK_EXACT 2451134 // Between 2451168 and 2451226 cycles
+#endif
 // Number of MFP clock ticks per 8000000 CPU cycles, very accurately tested!
 // This is the most accurate number but we use the one above because Lethal Xcess
 // won't work with this one.
@@ -221,7 +225,11 @@ EXT const int mfp_gpip_irq[8];
 
 void calc_time_of_next_timer_b();
 
+#if defined(SSE_TIMING_MULTIPLIER_392)
+EXT const int mfp_timer_prescale[16];
+#else
 EXT int mfp_timer_prescale[16];
+#endif
 
 EXT int mfp_timer_counter[4];
 

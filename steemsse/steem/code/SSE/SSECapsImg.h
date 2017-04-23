@@ -80,7 +80,7 @@ struct TCaps {
   BOOL Active; // if there's an IPF disk in some drive, we must run IPF cycles
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 #endif//caps
 

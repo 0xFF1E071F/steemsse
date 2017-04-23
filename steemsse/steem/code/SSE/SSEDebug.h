@@ -183,7 +183,7 @@ struct TDebug {
 #endif//C++
 };
 
-#pragma pack(pop)
+#pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 extern 
 #ifdef __cplusplus

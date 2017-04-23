@@ -508,8 +508,29 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                 bool new_enabled=(mfp_interrupt_enabled[mfp_timer_irq[n]] && (mfp_get_timer_control_register(n) & 7));
                 if (new_enabled && mfp_timer_enabled[n]==0){
                   // Timer should have been running but isn't, must put into future
+#if defined(SSE_TIMINGS_CPUTIMER64)
+                  COUNTER_VAR stage=(mfp_timer_timeout[n]-ABSOLUTE_CPU_TIME);
+#else
                   int stage=(mfp_timer_timeout[n]-ABSOLUTE_CPU_TIME);
+#endif
                   //TRACE_MFP("F%d y%d c%d PC %X enable Timer %C stage %d",TIMING_INFO,old_pc,'A'+n,stage);
+#if defined(SSE_INT_MFP_392) //not sure it's useful...
+                  if(OPTION_C2)
+                  {
+                    double precise_period=mfp_timer_period[n]
+                    +mfp_timer_period_fraction[n]/1000; //TODO: save it instead?
+                    double stage2=stage;
+                    if (stage<=0){
+                      if(precise_period)
+                        stage2+=((-stage2/precise_period)+1)*precise_period;
+                    }else{
+                      if(precise_period)
+                        stage2=(stage/precise_period)-(stage2/precise_period);
+                    }
+                    stage=stage2;
+                  }
+                  else
+#endif
                   if (stage<=0){
                     stage+=((-stage/mfp_timer_period[n])+1)*mfp_timer_period[n];
                   }else{
@@ -543,10 +564,10 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
               mfp_reg[MFPR_IPRB]&=mfp_reg[MFPR_IERB]; //no pending on disabled registers
             }else if (n>=MFPR_IPRA && n<=MFPR_ISRB){ //can only clear bits in IPR, ISR
 #ifdef SSE_DEBUG
-            if (n>=MFPR_IPRA && n<=MFPR_IPRB)
-              TRACE_MFP("%d PC %X MFP IPR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_IPRA,mfp_reg[n],mfp_reg[n]&io_src_b);
-            else
-              TRACE_MFP("%d PC %X MFP ISR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_ISRA,mfp_reg[n],mfp_reg[n]&io_src_b);
+              if (n>=MFPR_IPRA && n<=MFPR_IPRB)
+                TRACE_MFP("%d PC %X MFP IPR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_IPRA,mfp_reg[n],mfp_reg[n]&io_src_b);
+              else
+                TRACE_MFP("%d PC %X MFP ISR%c %X -> %X\n",ACT,old_pc,'A'+n-MFPR_ISRA,mfp_reg[n],mfp_reg[n]&io_src_b);
 #endif
               mfp_reg[n]&=io_src_b;
             }else if (n>=MFPR_TADR && n<=MFPR_TDDR){ //have to set counter as well as data register
@@ -790,7 +811,7 @@ This address is being used to feed the National LMC both address and data
  Just a hack for now.
  Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
-            if(OPTION_HACKS  // TODO option microwire
+            if(OPTION_MICROWIRE  // TODO option microwire
 #if defined(SSE_TIMINGS_CPUTIMER64)
               && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
 #else
@@ -805,7 +826,7 @@ This address is being used to feed the National LMC both address and data
             break;
           case 0xff8923: // Set low byte of MicroWire_Data
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-            if(OPTION_HACKS 
+            if(OPTION_MICROWIRE 
 #if defined(SSE_TIMINGS_CPUTIMER64)
               && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
 #else
@@ -1041,7 +1062,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
 */
           case 0xff8924:  // Set high byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-            if(OPTION_HACKS 
+            if(OPTION_MICROWIRE 
 #if defined(SSE_TIMINGS_CPUTIMER64)
               && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
 #else
@@ -1057,7 +1078,7 @@ explicetely used. Since the Microwire, as it is being used in the STE, requires
             break;
           case 0xff8925:  // Set low byte of MicroWire_Mask
 #if defined(SSE_SOUND_MICROWIRE_WRITE_LATENCY)
-            if(OPTION_HACKS 
+            if(OPTION_MICROWIRE 
 #if defined(SSE_TIMINGS_CPUTIMER64)
               && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES)
 #else
