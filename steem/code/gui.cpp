@@ -917,9 +917,11 @@ void GUIColdResetChangeSettings()
     if ((bank_length[0]+bank_length[1])==(KB512+KB128)){  // Old 512Kb
       OptionBox.NewMemConf0=MEMCONF_512;
       OptionBox.NewMemConf1=MEMCONF_512K_BANK1_CONF;
+#if !(defined(SSE_MMU_2560K) && defined(SSE_BUGFIX_392))
     }else if ((bank_length[0]+bank_length[1])==(MB2+KB512)){  // Old 2Mb
       OptionBox.NewMemConf0=MEMCONF_2MB;
       OptionBox.NewMemConf1=MEMCONF_2MB_BANK1_CONF;
+#endif
     }
   }
   if (OptionBox.NewMemConf0>=0){

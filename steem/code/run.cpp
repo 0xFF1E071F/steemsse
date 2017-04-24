@@ -541,7 +541,7 @@ inline void handle_timeout(int tn) {
     MFP_CALC_TIMER_PERIOD(tn);          
     mfp_timer_period_change[tn]=0;       
   }
-  int stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
+  COUNTER_VAR stage=(mfp_timer_timeout[tn]-ABSOLUTE_CPU_TIME); 
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   if(OPTION_C2)
