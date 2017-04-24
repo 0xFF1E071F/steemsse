@@ -280,6 +280,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
         new_control=BYTE((new_val >> 4) & 7);
         break;
     }
+    ASSERT(timer<4);
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
 /*  Steem authors shift 1st timeout 12 cycles later, we use a parameter
     to test that.
@@ -891,7 +892,9 @@ void TMC68901::Init() {
   IrqInfo[5].Timer=2;  // timer C
   IrqInfo[8].Timer=1;  // timer B
   IrqInfo[13].Timer=0;  // timer A
+#if !defined(SSE_INT_MFP_392)
   Irq=false; //?
+#endif
 }
 
 
