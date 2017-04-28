@@ -152,9 +152,15 @@ struct TMC68901 {
   COUNTER_VAR IrqSetTime;
   COUNTER_VAR IackTiming;
   COUNTER_VAR WriteTiming;
+#if defined(SSE_INT_MFP_392B)
+  double Period[4]; // to record the period as double
+#endif
   WORD IPR;//unused
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
+#endif
+#if defined(SSE_INT_MFP_392B)
+  BYTE Counter[4],Prescale[4];
 #endif
   BYTE LastRegisterWritten;
   BYTE LastRegisterFormerValue;
@@ -301,7 +307,7 @@ void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts();
 #endif
 
-#if defined(SSE_INT_MFP_392) // new mod, time to inline
+#if defined(SSE_INT_MFP_392) // new mods, time to inline
 
 inline void mfp_calc_timer_period(int t) {
   double precise_cycles= 
@@ -312,6 +318,9 @@ inline void mfp_calc_timer_period(int t) {
   precise_cycles*=cpu_cycles_multiplier; //cpu_cycles_multiplier is a double
 #endif
   mfp_timer_period[t]=(int)precise_cycles;
+#if defined(SSE_INT_MFP_392B)
+  MC68901.Period[t]=precise_cycles;
+#endif
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
   //mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );
   mfp_timer_period_fraction[t]=(int)(1000*precise_cycles-(double)mfp_timer_period[t]);

@@ -1734,15 +1734,20 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_OPTION_FOR_TESTS 
 #endif
 
+
+#ifdef SSE_BOILER
+#define SSE_BOILER_FRAME_REPORT_392
+#endif
+
 #if defined(SSE_BETA) //next version
 
 #ifdef SSE_BLITTER
 #define SSE_BLT_392
 #endif
 
-#ifdef SSE_BOILER
-#define SSE_BOILER_FRAME_REPORT_392
-#endif
+//#ifdef SSE_BOILER
+//#define SSE_BOILER_FRAME_REPORT_392
+//#endif
 
 #ifdef SSE_CPU
 #define SSE_CPU_392 // refactoring
@@ -1759,9 +1764,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_392A //correct start & end cycles
 #define SSE_GLUE_392B //refactor hscroll extra fetch
 #define SSE_GLUE_392C //sundry
-#if defined(SSE_INT_MFP_TIMER_B)
-#define SSE_GLUE_392D //timer B
-#endif
 #endif
 
 #ifdef SSE_GUI
@@ -1771,9 +1773,22 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
 
-//if disable TB, disable SSE_GLUE_392D too
 #ifdef SSE_INT_MFP
 #define SSE_INT_MFP_392
+#endif
+
+#if defined(SSE_INT_MFP_392)
+#ifdef SSE_DEBUG
+#define SSE_INT_MFP_392B //check timers, first debug-only
+#endif
+#define SSE_INT_MFP_392C // prescale unmodified when changing prescaler on the fly
+#ifdef SSE_DEBUG
+//#define SSE_INT_MFP_392D0 // reporting (temp)
+//like steem 3.2 (test)
+//#undef SSE_INT_MFP_TIMERS_RATIO1
+//#undef SSE_INT_MFP_TIMERS_BASETIME
+#endif
+#define SSE_INT_MFP_392D1 // remove 'snap to mfp clock', there's (imperfect) wobble already
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
 #define SSE_INT_MFP_RATIO_PRECISION_392
 #endif
@@ -1781,17 +1796,21 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_TIMER_B_392 // refactoring
 #endif
 #undef SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT //obsolete!
-#endif
+#endif//392
 
 #if defined(SSE_INT_MFP_TIMER_B_392)
-#define SSE_INT_MFP_TIMER_B_392A
-#define SSE_INT_MFP_TIMER_B_392B // jitter
-#define SSE_INT_MFP_TIMER_B_392C //sunny!
+#define SSE_INT_MFP_TIMER_B_392E //test >=2
+#define SSE_INT_MFP_TIMER_B_392E1 //test >=0
+//seem OK
 #define SSE_INT_MFP_TIMER_B_392D // in SSEGlue
-#define SSE_INT_MFP_TIMER_B_392E //test
-#undef SSE_INT_MFP_READ_DELAY
-#undef SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS
+#define SSE_GLUE_392D
+#define SSE_INT_MFP_TIMER_B_392A
+#define SSE_INT_MFP_TIMER_B_392C //sunny!
 #undef SSE_INT_MFP_TIMER_B_WOBBLE_HACK
+#undef SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS
+//seem bad
+//#undef SSE_INT_MFP_READ_DELAY //overscan demos STE
+//#define SSE_INT_MFP_TIMER_B_392B // jitter
 #endif
 
 #define SSE_MMU_392
@@ -1813,7 +1832,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
 //#define SSE_TIMING_MULTIPLIER_392A
 #define SSE_TIMING_MULTIPLIER_392B
-#define SSE_TIMING_MULTIPLIER_392C
+//#define SSE_TIMING_MULTIPLIER_392C //=bug MFD or improve...
 #endif
 #if defined(SSE_X64)
 #define SSE_TIMINGS_CPUTIMER64

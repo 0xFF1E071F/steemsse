@@ -514,23 +514,6 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                   int stage=(mfp_timer_timeout[n]-ABSOLUTE_CPU_TIME);
 #endif
                   //TRACE_MFP("F%d y%d c%d PC %X enable Timer %C stage %d",TIMING_INFO,old_pc,'A'+n,stage);
-#if defined(SSE_INT_MFP_392) //not sure it's useful...
-                  if(OPTION_C2)
-                  {
-                    double precise_period=mfp_timer_period[n]
-                    +mfp_timer_period_fraction[n]/1000; //TODO: save it instead?
-                    double stage2=stage;
-                    if (stage<=0){
-                      if(precise_period)
-                        stage2+=((-stage2/precise_period)+1)*precise_period;
-                    }else{
-                      if(precise_period)
-                        stage2=(stage/precise_period)-(stage2/precise_period);
-                    }
-                    stage=stage2;
-                  }
-                  else
-#endif
                   if (stage<=0){
                     stage+=((-stage/mfp_timer_period[n])+1)*mfp_timer_period[n];
                   }else{

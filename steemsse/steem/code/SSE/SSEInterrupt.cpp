@@ -214,8 +214,11 @@ void ASMCALL check_for_interrupts_pending() {
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
             int iack_cycles=ACT-MC68901.IackTiming;
+#if defined(SSE_CPU_392B)
 #if defined(SSE_CPU_BUS_ERROR_TIMING)
             INSTRUCTION_TIME(70-iack_cycles);
+#endif
+            M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
             //INSTRUCTION_TIME(50-iack_cycles); //?
             m68kInterruptTiming();
