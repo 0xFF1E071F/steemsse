@@ -572,6 +572,11 @@ inline void handle_timeout(int tn) {
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE)
     new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
 #endif
+#if defined(SSE_INT_MFP_392B)
+    MC68901.Counter[tn]=mfp_reg[MFPR_TADR+tn]; // load counter
+    BYTE prescale_index=(mfp_get_timer_control_register(tn)&7);
+    MC68901.Prescale[tn]=mfp_timer_prescale[prescale_index]; // load prescale (bad if 0)
+#endif
   }//C2
   mfp_interrupt_pend(mfp_timer_irq[tn],mfp_timer_timeout[tn]);
   mfp_timer_timeout[tn]=new_timeout;
@@ -650,6 +655,9 @@ void event_timer_b()
       // event_scanline but after a change to mono for left border removal, this
       // stops the border opening on the next line somehow.
       mfp_timer_counter[1]-=64;
+#if defined(SSE_INT_MFP_392B)
+      MC68901.Counter[1]--;
+#endif
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
       if (mfp_timer_counter[1]<64){
         dbg_log(EasyStr("MFP: Timer B timeout at ")+scanline_cycle_log());
@@ -657,6 +665,9 @@ void event_timer_b()
         if (mfp_interrupt_enabled[8]) TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO); //?
 #endif
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
+#if defined(SSE_INT_MFP_392B)
+        MC68901.Counter[1]=mfp_reg[MFPR_TBDR];
+#endif
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
         //FrameEvents.Add(scan_y,LINECYCLES,'x',ACT-time_of_next_timer_b);
       }
@@ -1625,7 +1636,11 @@ void event_vbl_interrupt() //SS misleading name?
     shifter_cycle_base+=60000*cpu_cycles_multiplier; //SS 60000?
   }
 #else
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  while (abs((int)(ABSOLUTE_CPU_TIME-shifter_cycle_base))>160000){
+#else
   while (abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)>160000){
+#endif
     shifter_cycle_base+=60000; //SS 60000?
   }
 #endif

@@ -374,22 +374,40 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
     It would seem to make sense that:
     MFP_WRITE_LATENCY + MFP_TIMER_DATA_REGISTER_ADVANCE = MFP_TIMER_SET_DELAY
+    but those delays are likely variable due to the interaction between CPU and
+    MFP clocks and other factors.
 */
 
 #define MFP_CLOCK 2457600
 #define MFP_IACK_LATENCY (28) 
-#if defined(SSE_INT_MFP_TIMER_B_392B)
+
+#if defined(SSE_INT_MFP_392D1)
+#define MFP_TIMER_DATA_REGISTER_ADVANCE (2)
+#elif defined(SSE_INT_MFP_TIMER_B_392B) //?
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (2)
 #else
 #define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
 #endif
+
+#if defined(SSE_INT_MFP_392D1)
+// compensates the non-substraction in mfp_set_timer_reg()
+// seems likelier this way
+#define MFP_TIMER_SET_DELAY (4) 
+#else
 #define MFP_TIMER_SET_DELAY (8) // see DSOTS
+#endif
+
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
 #else
 #define MFP_TIMERS_WOBBLE (4) // &
 #endif
+
+#if defined(SSE_INT_MFP_392D1)
+#define MFP_WRITE_LATENCY (2)
+#else
 #define MFP_WRITE_LATENCY (4)//(8) 
+#endif
 
 #endif//mfp
 
