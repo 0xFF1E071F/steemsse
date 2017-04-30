@@ -1852,6 +1852,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_RESIZE_392
 #endif
 
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_BORDERS_GUI_392 // simplify option...
+#endif
+
 #ifdef SSE_YM2149_SOUND
 #define SSE_SOUND_250K
 #define SSE_SOUND_DYNAMICBUFFERS //psg
@@ -1896,6 +1900,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_PRG_AUTORUN_392
 #define SSE_CPU_HISPEED_392
 #undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...
+#define SSE_VID_392 //crash on resizing...
 #define SSE_VID_D3D_392 //trash again fullscreen when changing modes
 
 #endif//bugfix

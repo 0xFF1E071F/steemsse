@@ -104,7 +104,11 @@ void debug_update_drawing_position(int *pHorz)
       if (screen_res_at_start_of_vbl==1 || mixed_output || draw_med_low_double_height) horz_scale=2;
 
       int x=scanline_drawn_so_far;
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if ((border)==0) 
+#else
       if ((border & 1)==0) 
+#endif
         x=max(x-BORDER_SIDE,0);
       x*=horz_scale;
 

@@ -355,13 +355,13 @@ POINT WinSizeBorderVeryLarge2[4][5]={
 };
 #endif//bigtop
 #endif//416
-
+/*
 #if defined(SSE_VID_BORDERS_BIGTOP)
 #undef BORDER_TOP
 #define BORDER_TOP (  (DISPLAY_SIZE==BIGGEST_DISPLAY) \
   ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
 #endif
-
+*/
 
   // used?
  POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOTTOM)},
@@ -442,7 +442,7 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 #include "stemwin.cpp"
 //#define LOGSECTION LOGSECTION_INIT
-#if defined(SSE_BOILER_390_LOG2)
+#if 1 || defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_VIDEO_RENDERING
 #else
 #define LOGSECTION LOGSECTION_OPTIONS
@@ -463,9 +463,57 @@ int ChangeBorderSize(int size_in) {
     size=0;
   //if(1||size!=DISPLAY_SIZE) //todo
   {
+#if !defined(SSE_VID_BORDERS_GUI_392)
     DISPLAY_SIZE=size;
+#endif
     switch(size)
     {
+#if defined(SSE_VID_BORDERS_GUI_392)
+    case 0: //no border
+    case 1:
+      SideBorderSize=ORIGINAL_BORDER_SIDE;
+      SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
+      BottomBorderSize=ORIGINAL_BORDER_BOTTOM;
+      break;
+#if defined(SSE_VID_D3D_ONLY)
+    case 2:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+    case 3:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+#else
+
+
+    case 2:
+      SideBorderSize=LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=LARGE_BORDER_SIDE_WIN; // show 400
+      BottomBorderSize=LARGE_BORDER_BOTTOM;
+      break;
+    case 3:
+#if defined(SSE_VID_BORDERS_412)
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+#else
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+#endif
+      break;
+#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
+    case 4:
+      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
+      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
+      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
+      break;
+#endif
+#endif
+#else
     case 0:
       SideBorderSize=ORIGINAL_BORDER_SIDE;
       SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
@@ -507,6 +555,7 @@ int ChangeBorderSize(int size_in) {
       break;
 #endif
 #endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if defined(SSE_VID_BORDERS_GUI_392)
     }//sw
     int i,j;
     for(i=0;i<4;i++) 
@@ -515,6 +564,36 @@ int ChangeBorderSize(int size_in) {
       {
         switch(size)
         {
+#if defined(SSE_VID_BORDERS_GUI_392)
+        case 0:
+        case 1:
+          WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
+          break;
+#if defined(SSE_VID_D3D_ONLY)
+        case 2:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+          break;
+        case 3:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+          break;
+#else
+        case 2:
+          WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
+          break;
+        case 3:
+#if defined(SSE_VID_BORDERS_412)
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+#else
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+#endif
+          break;
+#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
+        case 4:
+          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+          break;
+#endif
+#endif//#if defined(SSE_VID_D3D_ONLY)
+#else//!392
         case 0:
           WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
           break;
@@ -542,10 +621,11 @@ int ChangeBorderSize(int size_in) {
           break;
 #endif
 #endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if defined(SSE_VID_BORDERS_GUI_392)
         }//sw
       }
     }
-#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+#if defined(SSE_VID_DISABLE_AUTOBORDER2) && !defined(SSE_VID_BORDERS_GUI_392)
     SendMessage(OptionBox.BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
 #endif
     draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
@@ -558,10 +638,12 @@ int ChangeBorderSize(int size_in) {
 //#endif
 
 #if defined(SSE_GUI_390B)
+#if defined(SSE_VID_392)
+    draw_begin(); // Lock() will update draw_line_length
+#else
     draw_set_jumps_and_source(); // avoid crash when running?
 #endif
-
-
+#endif
     return TRUE;
   }
 #if !defined(SSE_VS2008_WARNING_382)
@@ -692,7 +774,10 @@ void GUIRefreshStatusBar() {
     {
 #define MAX_TEXT_LENGTH_BORDER_ON (30+62+10) 
 #define MAX_TEXT_LENGTH_BORDER_OFF (30+42+10) 
-#ifdef SSE_VS2008_WARNING_382
+#if defined(SSE_VID_BORDERS_GUI_392)
+      size_t max_text_length=(border!=0)?MAX_TEXT_LENGTH_BORDER_ON:
+        MAX_TEXT_LENGTH_BORDER_OFF;
+#elif defiend(SSE_VS2008_WARNING_382)
       size_t max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
 #else
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
@@ -1170,7 +1255,7 @@ bool MakeGUI()
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,105,T("Smaller Window"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,104,T("Bigger Window"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_SEPARATOR,0,NULL);
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) //leave it so?
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,110,T("Borders Off"));
   InsertMenu(StemWin_SysMenu,pos,MF_BYPOSITION | MF_STRING,111,T("Borders On"));
 #else
@@ -2049,10 +2134,17 @@ void ShowAllDialogs(bool Show)
   if (DiskMan.Handle){
     if (DiskMan.FSMaximized && Show==0) DiskManWasMaximized=true;
     if (DiskManWasMaximized && Show){
+#if defined(SSE_VID_BORDERS_GUI_392)
+      SetWindowPos(DiskMan.Handle,NULL,-GetSystemMetrics(SM_CXFRAME),MENUHEIGHT,
+                    int((border) ? 800:640)+GetSystemMetrics(SM_CXFRAME)*2,
+                    int((border) ? 600:480)+GetSystemMetrics(SM_CYFRAME)-MENUHEIGHT,
+                    SWP_NOZORDER | SWP_NOACTIVATE);
+#else
       SetWindowPos(DiskMan.Handle,NULL,-GetSystemMetrics(SM_CXFRAME),MENUHEIGHT,
                     int((border & 1) ? 800:640)+GetSystemMetrics(SM_CXFRAME)*2,
                     int((border & 1) ? 600:480)+GetSystemMetrics(SM_CYFRAME)-MENUHEIGHT,
                     SWP_NOZORDER | SWP_NOACTIVATE);
+#endif
       DiskManWasMaximized=0;
     }else{
       DiskMan.FSLeft+=PosChange;

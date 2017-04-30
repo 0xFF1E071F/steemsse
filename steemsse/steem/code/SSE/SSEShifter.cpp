@@ -47,7 +47,11 @@ void TShifter::DrawScanlineToEnd()  {
   if (emudetect_falcon_mode!=EMUD_FALC_MODE_OFF){
     int pic=320*emudetect_falcon_mode_size,bord=0;
     // We double the size of borders too to keep the aspect ratio of the screen the same
+#if defined(SSE_VID_BORDERS_GUI_392)
+    if (border) bord=BORDER_SIDE*emudetect_falcon_mode_size;
+#else
     if (border & 1) bord=BORDER_SIDE*emudetect_falcon_mode_size;
+#endif
     if (scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line){
       bool in_border=(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_scanline_for_border);
       bool in_pic=(scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line);
@@ -211,7 +215,11 @@ void TShifter::DrawScanlineToEnd()  {
 #elif defined(SSE_SHIFTER_382)
         if(nsdp<mem_len) // potential crash
 #endif
+#if defined(SSE_VID_BORDERS_GUI_392)
+        if (border)
+#else
         if(border & 1)
+#endif
           ///////////////// RENDER VIDEO /////////////////
 #if defined(SSE_GLUE_HIRES_OVERSCAN)
 // experimental, right off, left off?
@@ -260,7 +268,11 @@ void TShifter::DrawScanlineToEnd()  {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
         ASSERT(screen_res==2); //>?
+#if defined(SSE_VID_BORDERS_GUI_392)
+        if (border)
+#else
         if(border & 1)
+#endif
           ///////////////// RENDER VIDEO /////////////////
           draw_scanline((BORDER_SIDE*2+640+BORDER_SIDE*2)/16,0,0,0); // rasters!
         else
@@ -531,7 +543,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
         // real lines
         if(scan_y>=draw_first_possible_line
 #if defined(SSE_VID_BORDERS_BIGTOP)
-          + (DISPLAY_SIZE>BIGGEST_DISPLAY?6:0) 
+          + (DISPLAY_SIZE>BIGGEST_DISPLAY?6:0)  //TODO: never...
 #endif
           && scan_y<draw_last_possible_line)
         {
@@ -582,7 +594,11 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       int border1; // the only var. sent to draw_scanline
       int left_visible_edge,right_visible_edge;
       // Borders on
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border)
+#else
       if(border & 1)
+#endif
       {
         left_visible_edge=0;
         right_visible_edge=BORDER_SIDE + 320 + BORDER_SIDE;

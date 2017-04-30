@@ -55,7 +55,7 @@ EXT BYTE draw_grille_black INIT(6);
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
 #endif
 
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && !defined(SSE_VID_BORDERS_GUI_392)
 EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);

@@ -994,7 +994,11 @@ void SteemDisplay::VSync()
       && !(D3D9_OK && OPTION_D3D)
 #endif
       )
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border)
+#else
       if (border & 1)
+#endif
         botline=600-40;
       else if (using_res_640_400)
         botline=400-40;
@@ -1079,6 +1083,8 @@ bool SteemDisplay::Blit()
             if(BORDER_40) // clip from larger to 800
             {
               RECT our_clipping={16,0,816,556-6};
+              //TRACE("blt %d %d %d %d %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,
+              //  our_clipping.left,our_clipping.top,our_clipping.right,our_clipping.bottom);
               hRet=DDPrimarySur->Blt(&draw_blit_source_rect,DDBackSur,
                   &our_clipping,DDBLT_WAIT,NULL);
             }
@@ -1498,7 +1504,11 @@ void SteemDisplay::DrawFullScreenLetterbox()
   if (extended_monitor) return;
 #endif
 
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (draw_fs_topgap || (border)){
+#else
   if (draw_fs_topgap || (border & 1)){
+#endif
     if (Method==DISPMETHOD_DD){
       DDBLTFX bfx;
       ZeroMemory(&bfx,sizeof(DDBLTFX));
@@ -1509,7 +1519,11 @@ void SteemDisplay::DrawFullScreenLetterbox()
       if (DrawLetterboxWithGDI) dc=GetDC(StemWin);
 
       RECT Dest={0,0,640,draw_fs_topgap};
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         Dest.right=800;
         Dest.bottom=(600-400-2*(BORDER_TOP+BORDER_BOTTOM))/2;
       }
@@ -1519,7 +1533,11 @@ void SteemDisplay::DrawFullScreenLetterbox()
       }else{
         DDPrimarySur->Blt(&Dest,NULL,NULL,DDBLT_COLORFILL | DDBLT_WAIT,&bfx);
       }
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         Dest.top=600-Dest.bottom;
         Dest.bottom=600;
       }else{
@@ -1532,8 +1550,11 @@ void SteemDisplay::DrawFullScreenLetterbox()
       }else{
         DDPrimarySur->Blt(&Dest,NULL,NULL,DDBLT_COLORFILL | DDBLT_WAIT,&bfx);
       }
-
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         int SideGap=(800 - (BORDER_SIDE+320+BORDER_SIDE)*2) / 2;
 
         Dest.top=0;Dest.bottom=600;
@@ -1650,7 +1671,11 @@ void SteemDisplay::ChangeToFullScreen()
     SetWindowPos(StemWin,HWND_TOPMOST,0,0,D3DFsW,D3DFsH,0);
 #else
     int w=640,h=480;
+#if defined(SSE_VID_BORDERS_GUI_392)
+    if (border){
+#else
     if (border & 1){
+#endif
       w=800;h=600;
     }
 #ifndef NO_CRAZY_MONITOR
@@ -2199,7 +2224,11 @@ HRESULT SteemDisplay::SaveScreenShot()
 
     if(ScreenShotMinSize) // option
     {
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         rcDest.right=WinSizeBorder[screen_res][0].x;
         rcDest.bottom=WinSizeBorder[screen_res][0].y;
       }else{
@@ -2271,7 +2300,11 @@ HRESULT SteemDisplay::SaveScreenShot()
 
     RECT rcDest={0,0,0,0};
     if (ScreenShotMinSize){
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         rcDest.right=WinSizeBorder[screen_res][0].x;
         rcDest.bottom=WinSizeBorder[screen_res][0].y;
       }else{
@@ -2797,9 +2830,12 @@ void draw_init_resdependent()
 #ifdef WIN32
 // miscellaneous functions
 
-//TODO it's just lowres?
 int SteemDisplay::STXPixels() {
+#if defined(SSE_VID_BORDERS_GUI_392)
+  int st_x_pixels=320+(border!=0)*SideBorderSizeWin*2; //displayed
+#else
   int st_x_pixels=320+(border&1)*SideBorderSizeWin*2; //displayed
+#endif
   if(screen_res
 #if defined(SSE_BUGFIX_392)
     || mixed_output
@@ -2811,7 +2847,11 @@ int SteemDisplay::STXPixels() {
 
 
 int SteemDisplay::STYPixels() {
+#if defined(SSE_VID_BORDERS_GUI_392)
+  int st_y_pixels=200+(border!=0)*(BORDER_TOP+BORDER_BOTTOM);
+#else
   int st_y_pixels=200+(border&1)*(BORDER_TOP+BORDER_BOTTOM);
+#endif
   if(screen_res
 #if defined(SSE_BUGFIX_392)
     || mixed_output
@@ -2904,10 +2944,10 @@ bool SteemDisplay::D3DBlit() {
       dest.left,dest.top,dest.right,dest.bottom,d3derr);
   }
 #endif
-
   }
 
 #if defined(SSE_VID_D3D_382)
+
   if(d3derr) 
   {
     TRACE("BLIT ERROR\n");

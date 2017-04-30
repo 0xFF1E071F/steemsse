@@ -87,12 +87,15 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   int newval=newborder;
   if (Disp.BorderPossible()==0 && (FullScreen==0)) newval=0;
   bool proceed=true;
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (min(border,BIGGEST_DISPLAY)==min(newval,BIGGEST_DISPLAY)){ 
+#elif defined(SSE_VID_DISABLE_AUTOBORDER) 
   if (min((int)border,1)==min(newval,1)){
 #else
   if (min(border,2)==min(newval,2)){
 #endif
     proceed=false;
+#if !defined(SSE_VID_BORDERS_GUI_392)
 #if defined(SSE_VS2008_WARNING_390) // :)
   }else if ((border^(newval!=0)) & 1){
 #elif defined(SSE_VS2008_WARNING_382)
@@ -108,8 +111,9 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
       }
     }
 #endif
+#endif
   }
-#if defined(SSE_VS2008_WARNING_390) 
+#if defined(SSE_VS2008_WARNING_390) && !defined(SSE_VID_BORDERS_GUI_392)
   if (proceed) border_last_chosen=(newborder!=0);
 #else
   if (proceed) border_last_chosen=newborder;
@@ -875,9 +879,15 @@ void TOptionBox::EnableBorderOptions(bool enable)
   if (enable==0){
     border=0;
   }else{
-    border=border_last_chosen | (border & 1);
+    border=border_last_chosen
+#if !defined(SSE_VID_BORDERS_GUI_392)
+      | (border & 1)
+#endif
+      ;
   }
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392)
+  CheckMenuRadioItem(StemWin_SysMenu,110,112,110+(border!=0),MF_BYCOMMAND);
+#elif defined(SSE_VID_DISABLE_AUTOBORDER)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min((int)border,1),MF_BYCOMMAND);
 #else
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
@@ -885,7 +895,9 @@ void TOptionBox::EnableBorderOptions(bool enable)
   if (Handle==NULL || BorderOption==NULL) return;
 
   EnableWindow(BorderOption,enable);
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392)
+  SendMessage(BorderOption,CB_SETCURSEL,min(border,BIGGEST_DISPLAY),0);
+#elif defined(SSE_VID_DISABLE_AUTOBORDER)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);
@@ -940,13 +952,15 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
   }
 }
 //---------------------------------------------------------------------------
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
 void TOptionBox::SetBorder(bool newborder)
 #else
 void TOptionBox::SetBorder(int newborder)
 #endif
 {
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
   bool oldborder=border;
 #else
   int oldborder=border;
@@ -958,6 +972,9 @@ void TOptionBox::SetBorder(int newborder)
 #endif
   if (ChangeBorderModeRequest(newborder)){
     border=newborder;
+#if defined(SSE_VID_BORDERS_GUI_392)
+    ChangeBorderSize(newborder);
+#endif
     if (FullScreen) change_fullscreen_display_mode(true);
     change_window_size_for_border_change(oldborder,newborder);
     draw(false);
@@ -977,7 +994,8 @@ void TOptionBox::SetBorder(int newborder)
   CheckMenuRadioItem(StemWin_SysMenu,110,112,110+min(border,2),MF_BYCOMMAND);
 #endif
  
-#if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE)
+#if defined(SSE_VID_BORDERS) && defined(SSE_GUI_OPTIONS_DISPLAY_SIZE) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
   EnableWindow(GetDlgItem(Handle,1026),(BOOL)border); 
 #endif
 
@@ -1087,7 +1105,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 if (new_mode==DFSM_LAPTOP){
                   if (GetScreenWidth()!=monitor_width || GetScreenHeight()!=monitor_height) proceed=2;
                 }else if (draw_fs_blit_mode==DFSM_LAPTOP){
+#if defined(SSE_VID_BORDERS_GUI_392)
+                  if (border){
+#else
                   if (border & 1){
+#endif
                     if (monitor_width!=800 || monitor_height!=600) proceed=2;
                   }else{
                     if (monitor_width!=640 || monitor_height!=480) proceed=2;
@@ -1136,7 +1158,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
         case 207:
           if (HIWORD(wPar)==CBN_SELENDOK){
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
             This->SetBorder((SendMessage(HWND(lPar),CB_GETCURSEL,0,0))!=0);
 #else
             This->SetBorder(SendMessage(HWND(lPar),CB_GETCURSEL,0,0));
@@ -1281,8 +1304,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
             if (prefer_pc_hz[c256][i]!=new_hz){
               prefer_pc_hz[c256][i]=new_hz;
-
+#if defined(SSE_VID_BORDERS_GUI_392)
+              int current_i=int((border) ? 2:1);
+#else
               int current_i=int((border & 1) ? 2:1);
+#endif
               if (FullScreen && current_i==i){
                 if (IDYES==Alert(T("Do you want to test this video frequency now?"),
                                   T("Change Monitor Frequency"),MB_YESNO | MB_DEFBUTTON1 | MB_ICONQUESTION)){
@@ -1365,7 +1391,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(SSE_VID_BORDERS) // Option Display size
+#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_GUI_392)// Option Display size
         case 1026:
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
@@ -1375,6 +1401,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
 	  break;
 #endif
+
 #if defined(SSE_HACKS) // Option Hacks
         case 1027:
           if(HIWORD(wPar)==BN_CLICKED)

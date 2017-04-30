@@ -27,7 +27,9 @@ EXT BYTE draw_grille_black INIT(6);
 #else
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
 #endif
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392) 
+EXT BYTE border INIT(1),border_last_chosen INIT(1);
+#elif defined(SSE_VID_DISABLE_AUTOBORDER)
 EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
@@ -236,8 +238,11 @@ void draw_begin()
   // this initialises shifter_x, shifter_y,res_vertical_scale,
   // draw_first_scanline_for_border, draw_last_scanline_for_border
 //  init_screen();
-
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (border){
+#else
   if (border & 1){
+#endif
     draw_first_possible_line=draw_first_scanline_for_border;
     draw_last_possible_line=draw_last_scanline_for_border;
   }else{
@@ -368,6 +373,7 @@ void draw_set_jumps_and_source()
   // SS called at each frame by draw_begin()
   if (!draw_lock){
     draw_scanline=draw_scanline_dont;
+    //TRACE("no draw lock sucker!\n");
     return;
   }
   bool big_draw=CanUse_400;
@@ -410,7 +416,11 @@ void draw_set_jumps_and_source()
     int ox=0,oy=0,ow,oh;
     if (big_draw){
       ow=640;oh=400;
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         ow=640 + BORDER_SIDE*2 + BORDER_SIDE*2;
         oh=400 + BORDER_TOP*2 + BORDER_BOTTOM*2;
 #ifdef WIN32
@@ -429,7 +439,11 @@ void draw_set_jumps_and_source()
       if (emudetect_falcon_mode_size==1) draw_dest_increase_y*=2; // Have to draw double height
     }else{
       ow=320*emudetect_falcon_mode_size,oh=200*emudetect_falcon_mode_size;
+#if defined(SSE_VID_BORDERS_GUI_392)
+      if (border){
+#else
       if (border & 1){
+#endif
         // We double the size of borders too to keep the aspect ratio of the screen the same
         ow+=BORDER_SIDE*2*emudetect_falcon_mode_size;
         oh+=(BORDER_TOP+BORDER_BOTTOM)*emudetect_falcon_mode_size;
@@ -514,7 +528,11 @@ void draw_set_jumps_and_source()
 #endif
 
     int ox=0,oy=0,ow=640,oh=400;
+#if defined(SSE_VID_BORDERS_GUI_392)
+    if (border){
+#else
     if (border & 1){
+#endif
       oh=BORDER_TOP*2 + 400 + BORDER_BOTTOM*2;
 #if defined(SSE_VID_BORDERS)
       // this may not be larger than the window
@@ -603,7 +621,11 @@ void draw_set_jumps_and_source()
 #endif
 
 //    draw_scanline=jump_draw_scanline[x][0][BytesPerPixel-1][screen_res];
+#if defined(SSE_VID_BORDERS_GUI_392)
+    if (border){
+#else
     if (border & 1){
+#endif
       if (screen_res==0 && mixed_output==0){
         ow+=(BORDER_SIDE+BORDER_SIDE);
       }else{
@@ -649,7 +671,7 @@ void draw_set_jumps_and_source()
     TRACE_LOG("src %d %d %d %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom);
   }
 #endif
-
+  //TRACE("src %d %d %d %d len %d\n",draw_blit_source_rect.left,draw_blit_source_rect.top,draw_blit_source_rect.right,draw_blit_source_rect.bottom,draw_line_length);
 }
 //---------------------------------------------------------------------------
 void draw_end()
@@ -1239,7 +1261,11 @@ void draw(bool osd)
       yy=0;yy2=min(em_height,Disp.SurfaceHeight);
     }else
 #endif
+#if defined(SSE_VID_BORDERS_GUI_392)
+    if (border){
+#else
     if (border & 1){
+#endif
       yy=draw_first_scanline_for_border;yy2=draw_last_scanline_for_border;
     }else{
       yy=0;yy2=shifter_y;

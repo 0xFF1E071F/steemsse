@@ -526,7 +526,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define ORIGINAL_BORDER_TOP 30
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
+#if defined(SSE_VID_BORDERS_GUI_392) // 0:no border
 #if defined(SSE_VID_D3D_ONLY)
+#define BIGGEST_DISPLAY 3 //416
+#else
+#define BIGGEST_DISPLAY 4 //416
+#endif
+#elif defined(SSE_VID_D3D_ONLY)
 #define BIGGEST_DISPLAY 2 //no more 400
 #elif defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
 #define BIGGEST_DISPLAY 3
