@@ -49,7 +49,11 @@ void StemWinResize(int xo,int yo)
 /*  v3.8.0
     With this little mod we have PAL aspect ratio in windowed mode too.
 */
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (border){
+#else
   if (border & 1){
+#endif
     while (WinSizeBorder[res][Idx].x>GetScreenWidth()) Idx--;
     int h=WinSizeBorder[res][Idx].y;
     if(OPTION_ST_ASPECT_RATIO 
@@ -238,7 +242,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             y_gap=(Disp.SurfaceHeight-em_height)/2;
           }else
 #endif
+#if defined(SSE_VID_BORDERS_GUI_392)
+          if (border){
+#else
           if (border & 1){
+#endif
             x_gap=(800 - (BORDER_SIDE+320+BORDER_SIDE)*2)/2;
             y_gap=(600-(BORDER_TOP*2+400+BORDER_BOTTOM*2))/2;
 #if !defined(SSE_VID_D3D_ONLY)
@@ -604,7 +612,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           double ratio;
           int res=int(mixed_output ? 1:screen_res);
           int Idx=WinSizeForRes[res];
+#if defined(SSE_VID_BORDERS_GUI_392)
+          if (border){
+#else
           if (border & 1){
+#endif
             ratio=(double)(WinSizeBorder[res][Idx].x)/(double)(WinSizeBorder[res][Idx].y);
           }else{
             ratio=(double)(WinSize[res][Idx].x)/(double)(WinSize[res][Idx].y);
@@ -650,7 +662,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           }
           return 0;
         case 110:case 111:case 112: //Borders
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
           OptionBox.SetBorder((wPar-110)!=0);
 #else
           OptionBox.SetBorder(wPar-110);
@@ -1004,7 +1017,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 
 #if defined(SSE_VID_BORDERS)
       }
+#if defined(SSE_VID_BORDERS_GUI_392)
+      else if (border)
+#else
       else if (border & 1)
+#endif
       {// blurry display in 'no stretch' mode? check here!!!!!!!!!!!!!!!!
         CanUse_400=
 #if defined(SSE_VID_BORDERS_413)
@@ -1693,7 +1710,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #if defined(SSE_VID_D3D_ONLY)
   ///int hz_ok=0,hz=0;
 #else
+#if defined(SSE_VID_BORDERS_GUI_392)
+  int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border!=0)]
+#else
   int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border & 1)]
+#endif
 #endif
   ;
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
@@ -1703,7 +1724,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
     change_window_size_for_border_change(3,border);
   }
 #endif
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (border){
+#else
   if (border & 1){
+#endif
     rc.right=800;rc.bottom=600;
   }
 
@@ -1725,7 +1750,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #endif
     return Ret;
 #if !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if (hz) tested_pc_hz[hz256][1+(border!=0)]=MAKEWORD(hz,hz_ok);
+#else
   if (hz) tested_pc_hz[hz256][1+(border & 1)]=MAKEWORD(hz,hz_ok);
+#endif
 #endif
 #ifdef WIN32
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
@@ -1762,12 +1791,19 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 void change_window_size_for_border_change(int oldborder,int newborder)
 {
   if (ResChangeResize==0) return;
-
+#if defined(SSE_VID_BORDERS_GUI_392)
+  if ((newborder) && !(oldborder)){
+    StemWinResize(-(16*4),-(BORDER_TOP*2));
+  }else if (!(newborder) && (oldborder)){
+    StemWinResize((16*4),(BORDER_TOP*2));
+  }
+#else
   if ((newborder & 1) && !(oldborder & 1)){
     StemWinResize(-(16*4),-(BORDER_TOP*2));
   }else if (!(newborder & 1) && (oldborder & 1)){
     StemWinResize((16*4),(BORDER_TOP*2));
   }
+#endif
 }
 //---------------------------------------------------------------------------
 Str SnapShotGetLastBackupPath()

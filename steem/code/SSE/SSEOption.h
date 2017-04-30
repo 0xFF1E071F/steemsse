@@ -88,8 +88,11 @@ extern struct TOption SSEOption;
 #if !defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
 #define BORDER_40 (SSEOption.DisplaySize==1)
 #endif
+#if defined(SSE_VID_BORDERS_GUI_392)
+#define DISPLAY_SIZE (border)
+#else
 #define DISPLAY_SIZE (SSEOption.DisplaySize)
-//#define STEALTH_MODE SSEOption.StealthMode
+#endif
 #define OPTION_EMU_DETECT SSEOption.EmuDetect
 #define OPTION_TRACE_FILE (SSEOption.OutputTraceToFile)
 #define TRACE_FILE_REWIND (SSEOption.TraceFileLimit)//keep?

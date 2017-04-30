@@ -39,7 +39,7 @@ public: //TODO
   HWND MMUWakeUpOption;
 #endif
 #endif//ref
-#if defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_GUI_392)
   HWND BorderSizeOption;
 #endif
   EasyStr WAVOutputDir;
@@ -208,7 +208,8 @@ public:
   void UpdateHzDisplay();
 #endif
   void UpdateWindowSizeAndBorder();
-#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_DISABLE_AUTOBORDER) && defined(SSE_VS2008_WARNING_390) \
+  && !defined(SSE_VID_BORDERS_GUI_392)
   void SetBorder(bool);
 #else
   void SetBorder(int);

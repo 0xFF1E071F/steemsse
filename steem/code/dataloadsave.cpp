@@ -913,6 +913,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
 #endif
+#if !defined(SSE_VID_BORDERS_GUI_392) // DISPLAY_SIZE is border
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
     DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
     if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY
@@ -922,6 +923,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       )
       DISPLAY_SIZE=0;
     ChangeBorderSize(DISPLAY_SIZE);
+#endif
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
     OPTION_SAMPLED_YM=pCSF->GetInt("Sound","PsgMod",OPTION_SAMPLED_YM);
@@ -1111,7 +1113,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
     // Loading of border is now practically ignored (because it can be set to 0
     // by going to windowed mode). Only used first load of v2.06.
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392)
+    border=min(pCSF->GetInt("Display","Border",border),BIGGEST_DISPLAY);
+    border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),BIGGEST_DISPLAY);
+#elif defined(SSE_VID_DISABLE_AUTOBORDER)
     //border=min(pCSF->GetInt("Display","Border",border),1);
     border=pCSF->GetInt("Display","Border",border)&1;
     border_last_chosen=pCSF->GetInt("Display","BorderLastChosen",border)&1;
@@ -1126,6 +1131,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     }else
     {
       border=border_last_chosen;
+#if defined(SSE_VID_BORDERS_GUI_392)
+      ChangeBorderSize(border);
+#endif
     }
     display_option_8_bit_fs=pCSF->GetInt("Display","EightBitInFS",display_option_8_bit_fs);
 
@@ -1437,8 +1445,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
 #endif
+#if !defined(SSE_VID_BORDERS_GUI_392)
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
   pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
+#endif
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  

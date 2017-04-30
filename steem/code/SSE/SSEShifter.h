@@ -82,6 +82,40 @@ struct TShifter {
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
 
 // just taking some unimportant code out of Render for clarity
+#if defined(SSE_VID_BORDERS_GUI_392)
+
+#define   AUTO_BORDER_ADJUST  \
+          if(!(border)) { \
+            if(scanline_drawn_so_far<BORDER_SIDE) { \
+              border1-=(BORDER_SIDE-scanline_drawn_so_far); \
+              if(border1<0){ \
+                picture+=border1; \
+                if(!screen_res) {  \
+                  hscroll-=border1;  \
+                  shifter_draw_pointer+=(hscroll/16)*8; \
+                  hscroll&=15; \
+                }else if(screen_res==1) { \
+                  hscroll-=border1*2;  \
+                  shifter_draw_pointer+=(hscroll/16)*4; \
+                  hscroll&=15; \
+                } \
+                border1=0; \
+                if(picture<0) picture=0; \
+              } \
+            } \
+            int ta=(border1+picture+border2)-320; \
+            if(ta>0) { \
+              border2-=ta; \
+              if(border2<0)  { \
+                picture+=border2; \
+                border2=0; \
+                if (picture<0)  picture=0; \
+              } \
+            } \
+            border1=border2=0; \
+          }
+
+#else
 
 #define   AUTO_BORDER_ADJUST  \
           if(!(border & 1)) { \
@@ -113,6 +147,9 @@ struct TShifter {
             } \
             border1=border2=0; \
           }
+
+#endif
+
 #endif//#if defined(SSE_SHIFTER)
 
 #undef LOGSECTION 

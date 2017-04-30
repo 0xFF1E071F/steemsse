@@ -1211,6 +1211,48 @@ void TOptionBox::CreateDisplayPage()
   long Wid;
 #endif
   int y=10;
+
+#if defined(SSE_VID_BORDERS_GUI_392)
+/*  One option only for border on/off and size.
+    Border before frameskip.
+*/
+
+  int x=page_l;
+
+  Wid=get_text_width(T("Borders"));
+  CreateWindow("Static",T("Borders"),WS_CHILD,
+                          x,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+
+  BorderOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+                          x+5+Wid,y,Wid+50,200,Handle,(HMENU)207,HInstance,NULL);
+  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
+  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Normal"));
+#if !defined(SSE_VID_D3D_ONLY)
+  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Max fullscreen"));
+#endif
+  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Large"));
+  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Very Large"));
+  EnableBorderOptions(true);
+
+  x=page_l+150;
+  int w=get_text_width(T("Frameskip"));
+  CreateWindow("Static",T("Frameskip"),WS_CHILD,
+                    x,y+4,w,20,Handle,(HMENU)200,HInstance,NULL);
+  x+=w+5;
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
+                    x,y,110,200,Handle,(HMENU)201,HInstance,NULL);
+  // must make shorter
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw 1/2"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw 1/3"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw 1/4"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Auto"));
+  SendMessage(Win,CB_SETCURSEL,min(frameskip-1,4),0);
+
+  y+=30;//LineHeight;
+
+#else
+
   int x=page_l;
   int w=get_text_width(T("Frameskip"));
   CreateWindow("Static",T("Frameskip"),WS_CHILD,
@@ -1390,6 +1432,8 @@ void TOptionBox::CreateDisplayPage()
   ToolAddWindow(ToolTip,Win,T("Changes the border sizes"));
   y+=30;//LineHeight;
 #endif
+
+#endif//392
 
 #if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
 #if defined(SSE_VID_DISABLE_AUTOBORDER2)
@@ -1603,7 +1647,9 @@ void TOptionBox::FillScreenShotFormatOptsCombo()
 void TOptionBox::UpdateWindowSizeAndBorder()
 {
   if (BorderOption==NULL) return;
-#if defined(SSE_VID_DISABLE_AUTOBORDER)
+#if defined(SSE_VID_BORDERS_GUI_392)
+  SendMessage(BorderOption,CB_SETCURSEL,min((int)border,BIGGEST_DISPLAY),0);
+#elif defined(SSE_VID_DISABLE_AUTOBORDER)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
 #else
   SendMessage(BorderOption,CB_SETCURSEL,min(border,2),0);

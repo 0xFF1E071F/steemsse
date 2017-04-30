@@ -66,7 +66,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -83,7 +83,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_CPU ] = 0;
   logsection_enabled[ LOGSECTION_INIFILE ] = 0;
   logsection_enabled[ LOGSECTION_GUI ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 0;
+  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 1;
   // no PASTI, no DIV
 // additions
 #if !defined(SSE_BOILER_TRACE_CONTROL)
@@ -493,7 +493,9 @@ void TDebug::TraceGeneralInfos(int when) {
     if(MONO)
       //TRACE("Monochrome\n");  
       TRACE("; HI");  
-#if defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS_GUI_392)
+    TRACE("; Border %d",border);
+#elif defined(SSE_VID_BORDERS)
     else if(DISPLAY_SIZE)
       //TRACE("Dispay size %d\n", DISPLAY_SIZE);
       TRACE("; Size %d", DISPLAY_SIZE);
