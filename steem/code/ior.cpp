@@ -386,10 +386,29 @@ Receiver Data Register is retained.
       if (addr<0xfffa40){
         //  Hatari also counts 4 cycles of wait states
 
+        
+#if defined(SSE_INT_MFP_392F) //see below, we put it after the read
+        if(!OPTION_C2)
+        {
+          DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
+            if (io_word_access==0 || (addr & 1)==1) 
+              BUS_JAM_TIME(4);
+        }
+#else
         // Only cause bus jam once per word (should this be after the read?)
         DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) if (io_word_access==0 || (addr & 1)==1) BUS_JAM_TIME(4);
-
+#endif
         if (addr & 1){
+
+#if defined(SSE_INT_MFP_READ_DELAY_392)
+/*  Explanation for the negative value:
+    Time necessary to copy the register value to the IO lines. But then it
+    is general, not just for data timers...
+*/
+          if(OPTION_C2)
+            INSTRUCTION_TIME(-2);
+#endif
+
           if (addr==0xfffa01){
             // read GPIP
             // BIT
@@ -460,7 +479,7 @@ Receiver Data Register is retained.
 #endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
 
-#if defined(SSE_INT_MFP_READ_DELAY)
+#if defined(SSE_INT_MFP_READ_DELAY) // no...
 /*  MC68901 doc:    "
     Start Timer to Read Timer Error + 0 to – (tpsc + 6tCLK + 400ns)
     Start Timer to Interrupt Request Error (note 3) - 2tCLK to – (4tCLK + 800ns)"
@@ -479,7 +498,12 @@ Receiver Data Register is retained.
                   // Timer B is in event count mode, check if it has counted down since the start of
                   // this instruction. Due to MFP delays this very, very rarely gets changed under 4
                   // cycles from the point of the signal.
-#if defined(SSE_INT_MFP_TIMER_B_392E1) //why wait more?
+#if defined(SSE_INT_MFP_392F)
+                  //because we were in advance?
+                  if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) 
+                    >= (OPTION_C2?0:5)){ // >=5 = >4
+#elif defined(SSE_INT_MFP_TIMER_B_392E1)
+                  //why wait more? 
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) >= 0){
 #elif defined(SSE_INT_MFP_TIMER_B_392E)
 /*  This gives the best result in TIMERB07.TOS without messing TIMERB01.TOS.
@@ -545,6 +569,22 @@ Receiver Data Register is retained.
               ior_byte=mfp_reg[n];
             }
           }
+#if defined(SSE_INT_MFP_READ_DELAY_392)
+          if(OPTION_C2)
+            INSTRUCTION_TIME(2);
+#endif
+#if defined(SSE_INT_MFP_392F)
+/*  Counting the bus jam after the read makes sense in the way we can
+    remove the 'if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4)'
+    This seems to fix Down TLN.
+*/
+          if(OPTION_C2)
+          {
+            DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
+              if (io_word_access==0 || (addr & 1)==1) 
+                BUS_JAM_TIME(4);
+          }
+#endif
         } 
         else
         { // Even address byte access causes bus error
