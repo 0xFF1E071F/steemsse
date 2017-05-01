@@ -1789,6 +1789,9 @@ Beta: not SSE_PRIVATE_BUILD
 //#undef SSE_INT_MFP_TIMERS_BASETIME
 #endif
 #define SSE_INT_MFP_392D1 // remove 'snap to mfp clock', there's (imperfect) wobble already
+#define SSE_INT_MFP_392F // bus jam after read
+#define SSE_INT_MFP_READ_DELAY_392
+#undef SSE_INT_MFP_READ_DELAY
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
 #define SSE_INT_MFP_RATIO_PRECISION_392
 #endif
