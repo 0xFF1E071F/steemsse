@@ -360,10 +360,14 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
 #endif
     //60hz line with border, HSCROLL or not
-#if defined(SSE_GLUE_392A) // or we would need another variable to record 'choose' timing
+#if defined(SSE_GLUE_392E)
+    if(Glue.CurrentScanline.StartCycle==GLU_DE_ON_60
+      || Glue.CurrentScanline.StartCycle==GLU_DE_ON_60-16) //TODO
+#elif defined(SSE_GLUE_392A)
+    // or we would need another variable to record 'choose' timing
     if(Glue.CurrentScanline.StartCycle== ((shifter_hscroll_extra_fetch) // or HSCROLL? TODO
       ? Glue.ScanlineTiming[TGlue::CHOOSE_FREQ][TGlue::FREQ_60]
-      : Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60]))
+      : Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_60]))
 #else
     if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
 #endif
@@ -823,7 +827,7 @@ FF825E
       if(screen_res==2 && Glue.FetchingLine())
       {
         int time_to_first_pixel
-          =Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]+28-6;
+          =Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_72]+28-6;
         int cycle=CyclesIn-time_to_first_pixel;
         if(cycle>=0 && cycle<160) // only during Shifter DE
         {

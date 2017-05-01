@@ -1761,9 +1761,10 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DISK_MFM0A //temp
 
 #ifdef SSE_GLUE
-#define SSE_GLUE_392A //correct start & end cycles
+//#define SSE_GLUE_392A //correct start & end cycles //wrong?
 #define SSE_GLUE_392B //refactor hscroll extra fetch
 #define SSE_GLUE_392C //sundry
+#define SSE_GLUE_392E 
 #endif
 
 #ifdef SSE_GUI

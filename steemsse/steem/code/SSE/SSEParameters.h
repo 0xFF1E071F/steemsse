@@ -244,8 +244,11 @@ Some STFs                32.02480    8.0071
 // extremely important parameters, modified according to ST model and wakestate
 enum {
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
+  GLU_DE_OFF_72=166,
   GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
+  GLU_DE_OFF_60=372,
   GLU_DE_ON_50=56, //+ WU_sync_modifier; STE -16
+  GLU_DE_OFF_50=376,
   GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
