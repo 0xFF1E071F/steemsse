@@ -46,37 +46,74 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
   if(FetchingLine())
   {
 #if defined(SSE_GLUE_392A)
-    //put the right values
 
     if((m_ShiftMode&2)) //currently in HIRES
     {
-      if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_72])
+      if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_72])
       {
-        CurrentScanline.EndCycle=ScanlineTiming[GLU_DE_OFF][FREQ_72];
+        CurrentScanline.EndCycle=ScanlineTiming[LINE_STOP][FREQ_72];
         if(CyclesIn<=ScanlineTiming[CHOOSE_FREQ][FREQ_72])
         {
-          CurrentScanline.StartCycle=ScanlineTiming[GLU_DE_ON][FREQ_72];
+          CurrentScanline.StartCycle=ScanlineTiming[LINE_START][FREQ_72];
           if(shifter_hscroll_extra_fetch)
             CurrentScanline.StartCycle-=4;
         }
       }
     } // not in HIRES
-    else if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_60] 
+    else if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_60] 
       && !(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106
       |TRICK_LINE_PLUS_44|TRICK_LINE_MINUS_2)))
     {
       CurrentScanline.EndCycle= (m_SyncMode&2)
-        ? ScanlineTiming[GLU_DE_OFF][FREQ_50]
-        : ScanlineTiming[GLU_DE_OFF][FREQ_60];
+        ? ScanlineTiming[LINE_STOP][FREQ_50]
+        : ScanlineTiming[LINE_STOP][FREQ_60];
       if(CyclesIn<=ScanlineTiming[CHOOSE_FREQ][FREQ_60]
         && !(CurrentScanline.Tricks
           &(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20|TRICK_0BYTE_LINE)))
       {
         CurrentScanline.StartCycle=(m_SyncMode&2)
-          ? ScanlineTiming[GLU_DE_ON][FREQ_50]
-          : ScanlineTiming[GLU_DE_ON][FREQ_60];
+          ? ScanlineTiming[LINE_START][FREQ_50]
+          : ScanlineTiming[LINE_START][FREQ_60];
         if(shifter_hscroll_extra_fetch) 
           //CurrentScanline.StartCycle-=16; // med res too... 
+          CurrentScanline.StartCycle-=(m_ShiftMode&1)?8:16; // TODO test
+      }
+    }
+
+#elif defined(SSE_GLUE_392E)
+    // I admit I'm a bit confused by wake-state
+    // When reading the video counter in the MMU, WS should have no
+    // impact (eg Forest WS2)
+    // So starting and ending cycles are not affected as far as the
+    // MMU is concerned. We revert SSE_GLUE_392A.
+
+    //currently in HIRES
+    if((m_ShiftMode&2)) 
+    {
+      if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_72])
+      {
+        CurrentScanline.EndCycle=ScanlineTiming[LINE_STOP][FREQ_72];
+        if(CyclesIn<=ScanlineTiming[LINE_START][FREQ_72])
+        {
+          CurrentScanline.StartCycle=GLU_DE_ON_72;
+          if(shifter_hscroll_extra_fetch)
+            CurrentScanline.StartCycle-=4;
+        }
+      }
+    } 
+    // not in HIRES
+    else if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_60] 
+      && !(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106
+      |TRICK_LINE_PLUS_44|TRICK_LINE_MINUS_2)))
+    {
+      CurrentScanline.EndCycle=(m_SyncMode&2) ? GLU_DE_OFF_50 : GLU_DE_OFF_60;
+      if(CyclesIn<=ScanlineTiming[LINE_START][FREQ_60]
+        && !(CurrentScanline.Tricks
+          &(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20|TRICK_0BYTE_LINE)))
+      {
+        CurrentScanline.StartCycle=(m_SyncMode&2) ? GLU_DE_ON_50 :GLU_DE_ON_60;
+
+        if(shifter_hscroll_extra_fetch) 
           CurrentScanline.StartCycle-=(m_ShiftMode&1)?8:16; // TODO test
       }
     }
@@ -87,11 +124,11 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     {
       CurrentScanline.StartCycle
         =(shifter_hscroll_extra_fetch?2:6);
-      CurrentScanline.EndCycle=ScanlineTiming[GLU_DE_OFF][FREQ_72];
+      CurrentScanline.EndCycle=ScanlineTiming[LINE_STOP][FREQ_72];
     }
     else
     {
-      if(CyclesIn<=ScanlineTiming[GLU_DE_ON][FREQ_60] 
+      if(CyclesIn<=ScanlineTiming[LINE_START][FREQ_60] 
         && !(CurrentScanline.Tricks
           &(TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_20|TRICK_0BYTE_LINE)))
       {
@@ -137,7 +174,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
     // a bit tricky, saves a variable + rewriting
-    if(COLOUR_MONITOR && CyclesIn<ScanlineTiming[GLU_DE_OFF][FREQ_72])
+    if(COLOUR_MONITOR && CyclesIn<ScanlineTiming[LINE_STOP][FREQ_72])
     {
       if((m_ShiftMode&2) && !(CurrentScanline.Tricks&TRICK_80BYTE_LINE))
       {
@@ -240,8 +277,8 @@ void TGlue::CheckSideOverscan() {
       && CyclesIn>=ScanlineTiming[CHOOSE_FREQ][FREQ_72]
       && !(ShiftModeAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_72])&2))
 #else
-      && CyclesIn>=ScanlineTiming[GLU_DE_ON][FREQ_72]
-      && !(ShiftModeAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_72])&2))
+      && CyclesIn>=ScanlineTiming[LINE_START][FREQ_72]
+      && !(ShiftModeAtCycle(ScanlineTiming[LINE_START][FREQ_72])&2))
 #endif
       
     {
@@ -250,8 +287,8 @@ void TGlue::CheckSideOverscan() {
       draw_line_off=true;
     }
     else if( !(CurrentScanline.Tricks&0x10) 
-      && CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_72]
-      && !(ShiftModeAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_72])&2))
+      && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_72]
+      && !(ShiftModeAtCycle(ScanlineTiming[LINE_STOP][FREQ_72])&2))
     {
       // note 14x2=28
       // 6-166 DE; we deduce 166+28=194 HSYNC stops DE
@@ -286,7 +323,7 @@ void TGlue::CheckSideOverscan() {
 #if defined(SSE_GLUE_392A)
 #define lim_r2 ScanlineTiming[CHOOSE_FREQ][FREQ_72]
 #else
-#define lim_r2 Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_72]
+#define lim_r2 Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_72]
 #endif
 #define lim_r0 Glue.ScanlineTiming[TGlue::HBLANK_OFF][TGlue::FREQ_50]
     if(!(CurrentScanline.Tricks
@@ -424,10 +461,14 @@ void TGlue::CheckSideOverscan() {
         left_border=0;
 #endif
 
-#if defined(SSE_GLUE_392A) // part of AdaptScanlineValues...
+#if defined(SSE_GLUE_392E)
+        CurrentScanline.StartCycle=GLU_DE_ON_72;
+        if(shifter_hscroll_extra_fetch)
+          CurrentScanline.StartCycle-=4;
+#elif defined(SSE_GLUE_392A)
         CurrentScanline.StartCycle=(shifter_hscroll_extra_fetch) 
           ? ScanlineTiming[CHOOSE_FREQ][FREQ_72]
-          : ScanlineTiming[GLU_DE_ON][FREQ_72];
+          : ScanlineTiming[LINE_START][FREQ_72];
 #else
         CurrentScanline.StartCycle=(HSCROLL0?2:6);
 #endif
@@ -642,8 +683,8 @@ Closure STF2
 #define s0cycle ScanlineTiming[CHOOSE_FREQ][FREQ_60]
 #define s2cycle ScanlineTiming[CHOOSE_FREQ][FREQ_50]
 #else
-#define s0cycle ScanlineTiming[GLU_DE_ON][FREQ_60]
-#define s2cycle ScanlineTiming[GLU_DE_ON][FREQ_50]
+#define s0cycle ScanlineTiming[LINE_START][FREQ_60]
+#define s2cycle ScanlineTiming[LINE_START][FREQ_50]
 #endif
     ASSERT(s0cycle>0);
     ASSERT(s2cycle>0);
@@ -815,7 +856,7 @@ Closure STF2
       {
         r0cycle=NextShiftModeChange(r1cycle);
         if(r0cycle!=-1 && r0cycle>r1cycle // Nightmare
-          && r0cycle<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_50])
+          && r0cycle<Glue.ScanlineTiming[TGlue::LINE_STOP][TGlue::FREQ_50])
         {
           Shifter.Preload=1;
           CurrentScanline.Tricks|=TRICK_UNSTABLE;
@@ -923,7 +964,7 @@ Closure STF2
 #if defined(SSE_GLUE_392A)
     t=FreqAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_60]==50) ? 44: 40;
 #else
-    t=FreqAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_60]==50) ? 44: 40;
+    t=FreqAtCycle(ScanlineTiming[LINE_START][FREQ_60]==50) ? 44: 40;
 #endif
     if(ShiftModeChangeAtCycle(t)==2)
     {
@@ -989,16 +1030,16 @@ Closure STF2
 #if defined(SSE_GLUE_392A)
     t=ScanlineTiming[CHOOSE_FREQ][FREQ_60];
     if(CyclesIn>=t && FreqAtCycle(t)==60 
-      && ((CyclesIn<ScanlineTiming[GLU_DE_OFF][FREQ_60] && shifter_freq==50) 
-      || CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_60] 
-      && FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==50))
+      && ((CyclesIn<ScanlineTiming[LINE_STOP][FREQ_60] && shifter_freq==50) 
+      || CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_60] 
+      && FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_60])==50))
 #else
-    t=Glue.ScanlineTiming[TGlue::GLU_DE_ON][TGlue::FREQ_60];
+    t=Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_60];
     if(CyclesIn>=t && FreqAtCycle(t)==60 
-      && ((CyclesIn<Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] 
+      && ((CyclesIn<Glue.ScanlineTiming[TGlue::LINE_STOP][TGlue::FREQ_60] 
       && shifter_freq==50) 
-      || CyclesIn>=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60] &&
-      FreqAtCycle(Glue.ScanlineTiming[TGlue::GLU_DE_OFF][TGlue::FREQ_60])==50))
+      || CyclesIn>=Glue.ScanlineTiming[TGlue::LINE_STOP][TGlue::FREQ_60] &&
+      FreqAtCycle(Glue.ScanlineTiming[TGlue::LINE_STOP][TGlue::FREQ_60])==50))
 #endif
 
       CurrentScanline.Tricks|=TRICK_LINE_PLUS_2;
@@ -1067,8 +1108,8 @@ Closure STF2
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
     && !((CurrentScanline.Tricks&TRICK_80BYTE_LINE)&&(m_ShiftMode&2))
 #endif
-    && CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_72]
-    && (ShiftModeAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_72])&2))
+    && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_72]
+    && (ShiftModeAtCycle(ScanlineTiming[LINE_STOP][FREQ_72])&2))
      CurrentScanline.Tricks|=TRICK_LINE_MINUS_106;
 
   // action
@@ -1140,14 +1181,14 @@ detect unstable: switch MED/LOW - Beeshift
 
     // detect switch to medium or high during DE (more compact code)
     int mode;
-    r1cycle=NextShiftModeChange(ScanlineTiming[GLU_DE_ON][FREQ_50]); 
-    if(r1cycle>ScanlineTiming[GLU_DE_ON][FREQ_50] 
-    && r1cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50]
+    r1cycle=NextShiftModeChange(ScanlineTiming[LINE_START][FREQ_50]); 
+    if(r1cycle>ScanlineTiming[LINE_START][FREQ_50] 
+    && r1cycle<=ScanlineTiming[LINE_STOP][FREQ_50]
     && (mode=ShiftModeChangeAtCycle(r1cycle))!=0) //!=0 for C4706
     {
       r0cycle=NextShiftModeChange(r1cycle,0); // detect switch to low
       int cycles_in_med_or_high=r0cycle-r1cycle;
-      if(r0cycle<=ScanlineTiming[GLU_DE_OFF][FREQ_50]&&cycles_in_med_or_high>0)
+      if(r0cycle<=ScanlineTiming[LINE_STOP][FREQ_50]&&cycles_in_med_or_high>0)
       {
         Shifter.Preload=((cycles_in_med_or_high/4)%4);
         if((mode&2)&&Shifter.Preload&1) // if it's 3 or 5
@@ -1242,13 +1283,13 @@ detect unstable: switch MED/LOW - Beeshift
   // test
   if(!(CurrentScanline.Tricks
     &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2))
-    && CyclesIn>=ScanlineTiming[GLU_DE_OFF][FREQ_60]
+    && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_60]
 #if defined(SSE_GLUE_392A)
     && FreqAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_60])!=60  //50,72?
 #else
-    && FreqAtCycle(ScanlineTiming[GLU_DE_ON][FREQ_60])!=60  //50,72?
+    && FreqAtCycle(ScanlineTiming[LINE_START][FREQ_60])!=60  //50,72?
 #endif
-    && FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)
+    && FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_60])==60)
      CurrentScanline.Tricks|=TRICK_LINE_MINUS_2;
 
   //  action
@@ -1291,7 +1332,7 @@ detect unstable: switch MED/LOW - Beeshift
 
     WS thresholds (from table by Paolo) 
 
-    Swtich to 60hz  374 - 376 WS1,3
+    Switch to 60hz  374 - 376 WS1,3
                     376 - 378 WS2,4
 
     Switch back to 50hz  378 -... WS1,3
@@ -1333,22 +1374,22 @@ TODO Closure doesn't agree with 'Bees' for WS1?
 
   // test
 #if defined(SSE_GLUE_RIGHT_OFF_BY_SHIFT_MODE)
-  t=ScanlineTiming[GLU_DE_OFF][FREQ_50]
+  t=ScanlineTiming[LINE_STOP][FREQ_50]
 #if defined(SSE_MMU_WU)
   +MMU.ResMod[OPTION_WS]-MMU.FreqMod[OPTION_WS]
 #endif
   +2;
 #endif
-  if(CyclesIn<=ScanlineTiming[GLU_DE_OFF][FREQ_50] 
+  if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_50] 
     ||(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_2
     |TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44))
-    || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_60])==60)
+    || FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_60])==60)
     ; // no need to test
 #if defined(SSE_INT_MFP_TIMER_B_392D)
-  else if(CyclesIn==ScanlineTiming[GLU_DE_OFF][FREQ_50] && !(m_SyncMode&2) // now!
-    || FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
+  else if(CyclesIn==ScanlineTiming[LINE_STOP][FREQ_50] && !(m_SyncMode&2) // now!
+    || FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_50])==60
 #else
-  else if(FreqAtCycle(ScanlineTiming[GLU_DE_OFF][FREQ_50])==60
+  else if(FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_50])==60
 #endif
 #if defined(SSE_GLUE_RIGHT_OFF_BY_SHIFT_MODE)
 /*  Like Alien said, it is also possible to remove the right border by setting
@@ -1374,7 +1415,9 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     right_border=0;
     TrickExecuted|=TRICK_LINE_PLUS_44;
     CurrentScanline.Bytes+=44;
-#if defined(SSE_GLUE_392A) // I thought it would break things...
+#if defined(SSE_GLUE_392E)
+    CurrentScanline.EndCycle=GLU_HSYNC_ON_50; //376 + 44*2 = 464
+#elif defined(SSE_GLUE_392A) // I thought it would break things... 
     CurrentScanline.EndCycle=ScanlineTiming[HSYNC_ON][FREQ_50];
 #else
     CurrentScanline.EndCycle=464;
@@ -1639,8 +1682,10 @@ void TGlue::EndHBL() {
 */
   if((CurrentScanline.Tricks&(TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_26))
     && !(CurrentScanline.Tricks&(TRICK_LINE_MINUS_2|TRICK_LINE_MINUS_106))
-#if defined(SSE_GLUE_392A)
-    && CurrentScanline.EndCycle==ScanlineTiming[GLU_DE_OFF][FREQ_60])
+#if defined(SSE_GLUE_392E)
+    && CurrentScanline.EndCycle==GLU_DE_OFF_60)
+#elif defined(SSE_GLUE_392A)
+    && CurrentScanline.EndCycle==ScanlineTiming[LINE_STOP][FREQ_60])
 #else
     && CurrentScanline.EndCycle==372)    
 #endif
@@ -1655,9 +1700,12 @@ void TGlue::EndHBL() {
   } 
   // no 'else', they're false alerts!
   if(CurrentScanline.Tricks&TRICK_LINE_MINUS_2     
-#if defined(SSE_GLUE_392A)
-    && (CurrentScanline.StartCycle==ScanlineTiming[GLU_DE_ON][FREQ_60]
-    || CurrentScanline.EndCycle!=ScanlineTiming[GLU_DE_OFF][FREQ_60]))
+#if defined(SSE_GLUE_392E)
+    && (CurrentScanline.StartCycle==GLU_DE_ON_60 
+    || CurrentScanline.EndCycle!=GLU_DE_OFF_60))
+#elif defined(SSE_GLUE_392A)
+    && (CurrentScanline.StartCycle==ScanlineTiming[LINE_START][FREQ_60]
+    || CurrentScanline.EndCycle!=ScanlineTiming[LINE_STOP][FREQ_60]))
 #else
     && (CurrentScanline.StartCycle==52 || CurrentScanline.EndCycle!=372))
 #endif
@@ -2357,11 +2405,11 @@ void TGlue::Update() {
   // (8 before prefetch, 4 after).
   // Timer B is also triggered after those 28 cycles, but that's a coincidence,
   // it's due to other delays.
-  ScanlineTiming[GLU_DE_ON][FREQ_72]=GLU_DE_ON_72+WU_res_modifier; // GLUE tests MODE
-  ScanlineTiming[GLU_DE_ON][FREQ_60]=GLU_DE_ON_60+WU_sync_modifier; // GLUE tests SYNC
-  ScanlineTiming[GLU_DE_ON][FREQ_50]=GLU_DE_ON_50+WU_sync_modifier;
-  for(int f=0;f<NFREQS;f++) // MMU DE OFF = MMU DE ON + DE cycles
-    ScanlineTiming[GLU_DE_OFF][f]=ScanlineTiming[GLU_DE_ON][f]+DE_cycles[f];
+  ScanlineTiming[LINE_START][FREQ_72]=GLU_DE_ON_72+WU_res_modifier; // GLUE tests MODE
+  ScanlineTiming[LINE_START][FREQ_60]=GLU_DE_ON_60+WU_sync_modifier; // GLUE tests SYNC
+  ScanlineTiming[LINE_START][FREQ_50]=GLU_DE_ON_50+WU_sync_modifier;
+  for(int f=0;f<NFREQS;f++) // LINE STOP = LINE START + DE cycles
+    ScanlineTiming[LINE_STOP][f]=ScanlineTiming[LINE_START][f]+DE_cycles[f];
 
 
 #if defined(SSE_GLUE_392A)
@@ -2370,9 +2418,9 @@ void TGlue::Update() {
     But the process is started at that earlier timing regardless.
     This is why the thresholds for line +2 and line +26 are different.
 */
-  ScanlineTiming[CHOOSE_FREQ][FREQ_72]=ScanlineTiming[GLU_DE_ON][FREQ_72];
-  ScanlineTiming[CHOOSE_FREQ][FREQ_60]=ScanlineTiming[GLU_DE_ON][FREQ_60];
-  ScanlineTiming[CHOOSE_FREQ][FREQ_50]=ScanlineTiming[GLU_DE_ON][FREQ_50];  
+  ScanlineTiming[CHOOSE_FREQ][FREQ_72]=ScanlineTiming[LINE_START][FREQ_72];
+  ScanlineTiming[CHOOSE_FREQ][FREQ_60]=ScanlineTiming[LINE_START][FREQ_60];
+  ScanlineTiming[CHOOSE_FREQ][FREQ_50]=ScanlineTiming[LINE_START][FREQ_50];  
   if(ST_TYPE==STE)
   {
     ScanlineTiming[CHOOSE_FREQ][FREQ_72]-=4;
@@ -2382,13 +2430,11 @@ void TGlue::Update() {
 #else
   // On the STE, DE test occurs sooner due to hardscroll possibility
   // but prefetch starts sooner only if HSCROLL <> 0.
-  // If HSCROLL = 0, The Shifter is fed zeroes instead of video RAM.
-  // (My current theory)
   if(ST_TYPE==STE) // adapt for HSCROLL prefetch after DE_OFF has been computed
   {
-    ScanlineTiming[GLU_DE_ON][FREQ_72]-=4;
-    ScanlineTiming[GLU_DE_ON][FREQ_60]-=16;
-    ScanlineTiming[GLU_DE_ON][FREQ_50]-=16;
+    ScanlineTiming[LINE_START][FREQ_72]-=4;
+    ScanlineTiming[LINE_START][FREQ_60]-=16;
+    ScanlineTiming[LINE_START][FREQ_50]-=16;
   }
 #endif
 

@@ -1093,7 +1093,7 @@ void TMC68901::CalcCyclesFromHblToTimerB() {
     ? Glue.CurrentScanline.StartCycle // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     : Glue.CurrentScanline.EndCycle;
 #else
-  cpu_cycles_from_hbl_to_timer_b=Glue.ScanlineTiming[TGlue::GLU_DE_OFF][shifter_freq_idx];
+  cpu_cycles_from_hbl_to_timer_b=Glue.ScanlineTiming[TGlue::LINE_STOP][shifter_freq_idx];
   if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
     // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
     cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
