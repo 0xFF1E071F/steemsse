@@ -1738,6 +1738,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_LE)
 #define SSE_VAR_MAIN_LOOP4
 #define SSE_IKBD_6301_NOT_OPTIONAL 
+#define SSE_C2_NOT_OPTIONAL
+#undef SSE_CPU_MFP_RATIO_OPTION // user can fine tune CPU clock
+#undef SSE_CPU_MFP_RATIO_OPTION2 // L/S
 #endif
 
 

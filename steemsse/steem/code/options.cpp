@@ -2115,7 +2115,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_INT_MFP_OPTION) // Option MC68901
+#if defined(SSE_INT_MFP_OPTION) && !defined(SSE_C2_NOT_OPTIONAL)// Option MC68901
         case 7323:
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_C2=!OPTION_C2;
