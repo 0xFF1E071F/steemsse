@@ -3293,7 +3293,7 @@ Windows 2000	5.0
 #endif
 
 
-#if defined(SSE_INT_MFP_OPTION)
+#if defined(SSE_INT_MFP_OPTION) && !defined(SSE_C2_NOT_OPTIONAL)
 #if defined(SSE_IKBD_6301) 
   y-=LineHeight; // maybe it will be optimised away!
 #endif

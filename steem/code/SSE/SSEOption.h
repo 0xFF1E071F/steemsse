@@ -84,7 +84,11 @@ extern struct TOption SSEOption;
 #else
 #define OPTION_C1 (SSEOption.Chipset1)
 #endif
+#if defined(SSE_C2_NOT_OPTIONAL)
+#define OPTION_C2 (true)
+#else
 #define OPTION_C2 (SSEOption.Chipset2)
+#endif
 #define OPTION_MICROWIRE (SSEOption.Microwire && SSEOption.STModel==STE)
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)

@@ -1225,8 +1225,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if(OPTION_C1)
           myRect.left-=8;
 #endif
+#if !defined(SSE_C2_NOT_OPTIONAL)
         if(OPTION_C2)
           myRect.left-=8;
+#endif
         if(OPTION_HACKS)
           myRect.left-=8;
         TextOut(myHdc,myRect.left,3,ansi_string,nchars);
@@ -1269,6 +1271,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
+#if !defined(SSE_C2_NOT_OPTIONAL)
           if(OPTION_C2)
           {
             DrawIconEx(myHdc,myx,2,
@@ -1281,6 +1284,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
+#endif
         }
         return TRUE;
 #undef myHdc

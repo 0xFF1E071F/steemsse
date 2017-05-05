@@ -1000,7 +1000,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   //TRACE_LOG("Options D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
 #endif
 #endif
-#if defined(SSE_INT_MFP_OPTION)
+#if defined(SSE_INT_MFP_OPTION) && !defined(SSE_C2_NOT_OPTIONAL)
   OPTION_C2=pCSF->GetInt("Options","Chipset2",OPTION_C2);
 #endif
 #if defined(SSE_VID_D3D_CRISP_OPTION)
