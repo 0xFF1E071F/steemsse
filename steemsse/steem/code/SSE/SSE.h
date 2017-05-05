@@ -75,7 +75,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_COMPILER_INCLUDED_CPP // just telling cpp files included in modules
 
 // We use DirectDraw in the VC6 build and in one VS2008 build
-#if _MSC_VER == 1200 || defined(SSE_DD) 
+#if _MSC_VER == 1200 || defined(SSE_DD) || defined(SSE_LE)
 #define SSE_NO_D3D
 #else
 #define SSE_NO_DD 
@@ -1735,6 +1735,12 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
+#if defined(SSE_LE)
+#define SSE_VAR_MAIN_LOOP4
+#define SSE_IKBD_6301_NOT_OPTIONAL 
+#endif
+
+
 #ifdef SSE_BOILER
 #define SSE_BOILER_FRAME_REPORT_392
 #endif
@@ -1887,7 +1893,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
 //#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
-//#define SSE_IKBD_6301_NOT_OPTIONAL
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 #endif

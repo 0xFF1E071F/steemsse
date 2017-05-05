@@ -898,14 +898,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
     OPTION_CAPTURE_MOUSE=pCSF->GetInt("Options","CaptureMouse",OPTION_CAPTURE_MOUSE);
 #endif
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
     OPTION_C1=pCSF->GetInt("Options","Chipset1",OPTION_C1);
     if(!HD6301_OK)
       OPTION_C1=0;
-#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
-    else
-      OPTION_C1=1;
-#endif
 #endif
 #if defined(SSE_VAR_EMU_DETECT) 
     OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
@@ -1218,18 +1214,18 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     WAVOutputDir=pCSF->GetStr("Sound","WAVOutputDir",WAVOutputDir);
     if (WAVOutputDir.Empty()) WAVOutputDir=WriteDir;
 
-    #ifdef UNIX
-      x_sound_lib=pCSF->GetInt("Sound","Library",x_sound_lib);
-      #ifndef NO_RTAUDIO
-        rt_unsigned_8bit=pCSF->GetInt("Sound","RtAudioUnsigned8Bit",rt_unsigned_8bit);
-      #endif
-      sound_device_name=pCSF->GetStr("Sound","PADevice",Str(sound_device_name));
-      if (FirstLoad==0){
-        Sound_Stop(true);
-        InitSound();
-        Sound_Start();
-      }
-    #endif//UNIX
+#ifdef UNIX
+    x_sound_lib=pCSF->GetInt("Sound","Library",x_sound_lib);
+#ifndef NO_RTAUDIO
+    rt_unsigned_8bit=pCSF->GetInt("Sound","RtAudioUnsigned8Bit",rt_unsigned_8bit);
+#endif
+    sound_device_name=pCSF->GetStr("Sound","PADevice",Str(sound_device_name));
+    if (FirstLoad==0){
+      Sound_Stop(true);
+      InitSound();
+      Sound_Start();
+    }
+#endif//UNIX
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
     sound_internal_speaker=pCSF->GetInt("Sound","InternalSpeaker",sound_internal_speaker);
     // Trying to write to ports on WINNT causes the program to be killed!

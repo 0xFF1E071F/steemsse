@@ -373,7 +373,6 @@ void draw_set_jumps_and_source()
   // SS called at each frame by draw_begin()
   if (!draw_lock){
     draw_scanline=draw_scanline_dont;
-    //TRACE("no draw lock sucker!\n");
     return;
   }
   bool big_draw=CanUse_400;

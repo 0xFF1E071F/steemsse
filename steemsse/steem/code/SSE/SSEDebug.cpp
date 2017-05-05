@@ -389,6 +389,9 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #endif
     TRACE("Build: ");
+#if defined(SSE_LE)
+    TRACE("LE ");
+#endif
 #ifdef SSE_BETA
     TRACE("Beta ");
 #endif
@@ -468,7 +471,7 @@ void TDebug::TraceGeneralInfos(int when) {
       //TRACE("\nHacks");
       TRACE("; #");
 #endif
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
     if(OPTION_C1)
       TRACE("; C1");
 #endif

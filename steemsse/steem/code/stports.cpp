@@ -29,6 +29,9 @@ void agenda_midi_replace(int)
 #define LOGSECTION LOGSECTION_MIDI
   if(OPTION_C1)
   {
+#if defined(SSE_ACIA_EVENT) && defined(SSE_BUGFIX_392)
+    ACIA_MIDI.LineRxBusy=false;
+#endif
     if (MIDIPort.AreBytesToCome()){
       MIDIPort.NextByte();
       BYTE midi_in=MIDIPort.ReadByte();
@@ -36,7 +39,7 @@ void agenda_midi_replace(int)
 #if defined(SSE_MIDI_TRACE_BYTES_IN)
       TRACE_LOG("Midi in %X\n",midi_in);
 #endif
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA_EVENT) && !defined(SSE_BUGFIX_392)
       ASSERT(ACIA_MIDI.LineRxBusy);
 #endif
       if(ACIA_MIDI.SR&BIT_0) {

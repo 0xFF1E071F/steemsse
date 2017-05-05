@@ -367,10 +367,12 @@ void TGeneralInfo::CreateAboutPage()
   HWND Win;
 #endif
 #if defined(SSE_GUI)
-#if defined(SSE_VS2015)
+#if defined(SSE_LE)
+  EasyStr Text = EasyStr("Steem LE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
+#elif defined(SSE_VS2015)
   EasyStr Text = EasyStr("Steem SSE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
 #else
-   EasyStr Text=EasyStr("Steem SSE v")+SSE_VERSION+" (built " __DATE__" " +"- "__TIME__")\n";
+  EasyStr Text=EasyStr("Steem SSE v")+SSE_VERSION+" (built " __DATE__" " +"- "__TIME__")\n";
 #endif
 #else
   EasyStr Text=EasyStr("Steem Engine v")+(char*)stem_version_text+" (built " __DATE__" " +"- "__TIME__")\n";

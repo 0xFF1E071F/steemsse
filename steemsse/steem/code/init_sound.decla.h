@@ -5,8 +5,11 @@
 #define EXT extern
 #define INIT(s)
 
-
+#ifdef SSE_SOUND_16BIT_CENTRED
+EXT HRESULT Sound_Start(),Sound_Stop();
+#else
 EXT HRESULT Sound_Start(),Sound_Stop(bool=0);
+#endif
 EXT HRESULT SoundStartBuffer(int,int);
 EXT void SoundGetPosition(DWORD*,DWORD*);
 EXT HRESULT SoundLockBuffer(DWORD,DWORD,LPVOID*,DWORD*,LPVOID*,DWORD*);

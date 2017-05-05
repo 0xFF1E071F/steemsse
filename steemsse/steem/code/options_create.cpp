@@ -3271,7 +3271,7 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
-#if defined(SSE_IKBD_6301) 
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   if(!HD6301_OK)
@@ -3279,24 +3279,12 @@ Windows 2000	5.0
     OPTION_C1=0;
     mask|=WS_DISABLED;
   }
-#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
-  else
-  {
-    OPTION_C1=1;
-    mask|=WS_DISABLED;
-  }
-#endif
-
-
   Win=CreateWindow("Button",T("C1: 6850/6301/E-Clock"),mask,page_l,y,Wid,23,Handle,
     (HMENU)1029,HInstance,NULL);
-
   if(!HD6301_OK)
     SendMessage(Win,BN_DISABLE,0,0);
   else
     SendMessage(Win,BM_SETCHECK,OPTION_C1,0);
-
-
   ToolAddWindow(ToolTip,Win,
   T("Chipset 1 - This enables a low level emulation of the IKBD keyboard chip (using\
  the Sim6xxx code by Arne Riiber, thx dude!), precise E-Clock and ACIA timings.\
@@ -3425,7 +3413,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   if (Handle==NULL) 
     return;
   HWND Win;
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
   Win=GetDlgItem(Handle,1029); //HD6301 emu
   if(Win!=NULL) 
   {

@@ -88,7 +88,7 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
   if (Disp.BorderPossible()==0 && (FullScreen==0)) newval=0;
   bool proceed=true;
 #if defined(SSE_VID_BORDERS_GUI_392)
-  if (min(border,BIGGEST_DISPLAY)==min(newval,BIGGEST_DISPLAY)){ 
+  if (min(border,(BYTE)BIGGEST_DISPLAY)==min(newval,BIGGEST_DISPLAY)){ 
 #elif defined(SSE_VID_DISABLE_AUTOBORDER) 
   if (min((int)border,1)==min(newval,1)){
 #else
@@ -162,8 +162,11 @@ void TOptionBox::SetRecord(bool On)
 //---------------------------------------------------------------------------
 void TOptionBox::SoundModeChange(int new_mode,bool ChangeLast,bool UpdateCB)
 {
+#ifdef SSE_SOUND_16BIT_CENTRED
+  Sound_Stop();
+#else
   Sound_Stop(true);
-
+#endif
   sound_mode=new_mode;
   if (ChangeLast && sound_mode!=SOUND_MODE_MUTE) sound_last_mode=sound_mode;
   if (Handle){
@@ -189,8 +192,11 @@ void TOptionBox::UpdateRecordBut()
 //---------------------------------------------------------------------------
 void TOptionBox::UpdateSoundFreq()
 {
+#ifdef SSE_SOUND_16BIT_CENTRED
+  Sound_Stop();
+#else
   Sound_Stop(true);
-
+#endif
   WIN_ONLY( if (Handle) if (GetDlgItem(Handle,7101)) CBSelectItemWithData(GetDlgItem(Handle,7101),sound_chosen_freq); )
   Sound_Start();
 
@@ -208,7 +214,11 @@ void TOptionBox::UpdateSoundFreq()
 //---------------------------------------------------------------------------
 void TOptionBox::ChangeSoundFormat(BYTE bits,BYTE channels)
 {
+#ifdef SSE_SOUND_16BIT_CENTRED
+  Sound_Stop();
+#else
   Sound_Stop(true);
+#endif
   sound_num_bits=bits;
   sound_num_channels=channels;
   sound_bytes_per_sample=(sound_num_bits/8)*sound_num_channels;
@@ -896,7 +906,7 @@ void TOptionBox::EnableBorderOptions(bool enable)
 
   EnableWindow(BorderOption,enable);
 #if defined(SSE_VID_BORDERS_GUI_392)
-  SendMessage(BorderOption,CB_SETCURSEL,min(border,BIGGEST_DISPLAY),0);
+  SendMessage(BorderOption,CB_SETCURSEL,min(border,(BYTE)BIGGEST_DISPLAY),0);
 #elif defined(SSE_VID_DISABLE_AUTOBORDER)
   SendMessage(BorderOption,CB_SETCURSEL,min((int)border,1),0);
 #else
@@ -1422,7 +1432,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_IKBD_6301) // Option 6301 emu
+#if defined(SSE_IKBD_6301) &&!defined(SSE_IKBD_6301_NOT_OPTIONAL) // Option 6301 emu
         case 1029:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1788,7 +1798,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
         case 7102:
           if (HIWORD(wPar)==BN_CLICKED){
+#ifdef SSE_SOUND_16BIT_CENTRED
+            Sound_Stop();
+#else
             Sound_Stop(true);
+#endif
             sound_write_primary=!sound_write_primary;
             SendMessage(HWND(lPar),BM_SETCHECK,sound_write_primary,true);
             if (runstate==RUNSTATE_RUNNING){
@@ -1802,7 +1816,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
             int nstm=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             if (nstm!=sound_time_method){
+#ifdef SSE_SOUND_16BIT_CENTRED
+              Sound_Stop();
+#else
               Sound_Stop(true);
+#endif
               sound_time_method=nstm;
               if (runstate==RUNSTATE_RUNNING){
 #if defined(SSE_SOUND_CHANGE_TIME_METHOD_DELAY)

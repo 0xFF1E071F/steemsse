@@ -732,7 +732,12 @@ bool SoundActive()
   return UseSound && DSOpen;
 }
 //---------------------------------------------------------------------------
+
+#ifdef SSE_SOUND_16BIT_CENTRED
+HRESULT Sound_Stop()
+#else
 HRESULT Sound_Stop(bool Immediate)
+#endif
 {
   sound_record_close_file();
   sound_record=false;

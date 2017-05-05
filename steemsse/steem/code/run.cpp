@@ -356,8 +356,11 @@ void run()
   }while (ExcepHappened);
 
   PortsRunEnd();
-
+#ifdef SSE_SOUND_16BIT_CENTRED
+  Sound_Stop();
+#else
   Sound_Stop(Quitting);
+#endif
 #if defined(SSE_VID_FS_382)
   if(FullScreen)
 #endif
@@ -1879,9 +1882,9 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   BYTE iack_latency=(OPTION_C1)
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
-  if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
-    ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
+    if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
+    ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
       vbl_pending=true;
 
   Glue.Status.vbi_done=true;

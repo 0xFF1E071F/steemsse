@@ -527,8 +527,12 @@ void Blitter_Draw() {
     return;
   }
 
-#if defined(SSE_BLT_392)  // TODO
-  int blit_bus_cycles=(Blit.Restarted||M68000.ThinkingCycles>=4)?64:63;
+#if defined(SSE_BLT_392) // TODO
+  int blit_bus_cycles=(Blit.Restarted
+#if defined(SSE_CPU_392C)
+    ||M68000.ThinkingCycles>=4
+#endif
+    )?64:63;
 #endif
 
 #if defined(SSE_BLT_390B) 

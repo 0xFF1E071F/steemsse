@@ -250,10 +250,13 @@ void THD6301::Init() { // called in 'main'
     {
       HD6301_OK=false;
       hd6301_destroy(); 
+#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
+      throw romfile.Text;
+#endif
     } 
   }
 
-#if defined(SSE_DEBUG)
+#if defined(SSE_DEBUG) &&!defined(SSE_IKBD_6301_NOT_OPTIONAL)
 
   TRACE_LOG("6301 emu %d RAM %d file %s open %d checksum %d\n",HD6301_OK,(bool)ram,romfile.Text,(bool)fp,checksum);
   if(!Initialised)

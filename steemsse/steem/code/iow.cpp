@@ -271,8 +271,8 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
             ASSERT(acia_num==NUM_ACIA_MIDI);
             MIDIPort.OutputByte(io_src_b);
           }
-        break;
-      }
+          break;
+        }
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed

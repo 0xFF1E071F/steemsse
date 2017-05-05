@@ -951,7 +951,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
   else // default to safe values
   {
-#if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
     OPTION_C1=0;
 #endif
 #if defined(SSE_STF)
@@ -966,8 +966,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SSE_SHIFTER)
     ReadWriteStruct(Shifter); // for res & sync
 #endif
-
-#if defined(SSE_IKBD_6301) // too bad it was forgotten before
+#if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)// too bad it was forgotten before
     WORD HD6301EMU_ON_tmp=OPTION_C1;
     ReadWrite(HD6301EMU_ON_tmp); // but is it better?
     OPTION_C1=HD6301EMU_ON_tmp!=0;

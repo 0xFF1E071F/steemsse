@@ -933,8 +933,11 @@ bool GUIPauseWhenInactive()
   if ((PauseWhenInactive && bAppActive==0) || timer<CutPauseUntilSysEx_Time){
     bool MouseWasCaptured=(stem_mousemode==STEM_MOUSEMODE_WINDOW);
     if (FullScreen==0) SetStemMouseMode(STEM_MOUSEMODE_DISABLED);
+#ifdef SSE_SOUND_16BIT_CENTRED
+    Sound_Stop();
+#else
     Sound_Stop(0);
-
+#endif
 #ifdef WIN32
     SetWindowText(StemWin,Str("Steem - ")+T("Suspended"));
 
