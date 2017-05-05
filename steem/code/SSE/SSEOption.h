@@ -79,7 +79,11 @@ extern struct TOption SSEOption;
 
 // these macros were considered useful at some point
 #define OPTION_HACKS (SSEOption.Hacks)
+#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
+#define OPTION_C1 (true)
+#else
 #define OPTION_C1 (SSEOption.Chipset1)
+#endif
 #define OPTION_C2 (SSEOption.Chipset2)
 #define OPTION_MICROWIRE (SSEOption.Microwire && SSEOption.STModel==STE)
 #define PSG_FILTER_FIX (SSEOption.PSGFilter)

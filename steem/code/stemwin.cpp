@@ -111,7 +111,11 @@ void fast_forward_change(bool Down,bool Searchlight)
       }else{
         fast_forward=1;
       }
+#ifdef SSE_SOUND_16BIT_CENTRED
+      Sound_Stop();
+#else
       Sound_Stop(0);
+#endif
     }
     flashlight(Searchlight);
   }else if (Down==0 && fast_forward){
@@ -165,7 +169,11 @@ void slow_motion_change(bool Down)
       }else{
         slow_motion=1;
       }
+#ifdef SSE_SOUND_16BIT_CENTRED
+      Sound_Stop();
+#else
       Sound_Stop(0);
+#endif
     }
   }else if (Down==0 && slow_motion){
     if (slow_motion==RUNSTATE_STOPPED+1){
@@ -438,8 +446,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             case 201:       //Save SnapShot
             {
               EnableAllWindows(0,Win);
-
+#ifdef SSE_SOUND_16BIT_CENTRED
+              Sound_Stop();
+#else
               Sound_Stop(0);
+#endif
               int old_runstate=runstate;
               if (FullScreen && runstate==RUNSTATE_RUNNING){
                 runstate=RUNSTATE_STOPPED;
@@ -1210,8 +1221,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
           myRect.left-=8;
 #endif
+#if !defined(SSE_IKBD_6301_NOT_OPTIONAL)
         if(OPTION_C1)
           myRect.left-=8;
+#endif
         if(OPTION_C2)
           myRect.left-=8;
         if(OPTION_HACKS)
@@ -1248,12 +1261,14 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
+#if !defined(SSE_IKBD_6301_NOT_OPTIONAL)
           if(OPTION_C1)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_OPS_C1],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
+#endif
           if(OPTION_C2)
           {
             DrawIconEx(myHdc,myx,2,

@@ -311,12 +311,35 @@ int main(int argc,char *argv[])
       e.m_pExp->ExceptionRecord->ExceptionCode,
       e.m_pExp->ExceptionRecord->ExceptionAddress);
     Alert(exc_string,"STEEM CRASHED!",MB_ICONEXCLAMATION); // alert box before trace
+#if defined(SSE_VAR_MAIN_LOOP4)
+    SetClipboardText(exc_string);
+#endif
     TRACE("%s\n",exc_string);
+#if defined(SSE_VAR_MAIN_LOOP4)
+  }catch( char* filename ){
+    char exc_string[180];
+    sprintf(exc_string,"%s not found",filename);
+    Alert(exc_string,"ERROR",MB_ICONEXCLAMATION); // alert box before trace
+    TRACE("%s\n",exc_string);
+    SetClipboardText(exc_string);
+    PerformCleanShutdown();
+    return EXIT_SUCCESS;
+#endif
   }catch(...){
     Alert("Unknown exception","STEEM CRASHED!",MB_ICONEXCLAMATION); // C++, CRT ?
     TRACE("Unknown exception\n");
   }
 #else
+#if defined(SSE_VAR_MAIN_LOOP4) //in bcc
+  }catch(char* filename){
+    char exc_string[180];
+    sprintf(exc_string,"%s not found",filename);
+    Alert(exc_string,"ERROR",MB_ICONEXCLAMATION); // alert box before trace
+    TRACE("%s\n",exc_string);
+    SetClipboardText(exc_string);
+    PerformCleanShutdown();
+    return EXIT_SUCCESS;
+#endif
   }catch(...){
     TRACE("System exception\n"); // not in emu, so 
     Alert("STEEM CRASHED!","STEEM CRASHED!",MB_ICONEXCLAMATION);
@@ -335,7 +358,7 @@ int main(int argc,char *argv[])
   }catch(...){}
 #endif
 
-#if defined(SSE_VID_RECORD_AVI)//shouldn't be here
+#if defined(SSE_VID_RECORD_AVI)  && !defined(SSE_BUGFIX_392)
   if(pAviFile)
     delete pAviFile;
 #endif
@@ -424,18 +447,28 @@ bool Initialise()
     
     // build stem_window_title
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD) && defined(SSE_LE) // it's not something we would release
+    strcpy((char*)stem_window_title,"Steem LE Debug ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+    strcat((char*)stem_window_title,"B");
+#elif defined(DEBUG_BUILD)
     strcpy((char*)stem_window_title,"Steem Debug ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
     strcat((char*)stem_window_title,"B");
+#elif defined(SSE_LE)
+    strcpy((char*)stem_window_title,"Steem Beta LE ");
+    strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem Beta ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #endif
 #else // release
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD)
     //strcpy((char*)stem_window_title,"Steem SSE Boiler ");
     strcpy((char*)stem_window_title,"Steem Boiler ");//like rlz notes//382
+    strcat((char*)stem_window_title,(char*)stem_version_text);
+#elif defined(SSE_LE)
+    strcpy((char*)stem_window_title,"Steem LE ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem SSE ");
@@ -1369,7 +1402,10 @@ void PerformCleanShutdown()
   CleanUpSteem();
   if (CrashFile.NotEmpty()) DeleteFile(CrashFile);
   CrashFile="";
-
+#if defined(SSE_VID_RECORD_AVI) && defined(SSE_BUGFIX_392)
+  if(pAviFile)
+    delete pAviFile;
+#endif
 }
 //---------------------------------------------------------------------------
 void CleanUpSteem()

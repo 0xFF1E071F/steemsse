@@ -390,8 +390,8 @@ void IKBD_VBL()
     }
 
     int report_button_abs=0;
-
     if (mousek!=old_mousek){
+
       bool send_change_for_button=true;
 
       // Handle absolute mouse button flags
@@ -1432,6 +1432,10 @@ void agenda_keyboard_replace(int) {
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1) 
   {
+#if defined(SSE_BUGFIX_392)
+    ASSERT( ACIA_IKBD.LineRxBusy );
+    ACIA_IKBD.LineRxBusy=false;
+#endif
     if (keyboard_buffer_length){ 
       keyboard_buffer_length--;
       ASSERT( keyboard_buffer_length>=0 );
@@ -1439,8 +1443,10 @@ void agenda_keyboard_replace(int) {
       ACIA_IKBD.RDRS=HD6301.tdrs;
 #endif
       ASSERT( keyboard_buffer_length<2 );
+#if !defined(SSE_BUGFIX_392)
       ASSERT( ACIA_IKBD.LineRxBusy );
       ACIA_IKBD.LineRxBusy=false;
+#endif
 #ifdef SSE_ACIA_EVENT
       int cycles=LINECYCLES;
       ASSERT(cycles>=0);
@@ -1768,8 +1774,10 @@ void ikbd_reset(bool Cold)
 #endif
       return;
     }
+#if !defined(SSE_IKBD_6301_NOT_OPTIONAL)
     else
       OPTION_C1=0; // and no return
+#endif
   }
 #endif
 

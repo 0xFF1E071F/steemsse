@@ -332,6 +332,7 @@ void HBLInterrupt() {
   M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
 
+
   // wobble?
 #if defined(SSE_INT_E_CLOCK)
   if(!OPTION_C1) // not if mode "E-Clock"
@@ -407,7 +408,6 @@ void VBLInterrupt() {
 #endif
 
   // wobble?
-
 #if defined(SSE_INT_E_CLOCK)
   if(!OPTION_C1) // no jitter no wobble if "E-clock"
 #endif

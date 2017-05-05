@@ -1922,8 +1922,10 @@ HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
       }
 
       if ((Ret=DDCreateSurfaces())!=DD_OK) Init();
+#ifdef SSE_DEBUG
       if (Ret!=DD_OK)
         TRACE_LOG("DD error %d\n",Ret);
+#endif
       return Ret;
 
   }

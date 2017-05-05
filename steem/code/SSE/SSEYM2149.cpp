@@ -257,7 +257,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     BYTE index[3],interpolate[4];
     *(int*)interpolate=0;
     int vol=0;
-
+    //TRACE_OSD("%d %d %d",TONE_PERIOD(0),TONE_PERIOD(1),TONE_PERIOD(2));
     for(int abc=0;abc<3;abc++)
     {
       // Tone
