@@ -4,7 +4,7 @@ echo Build script for Steem LE - BCC build with boiler (unreleased)
 
 call build_bcc_set.bat
 
-set PROGRAMNAME=BoilerBeta BCC.exe
+set PROGRAMNAME=BoilerBeta BCC LE.exe
 
 del "%OUT%\6301.obj"
 del "%OUT%\AviFile.obj"

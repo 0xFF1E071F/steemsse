@@ -36,7 +36,11 @@ int dma_sector_count;
 int dma_bytes_written_for_sector_count=0;
 #endif
 
+#if defined(SSE_FLOPPY_ALWAYS_ADAT)
+EXT const bool floppy_instant_sector_access INIT(false);
+#else
 EXT bool floppy_instant_sector_access INIT(true);
+#endif
 
 EXT bool floppy_access_ff INIT(0);
 #if !defined(SSE_OSD_DRIVE_LED3)
@@ -1627,7 +1631,7 @@ instant_sector_access_loop:
     Necrosys STE, Oh No More Froggies
     MPS Golf still OK (MUST slow down)
 */
-    ASSERT(Part!=64); // 32 -> 65
+    ASSERT(Part!=64||SF314[DRIVE].ImageType.Extension==EXT_STT); // 32 -> 65
     WORD bytes= (Part==65)? 19 : 16;
     WORD start=HIWORD(Data);
     if(Part<65)
@@ -2247,7 +2251,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
 //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
 
-#if defined(SSE_DMA_OBJECT)// osd, fdcdebug
+#if defined(SSE_DMA_OBJECT) && !defined(SSE_BUGFIX_392)// osd, fdcdebug //WTF?
   Dma.UpdateRegs(); // for pasti, registers AFTER operation
 #endif
   pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles; //SS smart...
@@ -2270,7 +2274,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
       disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
 
-#if defined(SSE_DRIVE_SOUND)
+#if defined(SSE_DRIVE_SOUND) && !defined(SSE_BUGFIX_392)
       if(SSEOption.DriveSound)
         SF314[DRIVE].Sound_CheckIrq();
 #endif
@@ -2321,7 +2325,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
       }
     }
   }
-
+    
 #if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
     Dma.UpdateRegs(true);
@@ -2335,6 +2339,14 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     DEBUG_ONLY( if (debug_in_trace) SET_WHY_STOP("Pasti breakpoint"); )
   }
   ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+
+
+#if defined(SSE_DRIVE_SOUND) && defined(SSE_BUGFIX_392)
+  Dma.UpdateRegs();
+  if(SSEOption.DriveSound && pPIOI->intrqState&&!old_irq)
+    SF314[DRIVE].Sound_CheckIrq();
+#endif
+
 }
 
 #if defined(SSE_VS2008_WARNING_390) && defined(SSE_OSD_DRIVE_LED3)

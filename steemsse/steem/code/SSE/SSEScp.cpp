@@ -262,18 +262,11 @@ void TImageSCP::IncPosition() {
 
 
 void TImageSCP::Init() {
-#if defined(SSE_DISK_MFM0) 
-  TimeFromIndexPulse=NULL;
-  N_SIDES=2;
-  N_TRACKS=83; //max
-  nBytes=DISK_BYTES_PER_TRACK; //not really pertinent (TODO?)
-#else
   fCurrentImage=NULL;
   TimeFromIndexPulse=NULL;
   N_SIDES=2;
   N_TRACKS=83; //max
   nBytes=DISK_BYTES_PER_TRACK; //not really pertinent (TODO?)
-#endif
 }
 
 

@@ -1825,6 +1825,9 @@ void prepare_cpu_boosted_event_plans()
 #if USE_PASTI
 void event_pasti_update()
 {
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+  if(!(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))) {
+#else
   if (hPasti==NULL || pasti_active==false
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     ||OPTION_PASTI_JUST_STX && SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
@@ -1833,6 +1836,7 @@ void event_pasti_update()
 #endif
 #endif
     ){
+#endif
 #if defined(SSE_CPU_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;
 #else

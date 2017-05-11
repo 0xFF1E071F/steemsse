@@ -426,6 +426,9 @@ bool Initialise()
     ImageSCP[id].Id=id;
 #endif
     Disk[id].Id=id;
+ #if defined(SSE_DISK_392)
+    FloppyDrive[id].Id=id;
+#endif
   }
 #endif
 

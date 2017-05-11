@@ -153,14 +153,6 @@ WORD TImageSTW::GetMfmData(WORD position) {
 #endif
 
 void TImageSTW::Init() {
-#if defined(SSE_DISK_MFM0) 
-  Version=0x0100; // 1.0
-  ImageData=NULL;
-  TrackData=NULL;
-  N_SIDES=2;
-  N_TRACKS=84;
-  TRACKBYTES=DISK_BYTES_PER_TRACK;
-#else
   Version=0x0100; // 1.0
   fCurrentImage=NULL;
   ImageData=NULL;
@@ -168,7 +160,6 @@ void TImageSTW::Init() {
   N_SIDES=2;
   N_TRACKS=84;
   TRACKBYTES=DISK_BYTES_PER_TRACK;
-#endif
 }
 
 #if defined(SSE_DISK_MFM0) 

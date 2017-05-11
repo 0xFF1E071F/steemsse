@@ -246,13 +246,17 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     SF314[0].Sound_ChangeVolume();
     SF314[1].Sound_ChangeVolume();
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL)
     OPTION_PRG_SUPPORT=pCSF->GetInt("Disks","PRG_support",OPTION_PRG_SUPPORT);
 #endif
 
     SetNumFloppies(pCSF->GetInt("Disks","NumFloppyDrives",num_connected_floppies));
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
     floppy_instant_sector_access=pCSF->GetInt("Disks","QuickDiskAccess",floppy_instant_sector_access);
+#endif
     FloppyArchiveIsReadWrite=bool(pCSF->GetInt("Disks","FloppyArchiveIsReadWrite",FloppyArchiveIsReadWrite));
+
+#if !defined(SSE_DISK_392B)
     if (BootDisk[0].Empty() || FirstLoad==0){
 #if  defined(SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES)
       if( (pCSF->GetStr("Disks","Disk_A_Name","")).NotEmpty() )
@@ -270,6 +274,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
 #if defined(SSE_DRIVE) && !defined(SSE_VAR_OPT_391) // setdisk updates
     SF314[0].UpdateAdat();
     SF314[1].UpdateAdat();
+#endif
 #endif
   }
 
@@ -347,7 +352,34 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
 
 #if defined(SSE_GUI_DM_INSERT_DISK_B_LS)
   AutoInsert2=pCSF->GetInt("Disks","AutoInsert2",AutoInsert2);
+  ASSERT(!(AutoInsert2&2)); // option is saved after RemoveDisk()
 #endif
+
+
+#if defined(SSE_DISK_392B)
+/*  We insert disks after we have options so that auto remove disk 2 works
+*/
+
+  if (BootDisk[0].Empty() || FirstLoad==0){
+#if  defined(SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES)
+    if( (pCSF->GetStr("Disks","Disk_A_Name","")).NotEmpty() )
+#endif
+      InsertDisk(0,pCSF->GetStr("Disks","Disk_A_Name",""),pCSF->GetStr("Disks","Disk_A_Path",""),
+      0,0,pCSF->GetStr("Disks","Disk_A_DiskInZip",""),true,true);
+  }
+  if (BootDisk[1].Empty() || FirstLoad==0){
+#if  defined(SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES)
+    if( (pCSF->GetStr("Disks","Disk_B_Name","")).NotEmpty()
+#if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
+      && !(AutoInsert2&2)
+#endif      
+      )
+#endif
+      InsertDisk(1,pCSF->GetStr("Disks","Disk_B_Name",""),pCSF->GetStr("Disks","Disk_B_Path",""),
+      0,0,pCSF->GetStr("Disks","Disk_B_DiskInZip",""),true);
+  }
+#endif
+
 
   HardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
 #if defined(SSE_ACSI_HDMAN)

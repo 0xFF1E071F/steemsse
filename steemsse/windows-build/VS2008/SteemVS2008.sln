@@ -73,8 +73,8 @@ Global
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt_DrawC|Win32.Build.0 = Release_Opt_DrawC|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt_DrawC|x64.ActiveCfg = Release_Opt_DrawC|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt_DrawC|x64.Build.0 = Release_Opt_DrawC|x64
-		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.ActiveCfg = Release-LE|Win32
-		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.Build.0 = Release-LE|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.ActiveCfg = Release_Opt|Win32
+		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|Win32.Build.0 = Release_Opt|Win32
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|x64.ActiveCfg = Release_Opt|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release_Opt|x64.Build.0 = Release_Opt|x64
 		{9975320C-A18B-4425-B093-B11C1F35E3A4}.Release|Win32.ActiveCfg = Release|Win32

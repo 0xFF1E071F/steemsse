@@ -1213,7 +1213,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         SIZE Size;
         GetTextExtentPoint32(myHdc,ansi_string,nchars,&Size);
         myRect.left=myRect.right/2-Size.cx/2;
-#ifdef SSE_FLOPPY
+#if defined(SSE_FLOPPY) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
         if(ADAT)
           myRect.left-=8;
 #endif
@@ -1247,7 +1247,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           DeleteObject(SelectObject(TempDC,OldBmp));
           DeleteDC(TempDC);
           int myx=myRect.left+Size.cx+3;
-#ifdef SSE_FLOPPY
+#if defined(SSE_FLOPPY) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
           if(ADAT)
           {
             DrawIconEx(myHdc,myx,0,
@@ -1278,13 +1278,13 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               hGUIIcon[RC_ICO_OPS_C2],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
+#endif
           if(OPTION_HACKS)
           {
             DrawIconEx(myHdc,myx,2,
               hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-#endif
         }
         return TRUE;
 #undef myHdc
@@ -1753,7 +1753,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 
 #ifndef NO_CRAZY_MONITOR
   if (extended_monitor){
+#ifdef BCC_BUILD
+    rc.right=max((int)em_width,640);rc.bottom=max((int)em_height,480);hz=0;
+#else
     rc.right=max(em_width,640);rc.bottom=max(em_height,480);hz=0;
+#endif
   }
 #endif
 //#if !defined(SSE_VID_D3D_ONLY)

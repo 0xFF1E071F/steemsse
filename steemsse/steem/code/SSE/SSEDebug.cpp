@@ -68,7 +68,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
   logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
-  logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
+  logsection_enabled[ LOGSECTION_STEMDOS ] = 1;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
@@ -83,13 +83,13 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_CPU ] = 0;
   logsection_enabled[ LOGSECTION_INIFILE ] = 0;
   logsection_enabled[ LOGSECTION_GUI ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 1;
+  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 0;
   // no PASTI, no DIV
 // additions
 #if !defined(SSE_BOILER_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
 #endif
 #endif
 
@@ -475,8 +475,10 @@ void TDebug::TraceGeneralInfos(int when) {
     if(OPTION_C1)
       TRACE("; C1");
 #endif
+#if !defined(SSE_C2_NOT_OPTIONAL)
     if(OPTION_C2)
       TRACE("; C2");
+#endif
 #if defined(SSE_CPU_MFP_RATIO) 
     if(n_cpu_cycles_per_second>CpuNormalHz)
       //TRACE("; Speed %d",n_cpu_cycles_per_second);
@@ -518,7 +520,7 @@ void TDebug::TraceGeneralInfos(int when) {
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
       //TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
       TRACE("; B: %s",FloppyDrive[1].DiskName.c_str()); 
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE_OBJECT) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
     if(ADAT)
       TRACE("; ADAT");
 #endif

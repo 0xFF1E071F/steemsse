@@ -223,24 +223,24 @@ SSE:	SSE.obj SSEOption.obj SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj \
 
 #3rdparty:	unrarlib div68kCycleAccurate dsp 6301
 
-3rdparty:	div68kCycleAccurate dsp 6301 AviFile ArchiveAccessSSE
+3rdparty:	div68kCycleAccurate dsp 6301 AviFile.obj ArchiveAccessSSE
 
 
 ArchiveAccessSSE:
 #        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
-           $(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
+           $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
 
 #unrarlib:
 #	$(CPP) $(CPPFLAGS) -DWIN32 -c -o$(OUT)\unrarlib.obj $(3RDPARTYROOT)\unrarlib\unrarlib\unrarlib.c $(CFLAGS) 
 div68kCycleAccurate:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\div68kCycleAccurate.obj $(3RDPARTYROOT)\pasti\div68kCycleAccurate.c $(CFLAGS) 
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\div68kCycleAccurate.obj $(3RDPARTYROOT)\pasti\div68kCycleAccurate.c $(CFLAGS) 
 dsp:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\dsp.obj $(3RDPARTYROOT)\dsp\dsp.cpp
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\dsp.obj $(3RDPARTYROOT)\dsp\dsp.cpp
 6301:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\6301.obj $(3RDPARTYROOT)\6301\6301.c $(CFLAGS) 
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\6301.obj $(3RDPARTYROOT)\6301\6301.c $(CFLAGS) 
 #CapsPlug:
-#        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
+#        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
 
-AviFile:
-        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
+AviFile.obj:
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -c -o$(OUT)\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
 

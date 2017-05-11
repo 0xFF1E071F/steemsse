@@ -2786,9 +2786,6 @@
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="1"
 				PrecompiledHeaderFile=".\Release/SteemVS2008.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -2811,7 +2808,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/LTCG"
 				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9.lib"
-				OutputFile="Release\SteemBeta.exe"
+				OutputFile="Release-LE\SteemBeta.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)directx&quot;"
@@ -2847,7 +2844,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;Release\SteemBeta.exe&quot; &quot;D:\emu\ST\bin\steem\SteemLE.exe&quot;"
+				CommandLine="copy &quot;Release-LE\SteemBeta.exe&quot; &quot;D:\emu\ST\bin\steem\SteemLE.exe&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2994,7 +2991,7 @@
 				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
-				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG;SSE_LE"
+				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_LE;SSE_DEBUG"
 				StringPooling="true"
 				ExceptionHandling="2"
 				SmallerTypeCheck="false"
@@ -3004,9 +3001,6 @@
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
 				PrecompiledHeaderFile=".\Debug/SteemVS2008.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -3029,7 +3023,6 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="dinput8.lib dxguid.lib winmm.lib ComCtl32.Lib odbc32.lib odbccp32.lib d3d9.lib d3dx9d.lib"
 				ShowProgress="0"
-				OutputFile="Debug\Steem.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)directx&quot;"

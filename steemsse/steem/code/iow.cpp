@@ -1289,7 +1289,11 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
     return 1;
   }
 */
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+          if(hPasti) 
+#else
           if (hPasti && pasti_active) 
+#endif
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif//pasti
 #if defined(SSE_DEBUG) && defined(SSE_FDC_ACCURATE)

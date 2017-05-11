@@ -36,7 +36,11 @@ EXT void fdc_add_to_crc(WORD &,BYTE);
 EXT MEM_ADDRESS dma_address;
 #endif
 
+#if defined(SSE_FLOPPY_ALWAYS_ADAT)
+EXT const bool floppy_instant_sector_access;
+#else
 EXT bool floppy_instant_sector_access INIT(true);
+#endif
 
 EXT bool floppy_access_ff INIT(0);
 #if !defined(SSE_OSD_DRIVE_LED3)
