@@ -129,7 +129,11 @@ extern struct TOption SSEOption;
 #define OPTION_BLOCK_RESIZE (SSEOption.BlockResize)
 #define OPTION_LOCK_ASPECT_RATIO (SSEOption.LockAspectRatio)
 #define OPTION_CPU_CLOCK (SSEOption.FinetuneCPUclock)
+#if defined(SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL)
+#define OPTION_PRG_SUPPORT (true)
+#else
 #define OPTION_PRG_SUPPORT (SSEOption.PRG_support)
+#endif
 #define OPTION_D3D_CRISP (SSEOption.Direct3DCrisp)
 #define OPTION_KEYBOARD_CLICK (SSEOption.KeyboardClick)
 #define OPTION_FULLSCREEN_GUI (SSEOption.FullScreenGui)

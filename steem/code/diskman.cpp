@@ -33,7 +33,16 @@ bool ExtensionIsPastiDisk(char *Ext)
 #if USE_PASTI
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
-#if defined(SSE_DISK_PASTI_ONLY_STX)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+/*  We change again the way pasti.dll works in Steem.
+    If the option isn't checked (pasti_active is false), Pasti will run
+    STX images only, without changing pasti_active.
+    If the option is checked, Pasti will get all DMA/FDC writes.
+    There's a warning if the current image can't be run by Pasti.
+*/
+  if(!pasti_active)
+    return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
+#elif defined(SSE_DISK_PASTI_ONLY_STX)
   if(OPTION_PASTI_JUST_STX)
     return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
 #endif
@@ -1521,12 +1530,20 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #if !defined(SSE_GUI_DM_NO_DISABLE_B_MENU) // click on icon
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(num_connected_floppies==1 ? MF_CHECKED:0),2012,T("Disconnect Drive B"));
 #endif
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(floppy_instant_sector_access==0 ? MF_CHECKED:0),2013,T("Accurate Disk Access Times (Slow)"));
+#endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(FloppyArchiveIsReadWrite ? MF_CHECKED:0),2014,T("Read/Write Archives (Changes Lost On Eject)"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
-#if defined(SSE_GUI_DM_REGROUP_PASTI)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
+                | int(pasti_active ? MF_CHECKED:0),2023,
+                T("Use Pasti for all floppies and ACSI"));
+              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,
+                T("Pasti Configuration"));
+#elif defined(SSE_GUI_DM_REGROUP_PASTI)
               HMENU PastiPop=CreatePopupMenu();
               InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING 
                 | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
@@ -1557,7 +1574,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #endif
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
-#if USE_PASTI 
+#if defined(SSE_VAR_392) // more generic
+            InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
+              (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for protected disks"));
+#elif USE_PASTI 
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP-STX"));
 #else //64bit build
@@ -1566,7 +1586,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) 
+#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
@@ -2096,6 +2116,7 @@ That will toggle bit x.
           SendDlgItemMessage(Win,99,WM_LBUTTONDOWN,0,0);
           break;
 #endif
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
         case 2013: // SS menu ADAT
           floppy_instant_sector_access=!floppy_instant_sector_access;
           InvalidateRect(GetDlgItem(Win,98),NULL,0);
@@ -2106,6 +2127,7 @@ That will toggle bit x.
           SF314[1].UpdateAdat();
 #endif
           break;
+#endif
         case 2014:
           FloppyArchiveIsReadWrite=!FloppyArchiveIsReadWrite;
           This->LoadIcons();
@@ -2174,7 +2196,6 @@ That will toggle bit x.
             }
 #endif
           }//if (LOWORD(wPar)==2023
-
           break;
 
 #if defined(SSE_GUI_DM_PASTI_ONLY_STX)
@@ -2207,7 +2228,7 @@ That will toggle bit x.
           TRACE_LOG("Option Ghost disk %d\n",OPTION_GHOST_DISK);
           break;
 #endif
-#if defined(SSE_TOS_PRG_AUTORUN) 
+#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL)
         case 2028:
           OPTION_PRG_SUPPORT=!OPTION_PRG_SUPPORT;
           TRACE_LOG("Option PRG support %d\n",OPTION_GHOST_DISK);
@@ -3096,9 +3117,11 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       }else{
         DrawIconEx(ps.hdc,0,0,hGUIIcon[RC_ICO_DRIVEA+disk],64,64,0,br,DI_NORMAL);
       }
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
       if (floppy_instant_sector_access==0){ // SS draw snails!
         DrawIconEx(ps.hdc,24,48,hGUIIcon[RC_ICO_ACCURATEFDC],16,16,0,NULL,DI_NORMAL);
       }
+#endif
       DeleteObject(br);
 
       EndPaint(Win,&ps);
@@ -3576,6 +3599,9 @@ bool TDiskManager::InsertDisk(int Drive,EasyStr Name,EasyStr Path,bool DontChang
 
     InsertHistoryAdd(Drive,Name,Path,DiskInZip);
 #if defined(SSE_GUI_DM_INSERT_DISK_B_REMOVE)
+#if defined(SSE_DISK_392B)
+    if(AllowInsert2 && !Drive)
+#endif
     AutoInsert2&=~2; //TODO def
 #endif
     if (AllowInsert2 && Drive==0 && AutoInsert2){

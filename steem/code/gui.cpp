@@ -766,7 +766,7 @@ void GUIRefreshStatusBar() {
 */
     if(OPTION_STATUS_BAR_GAME_NAME 
       && (FloppyDrive[floppy_current_drive()].NotEmpty() 
-#if defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_TOS_PRG_AUTORUN_392)
       || SF314[0].ImageType.Extension==EXT_PRG 
       || SF314[0].ImageType.Extension==EXT_TOS
 #endif
@@ -1716,7 +1716,9 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SOUNDCLICK: sound_click_at_start=true; break;
       case ARG_DOUBLECHECKSHORTCUTS: WIN_ONLY( DiskMan.DoExtraShortcutCheck=true; ) break;
       case ARG_DONTLIMITSPEED: disable_speed_limiting=true; break;
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
       case ARG_ACCURATEFDC: floppy_instant_sector_access=0; break;
+#endif
       case ARG_NOPCJOYSTICKS: DisablePCJoysticks=true; break;
       case ARG_OLDPORTIO: WIN_ONLY( TPortIO::AlwaysUseNTMethod=0; ) break;
 #if !defined(SSE_CPU)

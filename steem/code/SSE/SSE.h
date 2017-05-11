@@ -1739,8 +1739,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_MAIN_LOOP4
 #define SSE_IKBD_6301_NOT_OPTIONAL 
 #define SSE_C2_NOT_OPTIONAL
-#undef SSE_CPU_MFP_RATIO_OPTION // user can fine tune CPU clock
-#undef SSE_CPU_MFP_RATIO_OPTION2 // L/S
+#undef SSE_CPU_MFP_RATIO_OPTION
+#undef SSE_CPU_MFP_RATIO_OPTION2
+#define SSE_FLOPPY_ALWAYS_ADAT
+// pasti corrections are for SSE too
 #endif
 
 
@@ -1766,8 +1768,18 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392D // bus access always 4 cycles
 #endif
 
+#define SSE_DISK_392 // refactoring
+#define SSE_DISK_392B // load disk options before disks...
 #define SSE_DISK_MFM0
-//#define SSE_DISK_MFM0A //temp
+#ifdef SSE_DISK_PASTI
+#undef SSE_GUI_DM_REGROUP_PASTI
+#undef SSE_GUI_DM_PASTI_ONLY_STX
+#undef SSE_DISK_PASTI_ONLY_STX
+#undef SSE_DISK_PASTI_ONLY_STX_HD
+#undef SSE_DISK_PASTI_AUTO_SWITCH2
+#define SSE_DISK_PASTI_AUTO_SWITCH4 
+#define SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL
+#endif
 
 #ifdef SSE_GLUE
 //#define SSE_GLUE_392A //correct start & end cycles //wrong?
@@ -1858,6 +1870,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_SNAPSHOTS_INCOMPATIBLE
 #endif
 
+#define SSE_VAR_392
 #define SSE_VAR_OPT_392
 #define SSE_VAR_REFACTOR_392
 #define SSE_VAR_RESIZE_392
@@ -1908,7 +1921,9 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_SOUND_DMA_390E//switch disappeared...
 #define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
+#if defined(SSE_YM2149_DRIVE)
 #define SSE_YM2149_DRIVE_392
+#endif
 #define SSE_TOS_PRG_AUTORUN_392
 #define SSE_CPU_HISPEED_392
 #undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...

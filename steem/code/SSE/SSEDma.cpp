@@ -422,6 +422,9 @@ Not emulated
 /*  Pasti handles all Dma reads - this cancels the first value
     of ior_byte, but allows to go through TRACE and update our variables..
 */
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+  if(hPasti && (pasti_active || SF314[drive].ImageType.Extension==EXT_STX))
+#else
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     && (!OPTION_PASTI_JUST_STX || 
@@ -435,6 +438,7 @@ Not emulated
      &&! (WD1772.Lines.CommandWasIntercepted)
 #endif
     )
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
   {
     if(addr<0xff8608 && (addr & 1))
     {
@@ -724,7 +728,11 @@ In case you are wondering, the video counter uses the same ripple mechanism. But
 is no such effect because they are read only on the ST.
 (ijor)
 */
-    if(ST_TYPE!=STE && (BaseAddress&0x008000) && !(io_src_b&0x80)) // 1 to 0
+    if(ST_TYPE!=STE && (BaseAddress&0x008000) && !(io_src_b&0x80)
+#ifdef SSE_BUGFIX_392 // by precaution
+      && !pasti_active && SF314[DRIVE].ImageType.Extension!=EXT_STX
+#endif      
+      ) // 1 to 0
     {
       BYTE new_byte=(BYTE)(dma_address>>16)+1;
       IOWrite(addr-2,new_byte); // maybe it works...
@@ -738,7 +746,11 @@ is no such effect because they are read only on the ST.
 //    TRACE_LOG("BaseAddress L");
     ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
 #if defined(SSE_DMA_RIPPLE_CARRY)
-    if(ST_TYPE!=STE && (BaseAddress&0x000080) && !(io_src_b&0x80)) // 1 to 0
+    if(ST_TYPE!=STE && (BaseAddress&0x000080) && !(io_src_b&0x80)
+#ifdef SSE_BUGFIX_392
+      && !pasti_active && SF314[DRIVE].ImageType.Extension!=EXT_STX
+#endif
+      ) // 1 to 0
     {
       BYTE new_byte=(BYTE)(dma_address>>8)+1;
       IOWrite(addr-2,new_byte);
@@ -763,14 +775,21 @@ is no such effect because they are read only on the ST.
 /*  Pasti handles all DMA writes, still we want to update our variables
     and go through TRACE.
 */
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+  if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))
+#else
   if(hPasti && pasti_active
     
 #if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
     && (!OPTION_PASTI_JUST_STX 
     || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
-    ||addr!=0xff8605 || (MCR&CR_HDC_OR_FDC))
+#if !defined(SSE_BUGFIX_392)
+    ||addr!=0xff8605 
+#endif
+    || (MCR&CR_HDC_OR_FDC))
 #endif        
     )
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
   {
 
     WORD data=io_src_b;
@@ -830,6 +849,10 @@ void TDma::UpdateRegs(bool trace_them) {
 */
 
 #if USE_PASTI
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+  if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX)
+    &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted))
+#else
   if(hPasti && pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX) //all or nothing?
     && (!OPTION_PASTI_JUST_STX || 
@@ -844,6 +867,7 @@ void TDma::UpdateRegs(bool trace_them) {
     &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
 #endif
     )
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4
   {
     pastiPEEKINFO ppi;
     pasti->Peek(&ppi);
@@ -1061,6 +1085,9 @@ void TDma::TransferBytes() {
       [(MCR&CR_WRITE)?15-i:i]);//bugfix 3.6.1 reverse order
 #endif
 #if USE_PASTI    
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+  if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))
+#else
     if(hPasti&&pasti_active
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     &&(!OPTION_PASTI_JUST_STX || 
@@ -1068,8 +1095,9 @@ void TDma::TransferBytes() {
 #if defined(SSE_DISK_PASTI_ONLY_STX_HD)
     || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
 #endif
-#endif        
+#endif     
       )  
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
       dma_address++;
     else
 #endif

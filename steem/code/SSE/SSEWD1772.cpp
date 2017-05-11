@@ -430,6 +430,10 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)
       WriteCR(io_src_b); // for STW, SCP, HFE
 #endif
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+    else if(SF314[drive].ImageType.Manager==MNGR_PRG) 
+      mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); //hack to avoid long timeout
+#endif
     // CAPS handled lower
     break;
   }

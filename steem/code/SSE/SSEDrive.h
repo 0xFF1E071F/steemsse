@@ -10,19 +10,17 @@
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
 #if defined(SSE_DISK_MFM0) 
-/*  Base class for TImageHFE +...
+/*  Base class for TImageHFE, TImageSCP, TImageSTW
 */
 
 struct  TImageMfm {
   // interface
+  virtual void Close()=0;
   virtual WORD GetMfmData(WORD position)=0; 
   virtual bool LoadTrack(BYTE side,BYTE track,bool reload=false)=0;
   virtual void SetMfmData(WORD position,WORD mfm_data)=0;
   void ComputePosition(WORD position);
   void IncPosition();
-  // other functions
-  TImageMfm();
-  void Init();
   // variables
   FILE *fCurrentImage;
   DWORD Position;

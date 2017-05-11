@@ -53,7 +53,11 @@ Here we declare all objects related to floppy drives.
 #if defined(SSE_FLOPPY)
 
 #if defined(SSE_DRIVE)
+#if defined(SSE_FLOPPY_ALWAYS_ADAT)
+#define ADAT (true)
+#else
 #define ADAT (SF314[floppy_current_drive()].State.adat)
+#endif
 #else
 #define ADAT (!floppy_instant_sector_access)
 #endif
@@ -90,9 +94,6 @@ extern TImageHFE ImageHFE[2];
 #if defined(SSE_DMA_OBJECT)
 extern TDma Dma;
 #endif
-#if defined(SSE_YM2149_OBJECT)
-extern TYM2149 YM2149;
-#endif
 #if defined(SSE_WD1772)
 extern TWD1772 WD1772;
 #endif
@@ -125,5 +126,10 @@ extern TDma Dma;
 #endif
 
 #endif//floppy
+
+#if defined(SSE_YM2149_OBJECT)
+extern TYM2149 YM2149;
+#endif
+
 
 #endif//SSEFLOPPY_H

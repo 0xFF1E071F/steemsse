@@ -331,10 +331,6 @@ void TSF314::Read() {
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.reading;
-#if defined(SSE_DISK_MFM0A)
-  if(IMAGE_STW)
-    new_position=true; //temp
-#endif
 #endif
 
   if(!State.reading || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
@@ -434,10 +430,6 @@ void TSF314::Write() {
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
   bool new_position=!State.writing;
-#if defined(SSE_DISK_MFM0A)
-  if(IMAGE_STW)
-    new_position=true; //temp
-#endif
 #endif
 
   if(!State.writing || Disk[Id].current_byte>=Disk[Id].TrackBytes-1)
@@ -592,6 +584,9 @@ void TSF314::Sound_CheckMotor() {
 #if defined(SSE_DRIVE_SOUND_EMPTY) // but clicks still on
     && !FloppyDrive[floppy_current_drive()].Empty()
 #endif
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+    && ImageType.Manager!=MNGR_PRG
+#endif
     && floppy_current_drive()==YM2149.Drive() //3.6.4,must be selected
     );
   if(SSEOption.DriveSound && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
@@ -670,7 +665,13 @@ void TSF314::Sound_ReleaseBuffers() {
 
 
 void TSF314::Sound_Step() {
-  if(!Sound_Buffer[STEP])
+  if(!Sound_Buffer[STEP]
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+    || ImageType.Manager==MNGR_PRG
+#elif defined(SSE_TOS_PRG_AUTORUN_392) //normally only for drive A:
+    || ImageType.Extension==EXT_PRG || ImageType.Extension==EXT_TOS
+#endif      
+  )
     return;
   Sound_Buffer[STEP]->SetCurrentPosition(0);
   Sound_Buffer[STEP]->Play(0,0,0);
@@ -692,11 +693,6 @@ void TSF314::Sound_StopBuffers() {
 
 #if defined(SSE_DISK_MFM0) 
 
-TImageMfm::TImageMfm() {
-  Init();
-}
-
-
 void  TImageMfm::ComputePosition(WORD position) {
   // when we start reading/writing, where on the disk?
   ASSERT(Disk[Id].TrackBytes); // good old div /0 crashes the PC like it did the ST
@@ -706,7 +702,6 @@ void  TImageMfm::ComputePosition(WORD position) {
 }
 
 
-
 void TImageMfm::IncPosition(){
   ASSERT(Disk[Id].TrackBytes);
   Position=(Position+1)%Disk[Id].TrackBytes;
@@ -714,11 +709,6 @@ void TImageMfm::IncPosition(){
   if(!Position)
     SF314[Id].IndexPulse(true);
 #endif
-}
-
-
-void TImageMfm::Init() {
-  fCurrentImage=NULL;
 }
 
 #endif

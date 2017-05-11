@@ -144,16 +144,10 @@ void TImageHFE::IncPosition(){
 #endif
 
 void TImageHFE::Init() {
-#if defined(SSE_DISK_MFM0) 
-  ImageData=NULL;
-  TrackData=NULL;
-  IMAGE_SIZE=0;
-#else
   fCurrentImage=NULL;
   ImageData=NULL;
   TrackData=NULL;
   IMAGE_SIZE=0;
-#endif
 }
 
 #if defined(SSE_DISK_MFM0) 

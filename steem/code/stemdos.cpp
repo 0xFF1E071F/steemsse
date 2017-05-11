@@ -132,10 +132,15 @@ int stemdos_get_boot_drive()
   // the control key is being held down
   bool NoControl=true;
   if (CutDisableKey[VK_CONTROL]==0) NoControl=(GetKeyState(VK_CONTROL)<0)==0;
- // ASSERT(!FloppyDrive[0].DiskInDrive());
-  if (FloppyDrive[0].DiskInDrive() && NoControl) return 0;
 
-#if defined(SSE_TOS_PRG_AUTORUN)
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+  if(SF314[0].ImageType.Manager!=MNGR_PRG
+    && FloppyDrive[0].DiskInDrive() && stemdos_boot_drive==AUTORUN_HD)
+    return 0;
+  else if(SF314[0].ImageType.Manager==MNGR_PRG && OPTION_PRG_SUPPORT)
+    return AUTORUN_HD;
+  if (FloppyDrive[0].DiskInDrive() && NoControl) return 0;
+#elif defined(SSE_TOS_PRG_AUTORUN)
   if(SF314[0].ImageType.Extension!=EXT_PRG 
     && SF314[0].ImageType.Extension!=EXT_TOS 
     && FloppyDrive[0].DiskInDrive() && stemdos_boot_drive==AUTORUN_HD)
@@ -144,7 +149,7 @@ int stemdos_get_boot_drive()
     ||SF314[0].ImageType.Extension==EXT_TOS)&& OPTION_PRG_SUPPORT)
     return AUTORUN_HD;
 #endif
-#ifdef SSE_DEBUG
+#if defined(SSE_DEBUG) && defined(SSE_FLOPPY)
   int rv=int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
   ASSERT(!(rv&&HardDiskMan.DisableHardDrives));
   return rv;
@@ -1450,7 +1455,11 @@ void stemdos_intercept_trap_1()
       return;
     }case 0x0E:{  //long SetDrv(short Drive) //For Drive 0=A, 1=B, 2=C
       dbg_log(Str("STEMDOS: Set current drive to ")+char('A'+m68k_dpeek(sp+2))+":");
-#if defined(SSE_TOS_PRG_AUTORUN2)
+#if defined(SSE_TOS_PRG_AUTORUN_392)
+      if(OPTION_PRG_SUPPORT && SF314[DRIVE].ImageType.Manager==MNGR_PRG) 
+        ;
+      else
+#elif defined(SSE_TOS_PRG_AUTORUN2)
       if(OPTION_PRG_SUPPORT && (SF314[DRIVE].ImageType.Extension==EXT_PRG
       || SF314[DRIVE].ImageType.Extension==EXT_TOS)) 
         ;
@@ -1947,7 +1956,9 @@ void stemdos_trap_1_Mfree(MEM_ADDRESS ad){
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("TRP",1);
 #endif
-
+#if defined(SSE_CPU_392B)
+  M68000.ProcessingState=TM68000::EXCEPTION;
+#endif
   m68k_interrupt(os_gemdos_vector);//ss not trap
 }
 /*

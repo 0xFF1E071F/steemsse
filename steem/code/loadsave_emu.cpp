@@ -810,14 +810,24 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if USE_PASTI==0
     int pasti_active=0;
 #endif
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
+    bool dummy=0;
+    ReadWrite(dummy);
+#else
     ReadWrite(pasti_active);
+#endif
 #if USE_PASTI
     if (hPasti==0) pasti_active=0;
 #endif
     if (LoadOrSave==LS_SAVE){
       //ask Pasti for variable block, save length as a long, followed by block
 #if USE_PASTI
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B) // and not pasti_active?
+      if (hPasti && (SF314[0].ImageType.Manager==MNGR_PASTI
+        || SF314[1].ImageType.Manager==MNGR_PASTI)) {
+#else
       if (hPasti && pasti_active){
+#endif
         DWORD l=0;
         pastiSTATEINFO psi;
         psi.bufSize=0;
@@ -1086,7 +1096,9 @@ Steem SSE will reset auto.sts and quit\nSorry!",
         SF314[drive].Id=drive;
       }
       SF314[drive].ImageType=image_type;
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
       SF314[drive].UpdateAdat();
+#endif
     }
 #endif
 
