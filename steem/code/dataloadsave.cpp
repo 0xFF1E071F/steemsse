@@ -240,7 +240,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     OPTION_DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",OPTION_DRIVE_SOUND_SEEK_SAMPLE);
 #endif
 #if defined(SSE_DRIVE_SOUND)
-    SSEOption.DriveSound=pCSF->GetInt("Disks","DriveSound",SSEOption.DriveSound);
+    OPTION_DRIVE_SOUND=pCSF->GetInt("Disks","DriveSound",OPTION_DRIVE_SOUND);
     SF314[0].Sound_Volume=SF314[1].Sound_Volume
       =pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
     SF314[0].Sound_ChangeVolume();
@@ -512,7 +512,7 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Disks","DriveSoundSeekSample",EasyStr(OPTION_DRIVE_SOUND_SEEK_SAMPLE));
 #endif
 #if defined(SSE_DRIVE_SOUND)
-  pCSF->SetStr("Disks","DriveSound",EasyStr(SSEOption.DriveSound));
+  pCSF->SetStr("Disks","DriveSound",EasyStr(OPTION_DRIVE_SOUND));
   pCSF->SetStr("Disks","DriveSoundVolume",EasyStr(SF314[0].Sound_Volume)); 
 #endif
 #if defined(SSE_TOS_PRG_AUTORUN)
@@ -953,7 +953,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ChangeBorderSize(DISPLAY_SIZE);
 #endif
 #endif
-#if defined(SSE_YM2149_FIX_TABLES)
+#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
     OPTION_SAMPLED_YM=pCSF->GetInt("Sound","PsgMod",OPTION_SAMPLED_YM);
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
     if(OPTION_SAMPLED_YM)
@@ -962,7 +962,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       YM2149.FreeFixedVolTable();
 #endif
 #endif
-#if defined(SSE_SOUND_MICROWIRE)
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_MICROWIRE_NOT_OPTIONAL)
     SSEOption.Microwire=pCSF->GetInt("Sound","Microwire",SSEOption.Microwire);
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
@@ -1234,11 +1234,15 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       sound_chosen_freq=pCSF->GetInt("Sound","Freq",sound_chosen_freq);
     }
     UpdateSoundFreq();
+#if !defined(SSE_SOUND_NO_8BIT)
     sound_num_bits=(BYTE)pCSF->GetInt("Sound","Bits",sound_num_bits);
+#endif
     sound_num_channels=(BYTE)pCSF->GetInt("Sound","Channels",sound_num_channels);
     sound_bytes_per_sample=(sound_num_bits/8)*sound_num_channels;
+#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
     sound_write_primary=pCSF->GetInt("Sound","WritePrimary",sound_write_primary);
     sound_time_method=pCSF->GetInt("Sound","TimeMethod",sound_time_method);
+#endif
     psg_write_n_screens_ahead=pCSF->GetInt("Sound","WriteAhead",psg_write_n_screens_ahead);
     WAVOutputFile=pCSF->GetStr("Sound","WAVOutputFile",WAVOutputFile);
     if (WAVOutputFile.Empty()) WAVOutputFile=WriteDir+SLASH "st.wav";

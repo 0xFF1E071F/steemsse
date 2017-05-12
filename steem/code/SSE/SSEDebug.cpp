@@ -489,8 +489,10 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; ~%d",CpuCustomHz); // not ambiguous, different order
 #endif
 #endif
+#if !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
     if(OPTION_SAMPLED_YM)
       TRACE("; YM");
+#endif
 #if defined(SSE_DONGLE_PORT) // if bug report = mouse drift...
     if(STPort[3].Type)
       TRACE("; Dongle %d", STPort[3].Type);  

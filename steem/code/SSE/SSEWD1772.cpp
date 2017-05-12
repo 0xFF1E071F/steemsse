@@ -410,7 +410,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif//ghost
 
 #if defined(SSE_DRIVE_SOUND)
-    if(SSEOption.DriveSound)
+    if(OPTION_DRIVE_SOUND)
 #if defined(SSE_DISK_GHOST)
       if(!Lines.CommandWasIntercepted) //would mess registers, and is instant
 #endif
@@ -972,7 +972,7 @@ void TWD1772::Irq(bool state) {
       STR&=~STR_DRQ;
 
 #if defined(SSE_DRIVE_SOUND)
-    if(SSEOption.DriveSound && OPTION_DRIVE_SOUND_SEEK_SAMPLE)
+    if(OPTION_DRIVE_SOUND && OPTION_DRIVE_SOUND_SEEK_SAMPLE)
       SF314[DRIVE].Sound_CheckIrq();
 #endif
 #if defined(SSE_DEBUG)

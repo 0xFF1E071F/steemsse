@@ -294,7 +294,7 @@ void TCaps::CallbackIRQ(PCAPSFDC pc, UDWORD lineout) {
       Dma.UpdateRegs(); // why it only worked in boiler, log on...
 
 #if defined(SSE_DRIVE_SOUND)
-    if(SSEOption.DriveSound)
+    if(OPTION_DRIVE_SOUND)
       ::SF314[DRIVE].Sound_CheckIrq();
 #endif
   }

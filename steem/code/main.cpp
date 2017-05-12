@@ -934,6 +934,10 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   SDL_OK=SDL.Init();
 #endif
 
+#if defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+  SetNotifyInitText(YM2149_FIXED_VOL_FILENAME);
+  YM2149.LoadFixedVolTable();
+#endif
 
 #ifdef DEBUG_BUILD
   dbg_log("STARTUP: d2_routines_init Called");
@@ -1046,6 +1050,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   }
 #endif
 
+#if !defined(SSE_SOUND_NO_NOSOUND_OPTION)
 #ifdef WIN32
   if (CSF.GetInt("Options","NoDirectSound",0)) TrySound=0;
 #else
@@ -1055,6 +1060,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
     CSF.SetInt("Sound","IgnoreNoPortAudio",1);
   }
   TrySound=x_sound_lib!=0;
+#endif
 #endif
   if (TrySound && StepByStepInit){
     if (Alert(T("Would you like to disable sound for this session?")+" "+

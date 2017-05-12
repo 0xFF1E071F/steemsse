@@ -672,7 +672,7 @@ cycles before the first stepping pulse.
       default: //step, step in, step out
       {
 #if defined(SSE_DRIVE_SOUND)
-        if(SSEOption.DriveSound)
+        if(OPTION_DRIVE_SOUND)
           SF314[DRIVE].Sound_Step();
 #endif
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
@@ -1313,7 +1313,7 @@ void agenda_fdc_finished(int)
 #endif
 
 #if defined(SSE_DRIVE_SOUND) 
-  if(SSEOption.DriveSound && (!ADAT || OPTION_DRIVE_SOUND_SEEK_SAMPLE)) //TODO
+  if(OPTION_DRIVE_SOUND && (!ADAT || OPTION_DRIVE_SOUND_SEEK_SAMPLE)) //TODO
     SF314[DRIVE].Sound_CheckIrq();
 #endif//snd
 
@@ -1394,7 +1394,7 @@ issued."
     else 
     {
 #if defined(SSE_DRIVE_SOUND)
-      if(SSEOption.DriveSound && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
+      if(OPTION_DRIVE_SOUND && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
         SF314[DRIVE].Sound_Step();
 #endif
       if(fdc_tr>fdc_dr)
@@ -2343,7 +2343,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 
 #if defined(SSE_DRIVE_SOUND) && defined(SSE_BUGFIX_392)
   Dma.UpdateRegs();
-  if(SSEOption.DriveSound && pPIOI->intrqState&&!old_irq)
+  if(OPTION_DRIVE_SOUND && pPIOI->intrqState&&!old_irq)
     SF314[DRIVE].Sound_CheckIrq();
 #endif
 
