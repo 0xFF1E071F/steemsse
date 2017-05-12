@@ -219,7 +219,9 @@ void TOptionBox::ChangeSoundFormat(BYTE bits,BYTE channels)
 #else
   Sound_Stop(true);
 #endif
+#if !defined(SSE_SOUND_NO_8BIT)
   sound_num_bits=bits;
+#endif
   sound_num_channels=channels;
   sound_bytes_per_sample=(sound_num_bits/8)*sound_num_channels;
   Sound_Start();
@@ -1576,6 +1578,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               SendDlgItemMessage(Win,3001,CB_GETLBTEXT,CurSel,LPARAM(DrivName.Text));
               WriteCSFStr("Options","DSDriverName",DrivName,INIFile);
             }
+#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+            InitSound();
+#endif
           }
           break;
         case 3303:
@@ -1615,7 +1620,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 3300:case 3301:case 3302:case 3304:case 3305:
           if (HIWORD(wPar)==BN_CLICKED){
             char *key="NoDirectDraw";
+#if !defined(SSE_SOUND_NO_NOSOUND_OPTION)
             if (LOWORD(wPar)==3301) key="NoDirectSound";
+#endif
             if (LOWORD(wPar)==3302) key="StartFullscreen";
             if (LOWORD(wPar)==3304) key="DrawToVidMem";
             if (LOWORD(wPar)==3305) key="BlitHideMouse";
@@ -1796,6 +1803,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           	This->ChangeSoundFormat(LOBYTE(dat),HIBYTE(dat));         	
           }
           break;
+#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
         case 7102:
           if (HIWORD(wPar)==BN_CLICKED){
 #ifdef SSE_SOUND_16BIT_CENTRED
@@ -1811,6 +1819,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+
         case 7103:
         {
           if (HIWORD(wPar)==CBN_SELENDOK){
@@ -1834,6 +1843,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
         }
+#endif//#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
         case 7104:
           if (HIWORD(wPar)==CBN_SELENDOK){
             psg_write_n_screens_ahead=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
@@ -1895,7 +1905,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_SOUND_MICROWIRE) 
+#if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_MICROWIRE_NOT_OPTIONAL)
         case 7302: // STE Microwire on/off 
           if (HIWORD(wPar)==BN_CLICKED){
             //OPTION_MICROWIRE=!OPTION_MICROWIRE; 
@@ -1906,7 +1916,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_GUI_OPTIONS_SAMPLED_YM)
+#if defined(SSE_GUI_OPTIONS_SAMPLED_YM) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
         case 7311: // option Sampled YM
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_SAMPLED_YM=!OPTION_SAMPLED_YM;
@@ -1979,9 +1989,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 */
         case 7310: //  option Drive Sound  - also see 7311 for volume slider
           if (HIWORD(wPar)==BN_CLICKED){
-            SSEOption.DriveSound=!SSEOption.DriveSound;
-            SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.DriveSound,0);
-            TRACE_LOG("Option Drive Sound %d\n",SSEOption.DriveSound);
+            OPTION_DRIVE_SOUND=!OPTION_DRIVE_SOUND;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_DRIVE_SOUND,0);
+            TRACE_LOG("Option Drive Sound %d\n",OPTION_DRIVE_SOUND);
           }
           break;
 #endif

@@ -171,6 +171,9 @@ HRESULT InitSound()
     typedef HRESULT WINAPI DSENUMPROC(LPDSENUMCALLBACK,LPVOID);
     typedef DSENUMPROC* LPDSENUMPROC;
     LPDSENUMPROC DSEnum=(LPDSENUMPROC)GetProcAddress(hDSDll,"DirectSoundEnumerateA");
+#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+    DSDriverModuleList.DeleteAll();
+#endif
     DSDriverModuleList.Sort=eslNoSort;
     dbg_log("SOUND: Attempting to enumerate devices");
     if (DSEnum!=NULL) DSEnum(DSEnumProc,NULL);
@@ -625,7 +628,7 @@ HRESULT DSCreateSoundBuf()
     if (DS_GetFormat_Wrong) sound_freq=DS_SetFormat_freq;
 
 #if defined(SSE_DRIVE_SOUND)
-    if(SSEOption.DriveSound)
+    if(OPTION_DRIVE_SOUND)
     {
       SF314[0].Sound_LoadSamples(DSObj,&dsbd,&wfx);
 #if defined(SSE_DRIVE_SOUND_391)
@@ -919,11 +922,13 @@ HRESULT SoundError(char *ErrorText,HRESULT DErr)
 
   Str Err=SoundLogError(Str(ErrorText)+"\n\n",DErr);
   Err+=Str("\n\n")+T("Steem will not be able to output any sound until you restart the program. Would you like to permanently stop Steem trying to use DirectSound at startup?");
+#if !defined(SSE_SOUND_NO_NOSOUND_OPTION)
 #ifndef ONEGAME
   int Ret=MessageBox(NULL,Err,T("Steem Engine DirectSound Error"),
                      MB_YESNO | MB_ICONEXCLAMATION | MB_SETFOREGROUND | MB_TASKMODAL | MB_TOPMOST);
   if (Ret==IDYES) WriteCSFStr("Options","NoDirectSound","1",INIFile);
   OptionBox.UpdateForDSError();
+#endif
 #endif
   return DErr;
 }

@@ -400,7 +400,7 @@ void TSF314::Read() {
 void TSF314::Step(int direction) {
 
 #if defined(SSE_DRIVE_SOUND)
-  if(SSEOption.DriveSound && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
+  if(OPTION_DRIVE_SOUND && !OPTION_DRIVE_SOUND_SEEK_SAMPLE)
     Sound_Step();
 #endif
 
@@ -589,9 +589,9 @@ void TSF314::Sound_CheckMotor() {
 #endif
     && floppy_current_drive()==YM2149.Drive() //3.6.4,must be selected
     );
-  if(SSEOption.DriveSound && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
+  if(OPTION_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
-  else if((!SSEOption.DriveSound||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
+  else if((!OPTION_DRIVE_SOUND||!motor_on) && (dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Stop();
   // step sound at vbl (this method misses some steps)
   if(motor_on && (fdc_str&1) 

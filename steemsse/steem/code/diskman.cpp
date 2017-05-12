@@ -3156,7 +3156,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       }
 
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
-      if(SSEOption.DriveSound)
+      if(OPTION_DRIVE_SOUND)
       {
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1044+This->MenuTarget,T("Toggle seek sound"));

@@ -30,7 +30,12 @@ EXT int sound_freq INIT(44100),sound_comline_freq INIT(0),sound_chosen_freq INIT
 #else
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 #endif
+#if defined(SSE_SOUND_NO_8BIT)
+BYTE sound_num_channels INIT(2);
+const BYTE sound_num_bits INIT(16);
+#else
 EXT BYTE sound_num_channels INIT(1),sound_num_bits INIT(8);
+#endif
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE sound_bytes_per_sample INIT(1);
 #else
@@ -42,7 +47,11 @@ EXT int MaxVolume INIT(10000);
 EXT DWORD MaxVolume INIT(0xffff);
 #endif
 EXT bool sound_low_quality INIT(0);
+#if defined(SSE_SOUND_ENFORCE_RECOM_OPT)
+const bool sound_write_primary=false;
+#else
 EXT bool sound_write_primary INIT( NOT_ONEGAME(0) ONEGAME_ONLY(true) );
+#endif
 EXT bool sound_click_at_start INIT(0);
 EXT bool sound_record INIT(false);
 EXT DWORD sound_record_start_time; //by timer variable = timeGetTime()
@@ -121,8 +130,16 @@ WORD dma_sound_channel_buf[DMA_SOUND_BUFFER_LENGTH+16];
 DWORD dma_sound_channel_buf_last_write_t;
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE psg_reg_select;
+#if defined(SSE_SOUND_ENFORCE_RECOM_OPT)
+EXT const BYTE sound_time_method=1; // write cursor (hopefully!)
+#else
 EXT BYTE sound_time_method INIT(0);
+#endif
+#if defined(SSE_SOUND_FEWER_FILTERS) // I prefer this one
+EXT BYTE sound_mode INIT(SOUND_MODE_MONITOR),sound_last_mode INIT(SOUND_MODE_MONITOR);
+#else
 EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
+#endif
 WORD dma_sound_mode_to_freq[4]={6258,12517,25033,50066},dma_sound_freq;
 int dma_sound_output_countdown,dma_sound_samples_countdown;
 BYTE dma_sound_internal_buf_len=0;
@@ -1431,8 +1448,10 @@ HRESULT Sound_VBL()
     int countdown_to_storing_values=max((int)(time_of_next_vbl_to_write-write_time_1),0);
     //this is set when we are counting down to the start time of the next write
     bool store_values=false,chipmode=bool((sound_mode==SOUND_MODE_EMULATED) ? false:true);
+#if !defined(SSE_SOUND_FEWER_FILTERS)
     if (sound_mode==SOUND_MODE_SHARPSAMPLES) chipmode=(psg_reg[PSGR_MIXER] & b00111111)!=b00111111;
     if (sound_mode==SOUND_MODE_SHARPCHIP)    chipmode=(psg_reg[PSGR_MIXER] & b00111111)==b00111111;
+#endif
     if (sound_record){
       sound_record_to_wav(countdown_to_storing_values,write_time_1,chipmode,source_p);
     }

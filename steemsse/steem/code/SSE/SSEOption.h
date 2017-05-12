@@ -89,8 +89,12 @@ extern struct TOption SSEOption;
 #else
 #define OPTION_C2 (SSEOption.Chipset2)
 #endif
+#if defined(SSE_SOUND_MICROWIRE_NOT_OPTIONAL)
+#define OPTION_MICROWIRE (true)
+#else
 #define OPTION_MICROWIRE (SSEOption.Microwire && SSEOption.STModel==STE)
-#define PSG_FILTER_FIX (SSEOption.PSGFilter)
+#endif
+//#define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
 #define OPTION_CAPTURE_MOUSE (SSEOption.CaptureMouse)
 #if !defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
@@ -107,7 +111,7 @@ extern struct TOption SSEOption;
 #define OPTION_WS (SSEOption.WakeUpState)
 #define USE_SDL (SSEOption.UseSDL)
 #define OPTION_DRIVE_INFO (SSEOption.OsdDriveInfo)
-#define DSP_ENABLED (SSEOption.Dsp)
+//#define DSP_ENABLED (SSEOption.Dsp)
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define OPTION_PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define OPTION_INTERPOLATED_SCANLINES (SSEOption.Interpolate)
@@ -115,10 +119,14 @@ extern struct TOption SSEOption;
 #define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define OPTION_WIN_VSYNC (SSEOption.WinVSync)
 #define OPTION_3BUFFER (SSEOption.TripleBuffer)
-//#define SSE_DRIVE_SOUND (SSEOption.DriveSound)
+#define OPTION_DRIVE_SOUND (SSEOption.DriveSound)
 #define OPTION_GHOST_DISK (SSEOption.GhostDisk)
 #define OPTION_D3D (SSEOption.Direct3D)
+#if defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+#define OPTION_SAMPLED_YM (true)
+#else
 #define OPTION_SAMPLED_YM (SSEOption.SampledYM)
+#endif
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
 #define OPTION_DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
@@ -142,7 +150,11 @@ extern struct TOption SSEOption;
 #define OPTION_MAME_YM (SSEOption.Chipset2) //C2 commands MFP and PSG mods
 
 #if defined(SSE_SOUND_16BIT_CENTRED)
+#if defined(SSE_SOUND_NO_8BIT)
+#define RENDER_SIGNED_SAMPLES (true)
+#else
 #define RENDER_SIGNED_SAMPLES (sound_num_bits==16)
+#endif
 #endif
 
 struct TConfig {

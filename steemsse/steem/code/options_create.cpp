@@ -2373,6 +2373,33 @@ void TOptionBox::CreateSoundPage()
 #endif
   int y=10;
 
+#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+  ConfigStoreFile CSF(INIFile);
+  Wid=get_text_width(T("Sound driver"));
+  CreateWindow("Static",T("Sound driver"),WS_CHILD,
+                          page_l,y+4,Wid,20,Handle,(HMENU)3000,HInstance,NULL);
+
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
+                    page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)3001,HInstance,NULL);
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Default"));
+  for (int i=0;i<DSDriverModuleList.NumStrings;i++){
+    SendMessage(Win,CB_ADDSTRING,0,(LPARAM)DSDriverModuleList[i].String);
+  }
+  SendMessage(Win,CB_SETCURSEL,0,0);
+  EasyStr DSDriverModName=CSF.GetStr("Options","DSDriverName","");
+  if (DSDriverModName.NotEmpty()){
+    for (int i=0;i<DSDriverModuleList.NumStrings;i++){
+      if (IsSameStr_I(DSDriverModuleList[i].String,DSDriverModName)){
+        SendMessage(Win,CB_SETCURSEL,1+i,0);
+        break;
+      }
+    }
+  }
+  CSF.Close();
+  y+=LineHeight;
+#endif//#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+
+
   DWORD DisableIfMute=DWORD(((sound_mode==SOUND_MODE_MUTE) || UseSound==0) ? WS_DISABLED:0);
   DWORD DisableIfNoSound=DWORD((UseSound==0) ? WS_DISABLED:0);
 #if !(defined(SSE_VS2008_WARNING_382) && defined(SOUND_DISABLE_INTERNAL_SPEAKER))
@@ -2390,8 +2417,10 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("No filter"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' (Steem original)"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'SCART'"));
+#if !defined(SSE_SOUND_FEWER_FILTERS)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' tunes only"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'coaxial' samples only"));
+#endif
 #if defined(SSE_SOUND_FILTER_HATARI)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'Hatari'"));
 #endif
@@ -2403,9 +2432,9 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
 #endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
-
-#if defined(SSE_GUI_OPTIONS_SAMPLED_YM)
   y+=LineHeight;
+#if defined(SSE_GUI_OPTIONS_SAMPLED_YM) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+
   Wid=GetCheckBoxSize(Font,T("Sampled YM-2149")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
@@ -2436,11 +2465,11 @@ void TOptionBox::CreateSoundPage()
   y+=LineHeight;
 #endif
 
-#if defined(SSE_GUI_OPTIONS_KEYBOARD_CLICK)
+#if defined(SSE_GUI_OPTIONS_KEYBOARD_CLICK) && !defined(SSE_SOUND_CAN_CHANGE_DRIVER)
 #if defined(SSE_GUI_OPTIONS_MICROWIRE) 
   y-=LineHeight; // maybe it will be optimised away!
-#endif
   Offset+=Wid+HorizontalSeparation;
+#endif
   Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
   Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
@@ -2449,12 +2478,21 @@ void TOptionBox::CreateSoundPage()
 #endif  
 
 #if defined(SSE_GUI_OPTIONS_SOUND)
+#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+  Str DrivStr="Settings"; //TODO
+#else
   Str DrivStr=T("Device ");
   EasyStr DSDriverModName=GetCSFStr("Options","DSDriverName","",INIFile);
   if (DSDriverModName.Empty()) DSDriverModName=T("Default");
   DrivStr+=DSDriverModName;
+#endif
+#if defined(SSE_SOUND_ENFORCE_RECOM_OPT)
+  CreateWindow("Button",DrivStr.Text,WS_CHILD | BS_GROUPBOX | DisableIfMute,
+                  page_l,y,page_w,230-60-30-30,Handle,(HMENU)7105,HInstance,NULL);
+#else
   CreateWindow("Button",DrivStr.Text,WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,230-30-30,Handle,(HMENU)7105,HInstance,NULL);
+#endif
   y+=20;
 #else
   y+=30;
@@ -2567,13 +2605,21 @@ void TOptionBox::CreateSoundPage()
                     DisableIfMute | CBS_DROPDOWNLIST,
                     page_l+15+Wid,y,page_w-10-(15+Wid),200,Handle,(HMENU)7061,HInstance,NULL);
 #endif
-
+#if !defined(SSE_SOUND_NO_8BIT)
   CBAddString(Win,T("8-Bit Mono"),MAKEWORD(8,1));
   CBAddString(Win,T("8-Bit Stereo"),MAKEWORD(8,2));
+#endif
   CBAddString(Win,T("16-Bit Mono"),MAKEWORD(16,1));
   CBAddString(Win,T("16-Bit Stereo"),MAKEWORD(16,2));
+#if defined(SSE_SOUND_NO_8BIT)
+  SendMessage(Win,CB_SETCURSEL,(sound_num_channels-1),0);
+#else  
   SendMessage(Win,CB_SETCURSEL,(sound_num_bits-8)/4 + (sound_num_channels-1),0);
+#endif
   y+=30;
+
+#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
+
 #if defined(SSE_SOUND_RECOMMEND_OPTIONS)
   Wid=GetCheckBoxSize(Font,T("Write to primary buffer (not recommended)")).Width;
   Win=CreateWindow("Button",T("Write to primary buffer (not recommended)"),WS_CHILD | WS_TABSTOP |
@@ -2612,6 +2658,8 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_SETCURSEL,sound_time_method,0);
   y+=30;
 
+#endif//#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
+
   Wid=GetTextSize(Font,T("Delay")).Width;
   CreateWindow("Static",T("Delay"),WS_CHILD | DisableIfMute,
                   page_l+10,y+4,Wid,23,Handle,(HMENU)7054,HInstance,NULL);
@@ -2629,13 +2677,13 @@ void TOptionBox::CreateSoundPage()
   EasyStr path=RunDir+SLASH+DRIVE_SOUND_DIRECTORY; // we suppose the sounds are in it!
   if(!Exists(path.Text))
   {
-    SSEOption.DriveSound=0;
+    OPTION_DRIVE_SOUND=0;
     mask|=WS_DISABLED;
   }
   Wid=GetCheckBoxSize(Font,T("Drive sound")).Width;
   Win=CreateWindow("Button",T("Drive sound"),mask,
     page_l+HorizontalSeparation,y,Wid,25,Handle,(HMENU)7310,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,SSEOption.DriveSound,0);
+  SendMessage(Win,BM_SETCHECK,OPTION_DRIVE_SOUND,0);
   ToolAddWindow(ToolTip,Win,
     T("Epson SMD-480L sound sampled by Stefan jL, thx dude!"));
   mask&=~BS_CHECKBOX;
@@ -2649,6 +2697,17 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,TBM_SETPAGESIZE,0,10);
   y+=LineHeight;
 #endif
+
+#if defined(SSE_GUI_OPTIONS_KEYBOARD_CLICK) && defined(SSE_SOUND_CAN_CHANGE_DRIVER)
+  y-=LineHeight; // maybe it will be optimised away!
+  Offset+=Wid;
+  Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
+  Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
+  y+=LineHeight;
+#endif  
+
 
   CreateWindow("Button",T("Record"),WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,80,Handle,(HMENU)7200,HInstance,NULL);
@@ -2756,13 +2815,14 @@ void TOptionBox::CreateStartupPage()
 #endif
   SendMessage(Win,BM_SETCHECK,NoDD,0);
   y+=30;
-
+#if !defined(SSE_SOUND_NO_NOSOUND_OPTION)
   Win=CreateWindow("Button",T("Never use DirectSound"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,GetCheckBoxSize(Font,T("Never use DirectSound")).Width,20,
                           Handle,(HMENU)3301,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,CSF.GetInt("Options","NoDirectSound",0),0);
   y+=30;
-
+#endif
+#if !defined(SSE_SOUND_CAN_CHANGE_DRIVER)
   Wid=get_text_width(T("Sound driver"));
   CreateWindow("Static",T("Sound driver"),WS_CHILD,
                           page_l,y+4,Wid,20,Handle,(HMENU)3000,HInstance,NULL);
@@ -2783,7 +2843,7 @@ void TOptionBox::CreateStartupPage()
       }
     }
   }
-
+#endif//#if !defined(SSE_SOUND_CAN_CHANGE_DRIVER)
   CSF.Close();
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,3303);

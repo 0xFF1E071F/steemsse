@@ -54,6 +54,8 @@ EXT int rt_buffer_size INIT(256*2),rt_buffer_num INIT(4);
 EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
 #endif
 
+#else
+HRESULT InitSound();
 #endif
 
 #if defined(UNIX) || (defined(USE_PORTAUDIO_ON_WIN32) && defined(WIN32))

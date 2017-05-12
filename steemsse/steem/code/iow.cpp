@@ -794,7 +794,7 @@ This address is being used to feed the National LMC both address and data
  Just a hack for now.
  Bugfix v3.7, negative values if some minutes into emulation. eg Antiques.
 */
-            if(OPTION_MICROWIRE  // TODO option microwire
+            if(OPTION_MICROWIRE
 #if defined(SSE_TIMINGS_CPUTIMER64)
               && abs((int)(ACT-MicroWire_StartTime)) <MICROWIRE_LATENCY_CYCLES) 
 #else
