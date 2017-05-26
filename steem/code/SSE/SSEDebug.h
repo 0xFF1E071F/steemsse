@@ -587,6 +587,9 @@ enum logsection_enum_tag {
 #define TRACE_EVENT(x) 
 #endif
 
+// TRACE_RECT 3.9.2
+#define TRACE_RECT(rect) TRACE("%d %d %d %d\n",rect.left,rect.top,rect.right,rect.bottom)
+
 // TRACE_OSD
 #if defined(SSE_OSD_DEBUG_MESSAGE)
 #ifdef __cplusplus // visible only to C++ objects

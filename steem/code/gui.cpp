@@ -38,9 +38,9 @@ Str PasteText;
 bool StartEmuOnClick=0;
 
 #ifdef WIN32
-
+#if !defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
 EXT HWND FSQuitBut=NULL;
-
+#endif
 EXT HICON hGUIIcon[RC_NUM_ICONS],hGUIIconSmall[RC_NUM_ICONS];
 
 HWND StemWin=NULL,ParentWin=NULL,ToolTip=NULL,DisableFocusWin=NULL,UpdateWin=NULL;
@@ -209,7 +209,7 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_BORDERS_GUI_392)
  POINT WinSizeBorderLarge[4][5]={ 
 {{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
 {640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)}, 
@@ -475,7 +475,6 @@ int ChangeBorderSize(int size_in) {
       SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
       BottomBorderSize=ORIGINAL_BORDER_BOTTOM;
       break;
-#if defined(SSE_VID_D3D_ONLY)
     case 2:
       SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
@@ -486,75 +485,6 @@ int ChangeBorderSize(int size_in) {
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
       break;
-#else
-
-
-    case 2:
-      SideBorderSize=LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=LARGE_BORDER_SIDE_WIN; // show 400
-      BottomBorderSize=LARGE_BORDER_BOTTOM;
-      break;
-    case 3:
-#if defined(SSE_VID_BORDERS_412)
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-#else
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-#endif
-      break;
-#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
-    case 4:
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-      break;
-#endif
-#endif
-#else
-    case 0:
-      SideBorderSize=ORIGINAL_BORDER_SIDE;
-      SideBorderSizeWin=ORIGINAL_BORDER_SIDE;
-      BottomBorderSize=ORIGINAL_BORDER_BOTTOM;
-      break;
-#if defined(SSE_VID_D3D_ONLY)
-    case 1:
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-      break;
-    case 2:
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-      break;
-#else
-    case 1:
-      SideBorderSize=LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=LARGE_BORDER_SIDE_WIN; // show 400
-      BottomBorderSize=LARGE_BORDER_BOTTOM;
-      break;
-    case 2:
-#if defined(SSE_VID_BORDERS_412)
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE_WIN; // show 412
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-#else
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-#endif
-      break;
-#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
-    case 3:
-      SideBorderSize=VERY_LARGE_BORDER_SIDE; // render 416
-      SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
-      BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
-      break;
-#endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
 #endif//#if defined(SSE_VID_BORDERS_GUI_392)
     }//sw
     int i,j;
@@ -569,30 +499,13 @@ int ChangeBorderSize(int size_in) {
         case 1:
           WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
           break;
-#if defined(SSE_VID_D3D_ONLY)
         case 2:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
           break;
         case 3:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
           break;
-#else
-        case 2:
-          WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
-          break;
-        case 3:
-#if defined(SSE_VID_BORDERS_412)
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
-#else
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-#endif
-          break;
-#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
-        case 4:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-          break;
-#endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
+
 #else//!392
         case 0:
           WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
@@ -633,13 +546,13 @@ int ChangeBorderSize(int size_in) {
     TRACE_LOG("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size_in,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
 
     StemWinResize();
-//#if !defined(SSE_VID_D3D1) // done in StemWinResize()
+
     Disp.ScreenChange();
-//#endif
 
 #if defined(SSE_GUI_390B)
-#if defined(SSE_VID_392)
+#if defined(SSE_VID_ANTICRASH_392)
     draw_begin(); // Lock() will update draw_line_length
+    draw_end(); // but we must Unlock() or trouble when changing display mode
 #else
     draw_set_jumps_and_source(); // avoid crash when running?
 #endif
@@ -1396,6 +1309,12 @@ bool MakeGUI()
                           120,0,20,20,StemWin,(HMENU)106,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Windowed Mode"));
 
+#if defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
+  Win=CreateWindow("Steem Fullscreen Quit Button","",WS_CHILD,
+      120,0,20,20,StemWin,(HMENU)116,Inst,NULL);
+  ToolAddWindow(ToolTip,Win,T("Quit Steem"));
+#endif
+
   SetWindowAndChildrensFont(StemWin,fnt);
 #endif
 
@@ -1433,8 +1352,13 @@ void CheckResetDisplay(bool NOT_ONEGAME(AlwaysHide))
   if (pc==rom_addr && StemWin && runstate==RUNSTATE_STOPPED && AlwaysHide==0){
     if (ResetInfoWin==NULL){
       if (FullScreen==0) SetWindowLong(StemWin,GWL_STYLE,GetWindowLong(StemWin,GWL_STYLE) | WS_CLIPCHILDREN);
+#if defined(SSE_VID_D3D_ONLY) || defined(SSE_VID_DD_NO_FS_CLIPPER)
+      ResetInfoWin=CreateWindow("Steem Reset Info Window","",WS_CHILD,
+                            0,0,0,0,HWND(StemWin),(HMENU)9876,Inst,NULL);
+#else
       ResetInfoWin=CreateWindow("Steem Reset Info Window","",WS_CHILD,
                             0,0,0,0,HWND(FullScreen ? ClipWin:StemWin),(HMENU)9876,Inst,NULL);
+#endif
       SendMessage(ResetInfoWin,WM_USER,1789,0);
       ShowWindow(ResetInfoWin,SW_SHOWNA);
     }else{
@@ -2164,7 +2088,9 @@ void ShowAllDialogs(bool Show)
       }
     }
   }
+#if !defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
   if (FSQuitBut) ShowWindow(FSQuitBut,int(Show ? SW_SHOWNA:SW_HIDE));
+#endif
 }
 //---------------------------------------------------------------------------
 #if defined(SSE_VS2008_WARNING_390)

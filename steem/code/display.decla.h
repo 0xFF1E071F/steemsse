@@ -106,9 +106,7 @@ EXT int HzIdxToHz[NUM_HZ];
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)//391
 
-
 #if defined(SSE_COMPILER_STRUCT_391)
-
 
 class SteemDisplay
 {
@@ -153,6 +151,9 @@ public: //temp
   D3DDEVTYPE DeviceType;
   DWORD vtx_proc;
 #endif
+#if defined(SSE_VID_ANTICRASH_392)
+  int VideoMemorySize;
+#endif
   int GDIBmpLineLength;
   DWORD GDIBmpSize;
 #if defined(SSE_VID_D3D_LIST_MODES)
@@ -172,16 +173,16 @@ public: //temp
 #endif//#ifdef WIN32
 
   Str ScreenShotNextFile;
+#if defined(SSE_VID_3BUFFER_WIN)
+  COUNTER_VAR VSyncTiming; // must be public
+#endif
+#if defined(SSE_VID_DD_FS_MAXRES)
+  RECT LetterBoxRectangle;
+#endif
   int Method,UseMethods[5],nUseMethod;
   int ScreenShotFormat;
   int ScreenShotMinSize;
   DWORD ChangeToWinTimeOut;
-#if defined(SSE_VID_3BUFFER_WIN)
-  BOOL BlitIfVBlank(); // our polling function
-#endif
-#if defined(SSE_VID_3BUFFER_WIN)
-  COUNTER_VAR VSyncTiming; // must be public
-#endif
 
 
 #if defined(SSE_VAR_RESIZE)
@@ -189,7 +190,6 @@ public: //temp
 #else
   int SurfaceWidth,SurfaceHeight;
 #endif
-
 
 #ifdef WIN32
 #if !defined(SSE_VID_D3D_ONLY)
@@ -286,6 +286,9 @@ public:
   HRESULT Init();
   HRESULT Lock();
   void VSync();
+#if defined(SSE_VID_3BUFFER_WIN)
+  BOOL BlitIfVBlank(); // our polling function
+#endif
   bool Blit();
   void WaitForAsyncBlitToFinish();
   void Unlock();

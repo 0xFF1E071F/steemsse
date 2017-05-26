@@ -65,9 +65,13 @@ EXT int draw_line_length;
 EXT long *PCpal;
 EXT WORD STpal[16];
 EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
-
-
+#if defined(SSE_VID_BPP_NO_CHOICE)
+EXT const BYTE display_option_8_bit_fs INIT(0);
+#elif defined(SSE_VID_BPP_CHOICE)
+EXT BYTE display_option_fs_bpp INIT(0); 
+#else
 EXT bool display_option_8_bit_fs INIT(false);
+#endif
 #if !defined(SSE_VID_D3D_ONLY)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #endif
@@ -263,8 +267,9 @@ void draw_begin()
   }
   UNIX_ONLY( draw_fs_topgap=0; )
 #if !defined(SSE_VID_D3D_ONLY)
-  if (draw_grille_black>0) Disp.DrawFullScreenLetterbox();
+  if (draw_grille_black>0) Disp.DrawFullScreenLetterbox(); //TODO test FS here
 #endif
+
   if (Disp.Lock()!=DD_OK) return;
 
   if (BytesPerPixel==1) palette_copy();
@@ -290,7 +295,6 @@ void draw_begin()
       ) 
       draw_grille_black=4;
 #endif
-
   if (draw_grille_black>0){
     bool using_grille=0;
     if (draw_dest_increase_y>draw_line_length){
@@ -315,7 +319,6 @@ void draw_begin()
       ) 
       using_grille=true;
 #endif
-
     if (using_grille){
       int l=640;
       if (Disp.BorderPossible()) l+=BORDER_SIDE*2 * 2;
@@ -383,12 +386,12 @@ void draw_set_jumps_and_source()
     big_draw=false;
 #else
   if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
 /*  About this complication, it is necessary to have interpolated
     scanlines working in fullscreen mode with triple buffer.
     There are many more places where we test that.
 */
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
+    && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
     ){
     if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP
@@ -480,18 +483,18 @@ void draw_set_jumps_and_source()
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_3BUFFER_392)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif
     )
 #endif
     ){
     int p=1; // 640 width 400 height
 #ifdef WIN32
     if (FullScreen
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_3BUFFER_392)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
@@ -546,8 +549,10 @@ void draw_set_jumps_and_source()
       ow=BORDER_SIDE*2 + 640 + BORDER_SIDE*2;
 #endif
 #ifdef WIN32
+
+#if !defined(SSE_VID_D3D_FS_392A) || !defined(SSE_VID_D3D_ONLY)
       if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
 #if defined(SSE_VID_D3D_STRETCH)
@@ -557,9 +562,11 @@ void draw_set_jumps_and_source()
         ox=(800-ow)/2;oy=(600-oh)/2;
       }
 #endif
+
+#endif
     }else if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
-        && !(SCANLINES_INTERPOLATED&&(OPTION_3BUFFER||OPTION_D3D))
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_3BUFFER_392)
+      && !(SCANLINES_INTERPOLATED&&(OPTION_3BUFFER||OPTION_D3D))
 #endif
       ){
 #if !defined(SSE_VID_D3D_ONLY)
@@ -573,19 +580,23 @@ void draw_set_jumps_and_source()
     }
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_3BUFFER_392) // option_3buffer or not -> false if fullscreen anyway
+    if(SCANLINES_INTERPOLATED && !screen_res && !FullScreen) 
+      ow/=2;
+#else
     if(!screen_res && SCANLINES_INTERPOLATED && 
 #if defined(SSE_VID_3BUFFER)
       (!FullScreen ||OPTION_3BUFFER
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
-      
       )
 #else
       !FullScreen
 #endif
       ) 
       ow/=2;
+#endif
 #endif
 
     draw_blit_source_rect.left=ox;
@@ -632,11 +643,9 @@ void draw_set_jumps_and_source()
       }
       oh=shifter_y+res_vertical_scale*(BORDER_TOP+BORDER_BOTTOM);
     }else if (FullScreen
-      
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
-      
       ){
 #if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_D3D_STRETCH)
@@ -656,14 +665,11 @@ void draw_set_jumps_and_source()
     draw_blit_source_rect.top=oy;
     draw_blit_source_rect.right=ox+ow;
     draw_blit_source_rect.bottom=oy+oh;
-
 //    if(overscan)draw_blit_source_rect_bottom+=OVERSCAN_HEIGHT; should this be put in???
     draw_dest_increase_y=draw_line_length;
   }
-
   WIN_ONLY( draw_buffer_complex_scanlines=(Disp.Method==DISPMETHOD_DD &&
                   Disp.DrawToVidMem && draw_med_low_double_height); )
-
 #if defined(SSE_BOILER_VIDEO_CONTROL__)
   if(VIDEO_CONTROL_MASK & VIDEO_CONTROL_BLIT)
   {
@@ -1199,8 +1205,12 @@ bool draw_blit()
 #if defined(SSE_VID_3BUFFER_WIN)
   // we blit the unlocked backsurface
   if (!draw_lock 
-#if !defined(SSE_VID_D3D_3BUFFER)
+#if !defined(SSE_VID_D3D_3BUFFER) 
+#if defined(SSE_VID_3BUFFER_392)
+    || OPTION_3BUFFER_WIN && !FullScreen 
+#else
     || OPTION_3BUFFER 
+#endif
 #endif
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
@@ -1243,7 +1253,11 @@ void draw(bool osd)
   // we blit the unlocked backsurface
   if (!draw_lock 
 #if !defined(SSE_VID_D3D_3BUFFER)
+#if defined(SSE_VID_3BUFFER_392)
+    || OPTION_3BUFFER_WIN && !FullScreen
+#else
     || OPTION_3BUFFER 
+#endif
 #endif
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
@@ -1436,6 +1450,7 @@ void old_palette_convert_32(int n){
 //---------------------------------------------------------------------------
 void res_change()
 {
+  TRACE_LOG("res_change()\n");
   if (ResChangeResize) StemWinResize();
 
   draw_set_jumps_and_source();

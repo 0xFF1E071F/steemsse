@@ -35,7 +35,10 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 
-#if defined(SSE_VAR_RESIZE)
+#if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
+EXT const BYTE frameskip INIT(AUTO_FRAMESKIP);
+EXT BYTE frameskip_count INIT(1);
+#elif defined(SSE_VAR_RESIZE)
 EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
 #else
@@ -361,6 +364,7 @@ void run()
 #else
   Sound_Stop(Quitting);
 #endif
+
 #if defined(SSE_VID_FS_382)
   if(FullScreen)
 #endif
@@ -1126,8 +1130,17 @@ void event_scanline()
 #if !defined(SSE_GLUE)
   screen_event_pointer++;
 #endif
+
 #if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+
+#if defined(SSE_VID_3BUFFER_392)
+  // DirectDraw Check for Window VSync at each ST scanline!
+  if(OPTION_3BUFFER_WIN && !FullScreen)
+    Disp.BlitIfVBlank();
+
+#else
+
   if(OPTION_3BUFFER && !(scan_y%2)
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
@@ -1135,7 +1148,10 @@ void event_scanline()
     )
     Disp.BlitIfVBlank();
 #endif
+
+#endif
 #endif//#if !defined(SSE_VID_D3D_3BUFFER)
+
 #if defined(SSE_GLUE)
   Glue.Status.hbi_done=false;
   ASSERT(!Glue.Status.scanline_done);
@@ -1249,6 +1265,10 @@ void event_vbl_interrupt() //SS misleading name?
   if (draw_lock){
     draw_end();
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_392) && !defined(SSE_VID_D3D_ONLY)
+    if (VSyncing==0 && !OPTION_3BUFFER_WIN)
+      draw_blit();
+#else
     if (VSyncing==0 
 #if !defined(SSE_VID_D3D_3BUFFER)
       &&( !OPTION_3BUFFER
@@ -1259,6 +1279,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif//#if !defined(SSE_VID_D3D_3BUFFER)
       )
       draw_blit();
+#endif
 #else
     if (VSyncing==0) draw_blit();
 #endif
@@ -1348,7 +1369,12 @@ void event_vbl_interrupt() //SS misleading name?
       res_change();
     }else if (mixed_output==0){
       init_screen();
-      if (screen_res==0) res_change();
+      if (screen_res==0
+#if defined(SSE_VID_SCANLINES_INTERPOLATED_392)
+        || SCANLINES_INTERPOLATED // eg The Pawn
+#endif
+        ) 
+        res_change();
       screen_res_at_start_of_vbl=screen_res;
     }
   }else if (screen_res!=screen_res_at_start_of_vbl){
@@ -1417,16 +1443,22 @@ void event_vbl_interrupt() //SS misleading name?
   int m=0;
   LOOP{
     timer=timeGetTime();
-//#if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+
+#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC) \
+  && !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_3BUFFER_392) 
+    if(OPTION_3BUFFER_WIN && !FullScreen)
+      Disp.BlitIfVBlank();
+#else
   if(OPTION_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
     && !FullScreen
 #endif
     )
     Disp.BlitIfVBlank();
+#endif//defined(SSE_VID_3BUFFER_392)
 #endif
-//#endif//#if !defined(SSE_VID_D3D_3BUFFER)
+
 
     // Break if used up enough time and processed at least 3 messages
     if (int(frame_delay_timeout-timer)<=time_for_exact_limit && m>=3) break;
@@ -1470,6 +1502,16 @@ void event_vbl_interrupt() //SS misleading name?
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
 */
+#if defined(SSE_VID_3BUFFER_392)
+      if(OPTION_3BUFFER_WIN && !FullScreen)
+      {
+        int limit=(int)(frame_delay_timeout)-(int)(time_for_exact_limit);
+        do {
+          Disp.BlitIfVBlank();
+        }while( (int)(timeGetTime())<limit);
+      }
+      else
+#else
       if(OPTION_3BUFFER
 #if !defined(SSE_VID_3BUFFER_FS)
         && !FullScreen
@@ -1482,6 +1524,7 @@ void event_vbl_interrupt() //SS misleading name?
         }while( (int)(timeGetTime())<limit);
       }
       else
+#endif
 #endif
 #endif//#if !defined(SSE_VID_D3D_3BUFFER)
       Sleep(DWORD(time_to_sleep));
@@ -1506,12 +1549,17 @@ void event_vbl_interrupt() //SS misleading name?
         timer=timeGetTime();
 #if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_3BUFFER_392)
+        if(OPTION_3BUFFER_WIN && !FullScreen)
+          Disp.BlitIfVBlank();
+#else
         if(OPTION_3BUFFER //&& OPTION_WIN_VSYNC
 #if !defined(SSE_VID_3BUFFER_FS)
           && !FullScreen 
 #endif
           )
           Disp.BlitIfVBlank();
+#endif//#if defined(SSE_VID_3BUFFER_392)
 #endif
 #endif
       }while (int(frame_delay_timeout-timer)>0);

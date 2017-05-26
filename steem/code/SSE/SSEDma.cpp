@@ -729,7 +729,7 @@ is no such effect because they are read only on the ST.
 (ijor)
 */
     if(ST_TYPE!=STE && (BaseAddress&0x008000) && !(io_src_b&0x80)
-#ifdef SSE_BUGFIX_392 // by precaution
+#if defined(SSE_BUGFIX_392) && USE_PASTI // by precaution
       && !pasti_active && SF314[DRIVE].ImageType.Extension!=EXT_STX
 #endif      
       ) // 1 to 0
@@ -747,7 +747,7 @@ is no such effect because they are read only on the ST.
     ASSERT( !(io_src_b&1) ); // shouldn't the address be even?
 #if defined(SSE_DMA_RIPPLE_CARRY)
     if(ST_TYPE!=STE && (BaseAddress&0x000080) && !(io_src_b&0x80)
-#ifdef SSE_BUGFIX_392
+#if defined(SSE_BUGFIX_392) && USE_PASTI
       && !pasti_active && SF314[DRIVE].ImageType.Extension!=EXT_STX
 #endif
       ) // 1 to 0

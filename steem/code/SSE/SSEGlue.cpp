@@ -830,12 +830,12 @@ Closure STF2
 #if defined(SSE_VID_BORDERS) && defined(SSE_VID_BPOC)
         if(OPTION_HACKS && cycles_in_low_res==16) 
           if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_ONLY) || !defined(SSE_VID_BORDERS_LB_DX)
             shifter_pixel+=1;
-#elif defined(SSE_VID_BORDERS_416_NO_SHIFT) // defined in VC6 build
+#elif defined(SSE_VID_BORDERS_416_NO_SHIFT)
             shifter_pixel+=(BORDER_40?4:1);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY) 
           else if(BORDER_40)
           { // fit text of Best Part of the Creation on a 800 display (pure hack)
             MMU.ShiftSDP(4);      

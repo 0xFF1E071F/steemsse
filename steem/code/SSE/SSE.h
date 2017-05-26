@@ -75,8 +75,9 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_COMPILER_INCLUDED_CPP // just telling cpp files included in modules
 
 // We use DirectDraw in the VC6 build and in one VS2008 build
-#if _MSC_VER == 1200 || defined(SSE_DD) || defined(SSE_LE)
+#if _MSC_VER == 1200 || defined(SSE_DD)
 #define SSE_NO_D3D
+#define SSE_VID_DD
 #else
 #define SSE_NO_DD 
 #endif
@@ -988,7 +989,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VID_3BUFFER)
 #define SSE_VID_3BUFFER_FS // fullscreen: stretch mode only
 //#define SSE_VID_3BUFFER_NO_VSYNC // for tests: "VSync" is necessary
-#define SSE_VID_3BUFFER_WIN //windowed mode (necessary for FS)
+#define SSE_VID_3BUFFER_WIN // windowed mode
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)
 #define SSE_VID_VSYNC_WINDOW_CRASH_FIX1
@@ -1087,7 +1088,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO)
 
-#define SSE_VID_D3D_STRETCH_AR_OPTION
+#define SSE_GUI_ST_AR_OPTION
 
 #endif
 
@@ -1736,6 +1737,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #if defined(SSE_LE)
+
 #define SSE_VAR_MAIN_LOOP4
 #define SSE_IKBD_6301_NOT_OPTIONAL 
 #define SSE_C2_NOT_OPTIONAL
@@ -1751,8 +1753,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_FEWER_FILTERS
 #define SSE_SOUND_CAN_CHANGE_DRIVER 
 #define SSE_SOUND_NO_NOSOUND_OPTION
+#define SSE_VID_ENFORCE_AUTOFRAMESKIP
+#define SSE_VID_BPP_NO_CHOICE
+#if defined(SSE_DD)
+#define SSE_VID_DD_SIMPLIFY_VSYNC
+#define SSE_GUI_DD_FULLSCREEN_LE
 #endif
-
+#endif
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_FRAME_REPORT_392
@@ -1797,6 +1804,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #ifdef SSE_GUI
+#define SSE_GUI_392
 #define SSE_GUI_DM_PASTI_ONLY_STX_392
 #define SSE_GUI_INFOBOX_CLIPBOARD
 #endif
@@ -1885,9 +1893,34 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_VAR_RESIZE
 #define SSE_VAR_RESIZE_392
 #endif
+#define SSE_VAR_WINVER
 
+#if defined(SSE_VIDEO) 
+
+#define SSE_VID_GUI_392
+#define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
+#if defined(SSE_VID_3BUFFER)
+#define SSE_VID_3BUFFER_392 // reorganise triple buffer
+#endif
+#if defined(SSE_VID_DD)
+#define SSE_VID_DD_FS_IS_392 // don't change the option, ignore it
+#else
+#undef SSE_VID_3BUFFER_WIN
+#endif
+#endif//#if defined(SSE_VIDEO) 
+
+#if defined(SSE_VID_DD) && defined(SSE_VID_BORDERS)
+#define SSE_VID_DD_FS_MAXRES // using the display's natural resolution 
+#undef SSE_VID_BORDERS_LB_DX // Fullscreen Max Res mode makes BORDER_40 useless
+#undef SSE_VID_BORDERS_LB_DX1
+#endif
+
+#if defined(SSE_VID_GUI_392)
+#define SSE_VID_GUI_IS_AND_PAL // one option for Interpolated Scanlines and PAL Aspect Ratio
+#define SSE_VID_FS_PROPER_QUIT_BUTTON // top right + made bigger icon
 #if defined(SSE_VID_BORDERS)
-#define SSE_VID_BORDERS_GUI_392 // simplify option...
+#define SSE_VID_BORDERS_GUI_392 // two options -> one option for on/off + size
+#endif
 #endif
 
 #ifdef SSE_YM2149_SOUND
@@ -1935,11 +1968,17 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TOS_PRG_AUTORUN_392
 #define SSE_CPU_HISPEED_392
 #undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...
-#define SSE_VID_392 //crash on resizing...
-#define SSE_VID_D3D_392 //trash again fullscreen when changing modes
-
+#define SSE_VID_ANTICRASH_392
+#define SSE_VID_SCANLINES_INTERPOLATED_392
+#define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
+#ifdef SSE_VID_D3D
+#define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
+#define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
+#endif
+#ifdef SSE_VID_DD
+#define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
+#endif
 #endif//bugfix
-
 #else//!SS
 /////////////////////////////////////
 // if STEVEN_SEAGAL is NOT defined //
