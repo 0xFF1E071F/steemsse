@@ -304,9 +304,9 @@ EXT bool StartEmuOnClick;
 LRESULT __stdcall WndProc(HWND,UINT,WPARAM,LPARAM);
 LRESULT __stdcall FSClipWndProc(HWND,UINT,WPARAM,LPARAM);
 LRESULT __stdcall FSQuitWndProc(HWND,UINT,WPARAM,LPARAM);
-
+#if !defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
 EXT HWND FSQuitBut;
-
+#endif
 EXT HICON hGUIIcon[RC_NUM_ICONS],hGUIIconSmall[RC_NUM_ICONS];
 
 inline bool HandleMessage(MSG*);

@@ -148,7 +148,6 @@ TPatchesBox PatchesBox;
 int MainRetVal=-50;
 
 #ifdef WIN32
-
 #if defined(SSE_VAR_MAIN_LOOP3)
 /*  The idea is to report a SEH exception in a normal try/catch block.
     https://msdn.microsoft.com/en-us/library/5z4bw5h5(VS.80).aspx
@@ -537,6 +536,27 @@ bool Initialise()
 #if defined(SSE_TRACE_FOR_RELEASE_390) 
   if(!SSEConfig.NoTrace)
     Debug.TraceInit();
+#endif
+#if defined(SSE_VAR_WINVER)
+  SSEConfig.WindowsVersion = GetVersion();
+#ifdef SSE_DEBUG //from Microsoft
+  DWORD dwVersion = SSEConfig.WindowsVersion; 
+  DWORD dwMajorVersion = 0;
+  DWORD dwMinorVersion = 0; 
+  DWORD dwBuild = 0;
+
+  // Get the Windows version.
+
+  dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+  dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+
+  // Get the build number.
+
+  if (dwVersion < 0x80000000)              
+    dwBuild = (DWORD)(HIWORD(dwVersion));
+  
+  TRACE_INIT("Windows version %d.%d (%d) - $%X\n",dwMajorVersion,dwMinorVersion,dwBuild,SSEConfig.WindowsVersion);
+#endif  
 #endif
 
   GoodConfigStoreFile CSF(INIFile);

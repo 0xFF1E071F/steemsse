@@ -107,6 +107,27 @@ TConfig::TConfig() {
 #endif
 }
 
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE) 
+
+int TConfig::GetBitsPerPixel() {
+  int bpp=(SSEConfig.VideoCard32bit)?32:16; // default
+  if(display_option_fs_bpp==1)
+  {
+    if(SSEConfig.VideoCard8bit)
+      bpp=16;
+  }
+  else if (display_option_fs_bpp==0)
+  {
+    if(SSEConfig.VideoCard8bit)
+      bpp=8;
+    else if(SSEConfig.VideoCard16bit)
+      bpp=16;
+  }
+  return bpp;
+}
+
+#endif
+
 #if defined(SSE_STF)
 
 int TConfig::SwitchSTType(int new_type) { 

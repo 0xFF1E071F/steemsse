@@ -88,8 +88,12 @@ void StemWinResize(int xo,int yo)
     && Disp.pD3DDevice // "D3DX: pDevice pointer is invalid"
 #endif
     )
-    Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
-    //Disp.ScreenChange(); //radical
+#if defined(SSE_VID_D3D_FS_392A)
+    if(FullScreen)
+      Disp.ScreenChange();//radical
+    else
+#endif
+      Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
 #endif
 
 #if defined(SSE_GUI_STATUS_BAR)
@@ -224,11 +228,58 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       GetClientRect(Win,&dest);
       int Height=dest.bottom;
       dest.bottom=MENUHEIGHT;
+#if defined(SSE_VID_FS_GUI_392)
+      // copy the region before BeginPaint(), which will reset it
+      HRGN hRgn=0;
+      int region_type=0;
+      if (FullScreen){
+        hRgn=CreateRectRgn(0,0,0,0);
+        region_type=GetUpdateRgn(Win,hRgn,FALSE);
+      }
+#endif
 
       PAINTSTRUCT ps;
       BeginPaint(Win,&ps);
 
+#if defined(SSE_VID_FS_GUI_392)
+/*  When a dialog box is moved in the fullscreen GUI, it trashes the background.
+    It's no big problem but it looks bad.
+    It is possible to redraw the picture by blitting on dirty rectangles.
+    In Direct3D, one call is enough:
+    Disp.pD3DDevice->Present(NULL,NULL,NULL,lpRgnData);
+    Unfortunately, I've only seen it work in Windows 10, not XP nor Vista.
+    In DirectDraw, we need to do a blit for each rectangle. It works on
+    most systems, but only in flip and straight blit modes, and not with
+    Triple Buffering.
+    So for a consistent experience, we erase the rectangles in all cases.
+*/
+      if (FullScreen && OPTION_FULLSCREEN_GUI)
+      {
+        if (region_type!=NULLREGION && region_type!=ERROR)
+        {
+          DWORD dwCount=GetRegionData(hRgn,0,NULL); // 1st call to get #bytes
+          if(dwCount)
+          {
+            RGNDATA *lpRgnData=(RGNDATA*)new BYTE[dwCount];
+            dwCount=GetRegionData(hRgn,dwCount,lpRgnData); // 2nd call to get rectangles
+            if(dwCount)
+            {
+              HBRUSH br=CreateSolidBrush(GetSysColor(COLOR_BACKGROUND));
+              LPRECT pRect = (LPRECT)lpRgnData->Buffer;
+              for(int i=0;i<lpRgnData->rdh.nCount;i++)
+                FillRect(ps.hdc,&pRect[ i ],br); // erase all rectangles
+              DeleteObject(br);
+            } //if(dwCount)
+            delete [] lpRgnData;
+          }//if(dwCount)
+        }//if (region_type!=NULLREGION && region_type!=ERROR)
+        DeleteObject(hRgn);
+      }//if (FullScreen)
+#endif
+
 #ifndef ONEGAME
+      //SS background for menu bar, must do that AFTER we redraw the 
+      // invalidated rectangles in fullscreen mode or we get those stripes...
       HBRUSH br=CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       FillRect(ps.hdc,&dest,br);
       DeleteObject(br);
@@ -576,6 +627,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         }
 
         ShowWindow(GetDlgItem(StemWin,106),SW_HIDE);
+#if defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
+        ShowWindow(GetDlgItem(StemWin,116),SW_HIDE);
+#endif
 
         if (MaximizeDiskMan) ShowWindow(DiskMan.Handle,SW_MAXIMIZE);
 
@@ -999,9 +1053,17 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         if(OPTION_D3D)
           cw=Disp.D3DFsW, ch=Disp.D3DFsH; // make size correct
 #endif
+
+#if defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
+        SetWindowPos(GetDlgItem(Win,106),0,cw-43,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windowed mode
+        SetWindowPos(GetDlgItem(Win,116),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windowed mode
+        cw-=50;
+#else
         if (FSQuitBut) SetWindowPos(FSQuitBut,0,0,ch-14-MENUHEIGHT,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-        SetWindowPos(GetDlgItem(Win,106),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windoed mode
+        SetWindowPos(GetDlgItem(Win,106),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windowed mode
         cw-=30;
+#endif
+        
       }
 #if defined(SSE_VAR_OPT_382)//useless?
       UINT mask=(SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
@@ -1614,6 +1676,12 @@ LRESULT __stdcall FSClipWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
   return DefWindowProc(Win,Mess,wPar,lPar);
 }
 //---------------------------------------------------------------------------
+/*  SS Argh! I didn't know Steem did all that just for that fullscreen quit 
+    button.
+    We place it back on the menu bar because on the lower left, it could trash
+    dialog boxes and it's counterintuitive.
+    We probably could simplify.
+*/
 LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 {
   bool CheckDown=0;
@@ -1637,10 +1705,12 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #else
       int Down=int(bool(GetProp(Win,"Down")) ? 1:0);
 #endif
+#if defined(SSE_VID_FS_PROPER_QUIT_BUTTON) // we changed the icon
+      DrawIconEx(ps.hdc,Down,3+Down,(HICON)hGUIIcon[RC_ICO_FULLQUIT],16,16,0,NULL,DI_NORMAL);
+#else
       DrawIconEx(ps.hdc,4+Down,3+Down,(HICON)hGUIIcon[RC_ICO_FULLQUIT],16,16,0,NULL,DI_NORMAL);
-
       DrawEdge(ps.hdc,&rc,int(Down ? EDGE_SUNKEN:EDGE_RAISED),BF_RECT);
-
+#endif
       EndPaint(Win,&ps);
       return 0;
     }
@@ -1700,10 +1770,14 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 //---------------------------------------------------------------------------
 HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 {
-  TRACE_INIT("change_fullscreen_display_mode\n");
   HRESULT Ret;
-
-#if defined(SSE_VID_DD_FS_32BIT)
+#if defined(SSE_VID_BPP_NO_CHOICE)
+  int bpp=32;
+  if(!SSEConfig.VideoCard32bit)
+    bpp=(SSEConfig.VideoCard16bit)?16:8;
+#elif defined(SSE_VID_BPP_CHOICE)
+  int bpp=SSEConfig.GetBitsPerPixel();
+#elif defined(SSE_VID_DD_FS_32BIT)
 /*  Fortunately, we only need to specify bpp, Steem already has the correct
     rendering routines.
 */
@@ -1723,12 +1797,12 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #endif
 #else
   RECT rc={0,MENUHEIGHT,640,480};
-
-  int hz256=int(display_option_8_bit_fs ? 0:1);
-  
-#if defined(SSE_VID_D3D_ONLY)
-  ///int hz_ok=0,hz=0;
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+  int hz256=int((display_option_fs_bpp==1) ? 0:1);
 #else
+  int hz256=int(display_option_8_bit_fs ? 0:1);
+#endif  
+#if !defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_BORDERS_GUI_392)
   int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border!=0)]
 #else
@@ -1760,11 +1834,9 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #endif
   }
 #endif
-//#if !defined(SSE_VID_D3D_ONLY)
   if (draw_fs_blit_mode==DFSM_LAPTOP){
     rc.right=monitor_width;rc.bottom=monitor_height;
   }
-//#endif
 #endif//#if defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
   if ((Ret=Disp.SetDisplayMode())!=DD_OK) 
@@ -1782,7 +1854,11 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #ifdef WIN32
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
   if (resizeclippingwindow){
+#if defined(SSE_VID_D3D_ONLY) || defined(SSE_VID_DD_NO_FS_CLIPPER)
+    SetWindowPos(StemWin,0,0,0,rc.right,rc.bottom,SWP_NOZORDER);
+#else
     SetWindowPos(ClipWin,0,0,MENUHEIGHT,rc.right,rc.bottom-MENUHEIGHT,SWP_NOZORDER);
+#endif
   }
   if (DiskMan.IsVisible()){
     if (DiskMan.FSMaximized){
@@ -1815,11 +1891,13 @@ void change_window_size_for_border_change(int oldborder,int newborder)
 {
   if (ResChangeResize==0) return;
 #if defined(SSE_VID_BORDERS_GUI_392)
+
   if ((newborder) && !(oldborder)){
     StemWinResize(-(16*4),-(BORDER_TOP*2));
   }else if (!(newborder) && (oldborder)){
     StemWinResize((16*4),(BORDER_TOP*2));
   }
+
 #else
   if ((newborder & 1) && !(oldborder & 1)){
     StemWinResize(-(16*4),-(BORDER_TOP*2));

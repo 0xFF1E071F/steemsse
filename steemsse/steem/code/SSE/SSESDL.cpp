@@ -95,6 +95,10 @@ void TSDL::LeaveSDLVideoMode() {
 void TSDL::Lock() {
   SDL_LockSurface(Surface);
   draw_mem=(BYTE*)Surface->pixels; 
+#if defined(SSE_VID_ANTICRASH_392)
+  // compute locked video memory as pitch * #lines
+  Disp.VideoMemorySize=draw_line_length*SurfaceHeight;
+#endif
 }
 
 

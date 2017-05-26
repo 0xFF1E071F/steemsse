@@ -500,7 +500,18 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #if defined(SSE_VIDEO)
 
 #if defined(SSE_VID_BORDERS)
+
 #define ORIGINAL_BORDER_SIDE 32
+
+#if defined(SSE_VID_BORDERS_GUI_392)
+//#define LARGE_BORDER_SIDE 48
+//#define LARGE_BORDER_SIDE_WIN 46 //?
+#define VERY_LARGE_BORDER_SIDE 48
+#define VERY_LARGE_BORDER_SIDE_WIN 46 //?
+#define ORIGINAL_BORDER_BOTTOM 40
+#define LARGE_BORDER_BOTTOM 45
+#define VERY_LARGE_BORDER_BOTTOM 45
+#else
 #if defined(SSE_VID_BORDERS_LB_DX)
 #define LARGE_BORDER_SIDE 48 // trick, making it 40 at rendering
 #else
@@ -526,11 +537,13 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
 #endif
 
+#endif//#if defined(SSE_VID_BORDERS_GUI_392)
+
 #define ORIGINAL_BORDER_TOP 30
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
 #if defined(SSE_VID_BORDERS_GUI_392) // 0:no border
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_ONLY) || !defined(SSE_VID_BORDERS_LB_DX)
 #define BIGGEST_DISPLAY 3 //416
 #else
 #define BIGGEST_DISPLAY 4 //416
@@ -545,7 +558,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #endif
 
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
 #endif
 

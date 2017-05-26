@@ -983,14 +983,19 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_VSYNC_WINDOW)
     OPTION_WIN_VSYNC=pCSF->GetInt("Display","WinVSync",OPTION_WIN_VSYNC);
 #endif
-#if defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_3BUFFER_392) // It's 2 options now
+    OPTION_3BUFFER_FS=pCSF->GetInt("Display","TripleBufferFS",OPTION_3BUFFER_FS);
+#if !defined(SSE_VID_D3D_ONLY)
+    OPTION_3BUFFER_WIN=pCSF->GetInt("Display","TripleBufferWin",OPTION_3BUFFER_WIN);
+#endif
+#elif defined(SSE_VID_3BUFFER)
     OPTION_3BUFFER=pCSF->GetInt("Display","TripleBuffer",OPTION_3BUFFER);
 #endif
 #if defined(SSE_VID_D3D_OPTION) &&!defined(SSE_VID_D3D_ONLY)
     OPTION_D3D=pCSF->GetInt("Options","Direct3D",OPTION_D3D);
     Disp.ScreenChange();
 #endif
-#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
+#if defined(SSE_GUI_ST_AR_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
 #endif
 #if defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
@@ -1099,8 +1104,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     }
 #endif
 #endif//debug
-
+#if !defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
     frameskip=pCSF->GetInt("Options","FrameSkip",frameskip);
+#endif
 //    osd_on=(bool)pCSF->GetInt("Options","OSD",osd_on);
 #if !defined(SSE_VID_D3D_ONLY)
     draw_fs_blit_mode=pCSF->GetInt("Options","DrawFSMode",draw_fs_blit_mode);
@@ -1163,8 +1169,12 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       ChangeBorderSize(border);
 #endif
     }
+#if defined(SSE_VID_BPP_NO_CHOICE)
+#elif defined(SSE_VID_BPP_CHOICE)
+    display_option_fs_bpp=pCSF->GetInt("Display","BppInFS",display_option_fs_bpp);
+#else
     display_option_8_bit_fs=pCSF->GetInt("Display","EightBitInFS",display_option_8_bit_fs);
-
+#endif
     brightness=pCSF->GetInt("Options","Brightness",brightness);
     contrast=pCSF->GetInt("Options","Contrast",contrast);
 #if defined(SSE_VID_GAMMA)
@@ -1506,13 +1516,18 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_VSYNC_WINDOW)
   pCSF->SetStr("Display","WinVSync",EasyStr(OPTION_WIN_VSYNC));
 #endif
-#if defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_3BUFFER_392)
+  pCSF->SetStr("Display","TripleBufferFS",EasyStr(OPTION_3BUFFER_FS));
+#if !defined(SSE_VID_D3D_ONLY)
+  pCSF->SetStr("Display","TripleBufferWin",EasyStr(OPTION_3BUFFER_WIN));
+#endif
+#elif defined(SSE_VID_3BUFFER)
   pCSF->SetStr("Display","TripleBuffer",EasyStr(OPTION_3BUFFER));
 #endif
 #if defined(SSE_VID_D3D_OPTION)
   pCSF->SetStr("Display","Direct3D",EasyStr(OPTION_D3D)); 
 #endif
-#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
+#if defined(SSE_GUI_ST_AR_OPTION)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
@@ -1586,9 +1601,12 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 
   pCSF->SetStr("Display","BorderLastChosen",EasyStr(border_last_chosen));
-
+#if defined(SSE_VID_BPP_NO_CHOICE)
+#elif defined(SSE_VID_BPP_CHOICE)
+  pCSF->SetStr("Display","BppInFS",EasyStr(display_option_fs_bpp));
+#else
   pCSF->SetStr("Display","EightBitInFS",EasyStr(display_option_8_bit_fs));
-
+#endif
   pCSF->SetStr("Options","Brightness",EasyStr(brightness));
 
   pCSF->SetStr("Options","Contrast",EasyStr(contrast));

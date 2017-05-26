@@ -682,11 +682,17 @@ void TShifter::Vbl() {
 
 void TShifter::DrawBufferedScanlineToVideo() {
   // replacing macro DRAW_BUFFERED_SCANLINE_TO_VIDEO
-
   if(draw_store_dest_ad)
   { 
     // Bytes that will be copied.
     int amount_drawn=(int)(draw_dest_ad-draw_temp_line_buf); 
+
+#if defined(SSE_VID_ANTICRASH_392)
+    // Don't access video memory beyond the surface, it causes a crash
+    if(draw_store_dest_ad+amount_drawn>draw_mem+Disp.VideoMemorySize)
+      return;
+#endif
+
     // From draw_temp_line_buf to draw_store_dest_ad
     DWORD *src=(DWORD*)draw_temp_line_buf; 
     DWORD *dest=(DWORD*)draw_store_dest_ad;  

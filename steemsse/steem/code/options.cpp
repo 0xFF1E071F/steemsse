@@ -1097,12 +1097,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,StartEmuOnClick,0);
           }
           break;
+#if !defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
         case 201:
           if (HIWORD(wPar)==CBN_SELENDOK){
             frameskip=SendMessage(HWND(lPar),CB_GETCURSEL,0,0)+1;
             if(frameskip==5)frameskip=AUTO_FRAMESKIP;
           }
           break;
+#endif
         case 203:
           if (HIWORD(wPar)==BN_CLICKED){
 //            This->ChangeOSD(!osd_on);
@@ -1179,6 +1181,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             if (draw_grille_black<4) draw_grille_black=4;
           }
           break;
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+        case 208:
+          if (HIWORD(wPar)==CBN_SELENDOK){
+            display_option_fs_bpp=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+            TRACE_LOG("option fs bpp %d\n",display_option_fs_bpp);
+            if(FullScreen)
+            {
+              change_fullscreen_display_mode(false);
+              palette_convert_all();
+            }
+          }
+          break;
+#endif
+#if ! defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
         case 208:
           if (HIWORD(wPar)==BN_CLICKED){
             bool proceed=true;
@@ -1203,6 +1219,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+#endif//!defined(SSE_VID_BPP_NO_CHOICE)
 #if !defined(SSE_VID_D3D_ONLY)
         case 210:
           if (HIWORD(wPar)==BN_CLICKED){
@@ -1311,7 +1328,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 220:case 222:case 224:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int i=(LOWORD(wPar)-220)/2;
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+            int c256=int((display_option_fs_bpp==0) ? 0:1);
+#else
             int c256=int(display_option_8_bit_fs ? 0:1);
+#endif
             int new_hz=HzIdxToHz[SendMessage(HWND(lPar),CB_GETCURSEL,0,0)];
 
             if (prefer_pc_hz[c256][i]!=new_hz){
@@ -1460,21 +1481,30 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) // option Interpolate scanlines
+#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+          // option Interpolate scanlines
         case 1032:
           if(HIWORD(wPar)==BN_CLICKED)
           {
             OPTION_INTERPOLATED_SCANLINES=!OPTION_INTERPOLATED_SCANLINES;
             TRACE_LOG("Interpolate scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
+#if defined(SSE_VID_GUI_IS_AND_PAL) //only one option now
+            OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
+            StemWinResize();
+#endif
+
+#if !defined(SSE_VID_DD_FS_IS_392)
 #if !defined(SSE_VID_D3D_ONLY)
             draw_fs_blit_mode=(OPTION_INTERPOLATED_SCANLINES)?DFSM_STRETCHBLIT:
 #if defined(SSE_VID_D3D2)
               (D3D9_OK && OPTION_D3D) ? DFSM_STRETCHBLIT :
 #endif
               DFSM_STRAIGHTBLIT;
+#endif
+
 #endif//#if !defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES)
+#if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES) && !defined(SSE_VID_GUI_IS_AND_PAL)
             Disp.ScreenChange();
 #endif
           }
@@ -1487,20 +1517,45 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           {
             OPTION_WIN_VSYNC=!OPTION_WIN_VSYNC;
             TRACE_LOG("Option Window VSync: %d\n",OPTION_WIN_VSYNC);
+#if defined(SSE_VID_3BUFFER_392)
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_WIN_VSYNC,0);
+#elif defined(SSE_GUI_OPTIONS_REFRESH) 
 #if !defined(SSE_VID_3BUFFER_NO_VSYNC) &&!defined(SSE_VID_D3D_3BUFFER)
             if(OPTION_WIN_VSYNC)
               OPTION_3BUFFER=false;
 #endif
-//            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_WIN_VSYNC,0);
-#if defined(SSE_GUI_OPTIONS_REFRESH)
             OptionBox.SSEUpdateIfVisible();
-#endif
             Disp.ScreenChange();
+#endif
           }
           break;
 #endif
 
-#if defined(SSE_VID_3BUFFER) // Option Triple Buffer
+#if defined(SSE_VID_3BUFFER_392) 
+
+        case 1037: // Option Triple Buffer FS
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            OPTION_3BUFFER_FS=!OPTION_3BUFFER_FS;
+            TRACE_LOG("Option Triple Buffer FS: %d\n",OPTION_3BUFFER_FS);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER_FS,0);
+            Disp.ScreenChange(); // must delete and create surface
+          }
+          break;
+
+#if defined(SSE_VID_3BUFFER_WIN)
+        case 1034: // Option Triple Buffer Win
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            OPTION_3BUFFER_WIN=!OPTION_3BUFFER_WIN;
+            TRACE_LOG("Option Triple Buffer Win: %d\n",OPTION_3BUFFER_WIN);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER_WIN,0);
+            Disp.ScreenChange(); // must delete and create surface
+          }
+          break;
+#endif
+
+#elif defined(SSE_VID_3BUFFER) // Option Triple Buffer
         case 1034:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -2006,7 +2061,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VID_D3D_OPTION)
+#if defined(SSE_VID_D3D_OPTION) && !defined(SSE_VID_D3D_ONLY)
         case 7314: // option D3D
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_D3D=!OPTION_D3D;
@@ -2043,9 +2098,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 
 #endif
 
-
-
-#if defined(SSE_VID_D3D_STRETCH_AR_OPTION)
+#if defined(SSE_GUI_ST_AR_OPTION) && !defined(SSE_VID_GUI_IS_AND_PAL)
         case 7315: // Option Aspect Ratio
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
@@ -2054,7 +2107,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VID_380)
             if(ResChangeResize)
               StemWinResize();
-            //Disp.ScreenChange();
 #endif
           }
           break;
@@ -2143,7 +2195,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
 #if defined(SSE_VID_D3D_382)
             if(FullScreen && OPTION_D3D && D3D9_OK)
+#if defined(SSE_VID_D3D_FS_392A)
+              Disp.ScreenChange();
+#else
               Disp.D3DSpriteInit();
+#endif
 #endif
           }
           break;
@@ -2155,6 +2211,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_FULLSCREEN_GUI=!OPTION_FULLSCREEN_GUI;
             TRACE_LOG("Option FullScreen GUI = %d\n",OPTION_FULLSCREEN_GUI);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FULLSCREEN_GUI,0);
+#if defined(SSE_GUI_392) // class A interface!
+            EnableWindow(GetDlgItem(Win,226),OPTION_FULLSCREEN_GUI);
+#endif
           }
           break;
 #endif

@@ -37,7 +37,7 @@ struct TOption {
   unsigned int Interpolate:1;
   unsigned int StatusBar:1;
   unsigned int WinVSync:1;
-  unsigned int TripleBuffer:1;
+  unsigned int TripleBufferWin:1;
   unsigned int StatusBarGameName:1;
   unsigned int DriveSound:1;
   unsigned int SingleSideDriveMap:2;
@@ -63,6 +63,7 @@ struct TOption {
   unsigned int OsdTime:1;
   unsigned int CartidgeOff:1;
   unsigned int FullScreenDefaultHz:1;
+  unsigned int TripleBufferFS:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
@@ -97,9 +98,7 @@ extern struct TOption SSEOption;
 //#define PSG_FILTER_FIX (SSEOption.PSGFilter)
 #define ST_TYPE (SSEOption.STModel)
 #define OPTION_CAPTURE_MOUSE (SSEOption.CaptureMouse)
-#if !defined(SSE_VID_BORDERS_LB_DX1) // see SSEDecla.h
-#define BORDER_40 (SSEOption.DisplaySize==1)
-#endif
+
 #if defined(SSE_VID_BORDERS_GUI_392)
 #define DISPLAY_SIZE (border)
 #else
@@ -118,7 +117,11 @@ extern struct TOption SSEOption;
 #define OPTION_STATUS_BAR (SSEOption.StatusBar)
 #define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #define OPTION_WIN_VSYNC (SSEOption.WinVSync)
-#define OPTION_3BUFFER (SSEOption.TripleBuffer)
+#define OPTION_3BUFFER (SSEOption.TripleBufferWin) //temp for old build
+#if !defined(SSE_VID_D3D_ONLY)
+#define OPTION_3BUFFER_WIN (SSEOption.TripleBufferWin)
+#endif
+#define OPTION_3BUFFER_FS (SSEOption.TripleBufferFS)
 #define OPTION_DRIVE_SOUND (SSEOption.DriveSound)
 #define OPTION_GHOST_DISK (SSEOption.GhostDisk)
 #define OPTION_D3D (SSEOption.Direct3D)
@@ -159,8 +162,8 @@ extern struct TOption SSEOption;
 
 struct TConfig {
 
-  int FullscreenMask; // mask?
-  
+  // int FullscreenMask; // mask?  //Forgot the use
+  int WindowsVersion; //hold Windows version instead
   unsigned int UnrarDll:1;
   //unsigned int SdlDll:1;//forget it?
   unsigned int Hd6301v1Img:1;
@@ -173,6 +176,7 @@ struct TConfig {
   //unsigned int Stemdos:1; //unused
   unsigned int VideoCard8bit:1;
   unsigned int VideoCard16bit:1;
+  unsigned int VideoCard32bit:1;
   unsigned int ym2149_fixed_vol:1;
   unsigned int mv16:1; // B.A.T cartridge
   unsigned int mr16:1; // Microdeal Replay 16 cartridge
@@ -182,6 +186,9 @@ struct TConfig {
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+  int GetBitsPerPixel();
+#endif
 #if defined(SSE_STF)
   int SwitchSTType(int new_type); // adapt to new machine
 #endif

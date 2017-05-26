@@ -99,8 +99,13 @@ EXT BYTE *draw_dest_ad,*draw_dest_next_scanline;
 }
 
 #define OVERSCAN_MAX_COUNTDOWN 25
-
+#if defined(SSE_VID_BPP_NO_CHOICE)
+EXT const BYTE display_option_8_bit_fs INIT(0);
+#elif defined(SSE_VID_BPP_CHOICE)
+EXT BYTE display_option_fs_bpp INIT(0);
+#else
 EXT bool display_option_8_bit_fs INIT(false);
+#endif
 #if !defined(SSE_VID_D3D_ONLY)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #endif
