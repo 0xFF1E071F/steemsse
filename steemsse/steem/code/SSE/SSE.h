@@ -1086,7 +1086,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//d3d
 
 
-#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_D3D_STRETCH_ASPECT_RATIO) || defined(SSE_VID_STRETCH_ASPECT_RATIO)
 
 #define SSE_GUI_ST_AR_OPTION
 
@@ -1753,6 +1753,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_FEWER_FILTERS
 #define SSE_SOUND_CAN_CHANGE_DRIVER 
 #define SSE_SOUND_NO_NOSOUND_OPTION
+#define SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL
 #define SSE_VID_ENFORCE_AUTOFRAMESKIP
 #define SSE_VID_BPP_NO_CHOICE
 #if defined(SSE_DD)
@@ -1779,21 +1780,21 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392 // refactoring
 #define SSE_CPU_392B // add exception states
 #define SSE_CPU_392B2// no blit if exception state
-#define SSE_CPU_392C // thinking cycles...
+#define SSE_CPU_392C // "thinking" cycles...
 #define SSE_CPU_392D // bus access always 4 cycles
+#undef SSE_CPU_MFP_RATIO_STE // different for STE, hack
 #endif
 
 #define SSE_DISK_392 // refactoring
 #define SSE_DISK_392B // load disk options before disks...
-#define SSE_DISK_MFM0
-#ifdef SSE_DISK_PASTI
+#define SSE_DISK_MFM0 // C++ style
+#ifdef SSE_DISK_PASTI // refactoring (again)
 #undef SSE_GUI_DM_REGROUP_PASTI
 #undef SSE_GUI_DM_PASTI_ONLY_STX
 #undef SSE_DISK_PASTI_ONLY_STX
 #undef SSE_DISK_PASTI_ONLY_STX_HD
 #undef SSE_DISK_PASTI_AUTO_SWITCH2
 #define SSE_DISK_PASTI_AUTO_SWITCH4 
-#define SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL
 #endif
 
 #ifdef SSE_GLUE
@@ -1820,14 +1821,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_392B //check timers, first debug-only
 #endif
 #define SSE_INT_MFP_392C // prescale unmodified when changing prescaler on the fly
-#ifdef SSE_DEBUG
-//#define SSE_INT_MFP_392D0 // reporting (temp)
-//like steem 3.2 (test)
-//#undef SSE_INT_MFP_TIMERS_RATIO1
-//#undef SSE_INT_MFP_TIMERS_BASETIME
-#endif
 #define SSE_INT_MFP_392D1 // remove 'snap to mfp clock', there's (imperfect) wobble already
-#define SSE_INT_MFP_392F // bus jam after read
+#define SSE_INT_MFP_392E // bus jam after read
 #define SSE_INT_MFP_READ_DELAY_392
 #undef SSE_INT_MFP_READ_DELAY
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
@@ -1871,9 +1866,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_TIMINGS)
 #if defined(SSE_TIMING_MULTIPLIER)
 #define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
-//#define SSE_TIMING_MULTIPLIER_392A
 #define SSE_TIMING_MULTIPLIER_392B
-//#define SSE_TIMING_MULTIPLIER_392C //=bug MFD or improve...
 #endif
 #if defined(SSE_X64)
 #define SSE_TIMINGS_CPUTIMER64

@@ -57,7 +57,7 @@ static dr4_getb P_((u_int offs));
     that builds DR1 bit by bit. 
     It's slow but performance isn't needed for the keyboard.
     v3.7 we fetch the values in the ROM F319-> F370 + special, but now
-    we depend on the ROM.
+    we depend on the ROM. // undef 3.9.1 -> speed, snapshot issues?
 */
 
 #if !defined(SSE_IKBD_6301_ROM_KEYTABLE) || defined(SSE_DEBUG)

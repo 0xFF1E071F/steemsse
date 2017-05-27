@@ -387,7 +387,7 @@ Receiver Data Register is retained.
         //  Hatari also counts 4 cycles of wait states
 
         
-#if defined(SSE_INT_MFP_392F) //see below, we put it after the read
+#if defined(SSE_INT_MFP_392E) //see below, we put it after the read
         if(!OPTION_C2)
         {
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
@@ -498,7 +498,7 @@ Receiver Data Register is retained.
                   // Timer B is in event count mode, check if it has counted down since the start of
                   // this instruction. Due to MFP delays this very, very rarely gets changed under 4
                   // cycles from the point of the signal.
-#if defined(SSE_INT_MFP_392F)
+#if defined(SSE_INT_MFP_392E)
                   //because we were in advance?
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) 
                     >= (OPTION_C2?0:5)){ // >=5 = >4
@@ -573,7 +573,7 @@ Receiver Data Register is retained.
           if(OPTION_C2)
             INSTRUCTION_TIME(2);
 #endif
-#if defined(SSE_INT_MFP_392F)
+#if defined(SSE_INT_MFP_392E)
 /*  Counting the bus jam after the read makes sense in the way we can
     remove the 'if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4)'
     This seems to fix Down TLN.

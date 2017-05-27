@@ -1068,13 +1068,35 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=352
   if(Version>=45) //3.5.2
   {
-#if defined(SSE_DRIVE)
-
-#if defined(SSE_DRIVE_SOUND)
-    TSF314 SF314Copy=SF314[0];
-#if defined(SSE_DRIVE_SOUND_391)
-    TSF314 SF314Copy1=SF314[1];
+#if defined(SSE_DISK_MFM0) // TODO!!! find a better system - quick fix
+    for(int drive=0;drive<2;drive++)
+    {
+      TSF314 copy=SF314[drive];
+      ReadWriteStruct(SF314[drive]);
+      if(SF314[drive].Id!=drive) // bad snapshot?
+      {
+        SF314[drive].Id=drive;
+        SF314[drive].Init();
+      }
+      SF314[drive].ImageType=copy.ImageType;
+      SF314[drive].MfmManager=copy.MfmManager;
+      SF314[drive].Id=drive;
+#if !defined(SSE_FLOPPY_ALWAYS_ADAT)
+      SF314[drive].UpdateAdat();
 #endif
+#if defined(SSE_DRIVE_SOUND) 
+      SF314[drive].Sound_Volume=copy.Sound_Volume;
+      for(int i=0;i<TSF314::NSOUNDS;i++)
+        SF314[drive].Sound_Buffer[i]=copy.Sound_Buffer[i];
+#endif
+    }
+#elif defined(SSE_DRIVE)
+
+#if defined(SSE_DRIVE_SOUND) 
+    TSF314 SF314Copy=SF314[0];
+//#if defined(SSE_DRIVE_SOUND_391)
+    TSF314 SF314Copy1=SF314[1];
+//#endif
 #endif
 
 #if SSE_VERSION>=370

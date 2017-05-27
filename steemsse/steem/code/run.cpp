@@ -692,12 +692,7 @@ void event_timer_b()
   }
 #if defined(SSE_INT_MFP_TIMER_B_392A)
   if(OPTION_C2)
-#if defined(SSE_TIMING_MULTIPLIER_392C)
-    time_of_next_timer_b=cpu_timer_at_start_of_hbl
-    +160000*cpu_cycles_multiplier;  //put into future
-#else
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
-#endif
 #endif
 
 }
@@ -1676,17 +1671,7 @@ void event_vbl_interrupt() //SS misleading name?
     cpu_time_of_first_mfp_tick+=160000; 
   }
 #endif
-#if defined(SSE_TIMING_MULTIPLIER_392C)
-#if defined(SSE_TIMINGS_CPUTIMER64)
-  while ( abs((int)(ABSOLUTE_CPU_TIME-shifter_cycle_base))
-    >160000*cpu_cycles_multiplier){
-#else
-  while ( abs(ABSOLUTE_CPU_TIME-shifter_cycle_base)
-    >160000*cpu_cycles_multiplier){
-#endif
-    shifter_cycle_base+=60000*cpu_cycles_multiplier; //SS 60000?
-  }
-#else
+
 #if defined(SSE_TIMINGS_CPUTIMER64)
   while (abs((int)(ABSOLUTE_CPU_TIME-shifter_cycle_base))>160000){
 #else
@@ -1694,7 +1679,7 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
     shifter_cycle_base+=60000; //SS 60000?
   }
-#endif
+
   shifter_pixel=shifter_hscroll;
 #if !defined(SSE_GLUE_REFACTOR_OVERSCAN_EXTRA2)
   overscan_add_extra=0;
@@ -1834,7 +1819,7 @@ void prepare_cpu_boosted_event_plans()
   if(factor>=512)
     SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
-#if !defined(SSE_TIMING_MULTIPLIER_392A)
+
   for (int idx=0;idx<3;idx++){ //3 frequencies
 #if !defined(SSE_GLUE)
     source=event_plan[idx];
@@ -1853,7 +1838,7 @@ void prepare_cpu_boosted_event_plans()
     scanline_time_in_cpu_cycles[idx]=(scanline_time_in_cpu_cycles_8mhz[idx]*factor)/8;
 #endif
   }
-#endif
+
 #if !defined(SSE_TIMING_MULTIPLIER_392)
   for (int n=0;n<16;n++){
 #if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)

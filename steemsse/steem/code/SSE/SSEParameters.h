@@ -400,7 +400,10 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define MFP_TIMER_SET_DELAY (8) // see DSOTS
 #endif
 
-#if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
+
+#if defined(SSE_INT_MFP_392D1)
+#define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
+#elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
 #else
 #define MFP_TIMERS_WOBBLE (4) // &

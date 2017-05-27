@@ -22,9 +22,9 @@ unsigned int _rotl(unsigned int Data, unsigned int Bits) {
  
 // functions & variables from Steem (declared as extern "C") there
 extern void keyboard_buffer_write(unsigned char src) ;
-extern int cpu_timer,cpu_cycles; // for debug
-#define ABSOLUTE_CPU_TIME (cpu_timer-cpu_cycles)
-#define act ABSOLUTE_CPU_TIME
+//extern int cpu_timer,cpu_cycles; // for debug
+//#define ABSOLUTE_CPU_TIME (cpu_timer-cpu_cycles)
+//#define act ABSOLUTE_CPU_TIME
 extern unsigned char  stick[8]; // joysticks
 // variables from Steem we declare here as 'C' linkage (easier than in Steem)
 BYTE ST_Key_Down[128];
@@ -156,8 +156,13 @@ hd6301_reset(int Cold) {
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
-  mouse_x_counter=MOUSE_MASK;
-  mouse_y_counter=MOUSE_MASK;
+#ifdef SSE_BUGFIX_392
+  if(Cold)
+#endif
+  {
+    mouse_x_counter=MOUSE_MASK;
+    mouse_y_counter=MOUSE_MASK;
+  }
 #if !defined(SSE_IKBD_6301_373)
   cpu_start(); // since we don't use the command.c file
 #endif
@@ -179,7 +184,11 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   static int cycles_to_give_back=0;
 #endif
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  unsigned COUNTER_VAR starting_cycles=cpu.ncycles;
+#else
   int starting_cycles=cpu.ncycles;
+#endif
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {
@@ -188,7 +197,8 @@ hd6301_run_cycles(u_int cycles_to_run) {
   }
   if((iram[TRCSR]&1) && !ACIA_IKBD.LineTxBusy)
   {
-    TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
+//    TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
+    TRACE("6301 waking up (PC %X cycles %d)\n",reg_getpc(),cpu.ncycles);
     iram[TRCSR]&=~1; // ha! that's for Barbarian (& Obliterator, Froggies)
   }
   pc=reg_getpc();
