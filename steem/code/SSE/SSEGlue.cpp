@@ -2134,7 +2134,7 @@ void TGlue::GetNextScreenEvent() {
   screen_event.event=screen_event_vector;
 #endif
 
-#if defined(SSE_TIMING_MULTIPLIER_392B) && !defined(SSE_TIMING_MULTIPLIER_392A)
+#if defined(SSE_TIMING_MULTIPLIER_392B)
   if(cpu_cycles_multiplier>1 && screen_event_vector!=event_scanline)
     screen_event.time*=cpu_cycles_multiplier;
 #elif defined(SSE_TIMING_MULTIPLIER)

@@ -16,7 +16,11 @@ struct cpu {
 		unsigned min:16;
 		unsigned max:16;
 	} stack;
+#if defined(SSE_TIMINGS_CPUTIMER64)
+  unsigned COUNTER_VAR ncycles;
+#else
 	unsigned ncycles;
+#endif
 	enum cpu_states state;
 
 #if 0

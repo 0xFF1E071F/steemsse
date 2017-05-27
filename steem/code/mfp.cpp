@@ -395,10 +395,6 @@ register. This is of course correct in Steem but hey, I didn't even know that.
             * CPU_CYCLES_PER_MFP_CLK);
 #endif
 
-#if defined(SSE_INT_MFP_392D0)
-          COUNTER_VAR timeout0=mfp_timer_timeout[timer];
-#endif
-
 #if defined(SSE_INT_MFP_392D1)
 /*
 Changing the prescale value with the timer running
@@ -472,14 +468,6 @@ TODO
 
 #if defined(SSE_INT_MFP_392D1)
           } //if(!OPTION_C2)
-#endif
-
-#if defined(SSE_INT_MFP_392D0)
-          COUNTER_VAR timeout1=mfp_timer_timeout[timer];
-          int correction=timeout1-timeout0;
-          TRACE_OSD("T%d %d",timer,correction);
-          //TRACE("T%d %d",timer,correction);
-          ASSERT(correction>-4);
 #endif
 
 #if defined(SSE_INT_MFP_TIMERS)
@@ -1047,11 +1035,7 @@ void TMC68901::ComputeNextTimerB(int info) {
   if(!tontb || info!=NewScanline && tontb-ACT<=0 
     && time_of_next_event!=time_of_next_timer_b)
   {
-#if defined(SSE_TIMING_MULTIPLIER_392C)
-    tontb=cpu_timer_at_start_of_hbl+160000*cpu_cycles_multiplier;  //put into future
-#else
     tontb=cpu_timer_at_start_of_hbl+160000;  //put into future
-#endif
   }
   bool recheck_events=(time_of_next_timer_b!=tontb);
   time_of_next_timer_b=tontb;

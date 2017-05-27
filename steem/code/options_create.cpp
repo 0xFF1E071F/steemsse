@@ -1286,9 +1286,8 @@ T("For the window. This can change emulation speed")
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           x,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
-  ToolAddWindow(ToolTip,Win,
-    T("Tries to emulate aspect ratio (in all window and fullscreen 'stretch' \
-modes) and scanlines of your typical monitor."));
+  //ToolAddWindow(ToolTip,Win,
+    //T("Tries to emulate aspect ratio and scanlines of your typical monitor."));
   y+=LineHeight;
 #endif
 

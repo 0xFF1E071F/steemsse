@@ -781,12 +781,12 @@ idiv_inh ()
 		reg_setix (-1);
 		reg_setaccd (0);
 		reg_setcflag (1);
-#if !defined(SSE_VAR_REWRITE)
+#if !defined(SSE_COMPILER_WARNING)
 		return;
 #endif
 	}
 
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
   else
 #endif
   {//SS
@@ -817,11 +817,11 @@ fdiv_inh ()
 	if (d > x)
 	{
 		reg_setvflag (1);
-#if !defined(SSE_VAR_REWRITE)
+#if !defined(SSE_COMPILER_WARNING)
 		return;
 #endif
   }
-#if defined(SSE_VAR_REWRITE)
+#if defined(SSE_COMPILER_WARNING)
   else
 #endif
   {//SS

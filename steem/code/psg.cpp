@@ -886,7 +886,13 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
+#if defined(SSE_CARTRIDGE_BAT)
+        val+=(SSEConfig.mv16 || SSEConfig.mr16)
+        ? (**lp_dma_sound_channel)
+        : (dma_sample*DMA_SOUND_MULTIPLIER);
+#else
         val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#endif
 #else
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
@@ -939,7 +945,13 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
+#if defined(SSE_CARTRIDGE_BAT)
+        val+=(SSEConfig.mv16 || SSEConfig.mr16)
+        ? (*(*lp_dma_sound_channel+1))
+        : (dma_sample*DMA_SOUND_MULTIPLIER);
+#else
           val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#endif
 #else
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) ) 
@@ -1021,7 +1033,13 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
     if(RENDER_SIGNED_SAMPLES)
     {
       char dma_sample=**lp_dma_sound_channel; 
+#if defined(SSE_CARTRIDGE_BAT)
+      val+=(SSEConfig.mv16 || SSEConfig.mr16)
+        ? (**lp_dma_sound_channel)
+        : (dma_sample*DMA_SOUND_MULTIPLIER);
+#else
       val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#endif
     }
     else
 #endif
@@ -1075,7 +1093,13 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
       if(RENDER_SIGNED_SAMPLES)
       {
         char dma_sample=*(*lp_dma_sound_channel+1); 
+#if defined(SSE_CARTRIDGE_BAT)
+        val+=(SSEConfig.mv16 || SSEConfig.mr16)
+          ? (*(*lp_dma_sound_channel+1))
+          : (dma_sample*DMA_SOUND_MULTIPLIER);
+#else
         val+=dma_sample*DMA_SOUND_MULTIPLIER;
+#endif
       }
       else
 #endif

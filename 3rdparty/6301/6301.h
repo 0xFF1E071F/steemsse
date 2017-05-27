@@ -9,9 +9,6 @@
     precise integration with another serial device (MC6850 ACIA in the
     ST) wasn't the focus.
     This also hadn't VC6 or BCC5 in mind, let alone VS2010 or Linux.
-    The emu takes 64K just for the 8bit chip's ram (x2 if we keep the
-    breaks). It must be possible to optimise this away (it only uses 256 bytes
-    of RAM + 4K of ROM) but 64k is OK.
     The functions in original files have been modified when necessary, some
     have been added, in 6301.c, and in ireg.c (most interesting ones). 
     The module is built in 6301.c, which also contains specific functions.

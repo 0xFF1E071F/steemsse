@@ -226,11 +226,7 @@ void init_timings()
   cpu_timer=time_of_next_event;
 
   cpu_time_of_last_vbl=ABSOLUTE_CPU_TIME;
-#if defined(SSE_TIMING_MULTIPLIER_392C)
-  time_of_next_timer_b=cpu_time_of_last_vbl+160000*cpu_cycles_multiplier;
-#else
   time_of_next_timer_b=cpu_time_of_last_vbl+160000;
-#endif
   scan_y=-scanlines_above_screen[shifter_freq_idx];
 
   time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME;

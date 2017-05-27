@@ -52,11 +52,11 @@ int nbytes;
 #endif
 #if !defined(SSE_VS2008_WARNING_390) || defined(SSE_DEBUG)
   u_char trcsr=iram[TRCSR];
-#endif
   ASSERT(nbytes==1);
   ASSERT(trcsr&RE);
   ASSERT(!(trcsr&RDRF));
   //ASSERT(!(trcsr&WU));
+#endif
 #if defined(SSE_IKBD_6301_380)
   ASSERT(rxinterrupts < BUFSIZE);
   recvbuf[rxinterrupts++] = *s;
@@ -188,19 +188,7 @@ trcsr_putb (offs, value)
   if(value&1)
     TRACE("Set 6301 stand-by\n");
   
-#if defined(SSE_IKBD_6301_373) && !defined(SSE_IKBD_6301_380B)
-/*  Enable serial int when TIE set, assuming the condition
-    for IRQ is true.
-    Cases: Cobra Compil 1, Defulloir
-    Undef, this version breaks Pothole 2
-*/
-  value&=0x1F;
-  if( (value&TIE) && ! (ireg_getb(TRCSR)&TIE))
-  {
-    TRACE("6301 set TIE tx %d\n",txinterrupts);
-    txinterrupts=1; // force check - hack?
-  }
-#elif defined(SSE_IKBD_6301_SET_TDRE)
+#if defined(SSE_IKBD_6301_SET_TDRE)
 /*  Here we do as if the program could set bit 5 of TRCSR - correct?
     Maybe we're compensating another bug (internal problem with txinterrupts?)
     Cases:
@@ -211,14 +199,7 @@ trcsr_putb (offs, value)
   value&=0x3F;
   if(value&TDRE/*0x20*/) 
   {
-    if((value & TIE)
-#if defined(SSE_IKBD_6301_380B)
-      && OPTION_HACKS // don't understand well
-#endif
-#if !defined(SSE_IKBD_6301_380B) // Defulloir
-     &&!ACIA_IKBD.LineRxBusy
-#endif
-      ) 
+    if(OPTION_HACKS && (value & TIE)) 
     {
       TRACE("6301 program sets TDRE\n");
       txinterrupts = 1; // this will force a check
@@ -287,9 +268,6 @@ rdr_getb (offs)
       TRACE("6301 clear OVR\n");
       iram[TRCSR]&=~ORFE; // clear overrun bit
     }
-
-    ////////rxinterrupts=0;//
-
   }
   return ireg_getb (RDR);
 }
