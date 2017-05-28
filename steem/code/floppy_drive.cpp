@@ -1517,9 +1517,9 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 
 #if defined(SSE_DISK_MFM0)
   // use polymorphism for closing (for opening it wouldn't make it simpler)
-  if(SF314[drive].ImageType.Manager==MNGR_WD1772)
+  if(SF314[drive].ImageType.Manager==MNGR_WD1772 && SF314[drive].MfmManager)
   {
-    ASSERT(SF314[drive].MfmManager);
+    //ASSERT(SF314[drive].MfmManager);
     SF314[drive].MfmManager->Close();
   }
   SF314[drive].State.reading=SF314[drive].State.writing=0; //? TODO
