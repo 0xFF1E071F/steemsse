@@ -544,7 +544,7 @@ HRESULT DSGetPrimaryBuffer()
   {
     if(psg_channels_buf!=NULL)
       delete[] psg_channels_buf;
-    psg_channels_buf=new int[samples_per_vbl+16];
+    psg_channels_buf=new int[samples_per_vbl+16+PSG_WRITE_EXTRA];
     ASSERT(psg_channels_buf);
     ZeroMemory(psg_channels_buf,(samples_per_vbl+16)*sizeof(int));
     psg_channels_buf_len=samples_per_vbl;

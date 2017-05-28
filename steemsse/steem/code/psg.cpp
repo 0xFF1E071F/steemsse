@@ -1414,8 +1414,14 @@ HRESULT Sound_VBL()
 #if defined(SSE_YM2149_MAMELIKE)
   if(OPTION_MAME_YM)
   {
-    //TRACE_OSD("YM");
+#if defined(SSE_YM2149_MAMELIKE3)
+    YM2149.psg_write_buffer(time_of_next_vbl_to_write);
+    // Fill extra buffer, but without advancing the YM emu
+    for(int i=psg_buf_pointer[0];i<psg_buf_pointer[0]+PSG_WRITE_EXTRA;i++)
+      *(psg_channels_buf+i)=*(psg_channels_buf+i-1);
+#else
     YM2149.psg_write_buffer(time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
+#endif
   }
   else
 #endif

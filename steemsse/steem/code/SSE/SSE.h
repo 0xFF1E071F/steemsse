@@ -1772,10 +1772,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_392
 #endif
 
-//#ifdef SSE_BOILER
-//#define SSE_BOILER_FRAME_REPORT_392
-//#endif
-
 #ifdef SSE_CPU
 #define SSE_CPU_392 // refactoring
 #define SSE_CPU_392B // add exception states
@@ -1932,6 +1928,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_DISABLE_CAPTURE_FILE // never noticed this before...
 #define SSE_YM2149_FIX_ENV_TABLE // interpolated from fixed volume values
 #define SSE_YM2149_MAMELIKE
+//#define SSE_YM2149_MAMELIKE2 //undef
+#define SSE_YM2149_MAMELIKE3 //def
 #define SSE_YM2149_MAMELIKE_AVG_SMP // oversampling by artihmetic averaging
 #endif
 
