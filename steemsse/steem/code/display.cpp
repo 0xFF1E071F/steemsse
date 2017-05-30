@@ -1608,18 +1608,18 @@ void SteemDisplay::RunEnd(bool Temp)
 */
   if(OPTION_FULLSCREEN_GUI) 
 #endif
-#if defined(SSE_VID_D3D)
+  {
+#if defined(SSE_VID_D3D) && !defined(SSE_VID_D3D_FS_392B)
     if(D3D9_OK && OPTION_D3D && pD3DDevice)
-#if defined(SSE_VID_FS_GUI_OPTION) && !defined(SSE_VID_D3D_FS_392B)
       pD3DDevice->SetDialogBoxMode(TRUE);
 #if !defined(SSE_VID_D3D_ONLY)
     else
 #endif
 #endif
-#endif
 #if !defined(SSE_VID_D3D_ONLY)
       DDObj->FlipToGDISurface();
 #endif
+  }
 #if !defined(SSE_VID_FS_382)
   LockWindowUpdate(NULL);
 #endif
