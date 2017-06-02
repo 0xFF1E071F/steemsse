@@ -66,7 +66,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -89,7 +89,7 @@ TDebug::TDebug() {
 #if !defined(SSE_BOILER_TRACE_CONTROL)
   logsection_enabled[ LOGSECTION_FDC_BYTES ] = 0;
 #endif
-  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 1;
+  logsection_enabled[ LOGSECTION_IMAGE_INFO ] = 0;
 #endif
 #endif
 
@@ -418,12 +418,12 @@ void TDebug::TraceGeneralInfos(int when) {
       UNZIP_DLL,SSEConfig.unzipd32Dll,SSE_DISK_CAPS_PLUGIN_FILE,SSEConfig.CapsImgDll,
       PASTI_DLL,SSEConfig.PastiDll,ARCHIVEACCESS_DLL,SSEConfig.ArchiveAccess,
       HD6301_ROM_FILENAME,SSEConfig.Hd6301v1Img);
-    //TRACE("High priority %d Task switch %d Auto pause %d Floppy skip %d Start on click %d Load snapshot %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
-//    TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
-    TRACE("Video DX %d D3D %d Mem %d BHM %d 8 %d 16 %d \n",TryDD,SSEConfig.Direct3d9,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit);
+#ifdef SSE_VID_D3D
+    TRACE("Video DX %d D3D %d HWM %d BHM %d BPP%d%d%d\n",TryDD,SSEConfig.Direct3d9,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit,SSEConfig.VideoCard32bit);
+#else
+    TRACE("Video DX %d HWM %d BHM %d BPP%d%d%d\n",TryDD,Disp.DrawToVidMem,Disp.BlitHideMouse,SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit,SSEConfig.VideoCard32bit);
+#endif
     TRACE("HP %d ATS %d PWI %d FAFF %d SEOC %d ALSS %d\n",HighPriority,AllowTaskSwitch,PauseWhenInactive,floppy_access_ff,StartEmuOnClick,AutoLoadSnapShot);
-    //TRACE("Sound DX %d drive %d\n",TrySound,SSEConfig.DriveSound);
-    //TRACE("ACSI %d 6301 %d\n",SSEConfig.AcsiImg,SSEConfig.Hd6301v1Img);
   }
   else
 #endif
@@ -456,7 +456,7 @@ void TDebug::TraceGeneralInfos(int when) {
     //options
     if(cart)
       TRACE("Cart %X ",CART_LPEEK(0));
-#if defined(SSE_CPU_MFP_RATIO)
+#if defined(SSE_CPU_MFP_RATIO) && !defined(SSE_GUI_NO_CPU_SPEED)
     if (n_cpu_cycles_per_second>CpuNormalHz)
       TRACE("Speed %d Mhz ",n_cpu_cycles_per_second/1000000);
 #endif
@@ -479,7 +479,7 @@ void TDebug::TraceGeneralInfos(int when) {
     if(OPTION_C2)
       TRACE("; C2");
 #endif
-#if defined(SSE_CPU_MFP_RATIO) 
+#if defined(SSE_CPU_MFP_RATIO) && !defined(SSE_GUI_NO_CPU_SPEED)
     if(n_cpu_cycles_per_second>CpuNormalHz)
       //TRACE("; Speed %d",n_cpu_cycles_per_second);
       TRACE("; ~%d",n_cpu_cycles_per_second);
@@ -508,11 +508,24 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Size %d", DISPLAY_SIZE);
 #endif
     if(extended_monitor)
-      TRACE("; ext %dx%d",em_width,em_height);
+      TRACE("; EXT %dx%d",em_width,em_height);
+#if defined(SSE_VID_3BUFFER_392)
+    if(FullScreen)
+      TRACE("; FS 3B%d VS%d",OPTION_3BUFFER_FS,FSDoVsync);
+    else
+#ifdef SSE_VID_DD
+      TRACE("; WM 3B%d VS%d %d-%d,%d-%d,%d",OPTION_3BUFFER_WIN,OPTION_WIN_VSYNC,
+        WinSizeForRes[0],draw_win_mode[0],WinSizeForRes[1],draw_win_mode[1],WinSizeForRes[2]); 
+#else
+      TRACE("; WM VS%d %d-%d,%d-%d,%d",OPTION_WIN_VSYNC,
+        WinSizeForRes[0],draw_win_mode[0],WinSizeForRes[1],draw_win_mode[1],WinSizeForRes[2]); 
+#endif
+#else
     if(FullScreen)
       TRACE("; FS");
     else
       TRACE("; WM %d-%d,%d-%d,%d",WinSizeForRes[0],draw_win_mode[0],WinSizeForRes[1],draw_win_mode[1],WinSizeForRes[2]); 
+#endif
     TRACE("\n");
     //disk
     //TRACE("%d drives",num_connected_floppies);

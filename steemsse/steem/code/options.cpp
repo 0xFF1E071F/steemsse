@@ -227,6 +227,7 @@ void TOptionBox::ChangeSoundFormat(BYTE bits,BYTE channels)
   Sound_Start();
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_MACROS)
 Str TOptionBox::CreateMacroFile(bool Edit)
 {
   Str Path="";
@@ -264,6 +265,7 @@ Str TOptionBox::CreateMacroFile(bool Edit)
 
   return Path;
 }
+#endif
 //---------------------------------------------------------------------------
 int TOptionBox::GetCurrentMonitorSel()
 {
@@ -646,6 +648,7 @@ void TOptionBox::LoadProfile(char *File)
 //---------------------------------------------------------------------------
 #ifdef WIN32
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_MACROS)
 void TOptionBox::UpdateMacroRecordAndPlay(Str SelPath,int Type)
 {
   if (Handle==NULL) return;
@@ -670,6 +673,7 @@ void TOptionBox::UpdateMacroRecordAndPlay(Str SelPath,int Type)
 //  SendDlgItemMessage(Handle,10017,BM_SETCHECK,MFO.add_mouse_together,0);
   CBSelectItemWithData(GetDlgItem(Handle,10014),MFO.max_mouse_speed);
 }
+#endif
 //---------------------------------------------------------------------------
 
 #define OPTIONS_HEIGHT 395
@@ -848,8 +852,9 @@ void TOptionBox::Show()
   AddPageLabel("TOS",10);
   AddPageLabel(T("Ports"),12);
   AddPageLabel(T("MIDI"),4);
+#if !defined(SSE_GUI_NO_MACROS)
   AddPageLabel(T("Macros"),13);
-
+#endif
   // Configuration options
   AddPageLabel(T("General"),0);
   AddPageLabel(T("Sound"),5);
@@ -861,9 +866,13 @@ void TOptionBox::Show()
 #else
   AddPageLabel(T("Brightness")+"/"+T("Contrast"),2);
 #endif
+#if !defined(SSE_GUI_NO_PROFILES)
   AddPageLabel(T("Profiles"),11);
+#endif
   AddPageLabel(T("Startup"),6);
+#if !defined(SSE_GUI_NO_ICONCHOICE)
   AddPageLabel(T("Icons"),14);
+#endif
 #ifndef SSE_VAR_NO_UPDATE
   AddPageLabel(T("Auto Update"),7);
 #endif
@@ -952,7 +961,8 @@ bool TOptionBox::HasHandledMessage(MSG *mess)
     if (mess->message==WM_KEYDOWN){
       if (mess->wParam==VK_TAB){
 #if defined(SSE_VS2008_WARNING_390) 
-        return IsDialogMessage(Handle,mess)&1;
+        //return IsDialogMessage(Handle,mess)&1;
+        return (IsDialogMessage(Handle,mess)!=0);;
 #else
         return IsDialogMessage(Handle,mess);
 #endif
@@ -1042,6 +1052,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #else
       switch (LOWORD(wPar)){
 #endif
+#if !defined(SSE_GUI_NO_CPU_SPEED)
         case 404:
           if (HIWORD(wPar)==CBN_SELENDOK){
 #if defined(SSE_CPU_HISPEED_392)
@@ -1073,6 +1084,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             prepare_cpu_boosted_event_plans();
           }
           break;
+#endif
         case 700:
           if (HIWORD(wPar)==BN_CLICKED){
             AllowTaskSwitch=!AllowTaskSwitch;
@@ -2018,7 +2030,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_GUI_STATUS_BAR)
+#if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
         case 7307: // status bar
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_STATUS_BAR=!OPTION_STATUS_BAR;
@@ -2028,7 +2040,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
         case 7309: //  status bar game name
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_STATUS_BAR_GAME_NAME=!OPTION_STATUS_BAR_GAME_NAME;
@@ -2540,6 +2552,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             This->TOSRefreshBox("");
           }
           break;
+#if !defined(SSE_GUI_NO_MACROS)
         case 10001:
           if (HIWORD(wPar)!=BN_CLICKED) break;
           DTree.NewItem(T("New Macro"),DTree.RootItem,1);
@@ -2603,6 +2616,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
           break;
         }
+#endif
+#if !defined(SSE_GUI_NO_PROFILES)
         case 11001:
         case 11012:
           if (HIWORD(wPar)==BN_CLICKED){
@@ -2621,6 +2636,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 11011:
           if (HIWORD(wPar)==BN_CLICKED) This->LoadProfile(This->ProfileSel);
           break;
+#endif
+#if !defined(SSE_GUI_NO_ICONCHOICE)
         case 14020:
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
@@ -2692,6 +2709,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,0,true);
           }
           break;
+
         case 14021:
           if (HIWORD(wPar)==BN_CLICKED){
             ConfigStoreFile CSF(INIFile);
@@ -2701,6 +2719,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             CSF.Close();
           }
           break;
+#endif//#if !defined(SSE_GUI_NO_ICONCHOICE)
       }
 
 #if defined(SSE_GUI_STATUS_BAR)
@@ -3174,10 +3193,13 @@ int TOptionBox::DTreeNotifyProc(DirectoryTree*,void *t,int Mess,int i1,int)
     DTREE_LOG(EasyStr("DTree: NewSel=")+NewSel+" Type="+Type);
     int DisableLo=0,DisableHi=0;
     if (GetDlgCtrlID(DTree.hTree)==10000){
+#if !defined(SSE_GUI_NO_MACROS)
       This->MacroSel=NewSel;
       DTREE_LOG(EasyStr("DTree: Calling UpdateMacroRecordAndPlay"));
       This->UpdateMacroRecordAndPlay(NewSel,Type);
       DisableLo=10010;DisableHi=10030;
+#endif
+#if !defined(SSE_GUI_NO_PROFILES)
     }else if (GetDlgCtrlID(DTree.hTree)==11000){
       This->ProfileSel=NewSel;
       DisableLo=11010;DisableHi=11030;
@@ -3198,6 +3220,7 @@ int TOptionBox::DTreeNotifyProc(DirectoryTree*,void *t,int Mess,int i1,int)
     DTREE_LOG(EasyStr("DTree: Enabling/Disabling sections"));
     for (int n=DisableLo;n<DisableHi;n++){
       if (GetDlgItem(This->Handle,n)) EnableWindow(GetDlgItem(This->Handle,n),Type);
+#endif
     }
   }
   DTREE_LOG(EasyStr("DTree: Finished processing Mess=")+Mess);

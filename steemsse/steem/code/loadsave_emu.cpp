@@ -810,21 +810,16 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if USE_PASTI==0
     int pasti_active=0;
 #endif
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
-    bool dummy=0;
-    ReadWrite(dummy);
-#else
     ReadWrite(pasti_active);
-#endif
 #if USE_PASTI
     if (hPasti==0) pasti_active=0;
 #endif
     if (LoadOrSave==LS_SAVE){
       //ask Pasti for variable block, save length as a long, followed by block
 #if USE_PASTI
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B) // and not pasti_active?
-      if (hPasti && (SF314[0].ImageType.Manager==MNGR_PASTI
-        || SF314[1].ImageType.Manager==MNGR_PASTI)) {
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+      if (hPasti && (pasti_active||SF314[0].ImageType.Manager==MNGR_PASTI
+        ||SF314[1].ImageType.Manager==MNGR_PASTI)){
 #else
       if (hPasti && pasti_active){
 #endif
@@ -1261,7 +1256,7 @@ Steem SSE will reset auto.sts and quit\nSorry!",
       M68000.cycles_for_eclock+=ioaccess; // restore
 #endif
 #if defined(SSE_BUGFIX_392)
-    if(LoadOrSave==LS_SAVE)
+    if(LoadOrSave==LS_LOAD)//LS_SAVE)
       ioaccess=save_ioaccess;
 #endif
 
@@ -1287,8 +1282,15 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=392
   if(Version>=56) //392
   {
-    ReadWriteStruct(MMU); // for MonSTer alt-RAM...
-    ASSERT(MMU.FreqMod[5]==2);
+    //ReadWriteStruct(MMU); // for MonSTer alt-RAM...
+    //ASSERT(MMU.FreqMod[5]==2);
+
+#if defined(SSE_MMU_MONSTER_ALT_RAM)
+    ReadWrite(MMU.MonSTerHimem);
+#else
+    ReadWrite(dummy[0]);
+#endif
+
   }
 #endif
 
@@ -1367,7 +1369,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
   if (pasti_active!=pasti_old_active) LoadSavePastiActiveChange();
 #endif
-
+#ifdef SSE_VID_FS_GUI_392
+  if(FullScreen)
+    InvalidateRect(StemWin,NULL,false); // erase pic we just drew...
+#endif
   return 0;
 }
 #undef ReadWrite
@@ -1432,7 +1437,6 @@ void LoadSnapShotUpdateVars(int Version)
   res_change();
 
   palette_convert_all();
-
   draw(false);
 
   for (int n=0;n<16;n++) PAL_DPEEK(n*2)=STpal[n];

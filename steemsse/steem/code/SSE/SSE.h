@@ -1760,7 +1760,22 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_DD_SIMPLIFY_VSYNC
 #define SSE_GUI_DD_FULLSCREEN_LE
 #endif
-#endif
+#define SSE_GUI_STATUS_BAR_NOT_OPTIONAL
+#define SSE_GUI_NO_PROFILES
+#define SSE_MMU_WU_LE
+#undef SSE_GUI_OPTIONS_WU
+#define SSE_GUI_NO_CPU_SPEED
+#undef SSE_GUI_STATUS_BAR_HISPEED
+#undef SSE_GUI_STATUS_BAR_DISK_NAME
+#define SSE_GUI_NO14MB
+#undef SSE_MMU_256K
+#undef SSE_MMU_2560K
+#define NO_CRAZY_MONITOR //+ a little fix in emulator.cpp
+#define SSE_GUI_NO_MACROS //don't work with C1
+#define SSE_GUI_NO_PASTE
+#define SSE_GUI_NO_ICONCHOICE
+
+#endif//LE
 
 #ifdef SSE_BOILER
 #define SSE_BOILER_FRAME_REPORT_392
@@ -1804,6 +1819,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_392
 #define SSE_GUI_DM_PASTI_ONLY_STX_392
 #define SSE_GUI_INFOBOX_CLIPBOARD
+#define SSE_GUI_STATUS_BAR_392
 #endif
 
 #define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
@@ -1846,7 +1862,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #define SSE_MMU_392
-#if defined(SSE_MMU_392)
+#if defined(SSE_MMU_392) && !defined(SSE_LE)
 #define SSE_MMU_MONSTER_ALT_RAM // HW hack for ST
 #endif
 
@@ -1885,7 +1901,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_WINVER
 
 #if defined(SSE_VIDEO) 
-
 #define SSE_VID_GUI_392
 #define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
 #if defined(SSE_VID_3BUFFER)
@@ -1951,6 +1966,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_X64)
 #define SSE_X64_392
 #endif
+#define SSE_SHIFTER_UNSTABLE_392
 #define SSE_SOUND_DMA_390E//switch disappeared...
 #define SSE_SOUND_MICROWIRE_392 //use sound_freq, not dma_sound_freq
 #if defined(SSE_YM2149_DRIVE)

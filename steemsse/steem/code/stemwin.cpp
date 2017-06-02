@@ -89,7 +89,7 @@ void StemWinResize(int xo,int yo)
 #endif
     )
 #if defined(SSE_VID_D3D_FS_392A)
-    if(FullScreen)
+    if(FullScreen && OPTION_HACKS)
       Disp.ScreenChange();//radical
     else
 #endif
@@ -266,7 +266,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             {
               HBRUSH br=CreateSolidBrush(GetSysColor(COLOR_BACKGROUND));
               LPRECT pRect = (LPRECT)lpRgnData->Buffer;
-              for(int i=0;i<lpRgnData->rdh.nCount;i++)
+              for(DWORD i=0;i<lpRgnData->rdh.nCount;i++)
                 FillRect(ps.hdc,&pRect[ i ],br); // erase all rectangles
               DeleteObject(br);
             } //if(dwCount)
@@ -1159,7 +1159,9 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
       break;
     case WM_DRAWCLIPBOARD:
+#if !defined(SSE_GUI_NO_PASTE)
       UpdatePasteButton();
+#endif
       if (NextClipboardViewerWin) SendMessage(NextClipboardViewerWin,Mess,wPar,lPar);
       break;
     case WM_ACTIVATEAPP:
@@ -1249,7 +1251,122 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       ChangeClipboardChain(StemWin,NextClipboardViewerWin);
       StemWin=NULL;
       break;
-#if defined(SSE_GUI_STATUS_BAR_ICONS) //v3.8.0
+#if defined(SSE_GUI_STATUS_BAR_392)
+    case WM_DRAWITEM: // window must draw its own item
+      if(wPar==120) // status bar 
+      {
+#define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
+#define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
+        ASSERT(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME);
+        ASSERT(((DRAWITEMSTRUCT*)lPar)->CtlType==ODT_STATIC);
+        ASSERT(myRect.left==0); ASSERT(myRect.top==0); //which I didn't know
+        ASSERT(ansi_string);
+#if !defined(BCC_BUILD) && !(defined(VC_BUILD) && _MSC_VER<=1200) // old compilers
+        ASSERT(strnlen(ansi_string,MAX_PATH)<MAX_PATH);
+#endif
+        // erase rectangle (different colour for hires)
+        FillRect(myHdc,&myRect,((COLOUR_MONITOR)?
+          (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
+        GUIRefreshStatusBar(false); // make sure the string is correct (again!)
+        int nchars=strlen(ansi_string); // safe version?
+        SIZE Size;
+        VERIFY(GetTextExtentPoint32(myHdc,ansi_string,nchars,&Size)!=0);
+        //TRACE_RECT(myRect); TRACE("%d %d\n",Size.cx,Size.cy);
+        int left=myRect.right/2-Size.cx/2;
+        //TRACE("left %d\n",left);
+        // adjust for trailing icons
+        if(OPTION_STATUS_BAR)
+        {
+          left-=9*(
+#if defined(SSE_FLOPPY) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
+          (ADAT)
+#endif
+#if !defined(SSE_IKBD_6301_NOT_OPTIONAL)
+          +(OPTION_C1)
+#endif
+#if !defined(SSE_C2_NOT_OPTIONAL)
+          +(OPTION_C2)
+#endif
+#if !defined(SSE_LE)
+          +(OPTION_HACKS)
+#endif
+          +(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON));
+        }
+        //TRACE("left %d right %d\n",left,left+Size.cx);
+        //TextOut(myHdc,0,3,"L",1);
+        //TextOut(myHdc,myRect.right-8,3,"R",1);
+
+        // Text
+        TextOut(myHdc,left,3,ansi_string,nchars);
+        // Icons
+        if(OPTION_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
+        {
+          HDC TempDC=CreateCompatibleDC(myHdc);
+          ASSERT(TempDC);
+          HANDLE OldBmp=SelectObject(TempDC,LoadBitmap(Inst,"TOSFLAGS"));
+          int FlagIdx=OptionBox.TOSLangToFlagIdx((int)ROM_PEEK(0x1D));
+          ASSERT(FlagIdx!=-1); // error code
+          if (FlagIdx>=0){ 
+             ASSERT(FlagIdx<14); 
+#if defined(SSE_GUI_OPTIONS_WU)
+            BitBlt(myHdc,left+((OPTION_WS)?58:51),4,RC_FLAG_WIDTH,
+              RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
+#else
+            BitBlt(myHdc,left+((OPTION_WS)?58-6:51-6),4,RC_FLAG_WIDTH,
+              RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
+#endif
+          }
+          DeleteObject(SelectObject(TempDC,OldBmp));
+          DeleteDC(TempDC);
+          int myx=left+Size.cx+3;
+#if defined(SSE_FLOPPY) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
+          if(ADAT)
+          {
+            DrawIconEx(myHdc,myx,0,
+              hGUIIcon[RC_ICO_ACCURATEFDC],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+          if(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_HARDDRIVE16],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#if !defined(SSE_IKBD_6301_NOT_OPTIONAL)
+          if(OPTION_C1)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_OPS_C1],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+#if !defined(SSE_C2_NOT_OPTIONAL)
+          if(OPTION_C2)
+          {
+            DrawIconEx(myHdc,myx,2,
+              hGUIIcon[RC_ICO_OPS_C2],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+#if !defined(SSE_LE) // stands out without C1, C2
+          if(OPTION_HACKS)
+          {
+            DrawIconEx(myHdc,myx,2,
+              //hGUIIcon[RC_ICO_PATCHES],16,16,0,NULL,DI_NORMAL);
+              hGUIIcon[RC_ICO_OPS_HACKS],16,16,0,NULL,DI_NORMAL);
+            myx+=19;
+          }
+#endif
+        }
+        return TRUE;
+#undef myHdc
+#undef myRect
+      }
+      break;
+
+
+#elif defined(SSE_GUI_STATUS_BAR_ICONS) //v3.8.0
 /*  It is cool to add country flag next to TOS in the status bar, so
     let's do some Windows programming. 
 */
@@ -1260,10 +1377,12 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         ASSERT(((DRAWITEMSTRUCT*)lPar)->CtlType==ODT_STATIC);
 #define myHdc ((DRAWITEMSTRUCT*)lPar)->hDC 
 #define myRect ((DRAWITEMSTRUCT*)lPar)->rcItem
+        //TRACE_RECT(myRect);
 #if !defined(SSE_VS2008_WARNING_390)
         HWND status_bar_win=GetDlgItem(StemWin,wPar); // get handle
 #endif
         // erase rectangle (different colour for hires)
+         
         FillRect(myHdc,&((DRAWITEMSTRUCT*)lPar)->rcItem,((COLOUR_MONITOR)?
           (HBRUSH)(COLOR_MENU+1):(HBRUSH)(COLOR_WINDOWFRAME+1)));
         GUIRefreshStatusBar(false); // make sure the string is correct
@@ -1274,6 +1393,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         int nchars=strlen(ansi_string); // safe version?
         SIZE Size;
         GetTextExtentPoint32(myHdc,ansi_string,nchars,&Size);
+        
         myRect.left=myRect.right/2-Size.cx/2;
 #if defined(SSE_FLOPPY) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
         if(ADAT)
@@ -1489,6 +1609,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       DestroyMenu(SnapShotMenu);
       break;
     }
+#if !defined(SSE_GUI_NO_PASTE)
     case 114:
     {
       if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2){
@@ -1511,6 +1632,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       }
       break;
     }
+#endif
     case 115:
     {
       if (SendMessage(hBut,BM_GETCLICKBUTTON,0,0)==2){

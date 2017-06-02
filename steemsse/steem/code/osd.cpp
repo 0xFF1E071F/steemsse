@@ -398,6 +398,7 @@ void osd_draw()
     }
   }
 
+#if !defined(SSE_GUI_NO_CPU_SPEED)
   if (seconds<osd_show_cpu){
 #if defined(SSE_CPU_MFP_RATIO)
     if (n_cpu_cycles_per_second>CpuNormalHz){
@@ -418,7 +419,7 @@ void osd_draw()
       if (draw_grille_black<4) draw_grille_black=4;
     }
   }
-
+#endif
 
   if (seconds<osd_show_icons){
     can_have_scroller=0;

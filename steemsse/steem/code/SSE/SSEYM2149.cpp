@@ -197,6 +197,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     // mix each channel
 
     m_count_noise++;
+    //if (m_count_noise >= (OPTION_HACKS?2:1)*(psg_reg[PSGR_NOISE_PERIOD] & 0x1f)) //test
     if (m_count_noise >= (psg_reg[PSGR_NOISE_PERIOD] & 0x1f))
     {
       /* toggle the prescaler output. Noise is no different to
