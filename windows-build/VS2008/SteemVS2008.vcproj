@@ -3246,7 +3246,6 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/SteemVS2008.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -5406,6 +5405,10 @@
 			</File>
 			<File
 				RelativePath="..\..\steem\rc\options_general.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\..\steem\rc\options_hacks.ico"
 				>
 			</File>
 			<File

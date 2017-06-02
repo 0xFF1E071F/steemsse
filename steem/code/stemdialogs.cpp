@@ -234,6 +234,15 @@ LRESULT TStemDialog::DefStemDialogProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
 //---------------------------------------------------------------------------
 void TStemDialog::LoadPosition(GoodConfigStoreFile *pCSF)
 {
+#if defined(SSE_VID_GUI_392)
+  int W=GetScreenWidth()-100,H=GetScreenHeight()-70;
+  Left=max(min((int)pCSF->GetInt(Section,"Left",Left),W),-100);
+  Top=max(min((int)pCSF->GetInt(Section,"Top",Top),H),-70);
+  FSLeft=pCSF->GetInt(Section,"FSLeft",FSLeft);
+  FSLeft=max(min(FSLeft,W),-100);
+  FSTop=pCSF->GetInt(Section,"FSTop",FSTop);
+  FSTop=max(min(FSTop,H),-70);
+#else
   int PCScreenW=GetScreenWidth(),PCScreenH=GetScreenHeight();
 
   Left=max(min((int)pCSF->GetInt(Section,"Left",Left),PCScreenW-100),-100);
@@ -242,6 +251,7 @@ void TStemDialog::LoadPosition(GoodConfigStoreFile *pCSF)
   FSLeft=max(min(FSLeft,640-100),-100);
   FSTop=pCSF->GetInt(Section,"FSTop",FSTop);
   FSTop=max(min(FSTop,480-70),-70);
+#endif
 }
 //---------------------------------------------------------------------------
 void TStemDialog::SavePosition(bool FinalSave,ConfigStoreFile *pCSF)

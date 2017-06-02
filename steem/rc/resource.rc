@@ -4,13 +4,14 @@
 #include "../code/SSE/SSE.h"
 #include "../code/resnum.decla.h"
 #else
+#error resnum
 #include "../code/resnum.h"
 #endif
 // EDIT in NOTEPAD, not the VC IDE!!!!!!!
 //Update "FileVersion" and "ProductVersion" too!
 #define STEEM_VER_MAJOR 3
 #define STEEM_VER_MINOR_1 9
-#define STEEM_VER_MINOR_2 1
+#define STEEM_VER_MINOR_2 2
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION STEEM_VER_MAJOR,STEEM_VER_MINOR_1,STEEM_VER_MINOR_2,0
@@ -28,12 +29,12 @@ BEGIN
             VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
             VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
-            VALUE "FileVersion", "3.9.1\000"
+            VALUE "FileVersion", "3.9.2\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
-            VALUE "OriginalFilename", "Steem SSE 3.9.1.exe\000"
+            VALUE "OriginalFilename", "Steem SSE 3.9.2.exe\000"
             VALUE "ProductName", "The Steem Engine\000"
-            VALUE "ProductVersion", "3.9.1\000"
+            VALUE "ProductVersion", "3.9.2\000"
         END
     END
     BLOCK "VarFileInfo"
@@ -137,6 +138,7 @@ RC_ICO_OPS_SSE ICON "options_sse.ico"
 //#ifdef SSE_GUI_STATUS_BAR_ICONS
 RC_ICO_OPS_C1 ICON "options_C1.ico"
 RC_ICO_OPS_C2 ICON "options_C2.ico"
+RC_ICO_OPS_HACKS ICON "options_hacks.ico"
 //#endif
 #ifdef SSE_GUI_CONFIG_FILE 
 RC_ICO_CFG ICON "config.ico"

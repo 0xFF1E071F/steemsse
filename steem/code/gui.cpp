@@ -579,8 +579,6 @@ void GUIRefreshStatusBar() {
   bool should_we_show=(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME); 
 
   // build text of "status bar", only if we're to show it
-
-
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
@@ -600,7 +598,7 @@ void GUIRefreshStatusBar() {
       char 
         sb_st_model[5],
         sb_tos[5],sb_ram[7];
-#if defined(SSE_MMU_WU)
+#if defined(SSE_MMU_WU) && defined(SSE_GUI_OPTIONS_WU)
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[OPTION_WS]);
       if(!OPTION_WS)
         sb_st_model[3]='\0';
@@ -615,7 +613,6 @@ void GUIRefreshStatusBar() {
 #else
       sprintf(status_bar,"%s %s %s",sb_st_model,sb_tos,sb_ram);
 #endif
-
 #if defined(SSE_GUI_STATUS_BAR_HISPEED) && defined(SSE_CPU_MFP_RATIO)
       if(n_cpu_cycles_per_second>CpuNormalHz)
       {
@@ -624,7 +621,6 @@ void GUIRefreshStatusBar() {
         strcat(status_bar,sb_clock);
       }
 #endif
-
 #if !defined(SSE_GUI_STATUS_BAR_ICONS)
       // some options
 #if defined(SSE_IKBD_6301) && defined(SSE_GUI_STATUS_BAR_6301)
@@ -742,7 +738,9 @@ void GUIRefreshStatusBar() {
     }
 #undef MAX_TEXT_LENGTH_BORDER_ON
 #undef MAX_TEXT_LENGTH_BORDER_OFF
-
+#else
+    if(0);
+#endif
 #if defined(SSE_DISK_EXT) && defined(SSE_DISK)
 /*  If the game in A: isn't displayed on status bar, then we
     show what kind of file is in A: and B:. v3.7.2
@@ -761,10 +759,12 @@ void GUIRefreshStatusBar() {
       strcat(status_bar,disk_type);
     }
 #endif
+#if defined(SSE_GUI_STATUS_BAR_392)
+    if(Disp.Method==DISPMETHOD_GDI)
+      strcat(status_bar," GDI");
 #endif
-
-    // change text
 #if !defined(SSE_GUI_STATUS_BAR_ICONS)
+    // change text
 #if defined(SSE_GUI_STATUS_BAR_HALT) && defined(SSE_CPU_HALT)
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
@@ -779,7 +779,6 @@ void GUIRefreshStatusBar() {
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
       strcpy(ansi_string,T("HALT"));
-
     if(M68000.ProcessingState==TM68000::BLIT_ERROR)
       strcpy(ansi_string,T("BLIT ERROR"));
 #endif
@@ -788,27 +787,44 @@ void GUIRefreshStatusBar() {
   if(should_we_show)
   {
     // compute free width
+#if defined(SSE_GUI_STATUS_BAR_392)
+    RECT window_rect1,window_rect2;
+#else
     RECT window_rect1,window_rect2,window_rect3;
+#endif
     // last icon on the left is...
 #if defined(SSE_GUI_CONFIG_FILE)
     HWND previous_icon=GetDlgItem(StemWin,121); // config
 #else
     HWND previous_icon=GetDlgItem(StemWin,114); // paste
 #endif
+    GetWindowRect(previous_icon,&window_rect1); //absolute
+    // first icon on the right
     HWND next_icon=GetDlgItem(StemWin,105); // info
-    GetWindowRect(previous_icon,&window_rect1);
-    GetWindowRect(next_icon,&window_rect2);
+    GetWindowRect(next_icon,&window_rect2); //absolute
+    //TRACE_RECT(window_rect1); TRACE_RECT(window_rect2);
+#if defined(SSE_GUI_STATUS_BAR_392)
+    int w=window_rect2.left-window_rect1.right;
+#else
     GetWindowRect(status_bar_win,&window_rect3);
     int w=window_rect2.left-window_rect1.right-10;
-
+#endif
 #if defined(SSE_GUI_STATUS_BAR_THRESHOLD)
     if(w<200)
       should_we_show=false;
     else
 #endif    
-
     // resize status bar without trashing other icons
-#if defined(SSE_GUI_CONFIG_FILE) // TODO, more "pro"
+#if defined(SSE_GUI_STATUS_BAR_392)
+    ;
+    POINT mypoint;
+    mypoint.x=window_rect1.right;
+    mypoint.y=window_rect1.top;
+    ScreenToClient(StemWin,&mypoint);
+
+    //TRACE("move satus bar %d %d %d %d\n",mypoint.x,0,w,window_rect1.bottom-window_rect1.top);
+    MoveWindow(status_bar_win,mypoint.x,0,w,window_rect1.bottom-window_rect1.top,FALSE);
+#elif defined(SSE_GUI_CONFIG_FILE) // TODO, more "pro"
     MoveWindow(status_bar_win,23*7,0,w,window_rect3.bottom-window_rect3.top,FALSE);
 #else
     MoveWindow(status_bar_win,23*6,0,w,window_rect3.bottom-window_rect3.top,FALSE);
@@ -1041,6 +1057,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 #ifdef ONEGAME
   for (int n=1;n<RC_NUM_ICONS;n++) hGUIIcon[n]=NULL;
 #else
+  //ASSERT(RC_NUM_ICONS==80);
   HICON hOld[RC_NUM_ICONS],hOldSmall[RC_NUM_ICONS];
   for (int n=1;n<RC_NUM_ICONS;n++){
     hOld[n]=hGUIIcon[n];
@@ -1060,6 +1077,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 
   Str File;
   for (int n=1;n<RC_NUM_ICONS;n++){
+//    ASSERT(n!=79);
     int size=RCGetSizeOfIcon(n);
     bool load16too=size & 1;
     size&=~1;
@@ -1072,6 +1090,7 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
       if (UseDefault==0) File=pCSF->GetStr("Icons",Str("Icon")+n,"");
       if (File.NotEmpty()) hGUIIcon[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,size,size,LR_LOADFROMFILE);
       if (hGUIIcon[n]==NULL) hGUIIcon[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,size,size,0);
+     // TRACE("%d %d %d\n",n,size,hGUIIcon[n]);
       if (load16too){
         if (File.NotEmpty()) hGUIIconSmall[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,16,16,LR_LOADFROMFILE);
         if (hGUIIconSmall[n]==NULL) hGUIIconSmall[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,16,16,0);
@@ -1239,17 +1258,19 @@ bool MakeGUI()
                           PBS_RIGHTCLICK,x,0,20,20,StemWin,(HMENU)115,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Take Screenshot")+" ("+T("Right Click = Options")+")");
   x+=23;
-
+#if !defined(SSE_GUI_NO_PASTE)
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_PASTE),WS_CHILD | WS_VISIBLE | PBS_RIGHTCLICK,
                           x,0,20,20,StemWin,(HMENU)114,Inst,NULL);
   ToolAddWindow(ToolTip,Win,T("Paste Text Into ST (Right Click = Options)"));
   x+=23;
+#endif
 #ifdef RELEASE_BUILD
   // This causes freeze up if tracing in debugger, so only do it in final build
   NextClipboardViewerWin=SetClipboardViewer(StemWin);
 #endif
+#if !defined(SSE_GUI_NO_PASTE)
   UpdatePasteButton();
-
+#endif
 #if !(defined(SSE_VAR_NO_UPDATE))
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_UPDATE),WS_CHILD,
                           x,0,20,20,StemWin,(HMENU)120,Inst,NULL);
@@ -1277,7 +1298,7 @@ bool MakeGUI()
     |SS_CENTER // horizontally
     |SS_CENTERIMAGE // vertically
 #endif
-    ,x, 0,50,20,StemWin,(HMENU)120,Inst,NULL);
+    ,x,0,50,20,StemWin,(HMENU)120,Inst,NULL);
 #endif
 
   Win=CreateWindow("Steem Flat PicButton",Str(RC_ICO_INFO),WS_CHILD | WS_VISIBLE,
@@ -2063,11 +2084,11 @@ void ShowAllDialogs(bool Show)
   if (DiskMan.Handle){
     if (DiskMan.FSMaximized && Show==0) DiskManWasMaximized=true;
     if (DiskManWasMaximized && Show){
-#if defined(SSE_VID_BORDERS_GUI_392)
+#if defined(SSE_VID_GUI_392)
       SetWindowPos(DiskMan.Handle,NULL,-GetSystemMetrics(SM_CXFRAME),MENUHEIGHT,
-                    int((border) ? 800:640)+GetSystemMetrics(SM_CXFRAME)*2,
-                    int((border) ? 600:480)+GetSystemMetrics(SM_CYFRAME)-MENUHEIGHT,
-                    SWP_NOZORDER | SWP_NOACTIVATE);
+        Disp.SurfaceWidth+GetSystemMetrics(SM_CXFRAME)*2,
+        Disp.SurfaceHeight+GetSystemMetrics(SM_CYFRAME)-MENUHEIGHT,
+        SWP_NOZORDER | SWP_NOACTIVATE);
 #else
       SetWindowPos(DiskMan.Handle,NULL,-GetSystemMetrics(SM_CXFRAME),MENUHEIGHT,
                     int((border & 1) ? 800:640)+GetSystemMetrics(SM_CXFRAME)*2,
@@ -2101,8 +2122,9 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 {
   if (disable_input_vbl_count) return;
   if (ikbd_keys_disabled()) return; //in duration mode
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_play_has_keys) return;
-
+#endif
   BYTE STCode=0;
 
   if ((Extended & 3)==1){
@@ -2351,6 +2373,7 @@ int ASMCALL PeekEvent()
   return PEEKED_MESSAGE;
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_PASTE)
 void UpdatePasteButton()
 {
 #ifdef RELEASE_BUILD
@@ -2360,6 +2383,7 @@ void UpdatePasteButton()
   EnableWindow(GetDlgItem(StemWin,114),true);
 #endif
 }
+#endif
 //---------------------------------------------------------------------------
 #if !defined(RELEASE_BUILD) && defined(DEBUG_BUILD)
 bool HWNDNotValid(HWND Win,char *File,int Line)
@@ -2507,6 +2531,7 @@ void HandleShiftSwitching(UINT VKCode,bool Up,BYTE &STCode,int ModifierRestoreAr
   }
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_PASTE)
 void PasteIntoSTAction(int Action)
 {
   if (Action==STPASTE_STOP || Action==STPASTE_TOGGLE){
@@ -2610,6 +2635,7 @@ void PasteVBL()
     }
   }
 }
+#endif
 //---------------------------------------------------------------------------
 void UpdateSTKeys()
 {

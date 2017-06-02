@@ -21,7 +21,9 @@ void TOptionBox::CreatePage(int n)
   switch (n){
     case 9:CreateMachinePage();break;
     case 10:CreateTOSPage();break;
+#if !defined(SSE_GUI_NO_MACROS)
     case 13:CreateMacrosPage();break;
+#endif
     case 12:CreatePortsPage();break;
     case 4:CreateMIDIPage();break;
     case 0:CreateGeneralPage();break;
@@ -30,9 +32,13 @@ void TOptionBox::CreatePage(int n)
     case 15:CreateOSDPage();break;
     case 3:CreateFullscreenPage();break;
     case 2:CreateBrightnessPage();break;
+#if !defined(SSE_GUI_NO_PROFILES)
     case 11:CreateProfilesPage();break;
+#endif
     case 6:CreateStartupPage();break;
+#if !defined(SSE_GUI_NO_ICONCHOICE)
     case 14:CreateIconsPage();break;
+#endif
     case 8:CreateAssocPage();break;
 #if !(defined(SSE_VAR_NO_UPDATE))
     case 7:CreateUpdatePage();break;
@@ -143,6 +149,7 @@ compatible only with the STF"));
   y+=30;
 #endif
 
+#if !defined(SSE_GUI_NO_CPU_SPEED)
   Wid=get_text_width(T("ST CPU speed"));
   CreateWindow("Static",T("ST CPU speed"),WS_CHILD,page_l,y+4,Wid,23,Handle,(HMENU)403,HInstance,NULL);
   
@@ -218,7 +225,7 @@ compatible only with the STF"));
     SendMessage(Win,CB_SETCURSEL,CBAddString(Win,Cycles+" "+T("Megahertz"),n_cpu_cycles_per_second),0);
   }
   y+=30;
-
+#endif
   Wid=GetTextSize(Font,T("Memory size")).Width;
   CreateWindow("Static",T("Memory size"),WS_CHILD,page_l,y+4,Wid,20,Handle,HMENU(8090),HInstance,NULL);
 
@@ -238,12 +245,13 @@ compatible only with the STF"));
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
   CBAddString(Win,"12 MB (MonSTer alt-RAM)",MAKELONG(MEMCONF_6MB,MEMCONF_6MB));
 #endif
+#if !defined(SSE_GUI_NO14MB)
 #ifdef  SSE_BUILD
   CBAddString(Win,"14 MB (hack)",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #else  
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #endif
-
+#endif
 
   y+=30;
 
@@ -1885,7 +1893,7 @@ void TOptionBox::CreateFullscreenPage()
   D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
 #endif
 #if defined(SSE_VID_D3D_373)
-  ASSERT(Disp.pD3D);
+  //ASSERT(Disp.pD3D);
   UINT nD3Dmodes=(Disp.pD3D)
     ? Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat) : 0;
 #else
@@ -2183,7 +2191,8 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   Win=CreateWindow("Button",T("Triple Buffering"), WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                page_l+130,y,w,25,Handle,(HMENU)1037,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER_FS,0);
-  ToolAddWindow(ToolTip,Win,T("This may reduce tearing"));
+  //ToolAddWindow(ToolTip,Win,T("This may reduce tearing"));
+  ToolAddWindow(ToolTip,Win,T("Yes, we add a buffer :) You decide if it's better or not."));
 #endif
 
 #if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
@@ -2193,7 +2202,6 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10-10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
   ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode"));
-
   SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
 #endif
 
@@ -3074,13 +3082,10 @@ void TOptionBox::AssAddToExtensionsLV(char *Ext,char *Desc,int Num)
   int y=5 + 30*Num;
   int ButWid=max(GetTextSize(Font,T("Associated")).Width,GetTextSize(Font,T("Associate")).Width)+16;
   int hoff=12-GetTextSize(Font,Text).Height/2;
-
   HWND But=CreateWindow("Button","",WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                         5,y,ButWid,23,Scroller.GetControlPage(),HMENU(5100+Num),HInstance,NULL);
-
   HWND Stat=CreateWindow("Steem HyperLink",Text,WS_CHILD | HL_STATIC | HL_WINDOWBK,ButWid+10,y+hoff,300,25,
                        Scroller.GetControlPage(),(HMENU)5000,HInstance,NULL);
-
   SendMessage(Stat,WM_SETFONT,WPARAM(Font),0);
   SendMessage(But,WM_SETFONT,WPARAM(Font),0);
   if (IsSteemAssociated(Ext)){
@@ -3098,8 +3103,8 @@ void TOptionBox::AssAddToExtensionsLV(char *Ext,char *Desc,int Num)
 void TOptionBox::CreateAssocPage()
 {
   HWND Win;
-
-  Scroller.CreateEx(512,WS_CHILD | WS_VSCROLL | WS_HSCROLL,page_l,10,page_w,OPTIONS_HEIGHT-10-10-25-10,
+  Scroller.CreateEx(512,WS_CHILD | WS_VSCROLL | WS_HSCROLL,
+    page_l,10,page_w,OPTIONS_HEIGHT-10-10-25-10,
                           Handle,5500,HInstance);
   Scroller.SetBkColour(GetSysColor(COLOR_WINDOW));
 #ifdef SSE_DISK_EXT
@@ -3150,6 +3155,7 @@ void TOptionBox::CreateAssocPage()
   ShowPageControls();
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_MACROS)
 void TOptionBox::CreateMacrosPage()
 {
   int y=10,x,Wid;
@@ -3218,7 +3224,9 @@ void TOptionBox::CreateMacrosPage()
   SetPageControlsFont();
   ShowPageControls();
 }
+#endif
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_PROFILES)
 void TOptionBox::CreateProfilesPage()
 {
   int y=10;
@@ -3286,6 +3294,7 @@ void TOptionBox::CreateProfilesPage()
   SetPageControlsFont();
   ShowPageControls();
 }
+#endif
 //---------------------------------------------------------------------------
 void TOptionBox::IconsAddToScroller()
 {
@@ -3322,6 +3331,7 @@ void TOptionBox::IconsAddToScroller()
   Scroller.AutoSize(0,5);
 }
 //---------------------------------------------------------------------------
+#if !defined(SSE_GUI_NO_ICONCHOICE)
 void TOptionBox::CreateIconsPage()
 {
   int th=GetTextSize(Font,T("Left click to change")).Height;
@@ -3347,6 +3357,7 @@ void TOptionBox::CreateIconsPage()
   SetPageControlsFont();
   ShowPageControls();
 }
+#endif
 //---------------------------------------------------------------------------
 
 #if defined(SSE_GUI_OPTION_PAGE)
@@ -3378,7 +3389,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight+10;
   Wid=0;
 
-#if defined(SSE_GUI_STATUS_BAR)
+#if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
   Wid=GetCheckBoxSize(Font,T("Status info")).Width;
   Win=CreateWindow("Button",T("Status info"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)7307,HInstance,NULL);
@@ -3392,10 +3403,11 @@ void TOptionBox::CreateSSEPage() {
   SendMessage(Win,BM_SETCHECK,OPTION_STATUS_BAR_GAME_NAME,0);
   ToolAddWindow(ToolTip,Win,T("Also the name of the current disk."));
 #endif
+  Offset+=Wid+HorizontalSeparation;
 #endif
 
 #if defined(SSE_HACKS)  
-  Offset+=Wid+HorizontalSeparation;
+  
   Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
   Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);

@@ -9,7 +9,8 @@ replay, load and save user input.
 #pragma message("Included for compilation: macros.cpp")
 #endif
 
-#if defined(SSE_BUILD)
+#if defined(SSE_BUILD) && !defined(SSE_GUI_NO_MACROS)
+
 
 #define EXT
 #define INIT(s) =s
@@ -32,7 +33,7 @@ MACROVBLINFO *mrsc=NULL,*mpsc=NULL;
 
 
 #endif
-
+#if !defined(SSE_GUI_NO_MACROS)
 //---------------------------------------------------------------------------
 bool macro_mvi_blank(MACROVBLINFO *mvi)
 {
@@ -323,4 +324,4 @@ void macro_play_keys()
   }
 }
 //---------------------------------------------------------------------------
-
+#endif//#if !defined(SSE_GUI_NO_MACROS)

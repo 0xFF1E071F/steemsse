@@ -1744,8 +1744,9 @@ void event_vbl_interrupt() //SS misleading name?
 #endif
 
   log_to(LOGSECTION_SPEEDLIMIT,"--");
-
+#if !defined(SSE_GUI_NO_PASTE)
   PasteVBL();
+#endif
   ONEGAME_ONLY( OGVBL(); )
 
 #ifdef DEBUG_BUILD

@@ -1057,6 +1057,9 @@ Closure STF2
     It also fixes nordlicht_stniccc2015_partyversion.
     update: on real STE, flicker depends on some unidentified WS
  */
+#if defined(SSE_SHIFTER_UNSTABLE_392) // we add (spurious) conditions
+    if(ST_TYPE!=STE&&MMU.WS[OPTION_WS]==1||ST_TYPE==STE&&MMU.WS[OPTION_WS]!=1)
+#endif
     if(!(PreviousScanline.Tricks&TRICK_LINE_MINUS_2)) // BIG demo #1 STE
       Shifter.Preload=1; // assume = 0? problem, we don't know where it's reset
 #endif
@@ -1655,6 +1658,10 @@ void TGlue::CheckVerticalOverscan() {
 */
       shifter_last_draw_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
         ? 226 : 247;   //+1???
+#if defined(SSE_SHIFTER_UNSTABLE_392)//temp
+    if(Shifter.Preload==1)
+      Shifter.Preload=0; 
+#endif
   }
 
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_TRACE_CONTROL)
@@ -2537,7 +2544,7 @@ void TGlue::Vbl() {
 #endif
 #if defined(SSE_BOILER_FAKE_IO) && defined(SSE_OSD_CONTROL)
   if(OSD_MASK2&OSD_CONTROL_MODES)
-    TRACE_OSD("R%d S%d",Shifter.m_ShiftMode,m_SyncMode);
+    TRACE_OSD("R%d S%d P%d",Shifter.m_ShiftMode,m_SyncMode,Shifter.Preload);
 #endif
 #if defined(SSE_SHIFTER_TRICKS)
   AddFreqChange(shifter_freq); //? doubtful use...

@@ -94,7 +94,8 @@
 #define RC_ICO_OPS_C1 76
 #define RC_ICO_OPS_C2 77
 #define RC_ICO_CFG 78
-#define RC_NUM_ICONS 79
+#define RC_ICO_OPS_HACKS 79
+#define RC_NUM_ICONS 80
 #else
 #ifdef SSE_GUI_STATUS_BAR_ICONS
 #define RC_ICO_HARDDRIVES_ACSI 74

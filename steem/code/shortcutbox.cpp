@@ -137,11 +137,11 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
 #endif
 
   "Swap Disks In Drives",(char*)13,
-
+#if !defined(SSE_GUI_NO_MACROS)
   "Play Macro ->",(char*)CUT_PLAYMACRO,"Stop Playing Macro",(char*)48,
   "Record New Macro Start/Stop",(char*)45,"Record New Macro (Hold)",(char*)46,
   "Stop Macro Recording",(char*)47,
-
+#endif
   "Cold Reset",(char*)4,"Cold Reset and Run",(char*)5,
   "Warm Reset",(char*)27,
 
@@ -167,9 +167,9 @@ const char *ShortcutNames[NUM_SHORTCUTS*2]=
   "Exit Steem",(char*)23,
 
   "Show OSD",(char*)24,"Hide OSD",(char*)25,"Toggle OSD Hide/Show",(char*)26,
-
+#if !defined(SSE_GUI_NO_PASTE)
   "Start Paste",(char*)40,"Stop Paste",(char*)41,"Toggle Paste Start/Stop",(char*)42,
-
+#endif
   "Start Sound Recording",(char*)30,"Stop Sound Recording",(char*)31,
   "Toggle Sound Record On/Off",(char*)32,
 
@@ -615,6 +615,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       ShiftSwitchRestoreModifiers(ModifierRestoreArray);
       break;
     }
+#if !defined(SSE_GUI_NO_PASTE)
     case 40:case 41:case 42:
     {
       int n=STPASTE_START;
@@ -623,6 +624,8 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       PasteIntoSTAction(n);
       break;
     }
+#endif
+#if !defined(SSE_GUI_NO_MACROS)
     case 44:
       if (Inf.MacroFileIdx<0) break;
       if (macro_play) macro_end(MACRO_ENDPLAY);
@@ -630,6 +633,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
       macro_play_file=Inf.pESL->Get(Inf.MacroFileIdx).String;
       macro_advance(MACRO_STARTPLAY);
       break;
+
     case 45:case 46:
     {
       if (macro_record){
@@ -649,7 +653,7 @@ void DoShortcutDown(SHORTCUTINFO &Inf)
     case 48:
       if (macro_play) macro_end(MACRO_ENDPLAY);
       break;
-
+#endif
 #ifdef UNIX
     case 49:case 50:
     {
@@ -807,9 +811,11 @@ void DoShortcutUp(SHORTCUTINFO &Inf)
         cut_slow_motion_speed=0;
       }
       break;
+#if !defined(SSE_GUI_NO_MACROS)
     case 46:
       if (macro_record) macro_end(MACRO_ENDRECORD);
       break;
+#endif
   }
 }
 //---------------------------------------------------------------------------

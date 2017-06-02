@@ -478,6 +478,25 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_YM2149_MAMELIKE)
   YM2149.Reset();
 #endif
+#if defined(SSE_MMU_WU_LE)
+  if(Cold) 
+  {
+    // choose a wake-state - It will appear in TRACE, not the status bar
+    int rnd=rand();
+    if(ST_TYPE==STE && (rnd%5)!=0 ) // if not WS1, it means something else on STE
+      OPTION_WS=4; //WS1
+    else if(ST_TYPE==MEGASTF && (rnd&1))
+      OPTION_WS=1; //WS2
+    else if(ST_TYPE==STF && (rnd&1))
+      OPTION_WS=3; //WS3
+    else 
+      OPTION_WS=(rnd%4)+1;
+    ASSERT(OPTION_WS>0 && OPTION_WS<5);
+    Glue.Update();
+    //TRACE("option WS %d WS %d\n",OPTION_WS,MMU.WS[OPTION_WS]); 
+  }
+#endif
+
 }
 #undef LOGSECTION
 //---------------------------------------------------------------------------
@@ -526,7 +545,9 @@ void reset_st(DWORD flags)
   }
   DEBUG_ONLY( debug_reset(); )
   shifter_freq_at_start_of_vbl=shifter_freq;
+#if !defined(SSE_GUI_NO_PASTE)
   PasteIntoSTAction(STPASTE_STOP);
+#endif
   CheckResetIcon();
   CheckResetDisplay();
   

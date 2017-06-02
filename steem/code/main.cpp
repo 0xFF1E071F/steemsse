@@ -1444,9 +1444,9 @@ void CleanUpSteem()
 #elif defined(UNIX)
   hxc::kill_timer(StemWin,HXC_TIMER_ALL_IDS);
 #endif
-
+#if !defined(SSE_GUI_NO_MACROS)
   macro_end(MACRO_ENDRECORD | MACRO_ENDPLAY);
-
+#endif
   dbg_log("SHUTDOWN: Calling  CloseAllDialogs()");
   CloseAllDialogs();
 

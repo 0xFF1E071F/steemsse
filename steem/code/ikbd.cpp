@@ -175,8 +175,9 @@ void IKBD_VBL()
       if (increase_next==0) break;
     }
   }
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_start_after_ikbd_read_count) return;
-
+#endif
   // ikbd_poll_scanline determines where on the screen the IKBD has polled the keyboard,
   // joystick and mouse. Steem always polls at the VBL but that can cause problems for
   // some programs, so we delay sending the notifications. 
@@ -190,17 +191,19 @@ void IKBD_VBL()
   ikbd_key_poll_line%=max_line;
   ikbd_mouse_poll_line+=379;
   ikbd_mouse_poll_line%=max_line;
-
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_play_has_keys) macro_play_keys();
-
+#endif
   static BYTE old_stick[2];
   old_stick[0]=stick[0];
   old_stick[1]=stick[1];
   bool old_joypar1_bit4=(stick[N_JOY_PARALLEL_1] & BIT_4)!=0;
-
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_play_has_joys){
     macro_play_joy();
-  }else{
+  }else
+#endif
+  {
     if (disable_input_vbl_count==0){
       joy_read_buttons();
       for (int Port=0;Port<8;Port++) stick[Port]=joy_get_pos(Port);
@@ -312,13 +315,13 @@ void IKBD_VBL()
       break;
     }
   }
-
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_record){
     macro_jagpad[0]=GetJagPadDown(N_JOY_STE_A_0,0xffffffff);
     macro_jagpad[1]=GetJagPadDown(N_JOY_STE_B_0,0xffffffff);
     macro_record_joy();
   }
-
+#endif
   // Handle io line for parallel port joystick 1 (busy bit cleared if fire is pressed)
   if (stick[N_JOY_PARALLEL_1] & BIT_4){
     mfp_gpip_set_bit(0,bool((stick[N_JOY_PARALLEL_1] & BIT_7))==0);
@@ -378,6 +381,7 @@ void IKBD_VBL()
         }
       }
     }
+#if !defined(SSE_GUI_NO_MACROS)
     if (macro_record){
       macro_record_mouse(mouse_move_since_last_interrupt_x,mouse_move_since_last_interrupt_y);
     }
@@ -388,7 +392,7 @@ void IKBD_VBL()
         mouse_change_since_last_interrupt=true;
       }
     }
-
+#endif
     int report_button_abs=0;
     if (mousek!=old_mousek){
 
@@ -427,7 +431,9 @@ void IKBD_VBL()
 
     if (mouse_change_since_last_interrupt){
       int max_mouse_move=IKBD_DEFAULT_MOUSE_MOVE_MAX; //15
+#if !defined(SSE_GUI_NO_MACROS)
       if (macro_play_has_mouse) max_mouse_move=macro_play_max_mouse_speed;
+#endif
       ikbd_mouse_move(mouse_move_since_last_interrupt_x,mouse_move_since_last_interrupt_y,mousek,max_mouse_move);
       mouse_change_since_last_interrupt=false;
       mouse_move_since_last_interrupt_x=0;
@@ -452,8 +458,10 @@ void IKBD_VBL()
       }
     }
   }
-
-  if (macro_play_has_keys==0){
+#if !defined(SSE_GUI_NO_MACROS)
+  if (macro_play_has_keys==0)
+#endif
+  {
     // Check modifier keys, it's simpler to check them like this rather than
     // respond to messages
     MODIFIERSTATESTRUCT mss=GetLRModifierStates();
@@ -522,7 +530,9 @@ void IKBD_VBL()
     }
 #endif
   }
+#if !defined(SSE_GUI_NO_MACROS)
   macro_advance();
+#endif
   if (disable_input_vbl_count) disable_input_vbl_count--;
 }
 //---------------------------------------------------------------------------
@@ -1517,8 +1527,10 @@ void agenda_keyboard_replace(int) {
 #endif
       ACIA_IKBD.LineRxBusy=true;
     }
+#if !defined(SSE_GUI_NO_MACROS)
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
+#endif
     return;
   }
 #endif // Steem 3.2:
@@ -1547,15 +1559,18 @@ void agenda_keyboard_replace(int) {
     }
     if (keyboard_buffer_length) agenda_add(agenda_keyboard_replace,ACIAClockToHBLS(ACIA_IKBD.clock_divide),0);
   }
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_start_after_ikbd_read_count) macro_start_after_ikbd_read_count--;
-
+#endif
 }
 
 
 void keyboard_buffer_write_n_record(BYTE src)
 {
   keyboard_buffer_write(src);
+#if !defined(SSE_GUI_NO_MACROS)
   if (macro_record) macro_record_key(src);
+#endif
 }
 
 

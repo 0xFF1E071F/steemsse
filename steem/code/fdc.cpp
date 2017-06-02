@@ -1528,8 +1528,11 @@ instant_sector_access_loop:
 #else
           Temp=read_from_dma(); //SS from RAM to disk
 #endif
-
+#if defined(SSE_BUGFIX_392)
+          if (f==NULL || fwrite(&Temp,1,1,f)==0){
+#else
           if (fwrite(&Temp,1,1,f)==0){
+#endif
             if (floppy_handle_file_error(floppyno,true,fdc_sr,PosInSector,FromFormat)){
               TRACE_LOG("fwrite error\n");
               floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
@@ -1550,7 +1553,11 @@ instant_sector_access_loop:
       for (int bb=BytesPerStage;bb>0;bb--){	// SS: int BytesPerStage=16;
 
 #if defined(SSE_DMA_FIFO_FDC)
+#if defined(SSE_BUGFIX_392)
+        if (f==NULL || fread(&Temp,1,1,f)==0){
+#else
         if (fread(&Temp,1,1,f)==0){
+#endif
           if (floppy_handle_file_error(floppyno,0,fdc_sr,PosInSector,FromFormat)){
             TRACE_LOG("fread error\n");
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second

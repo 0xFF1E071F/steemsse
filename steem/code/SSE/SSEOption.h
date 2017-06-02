@@ -114,8 +114,14 @@ extern struct TOption SSEOption;
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define OPTION_PASTI_JUST_STX (SSEOption.PastiJustSTX)
 #define OPTION_INTERPOLATED_SCANLINES (SSEOption.Interpolate)
+#if defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
+#define OPTION_STATUS_BAR (true)
+#define OPTION_STATUS_BAR_GAME_NAME (false)
+#else
 #define OPTION_STATUS_BAR (SSEOption.StatusBar)
 #define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
+#endif
+
 #define OPTION_WIN_VSYNC (SSEOption.WinVSync)
 #define OPTION_3BUFFER (SSEOption.TripleBufferWin) //temp for old build
 #if !defined(SSE_VID_D3D_ONLY)

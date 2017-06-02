@@ -813,7 +813,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   TRACE_INIT("Retrieving options\n");
   SEC(PSEC_MACHINETOS){
 #if defined(SSE_CPU_MFP_RATIO)
-#if defined(SSE_CPU_HISPEED_392)
+#if defined(SSE_GUI_NO_CPU_SPEED)
+#elif defined(SSE_CPU_HISPEED_392)
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),CPU_MAX_HERTZ),(int)CpuNormalHz);
 #elif defined(SSE_CPU_4GHZ) //MFD
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),4096000000),(int)CpuNormalHz);
@@ -974,10 +975,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
     OPTION_INTERPOLATED_SCANLINES=pCSF->GetInt("Display","InterpolatedScanlines",OPTION_INTERPOLATED_SCANLINES);
 #endif
-#if defined(SSE_GUI_STATUS_BAR)
+#if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
     OPTION_STATUS_BAR=pCSF->GetInt("Options","StatusBar",OPTION_STATUS_BAR);
 #endif
-#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
     OPTION_STATUS_BAR_GAME_NAME=pCSF->GetInt("Options","StatusBarGameName",OPTION_STATUS_BAR_GAME_NAME);
 #endif
 #if defined(SSE_VID_VSYNC_WINDOW)

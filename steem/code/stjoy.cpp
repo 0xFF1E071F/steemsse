@@ -277,10 +277,11 @@ void SetJoyToDefaults(int j,int Defs)
 DWORD GetJagPadDown(int n,DWORD Mask)
 {
   ASSERT(n>=2);
+#if !defined(SSE_GUI_NO_MACROS)
   if ((macro_play_has_joys || macro_record) && Mask<0xffffffff){
     return macro_jagpad[int(n==N_JOY_STE_B_0 ? 1:0)] & Mask;
   }
-
+#endif
   if (IsToggled(n)==0) return 0;
 
   DWORD Ret=0;
