@@ -1901,6 +1901,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_WINVER
 
 #if defined(SSE_VIDEO) 
+#define SSE_VID_2SCREENS
 #define SSE_VID_GUI_392
 #define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
 #if defined(SSE_VID_3BUFFER)
@@ -1912,6 +1913,10 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_VID_3BUFFER_WIN
 #endif
 #endif//#if defined(SSE_VIDEO) 
+
+#if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D)
+#define SSE_VID_D3D_2SCREENS // don't think there will be DD version (Win 2000 min)
+#endif
 
 #if defined(SSE_VID_DD) && defined(SSE_VID_BORDERS)
 #define SSE_VID_DD_FS_MAXRES // using the display's natural resolution 
@@ -1926,6 +1931,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BORDERS_GUI_392 // two options -> one option for on/off + size
 #endif
 #endif
+
+#define SSE_VS2008_WARNING_392
 
 #ifdef SSE_YM2149_SOUND
 #define SSE_SOUND_250K
