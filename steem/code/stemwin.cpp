@@ -88,9 +88,9 @@ void StemWinResize(int xo,int yo)
     && Disp.pD3DDevice // "D3DX: pDevice pointer is invalid"
 #endif
     )
-#if defined(SSE_VID_D3D_FS_392A)
+#if 0 && defined(SSE_VID_D3D_FS_392A)
     if(FullScreen && OPTION_HACKS)
-      Disp.ScreenChange();//radical
+      Disp.ScreenChange();//radical - but too slow on some displays
     else
 #endif
       Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)

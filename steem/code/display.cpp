@@ -2092,9 +2092,6 @@ HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
   ASSERT(FullScreen);
 
 #if defined(SSE_VID_D3D)
-/*  We ignore parameters, we use other values for size.
-    DDCreateSurfaces() destroys surfaces and calls D3DCreateSurfaces().
-*/
   TRACE_LOG("D3D9 ok%d option %d\n",D3D9_OK,OPTION_D3D);
   if(D3D9_OK && OPTION_D3D)
 #if defined(SSE_VID_D3D_ONLY)
@@ -3126,6 +3123,10 @@ bool SteemDisplay::D3DBlit() {
     }
 #endif
     d3derr=pD3DDevice->BeginScene();
+#ifdef SSE_VID_D3D_FS_392A //does it even work?
+    if(FullScreen)
+      pD3DDevice->Clear(0,NULL,D3DCLEAR_TARGET,0,0,0);
+#endif
     d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
 #if defined(SSE_VID_D3D_CRISP)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
@@ -3321,7 +3322,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if defined(SSE_VID_D3D_2SCREENS)
     pD3D->EnumAdapterModes(m_Adapter,m_DisplayFormat,D3DMode,&Mode);
 #elif defined(SSE_VID_D3D_CHECK_HARDWARE)
-    pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,DisplayFormat,D3DMode,&Mode);
+    pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,m_DisplayFormat,D3DMode,&Mode);
 #else
     pD3D->EnumAdapterModes(Adapter,DisplayFormat,D3DMode,&Mode);
 #endif
@@ -3416,11 +3417,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     one part will be updated. Don't know how Windows does it.
 */
   d3derr=pD3D->CreateDevice(m_Adapter,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
-#else
-  d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
-#endif
 #ifdef SSE_DEBUG
-
   if(FullScreen)
     TRACE_LOG("D3D Create fullscreen surface %dx%d screen %d format %d buffers %d %dhz flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,
@@ -3429,6 +3426,19 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     TRACE_LOG("D3D Create windowed surface %dx%d screen %d format %d flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
 #endif
+#else
+  d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
+#ifdef SSE_DEBUG
+  if(FullScreen)
+    TRACE_LOG("D3D Create fullscreen surface %dx%d format %d buffers %d %dhz flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferFormat,
+    d3dpp.BackBufferCount,d3dpp.FullScreen_RefreshRateInHz,d3dpp.Flags,d3derr);
+  else
+    TRACE_LOG("D3D Create windowed surface %dx%d format %d flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
+#endif
+#endif
+
   //TRACE2("%s %dx%d %dbit %dhz %d buffers Vtx $%X Flags $%X\n",
   //  (FullScreen?"FS":"Win"),Width,Height,bitsperpixel,d3dpp.FullScreen_RefreshRateInHz,
   //  d3dpp.BackBufferCount,vtx_proc,d3dpp.Flags);
@@ -3596,17 +3606,17 @@ HRESULT SteemDisplay::D3DInit()
   TRACE_LOG("Screen %dx%d %dhz format %d %dbit err %d\n",d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
   // Probe capacities of video card, starting with desktop mode, HW
   // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization
-  DisplayFormat=d3ddm.Format; //should never change
+  m_DisplayFormat=d3ddm.Format; //should never change
 
-  D3DFORMAT checkDisplayFormat=DisplayFormat;
+  D3DFORMAT checkDisplayFormat=m_DisplayFormat;
 
-  DeviceType=D3DDEVTYPE_HAL;
-  d3derr=check_device_type(DeviceType,checkDisplayFormat);
+  m_DeviceType=D3DDEVTYPE_HAL;
+  d3derr=check_device_type(m_DeviceType,checkDisplayFormat);
   if(d3derr) // could be "alpha" in desktop format?
   {
     REPORT_D3D_ERR("check_device_type1",d3derr);
     checkDisplayFormat=D3DFMT_X8R8G8B8; // try X8R8G8B8 format
-    d3derr=check_device_type(DeviceType,checkDisplayFormat);
+    d3derr=check_device_type(m_DeviceType,checkDisplayFormat);
     if(d3derr) // no HW abilities?
     {
       REPORT_D3D_ERR("check_device_type2",d3derr);
@@ -3617,24 +3627,24 @@ HRESULT SteemDisplay::D3DInit()
   }
   ASSERT(!d3derr);
   D3DCAPS9 caps;
-  d3derr=pD3D->GetDeviceCaps(Adapter,DeviceType,&caps);
+  d3derr=pD3D->GetDeviceCaps(Adapter,m_DeviceType,&caps);
   TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
   if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
     TRACE_LOG("T&L\n");
-    vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    m_vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
     if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
       TRACE_LOG("Pure device\n");
-      vtx_proc |= D3DCREATE_PUREDEVICE;
+      m_vtx_proc |= D3DCREATE_PUREDEVICE;
     }
   } else {
     TRACE_LOG("Software vertex\n");
-    vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    m_vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
   }
 #if defined(SSE_VID_D3D_ONLY) // not sure it makes much sense but...
   if (DrawToVidMem==0) 
-    vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
+    m_vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
 #endif
-  TRACE_LOG("vtx_proc = $%X\n",vtx_proc);
+  TRACE_LOG("vtx_proc = $%X\n",m_vtx_proc);
   BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
 #endif
 #endif
@@ -3734,14 +3744,11 @@ void SteemDisplay::D3DUnlock() {
 
 
 HRESULT SteemDisplay::D3DSpriteInit() {
-  // called by D3DCreateSurfaces() and by ...
-  // ScreenChange() calls DDCreateSurfaces()
   HRESULT hr=E_FAIL;
 #if defined(SSE_VID_D3D_373)
   if(!pD3D||!pD3DDevice)
     return hr;
 #endif
-
   if(pD3DSprite)
     pD3DSprite->Release(); //so we can init sprite anytime
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
