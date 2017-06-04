@@ -1854,7 +1854,10 @@ void SteemDisplay::ChangeToFullScreen()
 #endif
     }
     SetWindowLong(StemWin,GWL_STYLE,WS_VISIBLE);
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_2SCREENS) // fullscreen on correct rectangle
+    SetWindowPos(StemWin,HWND_TOPMOST,rcMonitor.left,rcMonitor.top,
+      rcMonitor.right-rcMonitor.left,rcMonitor.bottom-rcMonitor.top,0);
+#elif defined(SSE_VID_D3D_ONLY)
     SetWindowPos(StemWin,HWND_TOPMOST,0,0,D3DFsW,D3DFsH,0);
 #else
     int w=640,h=480;
@@ -2400,7 +2403,11 @@ HRESULT SteemDisplay::SaveScreenShot()
     if (!pD3D||!pD3DDevice) 
       return DDERR_GENERIC;
     HRESULT hRet;
+#if defined(SSE_VID_D3D_2SCREENS)
+    UINT Adapter=m_Adapter;
+#else
     UINT Adapter=D3DADAPTER_DEFAULT;
+#endif
     D3DDISPLAYMODE d3ddm;
     if((hRet=pD3D->GetAdapterDisplayMode(Adapter, &d3ddm))!=D3D_OK)
     {
@@ -3121,7 +3128,6 @@ bool SteemDisplay::D3DBlit() {
     d3derr=pD3DDevice->BeginScene();
     d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
 #if defined(SSE_VID_D3D_CRISP)
-
 #if defined(SSE_VID_D3D_CRISP_OPTION)
     if(OPTION_D3D_CRISP)
 #endif
@@ -3195,11 +3201,16 @@ void SteemDisplay::Cls() {
 
 #endif
 
-// local helper for D3DCreateSurfaces()
+// local helper for D3DInit()
 
 HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat) {
   HRESULT d3derr;
+#if defined(SSE_VID_D3D_2SCREENS)
+  d3derr=Disp.pD3D->CheckDeviceType(Disp.m_Adapter,DeviceType,DisplayFormat,
+    DisplayFormat,false);
+#else
   d3derr=Disp.pD3D->CheckDeviceType(D3DADAPTER_DEFAULT,DeviceType,DisplayFormat,DisplayFormat,false);
+#endif
   return d3derr;
 }
 
@@ -3307,7 +3318,9 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   {
 #endif
     D3DDISPLAYMODE Mode; 
-#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+#if defined(SSE_VID_D3D_2SCREENS)
+    pD3D->EnumAdapterModes(m_Adapter,m_DisplayFormat,D3DMode,&Mode);
+#elif defined(SSE_VID_D3D_CHECK_HARDWARE)
     pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,DisplayFormat,D3DMode,&Mode);
 #else
     pD3D->EnumAdapterModes(Adapter,DisplayFormat,D3DMode,&Mode);
@@ -3343,7 +3356,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   }
   else
   {
-    d3dpp.BackBufferFormat=DisplayFormat;
+    d3dpp.BackBufferFormat=m_DisplayFormat;
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
     BytesPerPixel=GetDeviceCaps(GetDC(StemWin), BITSPIXEL)/8;
 #endif
@@ -3398,16 +3411,23 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     SurfaceHeight=d3dpp.BackBufferHeight=Height;
   }
 #endif
-
-  d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,DeviceType,StemWin,vtx_proc,&d3dpp,&pD3DDevice);
+#if defined(SSE_VID_D3D_2SCREENS)
+/*  We create the surface on only one monitor. If the window is split, only
+    one part will be updated. Don't know how Windows does it.
+*/
+  d3derr=pD3D->CreateDevice(m_Adapter,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
+#else
+  d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
+#endif
 #ifdef SSE_DEBUG
+
   if(FullScreen)
-    TRACE_LOG("D3D Create fullscreen surface %dx%d format %d buffers %d %dhz flags %X err %d\n",
-    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferFormat,
+    TRACE_LOG("D3D Create fullscreen surface %dx%d screen %d format %d buffers %d %dhz flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,
     d3dpp.BackBufferCount,d3dpp.FullScreen_RefreshRateInHz,d3dpp.Flags,d3derr);
   else
-    TRACE_LOG("D3D Create windowed surface %dx%d format %d flags %X err %d\n",
-    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
+    TRACE_LOG("D3D Create windowed surface %dx%d screen %d format %d flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
 #endif
   //TRACE2("%s %dx%d %dbit %dhz %d buffers Vtx $%X Flags $%X\n",
   //  (FullScreen?"FS":"Win"),Width,Height,bitsperpixel,d3dpp.FullScreen_RefreshRateInHz,
@@ -3512,6 +3532,7 @@ VOID SteemDisplay::D3DDestroySurfaces() {
 HRESULT SteemDisplay::D3DInit()
 {
   SetNotifyInitText("DirectD3D");
+  
   if(pD3D)
     pD3D->Release();
   // Create the D3D object - computer needs DirectX9
@@ -3521,6 +3542,50 @@ HRESULT SteemDisplay::D3DInit()
     return E_FAIL; 
   }
 #if defined(SSE_VID_D3D_CHECK_HARDWARE) // do it once, keeping result
+
+#if defined(SSE_VID_D3D_2SCREENS)
+  m_Adapter=D3DADAPTER_DEFAULT;
+  D3DCheckCurrentMonitorConfig(); // could Seem be started on second monitor?
+
+  // Probe capacities of video card, starting with desktop mode, HW
+  // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization
+
+  m_DeviceType=D3DDEVTYPE_HAL; // first suppose good hardware
+  HRESULT d3derr=check_device_type(m_DeviceType,m_DisplayFormat);
+  if(d3derr) // could be "alpha" in desktop format?
+  {
+    REPORT_D3D_ERR("check_device_type1",d3derr);
+    d3derr=check_device_type(m_DeviceType,D3DFMT_X8R8G8B8); // try X8R8G8B8 format
+    if(d3derr) // no HW abilities?
+    {
+      REPORT_D3D_ERR("check_device_type2",d3derr);
+      m_DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
+      d3derr=check_device_type(m_DeviceType,m_DisplayFormat);
+      TRACE_LOG("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
+    }
+  }
+  ASSERT(!d3derr);
+  D3DCAPS9 caps;
+  d3derr=pD3D->GetDeviceCaps(m_Adapter,m_DeviceType,&caps);
+  TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
+  if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
+    TRACE_LOG("T&L\n");
+    m_vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
+      TRACE_LOG("Pure device\n");
+      m_vtx_proc |= D3DCREATE_PUREDEVICE;
+    }
+  } else {
+    TRACE_LOG("Software vertex\n");
+    m_vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+  }
+#if defined(SSE_VID_D3D_ONLY) // not sure it makes much sense but...
+  if (DrawToVidMem==0) 
+    m_vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
+#endif
+  TRACE_LOG("vtx_proc = $%X\n",m_vtx_proc);
+
+#else
   UINT Adapter=D3DADAPTER_DEFAULT;
   // Get the current desktop display info
   D3DDISPLAYMODE d3ddm;
@@ -3572,8 +3637,9 @@ HRESULT SteemDisplay::D3DInit()
   TRACE_LOG("vtx_proc = $%X\n",vtx_proc);
   BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
 #endif
+#endif
 
-#if defined(SSE_VID_BPP_CHOICE)
+#if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_D3D_2SCREENS)
   checkDisplayFormat=D3DFMT_X8R8G8B8; //32bit
   UINT nD3Dmodes=pD3D->GetAdapterModeCount(Adapter,checkDisplayFormat);
   if(nD3Dmodes)
@@ -3589,6 +3655,7 @@ HRESULT SteemDisplay::D3DInit()
   TRACE_LOG("Formats 8bit %d 16bit %d 32bit %d\n",
     SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit,SSEConfig.VideoCard32bit);
 #endif
+
   TRACE_LOG("D3D9 Init OK\n");
   return S_OK;
 }
@@ -3836,9 +3903,15 @@ void SteemDisplay::D3DUpdateWH(UINT mode) {
   if(!pD3D)
     return;
   D3DDISPLAYMODE d3ddm;
+#if defined(SSE_VID_D3D_2SCREENS)
+  pD3D->GetAdapterDisplayMode(m_Adapter, &d3ddm);
+#else
   pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
+#endif
   D3DDISPLAYMODE Mode; 
-#if defined(SSE_VS2008_WARNING_390)//could do without param but it looks more logical this way
+#if defined(SSE_VID_D3D_2SCREENS)
+  pD3D->EnumAdapterModes(m_Adapter,d3ddm.Format,mode,&Mode);
+#elif defined(SSE_VS2008_WARNING_390)//could do without param but it looks more logical this way
   pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,mode,&Mode);
 #else
   pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,D3DMode,&Mode);
@@ -3849,6 +3922,93 @@ void SteemDisplay::D3DUpdateWH(UINT mode) {
 }
 
 #endif
+
+#if defined(SSE_VID_D3D_2SCREENS)
+/*  The D3D builds of Steem are now compatible with multiple displays,
+    in both windowed and fullscreen modes.
+    This function is called at startup and when the player dragged Steem's
+    main window to another monitor.
+    As programmer we must do two things:
+    - Create the D3D surfaces on the correct screen.
+    - Use the correct rectangle to display the window/fullscreen.
+*/
+
+void SteemDisplay::D3DCheckCurrentMonitorConfig(HMONITOR hCurrentMonitor) {
+  
+  if(pD3D)
+  {
+    if(!hCurrentMonitor)
+      // Get Windows handle to monitor. This function requires Windows 2000.
+      hCurrentMonitor=MonitorFromWindow(StemWin,MONITOR_DEFAULTTOPRIMARY);
+
+    // Get and memorize monitor's Windows rectangle
+    MONITORINFO myMonitorInfo;
+    myMonitorInfo.cbSize=sizeof(myMonitorInfo);
+    GetMonitorInfo(hCurrentMonitor,&myMonitorInfo);
+    rcMonitor=myMonitorInfo.rcMonitor;
+
+    // Determine current display and recreate surfaces if it's changed
+    UINT n_monitors=pD3D->GetAdapterCount();
+    for(UINT i=0;i<n_monitors;i++)
+    {
+      HMONITOR that_monitor_handle=pD3D->GetAdapterMonitor(i);
+      if(that_monitor_handle==hCurrentMonitor)
+      {
+        if(i!=m_Adapter)
+        {
+          //TRACE("change D3D adapter to %d\n",i);
+          m_Adapter=i;
+          // Classy interface, change mode (2 max) and update fullscreen page
+          UINT buf=oldD3DMode;
+          oldD3DMode=D3DMode;
+          D3DMode=buf;
+          if(OptionBox.Handle && OptionBox.Page==3) 
+          {
+            OptionBox.DestroyCurrentPage();
+            OptionBox.CreateFullscreenPage();
+          }
+          D3DCreateSurfaces();
+        }
+      }
+    }
+
+    // Get the current desktop display info
+    D3DDISPLAYMODE d3ddm;
+    HRESULT d3derr=pD3D->GetAdapterDisplayMode(m_Adapter, &d3ddm);
+    m_DisplayFormat=d3ddm.Format;
+
+    HDC hdc = GetDC(StemWin);
+    WORD bitsperpixel= GetDeviceCaps(hdc, BITSPIXEL);
+    BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
+    ReleaseDC(StemWin, hdc);
+
+    TRACE_LOG("Screen %d %dx%d %dhz format %d %dbit err %d\n",m_Adapter,
+      d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
+    monitor_width=d3ddm.Width;
+    monitor_height=d3ddm.Height;
+
+#if defined(SSE_VID_BPP_CHOICE)
+    D3DFORMAT checkDisplayFormat=D3DFMT_X8R8G8B8; //32bit
+    UINT nD3Dmodes=pD3D->GetAdapterModeCount(m_Adapter,checkDisplayFormat);
+    if(nD3Dmodes)
+      SSEConfig.VideoCard32bit=true; // required in D3D9?
+    checkDisplayFormat=D3DFMT_R5G6B5; //D3DFMT_X1R5G5B5; //16bit
+    nD3Dmodes=pD3D->GetAdapterModeCount(m_Adapter,checkDisplayFormat);
+    if(nD3Dmodes)
+      SSEConfig.VideoCard16bit=true;
+    checkDisplayFormat=D3DFMT_P8; //8bit - TODO? never see it in D3D9
+      nD3Dmodes=pD3D->GetAdapterModeCount(m_Adapter,checkDisplayFormat);
+    if(nD3Dmodes)
+      SSEConfig.VideoCard8bit=true;
+    TRACE_LOG("Formats 8bit %d 16bit %d 32bit %d\n",
+      SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit,SSEConfig.VideoCard32bit);
+#endif
+
+  }//pD3D
+}
+
+#endif
+
 
 #endif//d3d
 

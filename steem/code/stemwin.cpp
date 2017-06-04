@@ -1048,7 +1048,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       InvalidateRect(Win,&rc,0);
 #ifndef ONEGAME
       if (FullScreen){
-#if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_OPTION) 
+#if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_OPTION) && !defined(SSE_VID_D3D_2SCREENS)
         //circles  around a bug I don't understand
         if(OPTION_D3D)
           cw=Disp.D3DFsW, ch=Disp.D3DFsH; // make size correct
@@ -1475,7 +1475,22 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       }
       break;
 #endif
-
+#if defined(SSE_VID_D3D_2SCREENS)
+/*  The message keeps being sent while the window is being dragged, it's not
+    once after it has been moved.
+    We check here if the player dragged the main window over to another screen.
+*/
+    case WM_MOVE:
+      POINT myPoint={LOWORD(lPar),HIWORD(lPar)};
+      // Get Windows handle to monitor. This function requires Windows 2000.
+      HMONITOR hCurrentMonitor=MonitorFromPoint(myPoint,MONITOR_DEFAULTTOPRIMARY);
+      if(!PtInRect(&Disp.rcMonitor,myPoint)) // player dragged to other monitor
+      {
+        //TRACE("change monitor\n");
+        Disp.D3DCheckCurrentMonitorConfig(hCurrentMonitor);
+      }
+      break;
+#endif
   }
 	return DefWindowProc(Win,Mess,wPar,lPar);
 }
@@ -1893,7 +1908,8 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 {
   HRESULT Ret;
-#if defined(SSE_VID_BPP_NO_CHOICE)
+#if defined(SSE_VS2008_WARNING_392) && defined(SSE_VID_D3D_ONLY)
+#elif defined(SSE_VID_BPP_NO_CHOICE)
   int bpp=32;
   if(!SSEConfig.VideoCard32bit)
     bpp=(SSEConfig.VideoCard16bit)?16:8;
@@ -1974,14 +1990,22 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #endif
 #endif
 #ifdef WIN32
+#if defined(SSE_VID_D3D_2SCREENS)
+  SetWindowPos(StemWin,HWND_TOPMOST,Disp.rcMonitor.left,Disp.rcMonitor.top,
+    Disp.rcMonitor.right-Disp.rcMonitor.left,Disp.rcMonitor.bottom-
+    Disp.rcMonitor.top,0);
+#else
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
+#endif
   if (resizeclippingwindow){
-#if defined(SSE_VID_D3D_ONLY) || defined(SSE_VID_DD_NO_FS_CLIPPER)
+#if defined(SSE_VID_D3D_ONLY) 
+#elif defined(SSE_VID_DD_NO_FS_CLIPPER)
     SetWindowPos(StemWin,0,0,0,rc.right,rc.bottom,SWP_NOZORDER);
 #else
     SetWindowPos(ClipWin,0,0,MENUHEIGHT,rc.right,rc.bottom-MENUHEIGHT,SWP_NOZORDER);
 #endif
   }
+
   if (DiskMan.IsVisible()){
     if (DiskMan.FSMaximized){
       SetWindowPos(DiskMan.Handle,NULL,-GetSystemMetrics(SM_CXFRAME),MENUHEIGHT,

@@ -83,7 +83,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_CPU ] = 0;
   logsection_enabled[ LOGSECTION_INIFILE ] = 0;
   logsection_enabled[ LOGSECTION_GUI ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 1;
+  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 0;
   // no PASTI, no DIV
 // additions
 #if !defined(SSE_BOILER_TRACE_CONTROL)

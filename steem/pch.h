@@ -22,9 +22,13 @@ for pre-compiled headers (to reduce build time on slower development PCs).
 #endif
 
 #ifdef WIN32
-
+#if defined(SSE_VID_D3D_2SCREENS)
+#define WINVER 0x0500
+#define _WIN32_WINNT 0x0500
+#else
 #define WINVER 0x0400
 #define _WIN32_WINNT 0x0300
+#endif
 #if defined(SSE_VID_DD7)
 #if defined(BCC_BUILD) || _MSC_VER == 1200 
 #define DIRECT3D_VERSION 0x0900

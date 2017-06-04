@@ -1035,7 +1035,11 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   ASSERT(Disp.pD3D || Disp.Method==DISPMETHOD_GDI);
   if(Disp.pD3D) // previous build crashed here when GDI was used
   {
+#if defined(SSE_VID_D3D_2SCREENS)
+    UINT Adapter=Disp.m_Adapter;
+#else
     UINT Adapter=D3DADAPTER_DEFAULT;
+#endif
     D3DFORMAT DisplayFormat=D3DFMT_X8R8G8B8; //32bit; D3DFMT_R5G6B5=16bit
     UINT nD3Dmodes=Disp.pD3D->GetAdapterModeCount(Adapter,DisplayFormat);
     ASSERT(nD3Dmodes);

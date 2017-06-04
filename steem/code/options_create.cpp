@@ -1875,7 +1875,12 @@ void TOptionBox::CreateFullscreenPage()
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
 #endif
+
+#if defined(SSE_VID_D3D_2SCREENS)
+  UINT Adapter=Disp.m_Adapter;
+#else
   UINT Adapter=D3DADAPTER_DEFAULT;
+#endif
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
   D3DFORMAT DisplayFormat;
   switch(SSEConfig.GetBitsPerPixel()) {

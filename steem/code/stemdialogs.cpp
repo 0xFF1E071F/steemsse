@@ -182,9 +182,11 @@ LRESULT TStemDialog::DefStemDialogProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
           StemDialog_RetDefVal=true;
           return true;
         }
+#if !defined(SSE_VID_D3D_2SCREENS) // no clipping at all
         RECT LimRC={0,MENUHEIGHT+GetSystemMetrics(SM_CYFRAME),
                     GetSystemMetrics(SM_CXSCREEN),GetSystemMetrics(SM_CYSCREEN)};
         ClipCursor(&LimRC);
+#endif
       }
       break;
     case WM_MOVE:
@@ -196,6 +198,7 @@ LRESULT TStemDialog::DefStemDialogProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
       if (FullScreen){
         if (IsIconic(StemWin)==0 && IsZoomed(StemWin)==0){
           This->FSLeft=rc.left;This->FSTop=rc.top;
+          //TRACE("FSLeft %d FSTop %d\n",This->FSLeft,This->FSTop);
         }
       }else{
         if (IsIconic(Win)==0 && IsZoomed(Win)==0){

@@ -147,9 +147,13 @@ public: //temp
 #endif//dd7?
 #endif//!defined(SSE_VID_D3D_ONLY)
 #if defined(SSE_VID_D3D_CHECK_HARDWARE)
-  D3DFORMAT DisplayFormat;
-  D3DDEVTYPE DeviceType;
-  DWORD vtx_proc;
+  D3DFORMAT m_DisplayFormat;
+  D3DDEVTYPE m_DeviceType;
+  DWORD m_vtx_proc;
+#if defined(SSE_VID_D3D_2SCREENS)
+  UINT m_Adapter,oldD3DMode;
+  RECT rcMonitor;
+#endif
 #endif
 #if defined(SSE_VID_ANTICRASH_392)
   int VideoMemorySize;
@@ -262,6 +266,9 @@ public:
   friend HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat);
 #if defined(SSE_VID_D3D_382)
   void D3DUpdateWH(UINT mode);
+#endif
+#if defined(SSE_VID_D3D_2SCREENS)
+  void D3DCheckCurrentMonitorConfig(HMONITOR hCurrentMonitor=NULL);
 #endif
 private:
 #endif//d3d

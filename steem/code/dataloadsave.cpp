@@ -1033,6 +1033,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
     Disp.D3DMode=pCSF->GetInt("Display","D3DMode",Disp.D3DMode);
+#if defined(SSE_VID_D3D_2SCREENS)
+    Disp.oldD3DMode=pCSF->GetInt("Display","oldD3DMode",Disp.oldD3DMode);
+#endif
 #if defined(SSE_VID_D3D_382)
     Disp.D3DUpdateWH(Disp.D3DMode); // function returns if no pD3D
   //TRACE_LOG("Options D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
@@ -1541,8 +1544,19 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Display","LockAspectRatio",EasyStr(OPTION_LOCK_ASPECT_RATIO));
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
+#if defined(SSE_VID_D3D_2SCREENS)
+  // assume Steem will be started on primary display next time:  swap  
+  if(Disp.m_Adapter==1)
+  {
+    UINT buf=Disp.oldD3DMode;
+    Disp.oldD3DMode=Disp.D3DMode;
+    Disp.D3DMode=buf;
+  }
+  pCSF->SetStr("Display","oldD3DMode",EasyStr(Disp.oldD3DMode));
+#endif
   pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
 #endif
+
 #if defined(SSE_INT_MFP_OPTION)//TODO
   pCSF->SetStr("Options","Chipset2",EasyStr(OPTION_C2));
 #endif

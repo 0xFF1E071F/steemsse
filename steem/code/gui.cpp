@@ -2098,6 +2098,7 @@ void ShowAllDialogs(bool Show)
       DiskManWasMaximized=0;
     }else{
       DiskMan.FSLeft+=PosChange;
+
       SetWindowPos(DiskMan.Handle,NULL,DiskMan.FSLeft,DiskMan.FSTop,0,0,SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
     }
   }
@@ -2250,9 +2251,10 @@ void SetStemMouseMode(int NewMM)
 }
 //---------------------------------------------------------------------------
 #define WH_KEYBOARD_LL 13
+#if (_WIN32_WINNT < 0x0400)
 #define LLKHF_ALTDOWN 0x00000020
-
-#ifndef MINGW_BUILD
+#endif
+#if !defined(MINGW_BUILD) && (_WIN32_WINNT < 0x0400) // well well
 typedef struct{
   DWORD vkCode;
   DWORD scanCode;
