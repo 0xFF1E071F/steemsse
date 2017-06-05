@@ -2098,7 +2098,8 @@ void ShowAllDialogs(bool Show)
       DiskManWasMaximized=0;
     }else{
       DiskMan.FSLeft+=PosChange;
-
+      //TRACE("PosChange %d FS %d->%d %d\n",PosChange,DiskMan.FSLeft-PosChange,DiskMan.FSLeft,DiskMan.FSTop);
+      //TRACE_RECT(Disp.rcMonitor);
       SetWindowPos(DiskMan.Handle,NULL,DiskMan.FSLeft,DiskMan.FSTop,0,0,SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
     }
   }

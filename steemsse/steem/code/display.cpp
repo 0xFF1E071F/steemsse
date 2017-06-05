@@ -1939,7 +1939,6 @@ void SteemDisplay::ChangeToFullScreen()
     }//SS
     DDExclusive=true;
 #endif
-
     if (change_fullscreen_display_mode(0)==DD_OK){
 #if defined(SSE_VID_FS_GUI_392)
       if(OPTION_FULLSCREEN_GUI) 
@@ -3315,7 +3314,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_WINDOW)
-  if(FullScreen)
+  if(FullScreen && !OPTION_FAKE_FULLSCREEN)
   {
 #endif
     D3DDISPLAYMODE Mode; 
@@ -3412,13 +3411,27 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     SurfaceHeight=d3dpp.BackBufferHeight=Height;
   }
 #endif
+#if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
+/*  Create a borderless window instead of a fullscreen surface.
+    Apparently there's not more to it than this.
+*/
+  else if(FullScreen)
+  {
+    ASSERT(OPTION_FAKE_FULLSCREEN);
+    ASSERT(d3dpp.FullScreen_RefreshRateInHz==0);
+    d3dpp.BackBufferCount=1;
+    d3dpp.Windowed=true;
+    SurfaceWidth=d3dpp.BackBufferWidth=monitor_width;
+    SurfaceHeight=d3dpp.BackBufferHeight=monitor_height;
+  }
+#endif
 #if defined(SSE_VID_D3D_2SCREENS)
 /*  We create the surface on only one monitor. If the window is split, only
     one part will be updated. Don't know how Windows does it.
 */
   d3derr=pD3D->CreateDevice(m_Adapter,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
 #ifdef SSE_DEBUG
-  if(FullScreen)
+  if(!d3dpp.Windowed)
     TRACE_LOG("D3D Create fullscreen surface %dx%d screen %d format %d buffers %d %dhz flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,
     d3dpp.BackBufferCount,d3dpp.FullScreen_RefreshRateInHz,d3dpp.Flags,d3derr);

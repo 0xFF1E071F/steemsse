@@ -1917,7 +1917,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D)
 #define SSE_VID_D3D_2SCREENS // don't think there will be DD version (Win 2000 min)
 #endif
-
+#if defined(SSE_VID_D3D)
+#define SSE_VID_D3D_FAKE_FULLSCREEN
+#endif
 #if defined(SSE_VID_DD) && defined(SSE_VID_BORDERS)
 #define SSE_VID_DD_FS_MAXRES // using the display's natural resolution 
 #undef SSE_VID_BORDERS_LB_DX // Fullscreen Max Res mode makes BORDER_40 useless

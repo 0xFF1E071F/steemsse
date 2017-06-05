@@ -369,6 +369,7 @@ void TDiskManager::Show()
 #else
   SetWindowLong(Handle,GWL_USERDATA,(long)this);
 #endif
+
   MakeParent(HWND(FullScreen ? StemWin:NULL));
 
   HWND Win;
