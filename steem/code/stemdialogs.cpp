@@ -197,8 +197,15 @@ LRESULT TStemDialog::DefStemDialogProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPa
       GetWindowRect(Win,&rc);
       if (FullScreen){
         if (IsIconic(StemWin)==0 && IsZoomed(StemWin)==0){
+#if defined(SSE_VID_D3D_2SCREENS) // it's relative to main window, not absolute
+          POINT myPoint={rc.left,rc.top};
+          ScreenToClient(StemWin,&myPoint);
+          This->FSLeft=myPoint.x;
+          This->FSTop=myPoint.y;
+#else
           This->FSLeft=rc.left;This->FSTop=rc.top;
-          //TRACE("FSLeft %d FSTop %d\n",This->FSLeft,This->FSTop);
+          //TRACE("WM_MOVE FSLeft %d FSTop %d\n",This->FSLeft,This->FSTop);
+#endif
         }
       }else{
         if (IsIconic(Win)==0 && IsZoomed(Win)==0){
@@ -247,7 +254,6 @@ void TStemDialog::LoadPosition(GoodConfigStoreFile *pCSF)
   FSTop=max(min(FSTop,H),-70);
 #else
   int PCScreenW=GetScreenWidth(),PCScreenH=GetScreenHeight();
-
   Left=max(min((int)pCSF->GetInt(Section,"Left",Left),PCScreenW-100),-100);
   Top=max(min((int)pCSF->GetInt(Section,"Top",Top),PCScreenH-70),-70);
   FSLeft=pCSF->GetInt(Section,"FSLeft",FSLeft);
@@ -277,9 +283,11 @@ void TStemDialog::SaveVisible(ConfigStoreFile *pCSF)
 void TStemDialog::CheckFSPosition(HWND Par)
 {
   RECT rc;
+  ASSERT(Par==StemWin);
   GetClientRect(Par,&rc);
   FSLeft=max(min(FSLeft,(int)rc.right-100),-100);
   FSTop=max(min(FSTop,(int)rc.bottom-70),-70);
+  //TRACE("check FSLeft %d FSTop %d\n",FSLeft,FSTop);
 }
 //---------------------------------------------------------------------------
 void TStemDialog::UpdateDirectoryTreeIcons(DirectoryTree *pTree)

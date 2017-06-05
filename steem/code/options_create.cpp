@@ -2210,6 +2210,16 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
 #endif
 
+#if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
+  y+=LineHeight;
+  w=GetCheckBoxSize(Font,T("Windowed Borderless Mode")).Width;
+  Win=CreateWindow("Button",T("Windowed Borderless Mode"),
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    page_l,y,w,23,Handle,(HMENU)210,HInstance,NULL);
+  ToolAddWindow(ToolTip,Win,T("This fake fullscreen mode bypasses other settings"));
+  SendMessage(Win,BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
+#endif
+
 #if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_DD_SIMPLIFY_VSYNC)
   y+=30;
 

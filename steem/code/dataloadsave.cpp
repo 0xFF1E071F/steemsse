@@ -1123,6 +1123,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OPTION_FULLSCREEN_DEFAULT_HZ=(bool)pCSF->GetInt("Display",
       "FullScreenDefaultHz",OPTION_FULLSCREEN_DEFAULT_HZ);
 #endif
+#if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
+    OPTION_FAKE_FULLSCREEN=(bool)pCSF->GetInt("Display",
+      "FakeFullScreen",OPTION_FAKE_FULLSCREEN);
+#endif
     ResChangeResize=(bool)pCSF->GetInt("Display","ResChangeResize",ResChangeResize);
 #if !defined(SSE_VID_D3D_ONLY)
     draw_fs_fx=pCSF->GetInt("Options","InterlaceMode",draw_fs_fx);
@@ -1469,7 +1473,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
   pCSF->SetStr("Display","FSDoVsync",LPSTR(FSDoVsync ? "1":"0"));
 #if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
-  pCSF->SetStr("Display","FullScreenDefaultHz",EasyStr(OPTION_FULLSCREEN_DEFAULT_HZ));
+  pCSF->SetStr("Display","FullScreenDefaultHz",
+    EasyStr(OPTION_FULLSCREEN_DEFAULT_HZ));
+#endif
+#if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
+  pCSF->SetStr("Display","FakeFullScreen", EasyStr(OPTION_FAKE_FULLSCREEN));
 #endif
 #if !defined(SSE_VID_D3D_ONLY)
   pCSF->SetStr("Display","Prefer640x400",LPSTR(prefer_res_640_400 ? "1":"0"));

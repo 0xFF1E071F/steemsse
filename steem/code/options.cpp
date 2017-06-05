@@ -1001,11 +1001,13 @@ void TOptionBox::SetBorder(int newborder)
     change_window_size_for_border_change(oldborder,newborder);
     draw(false);
     InvalidateRect(StemWin,NULL,0);
+#if !(defined(SSE_VID_D3D_ONLY) && defined(SSE_BUGFIX_392))
     if (Handle) if (GetDlgItem(Handle,210)) EnableWindow(GetDlgItem(Handle,210),border==0 
 #if !defined(SSE_VID_D3D_ONLY)
       && draw_fs_blit_mode!=DFSM_LAPTOP
 #endif
       );
+#endif
   }else{
     if (Handle) if (GetDlgItem(Handle,207)) SendDlgItemMessage(Handle,207,CB_SETCURSEL,oldborder,0);
     border=oldborder;
@@ -1178,6 +1180,22 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_FULLSCREEN_DEFAULT_HZ=!OPTION_FULLSCREEN_DEFAULT_HZ;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
             TRACE_LOG("Option FullScreenDefaultHz = %d\n",OPTION_FULLSCREEN_DEFAULT_HZ);
+#if defined(SSE_VID_GUI_392)
+            if(FullScreen && OPTION_D3D && D3D9_OK)
+              Disp.ScreenChange();
+#endif
+          }
+          break;
+#endif
+
+#if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
+        case 210:
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_FAKE_FULLSCREEN=!OPTION_FAKE_FULLSCREEN;
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
+            TRACE_LOG("Option FakeFullScreen = %d\n",OPTION_FAKE_FULLSCREEN);
+            if(FullScreen && OPTION_D3D && D3D9_OK)
+              Disp.ScreenChange();
           }
           break;
 #endif
