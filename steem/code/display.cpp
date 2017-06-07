@@ -3415,9 +3415,10 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 /*  Create a borderless window instead of a fullscreen surface.
     Apparently there's not more to it than this.
 */
-  else if(FullScreen)
+  //else if(FullScreen)
+  else if(FullScreen && OPTION_FAKE_FULLSCREEN)
   {
-    ASSERT(OPTION_FAKE_FULLSCREEN);
+    //ASSERT(OPTION_FAKE_FULLSCREEN);
     ASSERT(d3dpp.FullScreen_RefreshRateInHz==0);
     d3dpp.BackBufferCount=1;
     d3dpp.Windowed=true;

@@ -283,7 +283,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       // from here on, specific to Steem rendering (different options)
       if(OPTION_SAMPLED_YM) // one table for all [A,B,C] volume sets
       {
-        int t=(enveloped) ? BIT_6 :0;
+        int digit=(enveloped) ? BIT_6 :0;
 #if defined(SSE_BOILER_MUTE_SOUNDCHANNELS)
         if( (4>>abc) & (d2_dpeek(FAKE_IO_START+20)>>12 ))
           ; // 0: skip this channel
@@ -298,16 +298,16 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
           if((1<<10)&d2_dpeek(FAKE_IO_START+20)) 
             ; //0: 'mute env'
           else
-            t|=m_env_volume; // vol 5bit
+            digit |=m_env_volume; // vol 5bit
         }
 #else
-          t|=m_env_volume; // vol 5bit
+          digit |=m_env_volume; // vol 5bit
 #endif
         else
-          t|=(psg_reg[abc+8] & 15)<<1; // vol 4bit shifted
+          digit |=(psg_reg[abc+8] & 15)<<1; // vol 4bit shifted
 
-        index[abc]=(t>>1)&0xF; // 4bit volume
-        interpolate[abc]=((t&BIT_6) && index[abc]>0 && !(t&1) ) ? 1 : 0;
+        index[abc]=(digit >>1)&0xF; // 4bit volume
+        interpolate[abc]=((digit&BIT_6) && index[abc]>0 && !(digit &1) ) ? 1 : 0;
       }
       else // Steem's orignal tables per channel
       {

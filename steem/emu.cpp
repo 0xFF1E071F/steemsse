@@ -143,8 +143,6 @@ EXT bool mmu_confused;        //144
 EXT unsigned long hbl_count INIT(0);
 
 #if defined(SSE_IKBD_6301)
-// it's silly but I need to place those 'C' declarations here
-EXT int cpu_timer;  
 EXT BYTE stick[8];
 #endif
 
@@ -213,8 +211,9 @@ EXT WORD dbus;
 #endif
 EXT long m68k_old_dest;
 EXT MEM_ADDRESS effective_address;
-
-#if !(defined(SSE_IKBD_6301))
+#if defined(SSE_TIMINGS_CPUTIMER64)
+EXT COUNTER_VAR cpu_timer;
+#else
 EXT int cpu_timer;
 #endif
 EXT WORD m68k_ap,m68k_iriwo;

@@ -1914,7 +1914,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif//#if defined(SSE_VIDEO) 
 
-#if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D)
+#if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D) && !defined(BCC_BUILD)
 #define SSE_VID_D3D_2SCREENS // don't think there will be DD version (Win 2000 min)
 #endif
 #if defined(SSE_VID_D3D)
@@ -1934,7 +1934,9 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #endif
 
+#if _MSC_VER >= 1500 
 #define SSE_VS2008_WARNING_392
+#endif
 
 #ifdef SSE_YM2149_SOUND
 #define SSE_SOUND_250K
