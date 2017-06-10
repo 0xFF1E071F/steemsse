@@ -2187,14 +2187,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
             if(FullScreen && OPTION_D3D && old_mode!=Disp.D3DMode)
             {
-#if defined(SSE_VID_D3D_2SCREENS)
-              SetWindowPos(StemWin,HWND_TOPMOST,Disp.rcMonitor.left,Disp.rcMonitor.top,
-                Disp.rcMonitor.right-Disp.rcMonitor.left,
-                Disp.rcMonitor.bottom-Disp.rcMonitor.top,SWP_FRAMECHANGED);
-#else
-              SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
+#if defined(SSE_VID_GUI_392)
+              Disp.ScreenChange();
 #endif
+#if !defined(SSE_VID_D3D_2SCREENS) // done in D3DCreateSurfaces()
+              SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
               InvalidateRect(StemWin,NULL,FALSE);
+#endif
             }
 #endif
           }
@@ -2231,7 +2230,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
 #if defined(SSE_VID_D3D_382)
             if(FullScreen && OPTION_D3D && D3D9_OK)
-#if defined(SSE_VID_D3D_FS_392A)
+#if defined(SSE_VID_D3D_FS_392A__)
               Disp.ScreenChange();
 #else
               Disp.D3DSpriteInit();

@@ -138,8 +138,11 @@ void TGeneralInfo::GetHyperlinkLists(EasyStringList &desc_sl,EasyStringList &lin
 #else
   desc_sl.Add(T("Official Steem website"),0);
 #endif
+#ifdef SSE_BUGFIX_392 //legacy
+  link_sl.Add("http:/""/steem.atari.st/");
+#else
   link_sl.Add(STEEM_WEB);
-
+#endif
 #if defined(SSE_GUI_INFOBOX_LINKS)
   desc_sl.Add(T("Steven Seagal's Atari website"),0);
   link_sl.Add("http:/""/ataristeven.exxoshost.co.uk/");
@@ -291,8 +294,11 @@ void TGeneralInfo::Show()
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
 #if defined(SSE_GUI_INFOBOX)
   AddPageLabel(T("About"),INFOPAGE_ABOUT);
-  if (Exists(RunDir+SLASH+WINDOW_TITLE+EXT_TXT)) 
-    AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE); // release notes
+  //TRACE("%s\n", (RunDir+SLASH+WINDOW_TITLE+EXT_TXT).Text);
+  //if (Exists(RunDir+SLASH+WINDOW_TITLE+EXT_TXT)) 
+    //AddPageLabel(WINDOW_TITLE,INFOPAGE_README_SSE); // release notes
+  if (Exists(RunDir+SLASH+STEEM_RELEASE_NOTES+EXT_TXT)) 
+    AddPageLabel(STEEM_RELEASE_NOTES,INFOPAGE_README_SSE); // release notes
   if (Exists(RunDir+SLASH+STEEM_MANUAL_SSE+EXT_TXT)) 
     AddPageLabel(STEEM_MANUAL_SSE,INFOPAGE_README); // manual
   if (Exists(RunDir+SLASH+STEEM_SSE_FAQ+EXT_TXT)) 
@@ -450,7 +456,6 @@ void TGeneralInfo::CreateAboutPage()
   CreateWindowEx(0,"Steem HyperLink",STEEM_WEB,
                       WS_CHILD | WS_VISIBLE,page_l,y,page_w,TextHeight,
                       Handle,(HMENU)201,HInstance,NULL);
-
   if (Focus==NULL) Focus=PageTree;
   SetPageControlsFont();
   ShowPageControls();
@@ -605,7 +610,9 @@ void TGeneralInfo::CreateReadmePage(int p)
 #if defined(SSE_GUI_INFOBOX)
     case INFOPAGE_FAQ: 
       TextFile+=STEEM_SSE_FAQ; TextFile+=EXT_TXT; break;
-    case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=EXT_TXT; break;
+    //case INFOPAGE_README_SSE: TextFile+=WINDOW_TITLE; TextFile+=EXT_TXT; break;
+      //TODO...
+    case INFOPAGE_README_SSE: TextFile+=STEEM_RELEASE_NOTES; TextFile+=EXT_TXT; break;
     case INFOPAGE_HINTS: TextFile+=STEEM_HINTS; TextFile+=EXT_TXT; break;
 #else
     case INFOPAGE_FAQ: TextFile+="faq.txt"; break;

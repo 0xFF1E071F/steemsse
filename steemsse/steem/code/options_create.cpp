@@ -2206,7 +2206,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   Win=CreateWindow("Button",T("Use Desktop Refresh Rate"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10-10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
-  ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode"));
+  ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode, useful for some NVidia cards"));
   SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
 #endif
 
@@ -2216,7 +2216,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   Win=CreateWindow("Button",T("Windowed Borderless Mode"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l,y,w,23,Handle,(HMENU)210,HInstance,NULL);
-  ToolAddWindow(ToolTip,Win,T("This fake fullscreen mode bypasses other settings"));
+  ToolAddWindow(ToolTip,Win,T("This 'fake' fullscreen mode bypasses most everything else on this page!"));
   SendMessage(Win,BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
 #endif
 
