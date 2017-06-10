@@ -3126,9 +3126,10 @@ bool SteemDisplay::D3DBlit() {
     }
 #endif
     d3derr=pD3DDevice->BeginScene();
-#ifdef SSE_VID_D3D_FS_392A //does it even work?
+#if defined(SSE_VID_D3D_FS_392A) && !defined(SSE_VID_D3D_FS_392D2)
+    //does it even work?
     if(FullScreen)
-      pD3DDevice->Clear(0,NULL,D3DCLEAR_TARGET,0,0,0);
+      pD3DDevice->Clear(0,NULL,D3DCLEAR_TARGET,0,0,0); //problem: not the backbuffer
 #endif
     d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
 #if defined(SSE_VID_D3D_CRISP)
@@ -3499,7 +3500,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3derr=pD3DDevice->SetDialogBoxMode(TRUE);
 #endif
 
-#if !defined(SSE_VID_D3D_FS_392D) // done in D3DSpriteInit() now
+#if !defined(SSE_VID_D3D_FS_392D1) //nope, was test...
   // Create texture
 #if defined(SSE_VID_D3D_382) // maybe it changes nothing
   d3derr=pD3DDevice->CreateTexture(Width,Height,1,D3DUSAGE_DYNAMIC,
@@ -3795,20 +3796,38 @@ void SteemDisplay::D3DUnlock() {
 HRESULT SteemDisplay::D3DSpriteInit() {
   HRESULT hr=E_FAIL;
 #if defined(SSE_VID_D3D_373)
-  if(!pD3D||!pD3DDevice)
+  if(!pD3D||!pD3DDevice
+#if defined(SSE_VID_D3D_FS_392D2)
+    ||!pD3DTexture
+#endif
+    )
     return hr;
 #endif
   if(pD3DSprite)
   {
-#if defined(SSE_VID_D3D_FS_392D)
+#if defined(SSE_VID_D3D_FS_392D1)
     pD3DSprite->Flush();
 #endif
     pD3DSprite->Release(); //so we can init sprite anytime
   }
 
-#if defined(SSE_VID_D3D_FS_392D)
+
+#if defined(SSE_VID_D3D_FS_392D2)
+/*  Here we zero the memory ourself, should be fast enough, but more dangerous
+*/
+  if(FullScreen)
+  {
+    D3DLOCKED_RECT LockedRect;
+    hr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
+    //TRACE("clean texture %d bytes\n",LockedRect.Pitch*d3dpp.BackBufferHeight);
+    // eg "clean texture 5242880 bytes" on 1280x1024 = precisely 4*1280*1024 = 5MB
+    SecureZeroMemory(LockedRect.pBits,LockedRect.Pitch*d3dpp.BackBufferHeight);
+    hr=pD3DTexture->UnlockRect(0);
+  }
+#elif defined(SSE_VID_D3D_FS_392D1)
 /*  Deleting and creating the texture at each sprite init seems silly
     but we're looking for ways to have clean rendering on all systems.
+    -> black frame at change reported, maybe it's too slow
 */
   // Create texture
   if(pD3DTexture)
@@ -3822,6 +3841,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     return hr;
   }
 #endif
+
 
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
   if(!pD3DSprite)
