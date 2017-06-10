@@ -3287,8 +3287,9 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
 #endif
 #endif//#if !defined(SSE_VID_D3D_CHECK_HARDWARE)
-
+#if !defined(SSE_VID_D3D_FS_392D)
   D3DPRESENT_PARAMETERS d3dpp; 
+#endif
   ZeroMemory(&d3dpp, sizeof(d3dpp));
   d3dpp.Windowed=!FullScreen;
 #if defined(SSE_VID_FS_GUI_OPTION)
@@ -3497,6 +3498,8 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if !defined(SSE_VID_D3D_NO_GUI) && !defined(SSE_VID_D3D_FS_392B)
   d3derr=pD3DDevice->SetDialogBoxMode(TRUE);
 #endif
+
+#if !defined(SSE_VID_D3D_FS_392D) // done in D3DSpriteInit() now
   // Create texture
 #if defined(SSE_VID_D3D_382) // maybe it changes nothing
   d3derr=pD3DDevice->CreateTexture(Width,Height,1,D3DUSAGE_DYNAMIC,
@@ -3523,6 +3526,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     return d3derr;
 #endif
   }
+#endif
 
 #if !defined(SSE_VID_D3D_CHECK_HARDWARE)
   BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
@@ -3795,7 +3799,30 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     return hr;
 #endif
   if(pD3DSprite)
+  {
+#if defined(SSE_VID_D3D_FS_392D)
+    pD3DSprite->Flush();
+#endif
     pD3DSprite->Release(); //so we can init sprite anytime
+  }
+
+#if defined(SSE_VID_D3D_FS_392D)
+/*  Deleting and creating the texture at each sprite init seems silly
+    but we're looking for ways to have clean rendering on all systems.
+*/
+  // Create texture
+  if(pD3DTexture)
+    pD3DTexture->Release();
+  pD3DTexture=NULL;
+  hr=pD3DDevice->CreateTexture(d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,1,
+    D3DUSAGE_DYNAMIC,d3dpp.BackBufferFormat,D3DPOOL_DEFAULT,&pD3DTexture,NULL);
+  if(!pD3DTexture)
+  {
+    REPORT_D3D_ERR("CreateTexture",hr);
+    return hr;
+  }
+#endif
+
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
   if(!pD3DSprite)
     return hr;

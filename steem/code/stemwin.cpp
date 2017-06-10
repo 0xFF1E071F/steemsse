@@ -1144,7 +1144,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         bool old_draw_lock=draw_lock;
 
         OptionBox.EnableBorderOptions(Disp.BorderPossible());
-        TRACE("displaychange ");
+        //TRACE("displaychange ");
         Disp.ScreenChange();
         palette_convert_all();
         draw(false);

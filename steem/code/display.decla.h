@@ -146,6 +146,9 @@ public: //temp
 #endif
 #endif//dd7?
 #endif//!defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_FS_392D)
+  D3DPRESENT_PARAMETERS d3dpp; // double use for w,h, but we need other params
+#endif
 #if defined(SSE_VID_D3D_CHECK_HARDWARE)
   D3DFORMAT m_DisplayFormat;
   D3DDEVTYPE m_DeviceType;

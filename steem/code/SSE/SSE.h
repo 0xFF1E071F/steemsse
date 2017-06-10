@@ -2001,6 +2001,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
 #define SSE_VID_D3D_FS_392C // double creation at "activate"?
+#define SSE_VID_D3D_FS_392D // memorise d3dpp, delete/create texture with sprite
 #endif
 #ifdef SSE_VID_DD
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
