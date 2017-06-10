@@ -10,32 +10,30 @@
 #include <ddraw.h>
 #endif
 
+#include <stdio.h>
+#include <stdarg.h>
+
 #ifdef WIN32
 #include <time.h>
 #endif
+
 #include <emulator.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <gui.decla.h>//WriteDir//alert
 #include <harddiskman.decla.h>
 #include <mfp.decla.h>
-#include <mymisc.h>//getexe
 #include <run.decla.h>
 #include <steemh.decla.h>
 #include <cpu.decla.h>
-
-
 #include <stports.decla.h>
-
-#include "SSEFloppy.h"
 #include <display.decla.h>
 #include <init_sound.decla.h>
-//#include "SSEMMU.h"
+
+#include "SSEFloppy.h"
 #include "SSEVideo.h"
 #include "SSEInterrupt.h"
 #include "SSECpu.h"
-#include <stdio.h>
-#include <stdarg.h>
 
 
 #if defined(SSE_DEBUG)
@@ -62,11 +60,11 @@ TDebug::TDebug() {
   //  We must init those variables for the builds without the boiler
   ZeroMemory(logsection_enabled,100*sizeof(bool)); // 100> our need
   logsection_enabled[ LOGSECTION_ALWAYS ] = 1;
-#if defined(_DEBUG) && !defined(DEBUG_BUILD) // VC6 IDE debug no boiler
+#if defined(_DEBUG) && !defined(DEBUG_BUILD) // VS IDE debug no boiler
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
   logsection_enabled[ LOGSECTION_IKBD ] = 0;
@@ -112,7 +110,6 @@ TDebug::TDebug() {
   trace_file_pointer=freopen(SSE_TRACE_FILE_NAME, "w", stdout );
 #ifdef SSE_DEBUG
   if(!trace_file_pointer)
-//    Alert("Couldn't open TRACE file",GetEXEDir().Text,0);
     Alert("Couldn't open TRACE file",RunDir.Text,0);
 #endif
  
@@ -148,7 +145,6 @@ TDebug::TDebug() {
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   ZeroMemory(&InterruptTable,sizeof(SInterruptTable));
 #endif
-
 #if defined(SSE_BOILER_68030_STACK_FRAME)
   M68030StackFrame=0;
 #endif

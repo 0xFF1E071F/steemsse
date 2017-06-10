@@ -1842,23 +1842,23 @@ void SteemDisplay::ChangeToFullScreen()
     DirectoryTree::PopupParent=StemWin;
     
     GetWindowRect(StemWin,&rcPreFS); //SS "before fullscreen"
+
 #if defined(SSE_VID_FS_GUI_OPTION)
     if(OPTION_FULLSCREEN_GUI)
 #elif defined(SSE_VID_D3D)
     if(!(D3D9_OK && OPTION_D3D))
 #endif    
     {
-    ShowWindow(GetDlgItem(StemWin,106),SW_SHOWNA); //SS icon "back to windowed"
+      ShowWindow(GetDlgItem(StemWin,106),SW_SHOWNA); //SS icon "back to windowed"
 #if defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
-    ShowWindow(GetDlgItem(StemWin,116),SW_SHOWNA); //Quit Steem
+      ShowWindow(GetDlgItem(StemWin,116),SW_SHOWNA); //Quit Steem
 #endif
     }
     SetWindowLong(StemWin,GWL_STYLE,WS_VISIBLE);
-#if defined(SSE_VID_D3D_2SCREENS) // fullscreen on correct rectangle
-    SetWindowPos(StemWin,HWND_TOPMOST,rcMonitor.left,rcMonitor.top,
-      rcMonitor.right-rcMonitor.left,rcMonitor.bottom-rcMonitor.top,0);
-#elif defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_2SCREENS) // done in D3DCreateSurfaces()
     SetWindowPos(StemWin,HWND_TOPMOST,0,0,D3DFsW,D3DFsH,0);
+#endif
 #else
     int w=640,h=480;
 #if defined(SSE_VID_BORDERS_GUI_392)
@@ -1918,6 +1918,10 @@ void SteemDisplay::ChangeToFullScreen()
     for (int n=0;n<nStemDialogs;n++){
       if (DialogList[n]!=&InfoBox){
         DEBUG_ONLY( if (DialogList[n]!=&HistList) ) DialogList[n]->MakeParent(StemWin);
+#if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_392) //same as diskman, see below
+        if(OPTION_FULLSCREEN_GUI && DialogList[n]->IsVisible())
+          InvalidateRect(DialogList[n]->Handle,NULL,FALSE);
+#endif
       }
     }
     InfoBox.Hide();
@@ -2088,8 +2092,8 @@ HRESULT SteemDisplay::SetDisplayMode()
 HRESULT SteemDisplay::SetDisplayMode(int w,int h,int bpp,int hz,int *hz_ok)
 #endif
 {
-  ASSERT(FullScreen);
-
+  TRACE_LOG("SetDisplayMode\n");
+  //ASSERT(FullScreen);
 #if defined(SSE_VID_D3D)
   TRACE_LOG("D3D9 ok%d option %d\n",D3D9_OK,OPTION_D3D);
   if(D3D9_OK && OPTION_D3D)
@@ -3415,10 +3419,8 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 /*  Create a borderless window instead of a fullscreen surface.
     Apparently there's not more to it than this.
 */
-  //else if(FullScreen)
   else if(FullScreen && OPTION_FAKE_FULLSCREEN)
   {
-    //ASSERT(OPTION_FAKE_FULLSCREEN);
     ASSERT(d3dpp.FullScreen_RefreshRateInHz==0);
     d3dpp.BackBufferCount=1;
     d3dpp.Windowed=true;
@@ -3439,7 +3441,15 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   else
     TRACE_LOG("D3D Create windowed surface %dx%d screen %d format %d flags %X err %d\n",
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
+#else
+  // release trace 
+  TRACE2("scr %d fmt %X flg %X FS%d W%d %dx%dx%d %dhz ERR %d\n",
+    m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,FullScreen,d3dpp.Windowed,
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferCount,
+    d3dpp.FullScreen_RefreshRateInHz,d3derr);
 #endif
+
+
 #else
   d3derr=pD3D->CreateDevice(D3DADAPTER_DEFAULT,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
 #ifdef SSE_DEBUG
@@ -3456,6 +3466,24 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   //TRACE2("%s %dx%d %dbit %dhz %d buffers Vtx $%X Flags $%X\n",
   //  (FullScreen?"FS":"Win"),Width,Height,bitsperpixel,d3dpp.FullScreen_RefreshRateInHz,
   //  d3dpp.BackBufferCount,vtx_proc,d3dpp.Flags);
+
+#if defined(SSE_VID_D3D_2SCREENS)
+  if(!d3derr && FullScreen)
+  {
+    // Update monitor rectangle. Hopefully, this won't call us again!
+    D3DCheckCurrentMonitorConfig(); 
+    // Compute size
+    WORD cw=rcMonitor.right-rcMonitor.left;
+    WORD ch=rcMonitor.bottom-rcMonitor.top;
+    // Update window in absolute coordinates (depend on which screen we're on)
+    SetWindowPos(StemWin,HWND_TOPMOST,rcMonitor.left,rcMonitor.top,
+      cw,ch,SWP_FRAMECHANGED);
+    // Need this message to position icons and SetWindowPos won't trigger it!
+    LPARAM lpar=cw+(ch<<16);
+    PostMessage(StemWin,WM_SIZE,0,lpar); // (dubious Windows programming)
+    InvalidateRect(StemWin,NULL,FALSE); // Redraw menu bar
+  }
+#endif
 
   if(!pD3DDevice)
   {
@@ -3524,6 +3552,9 @@ D3DCreateSurfacesEnd:
   {
     REPORT_D3D_ERR("CreateSurfaces",d3derr);
     TRACE2("D3D_ERR %d\n",d3derr);
+#ifdef SSE_BUGFIX_392
+    FullScreen=0; //?
+#endif
   }
 #endif
   return d3derr;

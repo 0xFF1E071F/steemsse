@@ -311,7 +311,7 @@ void AddSnapShotToHistory(char *FilNam)
 
 bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bool ChangeDisks=true)
 {
-  TRACE2("Loading %s\n",FilNam);
+  //TRACE2("Loading %s\n",FilNam);
 #ifndef ONEGAME
   int Failed=2,Version=0;
   bool FileError=0;
@@ -337,7 +337,8 @@ bool LoadSnapShot(char *FilNam,bool AddToHistory=true,bool ShowErrorMess=true,bo
       try {
 #endif
       Failed=LoadSaveAllStuff(f,LS_LOAD,-1,ChangeDisks,&Version);
-      TRACE_INIT("Load snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
+      //TRACE_INIT("Load snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
+      TRACE2("Load snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
 #if defined(SSE_VAR_CHECK_SNAPSHOT)
       }
       catch(...) { //Works in VC6 - BCC? Unix certainly not.
@@ -412,7 +413,10 @@ void SaveSnapShot(char *FilNam,int Version=-1,bool AddToHistory=true)
 {
   FILE *f=fopen(FilNam,"wb");
   if (f!=NULL){
-#if defined(SSE_DEBUG_382)
+#if defined(SSE_VAR_392)
+    int Failed=LoadSaveAllStuff(f,LS_SAVE,Version,0,&Version);
+    TRACE2("Save snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
+#elif defined(SSE_DEBUG_382)
     int Failed=LoadSaveAllStuff(f,LS_SAVE,Version,0,&Version);
     TRACE_INIT("Save snapshot \"%s\" v%d ERR:%d\n",FilNam,Version,Failed);
 #else

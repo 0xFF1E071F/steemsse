@@ -95,9 +95,11 @@ void StemWinResize(int xo,int yo)
 #endif
       Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
 #endif
-
 #if defined(SSE_GUI_STATUS_BAR)
-  GUIRefreshStatusBar();//of course (v3.5.5)
+#if defined(SSE_VID_FS_GUI_392B)
+  if(!FullScreen) // of course (v3.9.2), eg The Pawn
+#endif
+    GUIRefreshStatusBar();//of course (v3.5.5)
 #endif
 
 }
@@ -1045,6 +1047,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     {
       int cw=LOWORD(lPar),ch=HIWORD(lPar);
       RECT rc={0,MENUHEIGHT,cw,ch};
+      //TRACE("WM_SIZE ");TRACE_RECT(rc);
       InvalidateRect(Win,&rc,0);
 #ifndef ONEGAME
       if (FullScreen){
@@ -1141,6 +1144,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         bool old_draw_lock=draw_lock;
 
         OptionBox.EnableBorderOptions(Disp.BorderPossible());
+        TRACE("displaychange ");
         Disp.ScreenChange();
         palette_convert_all();
         draw(false);
@@ -1183,7 +1187,10 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               SetWindowPos(DialogList[n]->Handle,NULL,DialogList[n]->FSLeft,DialogList[n]->FSTop,0,0,SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
             }
           }
+          //TRACE("activate ");
+#if !defined(SSE_VID_D3D_FS_392C) //?
           Disp.ScreenChange();
+#endif
 #ifndef ONEGAME
           draw(true);
 #else
@@ -1568,7 +1575,11 @@ void HandleButtonMessage(UINT Id,HWND hBut)
       break;
     }
     case 106:
+#if defined(SSE_GUI_STATUS_BAR_ALERT) && defined(SSE_BUGFIX_392)
+      Disp.ChangeToWindowedMode(M68000.ProcessingState==TM68000::BLIT_ERROR);
+#else
       Disp.ChangeToWindowedMode();
+#endif
       break;
 #if !(defined(SSE_VAR_NO_UPDATE))
     case 120:
@@ -1990,11 +2001,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #endif
 #endif
 #ifdef WIN32
-#if defined(SSE_VID_D3D_2SCREENS)
-  SetWindowPos(StemWin,HWND_TOPMOST,Disp.rcMonitor.left,Disp.rcMonitor.top,
-    Disp.rcMonitor.right-Disp.rcMonitor.left,Disp.rcMonitor.bottom-
-    Disp.rcMonitor.top,0);
-#else
+#if !defined(SSE_VID_D3D_2SCREENS) // done in D3DCreateSurfaces()
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
 #endif
   if (resizeclippingwindow){

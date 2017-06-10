@@ -1530,7 +1530,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_SHOW_TRICKS //line
 #define SSE_BOILER_SHOW_TRICKS2 //frame
 #define SSE_BOILER_SSE_PERSISTENT // L/S options 
-//#define SSE_BOILER_68030_STACK_FRAME
+#define SSE_BOILER_68030_STACK_FRAME 
 #define SSE_BOILER_STACK_CHOICE
 #define SSE_BOILER_TIMER_B // instead of 0
 #define SSE_BOILER_TIMERS_ACTIVE // (in reverse video) yeah!
@@ -1750,8 +1750,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_MICROWIRE_NOT_OPTIONAL
 #undef SSE_GUI_OPTIONS_MICROWIRE
 #define SSE_YM2149_TABLE_NOT_OPTIONAL
-#define SSE_SOUND_FEWER_FILTERS
-#define SSE_SOUND_CAN_CHANGE_DRIVER 
+//#define SSE_SOUND_FEWER_FILTERS //all builds
+//#define SSE_SOUND_CAN_CHANGE_DRIVER //all builds
 #define SSE_SOUND_NO_NOSOUND_OPTION
 #define SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL
 #define SSE_VID_ENFORCE_AUTOFRAMESKIP
@@ -1782,6 +1782,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA) //next version
+
+
 
 #ifdef SSE_BLITTER
 #define SSE_BLT_392
@@ -1873,6 +1875,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_STF_MEGASTF)
 #define SSE_STF_MEGASTF_CLOCK
+#endif
+
+#if defined(SSE_SOUND)
+#define SSE_SOUND_CAN_CHANGE_DRIVER 
+#define SSE_SOUND_FEWER_FILTERS
 #endif
 
 #if defined(SSE_TIMINGS)
@@ -1989,9 +1996,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_ANTICRASH_392
 #define SSE_VID_SCANLINES_INTERPOLATED_392
 #define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
+#define SSE_VID_FS_GUI_392B // changing res triggered status bar refresh (DD+D3D)
 #ifdef SSE_VID_D3D
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
+#define SSE_VID_D3D_FS_392C // double creation at "activate"?
 #endif
 #ifdef SSE_VID_DD
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
