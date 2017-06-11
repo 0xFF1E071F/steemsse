@@ -3126,9 +3126,8 @@ bool SteemDisplay::D3DBlit() {
     }
 #endif
     d3derr=pD3DDevice->BeginScene();
-#if defined(SSE_VID_D3D_FS_392A) && !defined(SSE_VID_D3D_FS_392D2)
-    //does it even work?
-    if(FullScreen)
+#if defined(SSE_VID_D3D_FS_392A)
+    if(FullScreen) 
       pD3DDevice->Clear(0,NULL,D3DCLEAR_TARGET,0,0,0); //problem: not the backbuffer
 #endif
     d3derr=pD3DSprite->Begin(0); // the picture is one big sprite
@@ -3813,6 +3812,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 
 #if defined(SSE_VID_D3D_FS_392D2)
 /*  Here we zero the memory ourself, should be fast enough, but more dangerous
+    problem: we get only one backbuffer
 */
   if(FullScreen)
   {
