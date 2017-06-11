@@ -1995,6 +1995,7 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SOUND_MOVE_ZERO // it only made it louder vs DMA...
 #define SSE_VID_ANTICRASH_392
 #define SSE_VID_SCANLINES_INTERPOLATED_392
+#define SSE_VID_SCANLINES_INTERPOLATED_392B // mixed output
 #define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
 #define SSE_VID_FS_GUI_392B // changing res triggered status bar refresh (DD+D3D)
 #define SSE_VID_392_SCREEN_CHANGE_TIMING
@@ -2003,8 +2004,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
 #define SSE_VID_D3D_FS_392C // double creation at "activate"?
 #define SSE_VID_D3D_FS_392D // memorise d3dpp
-//#define SSE_VID_D3D_FS_392D1 // delete/create texture with sprite
-#define SSE_VID_D3D_FS_392D2 // delete texture memory by hand
+#define SSE_VID_D3D_FS_392D1 // delete/create texture with sprite
+//#define SSE_VID_D3D_FS_392D2 // delete texture memory by hand
 #endif
 #ifdef SSE_VID_DD
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
