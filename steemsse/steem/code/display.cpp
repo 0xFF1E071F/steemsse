@@ -3811,7 +3811,6 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     pD3DSprite->Release(); //so we can init sprite anytime
   }
 
-
 #if defined(SSE_VID_D3D_FS_392D2)
 /*  Here we zero the memory ourself, should be fast enough, but more dangerous
 */
@@ -3821,8 +3820,11 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     hr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
     //TRACE("clean texture %d bytes\n",LockedRect.Pitch*d3dpp.BackBufferHeight);
     // eg "clean texture 5242880 bytes" on 1280x1024 = precisely 4*1280*1024 = 5MB
-    SecureZeroMemory(LockedRect.pBits,LockedRect.Pitch*d3dpp.BackBufferHeight);
-    hr=pD3DTexture->UnlockRect(0);
+    if(!hr) // just in case ;)
+    {
+      SecureZeroMemory(LockedRect.pBits,LockedRect.Pitch*d3dpp.BackBufferHeight);
+      hr=pD3DTexture->UnlockRect(0);
+    }
   }
 #elif defined(SSE_VID_D3D_FS_392D1)
 /*  Deleting and creating the texture at each sprite init seems silly

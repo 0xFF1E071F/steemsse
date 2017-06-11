@@ -1221,7 +1221,34 @@ bool draw_blit()
 #endif
     if (bAppMinimized==0){
       if (BytesPerPixel==1) palette_flip();
+#if defined(SSE_VID_392_SCREEN_CHANGE_TIMING)
+/*  Check for screen change right after the blit so that we
+    don't erase the frame (fullscreen) just before it's rendered (test)
+*/
+      bool ok=Disp.Blit();
+      if(runstate==RUNSTATE_RUNNING)
+      {
+        if (mixed_output>0){
+          mixed_output--;
+          if (mixed_output==2){
+            init_screen();
+            res_change();
+          }else if (mixed_output==0){
+            init_screen();
+            if (screen_res==0||SCANLINES_INTERPOLATED) 
+              res_change();
+            screen_res_at_start_of_vbl=screen_res;
+          }
+        }else if (screen_res!=screen_res_at_start_of_vbl){
+          init_screen();
+          res_change();
+          screen_res_at_start_of_vbl=screen_res;
+        }
+      }//runstate
+      return ok;
+#else
       return Disp.Blit();
+#endif
     }
   }
   return 0;

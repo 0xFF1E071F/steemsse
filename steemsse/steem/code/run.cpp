@@ -1357,6 +1357,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
 #endif  
+#if !defined(SSE_VID_392_SCREEN_CHANGE_TIMING) // -> draw_blit()
   if (mixed_output>0){
     mixed_output--;
     if (mixed_output==2){
@@ -1377,6 +1378,7 @@ void event_vbl_interrupt() //SS misleading name?
     res_change();
     screen_res_at_start_of_vbl=screen_res;
   }
+#endif
   log_to_section(LOGSECTION_VIDEO,EasyStr("VIDEO: VBL interrupt - next screen is in freq ")+shifter_freq);
 
 #ifdef SHOW_DRAW_SPEED
