@@ -1997,6 +1997,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_SCANLINES_INTERPOLATED_392
 #define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
 #define SSE_VID_FS_GUI_392B // changing res triggered status bar refresh (DD+D3D)
+#define SSE_VID_392_SCREEN_CHANGE_TIMING
 #ifdef SSE_VID_D3D
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
