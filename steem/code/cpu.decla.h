@@ -1441,6 +1441,9 @@ inline void FetchWord(WORD &dest_word) {
     if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
       ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
   }
+#if defined(SSE_BLT_392) 
+  CHECK_BLITTER_START // eg Another Kid's Story 
+#endif
 }
 
 
