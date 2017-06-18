@@ -1286,7 +1286,11 @@ detect unstable: switch MED/LOW - Beeshift
   // test
   if(!(CurrentScanline.Tricks
     &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2))
-    && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_60]
+#if defined(SSE_INT_MFP_TIMER_B_392D) // check Lethal Xcess beta, TB2/Oxy
+    && CyclesIn>ScanlineTiming[LINE_STOP][FREQ_60] // > 372
+#else
+    && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_60] // we're at 372 min
+#endif
 #if defined(SSE_GLUE_392A)
     && FreqAtCycle(ScanlineTiming[CHOOSE_FREQ][FREQ_60])!=60  //50,72?
 #else
@@ -1307,6 +1311,11 @@ detect unstable: switch MED/LOW - Beeshift
 #endif
     CurrentScanline.Bytes-=2; 
     TrickExecuted|=TRICK_LINE_MINUS_2;
+
+#ifdef TEST02
+    //CurrentScanline.EndCycle-=4;
+#endif
+
 //    TRACE_LOG("-2 y %d c %d s %d e %d ea %d\n",scan_y,LINECYCLES,scanline_drawn_so_far,overscan_add_extra,ExtraAdded);
   }
 
@@ -1383,7 +1392,12 @@ TODO Closure doesn't agree with 'Bees' for WS1?
 #endif
   +2;
 #endif
+
+#if defined(SSE_INT_MFP_TIMER_B_392D) // TB2/OXY
+  if(CyclesIn<ScanlineTiming[LINE_STOP][FREQ_50] 
+#else
   if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_50] 
+#endif
     ||(CurrentScanline.Tricks&(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_2
     |TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44))
     || FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_60])==60)
@@ -1595,6 +1609,7 @@ void TGlue::CheckVerticalOverscan() {
 #else
   int t;
 #endif
+
 #if defined(SSE_GLUE_VERT_OVERSCAN_390) // feature just couldn't work. TODO test
   if(emudetect_overscans_fixed && on_overscan_limit) 
   {
@@ -1826,7 +1841,6 @@ void TGlue::IncScanline() {
     ASSERT( !FetchingLine() );
     NextScanline.Bytes=0;
   }
-
 #if defined(SSE_GLUE_392B)
   MMU.ExtraBytesForHscroll=0;
 #endif

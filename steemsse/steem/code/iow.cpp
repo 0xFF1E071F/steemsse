@@ -2262,7 +2262,7 @@ rasterline to allow horizontal fine-scrolling.
       exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
     }
   }
-#if defined(NO_IO_W_DELAY)
+#if defined(SSE_TIMING_NO_IO_W_DELAY)
   ioaccess&=~1;
 #endif
 
@@ -2348,7 +2348,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
     io_write_b(addr+1,LOBYTE(io_src_w));
     io_word_access=0;
   }
-#if defined(NO_IO_W_DELAY)
+#if defined(SSE_TIMING_NO_IO_W_DELAY)
   ioaccess&=~2;
 #endif
 }
@@ -2402,7 +2402,7 @@ void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
   io_write_w(addr,HIWORD(io_src_l));
   INSTRUCTION_TIME(4);
   io_write_w(addr+2,LOWORD(io_src_l));
-#if defined(NO_IO_W_DELAY)
+#if defined(SSE_TIMING_NO_IO_W_DELAY)
   ioaccess&=~4;
 #endif
 }

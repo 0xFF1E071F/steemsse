@@ -1781,10 +1781,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_FRAME_REPORT_392
 #endif
 
+//3.9.2
+
 #if defined(SSE_BETA) //next version
 
-
-
+// Features
 #ifdef SSE_BLITTER
 #define SSE_BLT_392
 #endif
@@ -1824,16 +1825,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_BAR_392
 #endif
 
-#define NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp //RENAME
-
 #ifdef SSE_INT_MFP
 #define SSE_INT_MFP_392
 #endif
 
 #if defined(SSE_INT_MFP_392)
-#ifdef SSE_DEBUG
-#define SSE_INT_MFP_392B //check timers, first debug-only
-#endif
+#define SSE_INT_MFP_392B //check timers
+#define SSE_INT_MFP_392B1 // don't zero prescale
 #define SSE_INT_MFP_392C // prescale unmodified when changing prescaler on the fly
 #define SSE_INT_MFP_392D1 // remove 'snap to mfp clock', there's (imperfect) wobble already
 #define SSE_INT_MFP_392E // bus jam after read
@@ -1883,6 +1881,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_TIMINGS)
+#define SSE_TIMING_NO_IO_W_DELAY // refactoring, see note in cpu_sse.cpp
 #if defined(SSE_TIMING_MULTIPLIER)
 #define SSE_TIMING_MULTIPLIER_392 // refactor MFP prescale boost
 #define SSE_TIMING_MULTIPLIER_392B
@@ -1980,6 +1979,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+// Bugfixes
 #define SSE_BUGFIX_392
 #if defined(SSE_X64)
 #define SSE_X64_392
@@ -1998,7 +1998,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_SCANLINES_INTERPOLATED_392B // mixed output
 #define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
 #define SSE_VID_FS_GUI_392B // changing res triggered status bar refresh (DD+D3D)
-#define SSE_VID_392_SCREEN_CHANGE_TIMING
+#define SSE_VID_392_SCREEN_CHANGE_TIMING // useful if VSYNC is used
 #ifdef SSE_VID_D3D
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
@@ -2010,7 +2010,9 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_VID_DD
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
 #endif
+
 #endif//bugfix
+
 #else//!SS
 /////////////////////////////////////
 // if STEVEN_SEAGAL is NOT defined //

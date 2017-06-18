@@ -366,6 +366,7 @@ void event_acia();
 
 #define PREPARE_EVENT_CHECK_FOR_ACIA     \
   if(OPTION_C1) {\
+  if(!HD6301.Crashed) {\
   if (acia[0].LineRxBusy &&(time_of_next_event-acia[0].time_of_event_incoming) >= 0){\
   time_of_next_event=time_of_event_acia=acia[0].time_of_event_incoming;  \
   screen_event_vector=event_acia;                    \
@@ -374,6 +375,7 @@ void event_acia();
   time_of_next_event=time_of_event_acia=acia[0].time_of_event_outgoing;  \
   screen_event_vector=event_acia;                    \
   } \
+  }\
   if (acia[1].LineRxBusy && (time_of_next_event-acia[1].time_of_event_incoming) >= 0){\
   time_of_next_event=time_of_event_acia=acia[1].time_of_event_incoming;  \
   screen_event_vector=event_acia;                    \

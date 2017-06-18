@@ -367,10 +367,12 @@ register. This is of course correct in Steem but hey, I didn't even know that.
             MC68901.Period[timer]=precise_cycles;
 #endif
           }
+
 #if defined(SSE_DEBUG)
 #if defined(SSE_INT_MFP_TIMERS_STARTING_DELAY)
-          TRACE_LOG("%d PC %X set timer %c control %d data %d",
-            ACT-MFP_TIMER_SET_DELAY,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
+          TRACE_LOG("%d PC %X set timer %c control %d data %d counter %d prescale %d",
+            ACT-MFP_TIMER_SET_DELAY,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer],
+            mfp_timer_counter[timer]/64,prescale_count);
 #else
           TRACE_LOG("%d PC %X set timer %c control $%x, data $%x",
             ACT-12,old_pc,'A'+timer,new_control,mfp_reg[MFPR_TADR+timer]);
@@ -379,13 +381,14 @@ register. This is of course correct in Steem but hey, I didn't even know that.
             TRACE_LOG(" (%d)\n",mfp_reg[MFPR_TADR+timer]);
           else
           {
-            if(prescale_count) TRACE_LOG(" Prescale count %d",prescale_count); //rare?
-            TRACE_LOG(" prescaler %d MFP cycles %d CPU cycles %d.%d\n",
+            //if(prescale_count) TRACE_LOG(" Prescale count %d",prescale_count); //rare?
+            TRACE_LOG(" prescaler %d MFP cycles %d CPU cycles %d.%d next timeout %d\n",
             mfp_timer_prescale[new_control],
             mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer])),
-            mfp_timer_period[timer],mfp_timer_period_fraction[timer]);
+            mfp_timer_period[timer],mfp_timer_period_fraction[timer],mfp_timer_timeout[timer]);
           }
 #endif
+
 #else
           // To make this more accurate for short timers, we should store the fractional
           // part as well.  Then every time it times out, increase the fractional part and
@@ -445,7 +448,7 @@ TODO
           mfp_timer_timeout[timer]/=8000;
 #endif
 
-#if defined(SSE_INT_MFP_392C) && !defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_392C) && !defined(SSE_INT_MFP_392D1) //d1: we don't come here if C2 anyway
           if(!OPTION_C2)
 #endif
           // Take off number of cycles already counted
@@ -524,15 +527,18 @@ TODO
             }
           }
 #endif
+
 #ifdef SSE_DEBUG
           if(new_val & BIT_3)
-            TRACE_LOG("%d PC %X set Timer %C\n",ACT,old_pc,'A'+timer);
+            TRACE_LOG("%d PC %X set Timer %c\n",ACT,old_pc,'A'+timer);
           else
-            TRACE_LOG("%d PC %X stop Timer %C\n",ACT,old_pc,'A'+timer);
+            TRACE_LOG("%d PC %X stop Timer %c counter %d prescale %d\n",
+            ACT,old_pc,'A'+timer,mfp_timer_counter[timer]/64,prescale_count);
 #endif
+
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_392B) && !defined(SSE_INT_MFP_392B1)
           MC68901.Prescale[timer]=0; // and Counter is up to date
 #endif
           dbg_log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
@@ -628,20 +634,29 @@ void mfp_init_timers() // For load state and CPU speed change
   RS232_CalculateBaud(bool(mfp_reg[MFPR_UCR] & BIT_7),mfp_get_timer_control_register(3),true);
 }
 
+//SS This is called whether a timer is being started or stopped
+// reference is timeout
+
 int mfp_calc_timer_counter(int timer)
 {
 #if defined(SSE_INT_MFP_392B)
   ASSERT(timer>=0 && timer<4);
+#if defined(SSE_INT_MFP_392B1) 
+  // temporarily assume prescale doesn't change when the timer isn't running
+  // Froggies Over The Fence menu
+  // TODO HW test
+#else
   MC68901.Prescale[timer]=0; // 0 if the timer isn't running
 #endif
-  BYTE cr=mfp_get_timer_control_register(timer);
+#endif
+  BYTE cr=mfp_get_timer_control_register(timer); //SS register before write
   if (cr & 7){ // SS delay timer
 #if defined(SSE_TIMINGS_CPUTIMER64)
     COUNTER_VAR stage=mfp_timer_timeout[timer]-ABSOLUTE_CPU_TIME;
 #else
     int stage=mfp_timer_timeout[timer]-ABSOLUTE_CPU_TIME;
 #endif
-    if (stage<0){ //SS has timed out?
+    if (stage<0){ //SS has timed out? - no high precision here...
       MFP_CALC_TIMER_PERIOD(timer);
       stage+=((-stage/mfp_timer_period[timer])+1)*mfp_timer_period[timer];
     }
@@ -666,6 +681,7 @@ int mfp_calc_timer_counter(int timer)
 #endif
   }
 #if defined(SSE_INT_MFP_392B)
+  //TRACE_LOG("calc timer %c cr %d counter %d prescale %d\n",'A'+timer,cr,MC68901.Counter[timer],MC68901.Prescale[timer]);
   return MC68901.Prescale[timer];
 #else
   return 0;

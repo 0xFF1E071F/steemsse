@@ -579,14 +579,15 @@ void DebugCheckIOAccess() {
 #endif
 
 
-#if defined(NO_IO_W_DELAY)
+#if defined(SSE_TIMING_NO_IO_W_DELAY)
 /*  This is intermediate refactoring.
     Steem sets the destination of a CPU operation using a pointer.
     If the destination is in the io zone, the pointer will be updated
     in good time, but the write to io itself is delayed until the end
     of the instruction. This is not really correct.
     Not all instructions use this system. Notably not MOVE and the like.
-    We eliminate the delay at the price of more code inside CPU instructions.
+    We eliminate the delay at the price of more code inside CPU instructions,
+    using macros.
 */
 
 inline void check_io_write_b() {
@@ -616,7 +617,7 @@ inline void check_io_write_l() {
 inline void handle_ioaccess() {
   if (ioaccess){                             
     switch (ioaccess & IOACCESS_NUMBER_MASK){     
-#if !defined(NO_IO_W_DELAY)
+#if !defined(SSE_TIMING_NO_IO_W_DELAY)
       case 1: io_write_b(ioad,LOBYTE(iobuffer)); 
         break;    
       case 2: io_write_w(ioad,LOWORD(iobuffer)); 

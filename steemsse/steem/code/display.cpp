@@ -3499,7 +3499,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3derr=pD3DDevice->SetDialogBoxMode(TRUE);
 #endif
 
-#if !defined(SSE_VID_D3D_FS_392D1) //nope, was test...
+#if !defined(SSE_VID_D3D_FS_392D1)
   // Create texture
 #if defined(SSE_VID_D3D_382) // maybe it changes nothing
   d3derr=pD3DDevice->CreateTexture(Width,Height,1,D3DUSAGE_DYNAMIC,
@@ -3555,7 +3555,7 @@ D3DCreateSurfacesEnd:
   if(d3derr!=D3D_OK)
   {
     REPORT_D3D_ERR("CreateSurfaces",d3derr);
-    TRACE2("D3D_ERR %d\n",d3derr);
+    TRACE("D3D_ERR %d\n",d3derr);
 #ifdef SSE_BUGFIX_392
     FullScreen=0; //?
 #endif
@@ -3805,7 +3805,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   if(pD3DSprite)
   {
 #if defined(SSE_VID_D3D_FS_392D1)
-    pD3DSprite->Flush();
+    //pD3DSprite->Flush(); // D3DX: ID3DXSprite::Flush called outside a Begin/End pair
 #endif
     pD3DSprite->Release(); //so we can init sprite anytime
   }
@@ -3829,7 +3829,6 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #elif defined(SSE_VID_D3D_FS_392D1)
 /*  Deleting and creating the texture at each sprite init seems silly
     but we're looking for ways to have clean rendering on all systems.
-    -> black frame at change reported, maybe it's too slow
 */
   // Create texture
   if(pD3DTexture)
