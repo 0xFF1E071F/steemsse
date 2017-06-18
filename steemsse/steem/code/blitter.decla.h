@@ -147,7 +147,11 @@ inline void check_blitter_start() {
   if(Blit.Request)
     Blitter_CheckRequest();
 }
+#if defined(SSE_BLT_BUS_ARBITRATION)
 #define CHECK_BLITTER_START check_blitter_start();
+#else
+#define CHECK_BLITTER_START
+#endif
 
 #else
 

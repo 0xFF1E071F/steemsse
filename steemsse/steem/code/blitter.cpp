@@ -614,7 +614,9 @@ void Blitter_Draw() {
           Blit.HasBus=false;
 #if defined(SSE_BLT_392)
           Blit.Request=1; // blit not finished
+#ifdef SSE_BLT_390B
           Blit.BlitCycles=ACT-Blit.TimeAtBlit; 
+#endif
           Blit.BusAccessCounter=0; // now we'll count CPU accesses
 #else
           Blit.TimeToSwapBus=ACT+258;
@@ -1318,7 +1320,7 @@ void Blitter_CheckRequest() {
       Blitter_Draw();
     }
   }
-  // hog mode
+  // hog mode + blit mode, start
   else if((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
     Blitter_Start_Now(); 
 }

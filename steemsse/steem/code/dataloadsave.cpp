@@ -410,6 +410,8 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   }
 #if defined(SSE_DISK_PASTI_ONLY_STX)
   pCSF->SetStr("Pasti","PastiJustStx",EasyStr(OPTION_PASTI_JUST_STX));  
+#elif SSE_VERSION>391
+  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(true));  
 #endif
 #endif
 
