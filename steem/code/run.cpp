@@ -781,6 +781,9 @@ void event_scanline_sub() {
     {
       TRACE("6301 CRASH\n");
       HD6301.Crashed=1; 
+#if defined(SSE_GUI_STATUS_BAR_392)
+      GUIRefreshStatusBar();
+#endif
     }
   }
 #endif

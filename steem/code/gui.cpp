@@ -578,12 +578,21 @@ void GUIRefreshStatusBar() {
   // should we show or hide that "status bar"?
   bool should_we_show=(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME); 
 
+#if defined(SSE_GUI_STATUS_BAR_392)
+  if(HD6301.Crashed)
+    M68000.ProcessingState=TM68000::HD6301_CRASH;
+#endif
+
   // build text of "status bar", only if we're to show it
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
-    && M68000.ProcessingState!=TM68000::BOILER_MESSAGE)
+    && M68000.ProcessingState!=TM68000::BOILER_MESSAGE
+#if defined(SSE_GUI_STATUS_BAR_392)
+    && M68000.ProcessingState!=TM68000::HD6301_CRASH
+#endif
+    )
 #else
   if(should_we_show)
 #endif
@@ -686,7 +695,7 @@ void GUIRefreshStatusBar() {
 #if defined(SSE_VID_BORDERS_GUI_392)
       size_t max_text_length=(border!=0)?MAX_TEXT_LENGTH_BORDER_ON:
         MAX_TEXT_LENGTH_BORDER_OFF;
-#elif defiend(SSE_VS2008_WARNING_382)
+#elif defined(SSE_VS2008_WARNING_382)
       size_t max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
 #else
       int max_text_length=(border&1)?MAX_TEXT_LENGTH_BORDER_ON:MAX_TEXT_LENGTH_BORDER_OFF;
@@ -779,8 +788,12 @@ void GUIRefreshStatusBar() {
     if(M68000.ProcessingState==TM68000::HALTED)
       //strcpy(status_bar,T("HALT (ST crashed)"));
       strcpy(ansi_string,T("HALT"));
-    if(M68000.ProcessingState==TM68000::BLIT_ERROR)
+    else if(M68000.ProcessingState==TM68000::BLIT_ERROR)
       strcpy(ansi_string,T("BLIT ERROR"));
+#if defined(SSE_GUI_STATUS_BAR_392)
+    else if(M68000.ProcessingState==TM68000::HD6301_CRASH)
+      strcpy(ansi_string,T("HD6301 CRASHED"));
+#endif
 #endif
 #endif
 

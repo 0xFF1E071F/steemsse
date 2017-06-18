@@ -42,7 +42,7 @@ Different states are used, but some have NOTHING to do with processor state,
 so refactoring due!
 */
   enum {NORMAL,EXCEPTION,HALTED,
-    STOPPED,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE}; 
+    STOPPED,INTEL_CRASH,BLIT_ERROR,BOILER_MESSAGE,HD6301_CRASH}; 
 #endif
 #ifdef SSE_CPU_E_CLOCK
   enum {ECLOCK_VBL,ECLOCK_HBL,ECLOCK_ACIA};

@@ -2206,7 +2206,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   Win=CreateWindow("Button",T("Use Desktop Refresh Rate"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10-10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
-  ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode, useful for some NVidia cards"));
+  ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode, useful for some NVIDIA cards"));
   SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
 #endif
 
@@ -2635,7 +2635,8 @@ void TOptionBox::CreateSoundPage()
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
+  //SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
+  SendMessage(Win,BM_SETCHECK,SSEOption.Microwire,0);
   ToolAddWindow(ToolTip,Win,
     //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
     T("Microwire (STE sound), incomplete emulation"));

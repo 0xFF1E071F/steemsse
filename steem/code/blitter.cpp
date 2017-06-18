@@ -380,6 +380,11 @@ void Blitter_Blit_Word()
     if(Blit.BlittingPhase!=TBlitter::PRIME)
       Blit.BlittingPhase=TBlitter::READ_SOURCE;
     break;
+
+#if defined(SSE_BUGFIX_392)
+  default: // recover from bug (old snapshot...)
+    Blit.BlittingPhase=Blit.Busy=0;
+#endif
   }//sw
 }
 

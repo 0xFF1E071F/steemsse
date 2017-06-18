@@ -1300,7 +1300,15 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #ifdef WIN32
   DEBUG_ONLY( ShowWindow(DWin,SW_SHOW); )
   ShowWindow(StemWin,ShowState);
+#if defined(SSE_VID_D3D_2SCREENS)
+  if (bAOT)
+  {
+    SetWindowPos(StemWin,HWND_TOPMOST,Disp.rcMonitor.left,Disp.rcMonitor.top,
+      0,0,SWP_NOMOVE | SWP_NOSIZE);
+  }
+#else
   if (bAOT) SetWindowPos(StemWin,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE | SWP_NOSIZE);
+#endif
 #elif defined(UNIX)
   XMapWindow(XD,StemWin);
   XFlush(XD);
