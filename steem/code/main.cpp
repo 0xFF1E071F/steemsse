@@ -1214,9 +1214,32 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
 
 #ifndef ONEGAME
+  //TRACE("Disk A %s, statefile %s\n",BootDisk[0].Text,BootStateFile.Text);
   if (BootDisk[0].NotEmpty()){
     if (BootStateFile.NotEmpty()){
+#if defined(SSE_VAR_ARG_SNAPSHOT_PLUS_DISK)
+/*  Request: specify both memory snapshot and disks.
+*/
+      int cnt=0;
+      for(int Drive=0;Drive<2;Drive++)
+      {
+        if (Exists(BootDisk[Drive].Text))
+        {
+          cnt++;
+          EasyStr Name=GetFileNameFromPath(BootDisk[Drive]);
+          *strrchr(Name,'.')=0;
+          DiskMan.InsertDisk(Drive,Name,BootDisk[Drive],0,0);
+        }
+      }
+      if(cnt)
+      {
+        if (LoadSnapShot(BootStateFile,false,false,false)) 
+          BootInMode|=BOOT_MODE_RUN;
+      }
+      else
+#endif
       if (LoadSnapShot(BootStateFile)) BootInMode|=BOOT_MODE_RUN;
+
       LastSnapShot=BootStateFile;
       TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
     }else{
@@ -1240,6 +1263,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
         if (BootDisk[Drive].NotEmpty() && NotSameStr_I(BootDisk[Drive],".")){
           EasyStr Name=GetFileNameFromPath(BootDisk[Drive]);
           *strrchr(Name,'.')=0;
+          //TRACE("insert %s in %c\n",BootDisk[Drive].Text,Drive+'A');
           if (DiskMan.InsertDisk(Drive,Name,BootDisk[Drive],0,0)){
             if (Drive==0) BootInMode|=BOOT_MODE_RUN;
           }
