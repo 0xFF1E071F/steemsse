@@ -1722,15 +1722,20 @@ WIN_ONLY( case ARG_GDIFSBORDER:   Disp.DrawLetterboxWithGDI=true; break; )
         break;
 
       case ARG_DISKIMAGEFILE:
+        //TRACE("ARG_DISKIMAGEFILE %s A free %d B free %d\n",Path.Text,BootDisk[0].Empty(),BootDisk[1].Empty());
         if (BootDisk[1].Empty()) BootDisk[int(BootDisk[0].Empty() ? 0:1)]=Path;
+        //TRACE("Boot disks %s %s\n",BootDisk[0].Text,BootDisk[1].Text);
         break;
       case ARG_PASTIDISKIMAGEFILE:
         BootPasti=BOOT_PASTI_ON;
         if (BootDisk[1].Empty()) BootDisk[int(BootDisk[0].Empty() ? 0:1)]=Path;
         break;
       case ARG_SNAPSHOTFILE:
+        //TRACE("ARG_SNAPSHOTFILE %s\n",Path.Text);
+#if !defined(SSE_VAR_ARG_SNAPSHOT_PLUS_DISK)
         BootDisk[0]=".";
         BootDisk[1]=".";
+#endif
         BootStateFile=Path;
         TRACE_INIT("BootStateFile %s given as argument\n",BootStateFile.Text);
         break;
