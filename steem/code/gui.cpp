@@ -1662,6 +1662,7 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
     dbg_log(Str("     ")+Arg[n]);
     EasyStr Path;
     int Type=GetComLineArgType(Arg[n],Path);
+    //TRACE("ARG %d %s %d\n",n,Path.Text,Type);
     switch (Type){
       case ARG_GDI:    WIN_ONLY( TryDD=0; ) break;
       case ARG_NODS:   TrySound=0; break;
@@ -1723,7 +1724,12 @@ WIN_ONLY( case ARG_GDIFSBORDER:   Disp.DrawLetterboxWithGDI=true; break; )
 
       case ARG_DISKIMAGEFILE:
         //TRACE("ARG_DISKIMAGEFILE %s A free %d B free %d\n",Path.Text,BootDisk[0].Empty(),BootDisk[1].Empty());
+#if defined(SSE_VAR_ARG_SNAPSHOT_PLUS_DISK)
+        if (BootDisk[1].Empty()||BootDisk[1]==".")
+          BootDisk[int( (BootDisk[0].Empty()||BootDisk[0]==".") ? 0:1)]=Path;
+#else
         if (BootDisk[1].Empty()) BootDisk[int(BootDisk[0].Empty() ? 0:1)]=Path;
+#endif
         //TRACE("Boot disks %s %s\n",BootDisk[0].Text,BootDisk[1].Text);
         break;
       case ARG_PASTIDISKIMAGEFILE:
@@ -1732,10 +1738,10 @@ WIN_ONLY( case ARG_GDIFSBORDER:   Disp.DrawLetterboxWithGDI=true; break; )
         break;
       case ARG_SNAPSHOTFILE:
         //TRACE("ARG_SNAPSHOTFILE %s\n",Path.Text);
-#if !defined(SSE_VAR_ARG_SNAPSHOT_PLUS_DISK)
+//#if !defined(SSE_VAR_ARG_SNAPSHOT_PLUS_DISK)
         BootDisk[0]=".";
         BootDisk[1]=".";
-#endif
+//#endif
         BootStateFile=Path;
         TRACE_INIT("BootStateFile %s given as argument\n",BootStateFile.Text);
         break;

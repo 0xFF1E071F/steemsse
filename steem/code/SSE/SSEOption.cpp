@@ -44,6 +44,7 @@ void TOption::Init() {
 #ifdef SSE_VID_DIRECT3D
   Direct3D=1;
 #endif
+  SampledYM=true;
 #else//opt390?
 #if defined(SSE_HACKS)
   Hacks=TRUE;
