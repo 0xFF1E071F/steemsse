@@ -444,8 +444,16 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
     {//scope
     bool pasti_active_save=pasti_active; //3.6.1, because RemoveDisk clears it
 #endif
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
+    // keep manager info for final snapshot save or pasti state not saved
+    TImageType save_type[2]={SF314[0].ImageType,SF314[1].ImageType};
+#endif
     FloppyDrive[0].RemoveDisk();
     FloppyDrive[1].RemoveDisk();
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
+    SF314[0].ImageType=save_type[0];
+    SF314[1].ImageType=save_type[1];
+#endif
 #if defined(SSE_DISK_PASTI_ONLY_STX)
     pasti_active=pasti_active_save; //we want correct state saved
     }

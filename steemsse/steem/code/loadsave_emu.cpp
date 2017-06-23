@@ -302,7 +302,11 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }else{
     NewROMVer=0x701;
   }
-
+#if defined(SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE)
+  //TRACE("Snapshot Version %d NewROMVer %x\n",Version,NewROMVer);
+  if(NewROMVer<0x106)
+    ST_TYPE=STF; //for older snapshots pre SSE
+#endif
   ReadWrite(bank_length[0]);       // 4
   ReadWrite(bank_length[1]);       // 4 
   if (LoadOrSave==LS_LOAD){
@@ -817,7 +821,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     if (LoadOrSave==LS_SAVE){
       //ask Pasti for variable block, save length as a long, followed by block
 #if USE_PASTI
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH4) 
       if (hPasti && (pasti_active||SF314[0].ImageType.Manager==MNGR_PASTI
         ||SF314[1].ImageType.Manager==MNGR_PASTI)){
 #else
@@ -959,7 +963,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
 #if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
     OPTION_C1=0;
 #endif
-#if defined(SSE_STF)
+#if defined(SSE_STF) && !defined(SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE)
     ST_TYPE=0;
 #endif
   }

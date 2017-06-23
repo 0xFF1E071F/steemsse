@@ -1223,8 +1223,10 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
       int cnt=0;
       for(int Drive=0;Drive<2;Drive++)
       {
-        if (Exists(BootDisk[Drive].Text))
+        //if (Exists(BootDisk[Drive].Text))
+        if(BootDisk[Drive]!=".")
         {
+          //TRACE("%s exists\n",BootDisk[Drive].Text);
           cnt++;
           EasyStr Name=GetFileNameFromPath(BootDisk[Drive]);
           *strrchr(Name,'.')=0;
