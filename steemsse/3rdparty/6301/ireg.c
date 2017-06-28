@@ -80,7 +80,7 @@ int dr_table[8][15] = {
   };
 #endif
 
-#if defined(SSE_IKBD_6301_ROM_KEYTABLE)
+#if defined(SSE_IKBD_6301_ROM_KEYTABLE) //undef in v391
 /*  go fetch the value in 6301 rom instead of in a fat table!
 f206	1d 2a 38 36: shift etc.
 ...  
@@ -335,6 +335,45 @@ static dr4_getb (offs)
   {
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_BUGFIX_392) // protect vs corrupt snapshot
+    int cycles_per_frame=0;
+    if(shifter_freq)
+      cycles_per_frame=HD6301_CLOCK/shifter_freq;   
+    if(HD6301.MouseVblDeltaX) // horizontal
+    { 
+      int clicks=abs(HD6301.MouseVblDeltaX);
+      int cycles_for_a_click=0, current_click=0;
+      if(clicks)
+        cycles_for_a_click=cycles_per_frame/clicks;
+      if(cycles_for_a_click)
+        current_click=hd6301_vbl_cycles/cycles_for_a_click;
+      if(current_click>=HD6301.click_x)
+      {
+        if(HD6301.MouseVblDeltaX<0) // left
+          mouse_x_counter=_rotl(mouse_x_counter,1);
+        else  // right
+          mouse_x_counter=_rotr(mouse_x_counter,1);
+        HD6301.click_x++;
+      }
+    }
+    if(HD6301.MouseVblDeltaY) // vertical
+    {
+      int clicks=abs(HD6301.MouseVblDeltaY);
+      int cycles_for_a_click=0, current_click=0;
+      if(clicks)
+        cycles_for_a_click=cycles_per_frame/clicks;
+      if(cycles_for_a_click)
+        current_click=hd6301_vbl_cycles/cycles_for_a_click;
+      if(current_click>=HD6301.click_y)
+      {
+        if(HD6301.MouseVblDeltaY<0) // up
+          mouse_y_counter=_rotl(mouse_y_counter,1);
+        else  // down
+          mouse_y_counter=_rotr(mouse_y_counter,1);
+        HD6301.click_y++;
+      }
+    } 
+#else
     int cycles_per_frame;
     ASSERT(shifter_freq);
     ASSERT(shifter_freq==50||shifter_freq==60||shifter_freq==72);
@@ -369,7 +408,7 @@ static dr4_getb (offs)
         HD6301.click_y++;
       }
     }   
-
+#endif
     //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
 
 #endif

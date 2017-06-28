@@ -3803,12 +3803,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     return hr;
 #endif
   if(pD3DSprite)
-  {
-#if defined(SSE_VID_D3D_FS_392D1)
-    //pD3DSprite->Flush(); // D3DX: ID3DXSprite::Flush called outside a Begin/End pair
-#endif
     pD3DSprite->Release(); //so we can init sprite anytime
-  }
 
 #if defined(SSE_VID_D3D_FS_392D2)
 /*  Here we zero the memory ourself, should be fast enough, but more dangerous

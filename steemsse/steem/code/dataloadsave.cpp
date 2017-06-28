@@ -446,7 +446,10 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
     // keep manager info for final snapshot save or pasti state not saved
-    TImageType save_type[2]={SF314[0].ImageType,SF314[1].ImageType};
+    //TImageType save_type[2]={SF314[0].ImageType,SF314[1].ImageType};//BCC don't like that
+    TImageType save_type[2];
+    save_type[0]=SF314[0].ImageType;
+    save_type[1]=SF314[1].ImageType;
 #endif
     FloppyDrive[0].RemoveDisk();
     FloppyDrive[1].RemoveDisk();
@@ -1518,7 +1521,8 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
-  pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
+  //pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
+  pCSF->SetStr("Sound","Microwire",EasyStr(SSEOption.Microwire));  
 #endif
 #if defined(SSE_OSD_DRIVE_INFO)
   pCSF->SetStr("Options","OsdDriveInfo",EasyStr(OPTION_DRIVE_INFO));  

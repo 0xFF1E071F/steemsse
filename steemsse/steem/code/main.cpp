@@ -1214,6 +1214,11 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
 
 #ifndef ONEGAME
+
+#if defined(SSE_VID_D3D_FS_392D1B)
+  bool snapshot_was_loaded=false;
+#endif
+
   //TRACE("Disk A %s, statefile %s\n",BootDisk[0].Text,BootStateFile.Text);
   if (BootDisk[0].NotEmpty()){
     if (BootStateFile.NotEmpty()){
@@ -1241,7 +1246,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
       else
 #endif
       if (LoadSnapShot(BootStateFile)) BootInMode|=BOOT_MODE_RUN;
-
+#if defined(SSE_VID_D3D_FS_392D1B)
+      snapshot_was_loaded=true;
+#endif
       LastSnapShot=BootStateFile;
       TRACE_INIT("BootStateFile %s\n",BootStateFile.Text);
     }else{
@@ -1283,6 +1290,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
       }
       if (Load){
         LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0); // Don't add to history, don't change disks
+#if defined(SSE_VID_D3D_FS_392D1B)
+        snapshot_was_loaded=true;
+#endif
       }
     }
   }
@@ -1313,7 +1323,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   if (OGInit()==0) QuitSteem();
   PostMessage(StemWin,WM_SYSCOMMAND,SC_MAXIMIZE,0);
 #endif
-
+#if defined(SSE_VID_D3D_FS_392D1B)
+  if(!snapshot_was_loaded) // res_change() will erase starting pic
+#endif
   res_change();
 
 #ifdef WIN32

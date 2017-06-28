@@ -1783,7 +1783,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 //3.9.2
 
-#if defined(SSE_BETA) //next version
+#if 1
 
 // Features
 #ifdef SSE_BLITTER
@@ -1898,8 +1898,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_SNAPSHOTS_INCOMPATIBLE
 #endif
 
-#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
-#define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE
+
+
 
 #define SSE_VAR_392
 #define SSE_VAR_OPT_392
@@ -1969,20 +1969,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_MAMELIKE_AVG_SMP // oversampling by artihmetic averaging
 #endif
 
-#endif//beta
+#endif //features 3.9.2
 
-#ifdef SSE_BETA // long term
-//#define SSE_CPU_RESTORE_ABUS
-//#define SSE_CPU_RESTORE_ABUS1
-//#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
-//#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
-//#define SSE_CPU_SIMPLIFY_READ_DEST_TST
-//#define SSE_INT_MFP_TIMER_B_PULSE //TODO
-//#define SSE_MMU_LOW_LEVEL //?
-#endif
-
-#if defined(SSE_BETA_BUGFIX)
-
+#if 1
 // Bugfixes
 #define SSE_BUGFIX_392
 #if defined(SSE_X64)
@@ -2009,11 +1998,32 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_FS_392C // double creation at "activate"?
 #define SSE_VID_D3D_FS_392D // memorise d3dpp
 #define SSE_VID_D3D_FS_392D1 // delete/create texture with sprite
+#define SSE_VID_D3D_FS_392D1B // pic at start
 //#define SSE_VID_D3D_FS_392D2 // delete texture memory by hand
 #endif
 #ifdef SSE_VID_DD
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
 #endif
+
+#endif //bugfixes 3.9.2
+
+#if defined(SSE_BETA) //next version
+
+#endif//beta
+
+#ifdef SSE_BETA // long term, tests
+//#define SSE_CPU_RESTORE_ABUS
+//#define SSE_CPU_RESTORE_ABUS1
+//#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
+//#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
+//#define SSE_CPU_SIMPLIFY_READ_DEST_TST
+//#define SSE_INT_MFP_TIMER_B_PULSE //TODO
+//#define SSE_MMU_LOW_LEVEL //?
+#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
+#define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE
+#endif
+
+#if defined(SSE_BETA_BUGFIX)
 
 #endif//bugfix
 

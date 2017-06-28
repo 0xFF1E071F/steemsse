@@ -2639,7 +2639,7 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,BM_SETCHECK,SSEOption.Microwire,0);
   ToolAddWindow(ToolTip,Win,
     //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
-    T("Microwire (STE sound), incomplete emulation"));
+    T("Microwire (for STE sound), incomplete emulation"));
   y+=LineHeight;
 #endif
 

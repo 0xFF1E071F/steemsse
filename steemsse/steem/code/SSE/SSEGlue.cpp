@@ -1672,11 +1672,7 @@ void TGlue::CheckVerticalOverscan() {
     Fixes It's a girl 2 last screen
 */
       shifter_last_draw_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
-        ? 226 : 247;   //+1???
-#if defined(SSE_SHIFTER_UNSTABLE_392)//temp
-    if(Shifter.Preload==1)
-      Shifter.Preload=0; 
-#endif
+        ? 226 : 247;
   }
 
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_TRACE_CONTROL)
