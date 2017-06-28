@@ -34,11 +34,10 @@ bool ExtensionIsPastiDisk(char *Ext)
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
 #if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-/*  We change again the way pasti.dll works in Steem.
+/*  v3.9.2. We change again the way pasti.dll works in Steem.
     If the option isn't checked (pasti_active is false), Pasti will run
-    STX images only, without changing pasti_active.
+    STX images only, without us changing pasti_active.
     If the option is checked, Pasti will get all DMA/FDC writes.
-    There's a warning if the current image can't be run by Pasti.
 */
   if(!pasti_active)
     return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
@@ -1575,7 +1574,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #endif
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
-#if defined(SSE_VAR_392) // more generic
+#if defined(SSE_VAR_392) // more generic wording
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for protected disks"));
 #elif USE_PASTI 
@@ -1755,9 +1754,9 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
         case 1002:  // Custom disk image
           This->ShowDiskDiag();
           break;
-#if defined(SSE_GUI_DM_STW) && defined(SSE_GUI_DM_HFE)
-        case 1003: // STW
-        case 1004: // HFE
+#if defined(SSE_GUI_DM_STW) && defined(SSE_GUI_DM_HFE) //been merged
+        case 1003: // New STW Disk Image
+        case 1004: // New HFE Disk Image
         {
           char *extension=(wPar==1003)?DISK_EXT_STW:DISK_EXT_HFE;
           EasyStr STName=This->DisksFol+"\\"+extension+" Disk."+extension;

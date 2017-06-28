@@ -304,7 +304,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 #if defined(SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE)
   //TRACE("Snapshot Version %d NewROMVer %x\n",Version,NewROMVer);
-  if(NewROMVer<0x106)
+  if(LoadOrSave==LS_LOAD && NewROMVer<0x106 && Version<41)
     ST_TYPE=STF; //for older snapshots pre SSE
 #endif
   ReadWrite(bank_length[0]);       // 4

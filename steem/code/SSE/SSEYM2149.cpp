@@ -126,6 +126,7 @@ void TYM2149::Reset() {
   m_cycles=0; 
   // 32 steps for envelope in YM - we do it at reset for old snapshots
   m_env_step_mask=ENVELOPE_MASK; 
+  m_hold=1; // Captain Blood
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
   m_oversampling_count=0;
 #endif
@@ -197,7 +198,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     // mix each channel
 
     m_count_noise++;
-    //if (m_count_noise >= (OPTION_HACKS?2:1)*(psg_reg[PSGR_NOISE_PERIOD] & 0x1f)) //test
+
     if (m_count_noise >= (psg_reg[PSGR_NOISE_PERIOD] & 0x1f))
     {
       /* toggle the prescaler output. Noise is no different to
@@ -226,6 +227,8 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     {
       m_count_env++;
       //TRACE_OSD("%d/%d",m_count_env,ENVELOPE_PERIOD());
+      //TRACE_OSD("%d/%d %d",m_count_env,ENVELOPE_PERIOD(),TONE_PERIOD(0));
+      //TRACE_OSD("%d/%d %d",m_count_env,ENVELOPE_PERIOD(),m_count[0]);
       if (m_count_env >= ENVELOPE_PERIOD()) // "m_step"=1 for YM2149
       {
         m_count_env = 0;

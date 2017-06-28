@@ -1316,6 +1316,9 @@ void sound_record_to_wav(int c,DWORD SINE_ONLY(t),bool chipmode,int *source_p)
   }
 }
 
+#ifdef VC_BUILD
+#pragma warning (disable: 4018) //signed/unsigned mismatch
+#endif
 
 HRESULT Sound_VBL()
 {
@@ -1958,6 +1961,11 @@ void dma_mv16_fetch(WORD data) {
 #undef last_write 
 
 #endif
+
+#ifdef VC_BUILD
+#pragma warning (default: 4018) //signed/unsigned mismatch
+#endif
+
 //---------------------------------------------------------------------------
 void dma_sound_get_last_sample(WORD *pw1,WORD *pw2)
 {
@@ -2649,10 +2657,10 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
       YM2149.m_env_step = YM2149.m_env_step_mask;
       YM2149.m_holding = 0;
       ASSERT(YM2149.m_env_step>=0);
-      //YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
-      // notice MAME doesn't reset the envelope counter
-      //YM2149.m_count_env = 0;
-      //YM2149.m_count_env = 0x10000; //in sc68 source as temp test
+      YM2149.m_env_volume = (YM2149.m_env_step ^ YM2149.m_attack);//no need?
+// from Hatari, see
+// http://www.atari-forum.com/viewtopic.php?f=51&t=31610&sid=b4e1d8fc35b06785db51e4f8e44d013d&p=319952#p319936
+      YM2149.m_count_env = 0; 
     }
   }
   else

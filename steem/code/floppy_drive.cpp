@@ -871,7 +871,7 @@ extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,
   // catch player's mistake
   if(SF314[drive].ImageType.Manager!=MNGR_PASTI && pasti_active)
   {
-    Alert("Disabling pasti.dll to run current disk image","Warning",0);
+    Alert(T("Disabling pasti.dll to run current disk image"),T("Warning"),0);
     pasti_active=false;
   }
 #endif
