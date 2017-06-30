@@ -1,7 +1,7 @@
 Steem SSE Bugs
 ===================
 
-v3.8.1
+v3.9.2
 
 Notes
 1) "Correct" means the bug may happen on a real STE
@@ -44,8 +44,6 @@ Dots in WU2 (correct)
 -Crash possible when Windows automatically blocks the session
 
 -Dizzy Panic 1 player/start switching (correct)
-
--Down -TLN: flickering screen
 
 -Dynabuster+ flicker at scores (correct)
 
@@ -97,6 +95,9 @@ STE sometimes lower border scanlines are shifted
 
 -My Dog is Enjoying Fuzion skull screen crash (correct)
 
+-No Extra 1/Der Patrizier+Civilization no response to keyboard (correct)
+-No Extra 1/Leeds United resets at once (correct)
+
 -Notator: instrument assignment?
 
 -Pacemaker credits crash at end (correct)
@@ -134,13 +135,14 @@ Is it Steem or TOS bug?
 -Sea of Colour hangs on ACSI disk (depends on driver?)
 
 -Sinfull Sinuses: bad 4bit rasters display on TOS 1.62UK (correct)
+Try with French TOS
 
 -Snapshot: can't save when HD files open (big problem!)
 
 -Snapshot: poor STW and SCP resuming (improved in v3.7.2)
 
 -Star Trek 
-samples too noisy
+samples too noisy (improved in v3.9.2 with higher SR)
 
 -Starting emulation too fast after loading a snapshot can hang Steem
 
@@ -162,9 +164,13 @@ samples too noisy
 
 -Switching between versions of Steem may corrupt auto.sts and cause crashes
 
+-TNT halts on STE (correct)
+
 -Ultimate 3D dots STE can fail to load
 
 -Union demo: sound dirty
+ The sound on the text boot screens uses very high frequency.
+ With option C2, it will sound better with a very high sampling rate.
 
 -Trauma STX: claims there's a KEYBOARD PROOBLEM. Apparently, it checks
 if it's a French layout. Works with French TOS.

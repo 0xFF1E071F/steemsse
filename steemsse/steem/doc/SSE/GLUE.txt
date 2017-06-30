@@ -1,18 +1,18 @@
-
 GLUE
 ======
 
 Sources:
 
 Wikipedia
-Overscan Techniques by Alien/ST-Connexion translated by Frost/Sector One
-Various discussions at www.atari-forum.com, especially contributions by
-Dio, ijor (Jorge Cwik), ljbk (Paolo), Troed/Sync.
-Some general Atari ST documentation
-Various doc
-Development of Steem
-Hatari source
+-Overscan Techniques by Alien/ST-Connexion (translated by Frost/Sector One, 
+plus original in French).
+-www.atari-forum.com
+-Some general Atari ST documentation
+-Various doc
+-Development of Steem
+-Hatari source
 
+Caution: incomplete, not guaranteed doc!
 
 Introduction
 ==============
@@ -64,9 +64,9 @@ We notice 2 things:
 (demo "Oyster")
 2) display timings are the same for low res and medium res, as tested on
 a STE.
-We conclude that only bit1 is memorised/considered by the Glue, bit 0 is
+We conclude that only bit 1 is memorised/considered by the Glue, bit 0 is
 irrelevant.
-The Shifter needs 2 bits to know its frequency, # bitplanes adn # colours.
+The Shifter needs 2 bits to know its frequency, # bitplanes and # colours.
 Register SHIFTMODE is held in the Shifter, line HIRES is held in the Glue.
 (In Steem we hold SHIFTMODE in two identical BYTE variables in both Glue and
 Shifter.)
@@ -79,9 +79,47 @@ Those counters run continuously.
 
 HCTR   position in HBL
 
-The precision of this counter isn't known. Is it 4 CPU cycles, as in Alien's
-article, 2 CPU cycles, as some cases seem to imply?
-Not knowing any better we'll use the CPU precision (emulator scanline cycles).
+The precision of this counter isn't known, maybe 4 clock cycles.
+
+Additional registers we guess:
+
+H_END    position of last cycle of this line (224, 508, 512)
+
+The GLue decides the value of this line in function of SHIFTMODE and SYNCMODE
+at cycle:
+54 + sync modifer on STF
+56 on STE.
+
+For example, a line -106, stopped because the ST was in HIRES at cycle 164, 
+will still run 512 cycles if it was at 50hz at cycles 54.
+
+Update (ijor): there are separate counters for DE and for HSYNC, because
+external sync is possible. 
+So H_END is more like a counter that is updated around cycle 54 on a colour
+screen (another one in HIRES...)
+
+Additional registers on the STE:
+--------------------------------
+
+HSCROLL  If HSCROLL<>0, video memory must be fetched in advance.
+How it exactly happens is speculative, but the Glue/MMU, as well as the
+Shifter, need the info.
+Precise HSCROLL (4bit) is held in the Shifter, a HSCROLL yes/no line is 
+held in the Glue.
+
+When HSCROLL<>0 at the start of the line, DE will be on for a raster more,
+even if HSCROLL=0 before the end of the line (TODO TEST).
+This implies a bit to hold this information.
+
+On the STE, DE is activated at the same time as on the STF if HSCROLL=0,
+earlier if not.
+One can assert that by using the Timer B in "start mode" (TIMERB05.TOS). 
+The decision to start a 50hz, 60hz or 71hz line is made earlier, at the
+time when DE would be asserted if HSCROLL<>0.
+That is 4 cycles before in HIRES (2 instead of 6).
+That is 16 cycles before in colour mode (36 instead of 52 at 60hz, 40 instead
+of 56 at 50hz).
+It is 16 cycles for both low and medium resolution.
 
 
 VCTR   HBL#
@@ -96,31 +134,13 @@ The first useful line is 63 at 50hz and 34 at 60hz or 72hz.
 The last useful line is 247 on a colour monitor, but VBLANK starts at line
 245.
 
-
-Additional registers we guess:
-
-H_END    position of last cycle of this line (224, 508, 512)
-
-The GLue decides the value of this line in function of SHIFTMODE and SYNCMODE
-at cycle:
-54 + sync modifer on STF
-56 on STE.
-
-For example, a line -106, stopped because the ST was in HIRES at cycle 164, 
-will still run 512 cycles if it was at 50hz at cycles 54.
+Like for HSYNC (see above), external sync is possible, so there are two
+counters, one for DE, one for the number of lines.
+This implies that the number of scanlines in a frame is stable from the moment
+it is decided until the next frame.
 
 
-Additional registers on the STE:
 
-HSCROLL  If HSCROLL<>0, video memory must be fetched in advance.
-How it exactly happens is speculative, but the Glue/MMU, as well as the
-Shifter, need the info.
-Precise HSCROLL (4bit) is held in the Shifter, a HSCROLL yes/no line is 
-held in the Glue.
-
-When HSCROLL<>0 at the start of the line, DE will be on for a raster more,
-even if HSCROLL=0 before the end of the line (TODO TEST).
-This implies a bit to hold this information.
 
 Signal descritpions
 ====================
@@ -128,6 +148,7 @@ Signal descritpions
 Bus error
 ----------
 
+The GLU will trigger a bus error only after 70 clock cycles (BUSERRTM.TOS).
 
 
 Video
@@ -213,8 +234,8 @@ be accessed on any phase.
 STE
 =====
 
-The frequency check happens at cycles 36 for 60hz and 40 for 50hz instead
-of 52 and 56, whatever the value of HSCROLL.
+In colour mode, the frequency check happens at cycles 36 for 60hz and 40 
+for 50hz instead of 52 and 56, whatever the value of HSCROLL.
 But prefetch starts (some) 16 cycles earlier only if HSCROLL is non null.
 This value of 16 cycles is the same in medium resolution.
 Prefetch ends as on a STF (cycle 376 at 50hz) because when HSCROLL 
@@ -226,7 +247,6 @@ STF when this condition is fulfilled.
 
 DE
 ====
-
 
 from STF schematics, we draw such graphic concerning DE signal:
 
@@ -246,14 +266,13 @@ and MMU on the STF, fixed delay on the STE.
 
 The Shifter is also affected by this delay.
 
-
-[ijor]
 The Timer B interrupt happens so late (28 emulator cycles + jitter)
-due to processing delays in the chips, especially the MFP.
+due to processing delays in the chips, especially the MFP. [ijor]
+The MFP checks the signal during some clock cycles (at its own frequency) 
+before it decides to trigger the interrupt.
 
 
-
-Timings used in Steem v3.8.0
+Timings used in Steem v3.9.2
 ==============================
 
 Wake-up modifiers for STF (0 on STE):
@@ -263,14 +282,18 @@ WU_res_modifier     -2   +2   0   0
 WU_sync_modifier     0   +2   0  +2
 
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
+  GLU_DE_OFF_72=166,
   GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
+  GLU_DE_OFF_60=372,
   GLU_DE_ON_50=56, //+ WU_sync_modifier; STE -16
+  GLU_DE_OFF_50=376,
   GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
-  GLU_RELOAD_VIDEO_COUNTER_50=64, //+ WU_sync_modifier (STE -2?)
-  GLU_TRIGGER_VBI_50=64, //+ WU_sync_modifier, STE +4
+  GLU_RELOAD_VIDEO_COUNTER_50=64-2, //+ WU_sync_modifier (STE -2?)
+  GLU_TRIGGER_VBI_50=64,	//STE+4
   GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
-  GLU_VERTICAL_OVERSCAN_50=504 //+ WU_sync_modifier, STE -2
+  GLU_VERTICAL_OVERSCAN_50=GLU_HSYNC_ON_50+GLU_HSYNC_DURATION // 504 //+ WU_sync_modifier, STE -2
+
 
 

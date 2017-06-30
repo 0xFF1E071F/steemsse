@@ -1,11 +1,34 @@
 Steem SSE Hints
 ===================
 
-v3.9.1
+v3.9.2
+
+
+General Hints
+===============
+
+- Read the manual ;)
+
+- Make regular backups of your steem.ini.
+In some cases, it can get corrupted, and setting everything up again is 
+a pain.
+
+- Try realistic combinations of ST model/TOS.
+
+- Most programs target the colour monitor.
+
+- If a program doesn't work, the first things to check are drive speed and
+ST model. After that, you may change memory size (especially 4MB is trouble
+with some programs).
+
+- Option C1 is highly recommended, except if you use macros.
+
+
+Emulation Hints
+=================
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
-
 
 Explanation of symbols
 =========================
@@ -13,7 +36,7 @@ Explanation of symbols
 #: SSE option 'Hacks'
 
 C1: SSE option 'C1: 6850/6301/MIDI/E-Clock'
-C2: SSE option 'C2: 68901'
+C2: SSE option 'C2: 68901/YM2149'
 
 DI: there are bad disk images around, you may want to check at
 ataristeven.exxoshost.co.uk for a good version!!
@@ -35,8 +58,6 @@ If not, right click and check Read Only.
 ADAT: Disk Manager option 'Accurate Disk Access times'
 
 No B: disconnect drive B: in Disk Manager (click on drive B: icon)
-
-digits x digits: select in SSE option 'Display size'
 
 patch: click on the patch icon, select patch, read instructions, apply
 
@@ -167,8 +188,8 @@ Demos
 - Knocking at Krystals Doors: press return
 - Kryos: STE, WS1, #
 - Megablast demo by Fashion: <4MB
-- More or less Zero: STE, 2MB, 400x275
-- Musical Wonder 1990: 416x281, WU1
+- More or less Zero: STE, 2MB
+- Musical Wonder 1990: WU1 or STE
 - New Stream Writer.prg: STW, HD, no acc
 - nordlicht_stniccc2015_partyversion: WS1 if STE
 - Noughts and Mad Crosses: STE, ADAT
@@ -179,12 +200,10 @@ Demos
 - Overdrive/Dragon: WU2
 - Overscan Demos STE: C2
 - Pacemaker: STE; Space: credits at once
-- Panic.tos v1: STF, C2
+- Panic v1: STF, C2
 - Phalanx: STF T102
 - Phaleon "normal loader": DI
 - Place To Be Again: STE
-- Punish Your Machine/Best Part of the Creation: 400x275 or higher
-- Punish Your Machine/Coast: 400x275 or higher
 - Punish Your Machine/Let's Do The Twist Again: STF
 - Q-Lize: STE T162
 - Reality is a Lie STE/Schnusdie: STE
@@ -203,7 +222,7 @@ Demos
 - Sphere by Sunny: STE
 - ST-NICCC 2000 Final by Oxygene: ADAT
 - Summer Delights: STE, 4MB
-- Sunny: STE, C2, #
+- Sunny: STE
 - Suretrip II - Dopecode by Checkpoint: ADAT
 - Swedish New Year Demo 1989: STF; TCB: WS2
 - SNYD2/Sync fullscreen: STF
@@ -216,7 +235,7 @@ Demos
 - Ultimate Demo by dynamic duo: <4MB
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
-- Union Demo: STF 1MB
+- Union Demo: STF 1MB; for sound, no C2 or very high sampling rate
 - The World is my Oyster screen #2: STF
 - World of Music -NPG: WS1 if STE
 - Ventura: mouse to rotate menu
@@ -256,7 +275,7 @@ Many Automation CDs were redone for the STE, they're not mentioned here.
 - Medway 001, ...: <4MB because of the stupid antivirus by you guess who!
 This antivirus ('Protector') can be found on other disks. 
 - Pyromaniacs 08: STF WU2
-- Ripped Off 14, 56, 60, etc.: STF because of the stupid antivirus
+- Ripped Off 14, 56, 60, etc.: <4MB because of the stupid antivirus
 - Speedy Pack #02 -HMD: enable Sound/Keyboard click
 - Superior 065/Blood Money: T102 (no guarantee, bloody packing work)
 

@@ -55,8 +55,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-#define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
+//#define SSE_BETA //title, OSD, plus some testing - new features
+//#define SSE_BETA_BUGFIX // beta for just bugfixes
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -1897,9 +1897,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_TIMINGS_CPUTIMER64_C // consequences for e-clock
 #define SSE_VAR_SNAPSHOTS_INCOMPATIBLE
 #endif
-
-
-
 
 #define SSE_VAR_392
 #define SSE_VAR_OPT_392

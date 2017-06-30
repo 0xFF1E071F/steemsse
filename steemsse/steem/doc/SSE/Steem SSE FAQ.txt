@@ -1,7 +1,7 @@
 Steem SSE FAQ
 ---------------
 
-v3.9.1
+v3.9.2
 
 Q:
 What is the Atari ST?
@@ -44,8 +44,8 @@ A:
 Steem was already very compatible, but Steem SSE is even more so, with
 better sound emulation, more disk image formats handled, many cool options,
 bugfixes, etc. 
-Steem SSE works better on more recent systems. The old Steem consumes less
-CPU.
+Steem SSE works better on more recent systems, especially fullscreen.
+The old Steem consumes less CPU.
 
 
 Q:
@@ -135,7 +135,8 @@ Some important games of the era were actually better on the ST or not even
 released on the Amiga.
 This said, the Amiga had better action games, especially space shooters.
 But practically, it was handicapped by one button joysticks (in fact, the
-Amiga could handle two buttons, but game developpers overlooked this feature).
+Amiga could handle two buttons, but lazy game developpers overlooked this
+feature).
 
 
 Q:
@@ -247,12 +248,14 @@ Sometimes I lose keyboard control.
 A:
 Me too. Don't know the cause. It's not an emulation issue if quitting and 
 restarting Steem gives you control back.
+In some cases it can be correct emulation.
 
 
 Q:
 Joysticks don't seem to be read correctly.
 A:
-Please first check that option 'Ports/Special adapters' doesn't interfere.
+Check that option 'Ports/Special adapters' doesn't interfere.
+Check that you don't have some autofire on.
 
 
 Q:
@@ -291,9 +294,7 @@ There is also a DirectDraw build available in case it really won't work.
 Q:
 What is the difference between the D3D and the DirectDraw (DD) build?
 A:
-The main difference is in fullscreen mode. The DD build uses 800x600 (with
-borders on) while the D3D uses any resolution you choose. There are other
-options available.
+The main difference is in fullscreen mode.
 
 
 Q:
@@ -365,6 +366,7 @@ Atari supported Falcon only for a few months, and little software was
 developed. Software was so specialised in audio it is very hard to emulate,
 not to mention protections. Only some professionals in audio production
 would be interested, and for this end Steem should be a paying tool anyway.
+Another emulator, Hatari, does support Falcon and TT.
 Now nothing keeps dedicated people from starting a Falcon branch of Steem.
 
 
