@@ -964,9 +964,6 @@ sets the CRC Error bit in the status register if the CRC is invalid.
             &&!(SSEOption.SingleSideDriveMap&(DRIVE+1)&&CURRENT_SIDE==1)
 #endif
             ){
-#if !(defined(SSE_VS2008_WARNING_390) && defined(SSE_DISK_READ_ADDRESS_TIMING))
-            DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
-#endif
 #if defined(SSE_DISK_READ_ADDRESS_TIMING)
 /*  Using a more precise routine for timings, this fixes ProCopy 'Analyze'
 */
@@ -975,6 +972,7 @@ sets the CRC Error bit in the status register if the CRC is invalid.
             Disk[DRIVE].NextID(NextIDNum,HBLsToNextSector); //references
             HBLsToNextSector-=2; //see below
 #else
+            DWORD DiskPosition=hbl_count % FDC_HBLS_PER_ROTATION;
             // Break up the track into nSects sections, agenda_read_address
             // occurs at the end of one of these sections
             DWORD HBLsPerTrack=FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE;

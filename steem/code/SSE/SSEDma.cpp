@@ -422,23 +422,15 @@ Not emulated
 /*  Pasti handles all Dma reads - this cancels the first value
     of ior_byte, but allows to go through TRACE and update our variables..
 */
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   if(hPasti && (pasti_active || SF314[drive].ImageType.Extension==EXT_STX))
 #else
   if(hPasti && pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!OPTION_PASTI_JUST_STX || 
-    SF314[drive].ImageType.Extension==EXT_STX
-#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
-    || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
-#endif
-    )
-#endif        
 #if defined(SSE_DISK_GHOST_SECTOR_STX1)
      &&! (WD1772.Lines.CommandWasIntercepted)
 #endif
     )
-#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   {
     if(addr<0xff8608 && (addr & 1))
     {
@@ -775,21 +767,11 @@ is no such effect because they are read only on the ST.
 /*  Pasti handles all DMA writes, still we want to update our variables
     and go through TRACE.
 */
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))
 #else
-  if(hPasti && pasti_active
-    
-#if defined(SSE_DRIVE_OBJECT)&&defined(SSE_DISK_PASTI_ONLY_STX)
-    && (!OPTION_PASTI_JUST_STX 
-    || SF314[YM2149.SelectedDrive].ImageType.Extension==EXT_STX
-#if !defined(SSE_BUGFIX_392)
-    ||addr!=0xff8605 
+  if(hPasti && pasti_active)
 #endif
-    || (MCR&CR_HDC_OR_FDC))
-#endif        
-    )
-#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
   {
 
     WORD data=io_src_b;
@@ -849,25 +831,12 @@ void TDma::UpdateRegs(bool trace_them) {
 */
 
 #if USE_PASTI
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX)
     &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted))
 #else
-  if(hPasti && pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX) //all or nothing?
-    && (!OPTION_PASTI_JUST_STX || 
-    SF314[floppy_current_drive()].ImageType.Extension==EXT_STX
-#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
-    || (MCR&BIT_3) // hard disk handling by pasti
+  if(hPasti && pasti_active)
 #endif
-    )
-#endif//defined(SSE_DISK_PASTI_ONLY_STX)
-#if defined(SSE_DISK_GHOST_SECTOR_STX1)
-    // regs should be alright since last update (?)
-    &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
-#endif
-    )
-#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4
   {
     pastiPEEKINFO ppi;
     pasti->Peek(&ppi);
@@ -1085,19 +1054,11 @@ void TDma::TransferBytes() {
       [(MCR&CR_WRITE)?15-i:i]);//bugfix 3.6.1 reverse order
 #endif
 #if USE_PASTI    
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))
 #else
-    if(hPasti&&pasti_active
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    &&(!OPTION_PASTI_JUST_STX || 
-    SF314[DRIVE].ImageType.Extension==EXT_STX)
-#if defined(SSE_DISK_PASTI_ONLY_STX_HD)
-    || (MCR&CR_HDC_OR_FDC) // hard disk handling by pasti
-#endif
-#endif     
-      )  
-#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+    if(hPasti&&pasti_active)  
+#endif//#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
       dma_address++;
     else
 #endif

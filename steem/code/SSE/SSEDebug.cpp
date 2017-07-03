@@ -404,10 +404,10 @@ void TDebug::TraceGeneralInfos(int when) {
 #ifdef SSE_BOILER
     TRACE("Boiler ");
 #endif
-#ifndef SSE_NO_D3D
+#ifdef SSE_VID_D3D
     TRACE("D3D ");
 #endif
-#ifndef SSE_NO_DD //v3.8.2
+#ifdef SSE_VID_DD
     TRACE("DD ");
 #endif
     TRACE("v%d %s %s\n",SSE_VERSION,__DATE__,__TIME__);

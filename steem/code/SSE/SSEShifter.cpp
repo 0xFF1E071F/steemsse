@@ -290,8 +290,8 @@ void TShifter::DrawScanlineToEnd()  {
 void TShifter::IncScanline() {
   scan_y++;
   HblPixelShift=0;  
-  left_border=BORDER_SIDE;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+  left_border=right_border=BORDER_SIDE;
+
 /*  Don't shift scanlines by 4 pixcels when the left border is removed. 
     We must shift other scanlines in compensation, which is
     correct emulation. On the ST, the left border is larger than the right
@@ -299,9 +299,10 @@ void TShifter::IncScanline() {
     the right timing for palette effects.
     Cases: Backlash -TEX, Appendix 4pix plasma, Gobliins II -ICS...
 */
+#if defined(SSE_VID_BORDERS)
   if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
-    left_border+=4;
-#endif  
+    left_border+=4,right_border-=4;
+#endif
   if(HSCROLL) 
     left_border+=16;
 #if defined(SSE_SHIFTER_HSCROLL)
@@ -309,11 +310,6 @@ void TShifter::IncScanline() {
 #endif
   if(shifter_hscroll_extra_fetch) 
     left_border-=16;
-  right_border=BORDER_SIDE;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
-  if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
-    right_border-=4;
-#endif    
 }
 
 
@@ -392,20 +388,18 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       
   if(pixels_in > BORDER_SIDE+320+BORDER_SIDE) 
     pixels_in=BORDER_SIDE+320+BORDER_SIDE; 
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
-// this is the most hacky part of our trick for large border/no shift on left off...
+
+  // this is the most hacky part of our trick for large border/no shift on left off...
   int pixels_in0=pixels_in;
+#if defined(SSE_VID_BORDERS)
   if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border && pixels_in>0)
     pixels_in+=4;
 #endif
   if(pixels_in>=0) // time to render?
   {
 #ifdef WIN32 // prepare buffer & ASM routine
-
-#ifdef SSE_VID_BORDERS_416_NO_SHIFT  // don't mess border2
     if(pixels_in>416)
       pixels_in=pixels_in0;
-#endif
 
     if(draw_buffer_complex_scanlines && draw_lock)
     {
@@ -417,12 +411,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 #endif
         && scan_y<draw_last_scanline_for_border)
       {
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
-        // OSC #3 //no condition
         if(draw_store_dest_ad==NULL && pixels_in0<=BORDER_SIDE+320+BORDER_SIDE)
-#else
-        if(draw_store_dest_ad==NULL && pixels_in<BORDER_SIDE+320+BORDER_SIDE)
-#endif
         {
           draw_store_dest_ad=draw_dest_ad;
           ScanlineBuffer=draw_dest_ad=draw_temp_line_buf;

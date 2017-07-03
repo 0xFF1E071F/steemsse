@@ -579,7 +579,7 @@ inline void handle_timeout(int tn) {
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE)
     new_timeout+=MC68901.Wobble[tn]=rand()&MFP_TIMERS_WOBBLE;
 #endif
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
     MC68901.Counter[tn]=mfp_reg[MFPR_TADR+tn]; // load counter
     BYTE prescale_index=(mfp_get_timer_control_register(tn)&7);
     MC68901.Prescale[tn]=mfp_timer_prescale[prescale_index]; // load prescale (bad if 0)
@@ -652,7 +652,7 @@ void event_timer_b()
     FrameEvents.Add(scan_y,LINECYCLES,"TB",ACT-time_of_next_timer_b);
 #endif
   if (scan_y<shifter_first_draw_line){
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
@@ -662,7 +662,7 @@ void event_timer_b()
       // event_scanline but after a change to mono for left border removal, this
       // stops the border opening on the next line somehow.
       mfp_timer_counter[1]-=64;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
       MC68901.Counter[1]--;
 #endif
       log_to(LOGSECTION_MFP_TIMERS,EasyStr("MFP: Timer B counter decreased to ")+(mfp_timer_counter[1]/64)+" at "+scanline_cycle_log());
@@ -672,25 +672,24 @@ void event_timer_b()
         if (mfp_interrupt_enabled[8]) TRACE_LOG("F%d y%d c%d Timer B pending\n",TIMING_INFO); //?
 #endif
         mfp_timer_counter[1]=BYTE_00_TO_256(mfp_reg[MFPR_TBDR])*64;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
         MC68901.Counter[1]=mfp_reg[MFPR_TBDR];
 #endif
         mfp_interrupt_pend(MFP_INT_TIMER_B,time_of_next_timer_b);
-        //FrameEvents.Add(scan_y,LINECYCLES,'x',ACT-time_of_next_timer_b);
       }
     }
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b+
         scanline_time_in_cpu_cycles_at_start_of_vbl + TB_TIME_WOBBLE;
   }else{
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;
   }
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(OPTION_C2)
     time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
 #endif
@@ -842,16 +841,6 @@ void event_scanline()
     We must separate SSE_SHIFTER from SSE_INTERRUPT, which makes for many
     #if blocks.
 */
-
-#if !defined(SSE_INT_MFP_TIMER_B_392) //MFD
-#if !defined(SSE_GLUE_392D) //moved into AdaptScanlineValues()
-#if defined(SSE_GLUE) && defined(SSE_INT_MFP_TIMER_B_AER)
-  if(OPTION_C2 && Glue.FetchingLine())
-    CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); // update each scanline
-#endif
-#endif
-#endif
-
   if (scan_y<shifter_first_draw_line-1){
     if (scan_y>=draw_first_scanline_for_border){
       if (bad_drawing==0) 
@@ -860,7 +849,7 @@ void event_scanline()
 #else
         draw_scanline_to_end();
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
       if(!OPTION_C2)
 #endif
       time_of_next_timer_b=time_of_next_event+160000;  //put into future
@@ -872,7 +861,7 @@ void event_scanline()
 #else
       draw_scanline_to_end();
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event
@@ -884,7 +873,7 @@ void event_scanline()
 #else
       draw_scanline_to_end();
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event
@@ -896,7 +885,7 @@ void event_scanline()
 #else
       draw_scanline_to_end();
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event+160000;  //put into future
@@ -1130,7 +1119,7 @@ void event_scanline()
 #endif
 
 #if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 
 #if defined(SSE_VID_3BUFFER_392)
   // DirectDraw Check for Window VSync at each ST scanline!
@@ -1262,8 +1251,8 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished frame, blitting at ")+(timeGetTime()-run_start_time)+" timer="+(timer-run_start_time));
   if (draw_lock){
     draw_end();
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
-#if defined(SSE_VID_3BUFFER_392) && !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_392) && !defined(SSE_VID_D3D)
     if (VSyncing==0 && !OPTION_3BUFFER_WIN)
       draw_blit();
 #else
@@ -1444,8 +1433,7 @@ void event_vbl_interrupt() //SS misleading name?
   LOOP{
     timer=timeGetTime();
 
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC) \
-  && !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_DD_3BUFFER_WIN) && !defined(SSE_VID_D3D)
 #if defined(SSE_VID_3BUFFER_392) 
     if(OPTION_3BUFFER_WIN && !FullScreen)
       Disp.BlitIfVBlank();
@@ -1497,7 +1485,7 @@ void event_vbl_interrupt() //SS misleading name?
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
 #if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 /*  This is the part responsible for high CPU use.
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
@@ -1548,7 +1536,7 @@ void event_vbl_interrupt() //SS misleading name?
       do{
         timer=timeGetTime();
 #if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_VID_3BUFFER_WIN) && !defined(SSE_VID_3BUFFER_NO_VSYNC)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 #if defined(SSE_VID_3BUFFER_392)
         if(OPTION_3BUFFER_WIN && !FullScreen)
           Disp.BlitIfVBlank();
@@ -1717,12 +1705,10 @@ void event_vbl_interrupt() //SS misleading name?
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
 
-#if defined(SSE_GLUE_392D) //oops
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(!OPTION_C2)
-    CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
-#elif !defined(SSE_INT_MFP_TIMER_B_390)
-  CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 #endif
+  CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);
 // SS: this was so in the source
   cpu_time_of_last_vbl=time_of_next_event; ///// ABSOLUTE_CPU_TIME;
 //  cpu_time_of_last_vbl=ABSOLUTE_CPU_TIME;
@@ -1847,11 +1833,7 @@ void prepare_cpu_boosted_event_plans()
 
 #if !defined(SSE_TIMING_MULTIPLIER_392)
   for (int n=0;n<16;n++){
-#if defined(SSE_INT_MFP_TIMERS_NO_BOOST_LIMIT)
-    mfp_timer_prescale[n]=(mfp_timer_8mhz_prescale[n]*factor)/8;
-#else
     mfp_timer_prescale[n]=min((mfp_timer_8mhz_prescale[n]*factor)/8,1000);
-#endif
   }
 #endif
 
@@ -1864,17 +1846,10 @@ void prepare_cpu_boosted_event_plans()
 #if USE_PASTI
 void event_pasti_update()
 {
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-  if(!(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))) {
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
+  if(!(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX))){
 #else
-  if (hPasti==NULL || pasti_active==false
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    ||OPTION_PASTI_JUST_STX && SF314[YM2149.SelectedDrive].ImageType.Extension!=EXT_STX
-#if defined(SSE_DISK_PASTI_ONLY_STX_HD) && defined(SSE_DMA_OBJECT)
-    && ! ( pasti_active && (Dma.MCR&TDma::CR_HDC_OR_FDC)) // hard disk handling by pasti
-#endif
-#endif
-    ){
+  if (hPasti==NULL || pasti_active==false){
 #endif
 #if defined(SSE_CPU_MFP_RATIO)
     pasti_update_time=ABSOLUTE_CPU_TIME+CpuNormalHz;

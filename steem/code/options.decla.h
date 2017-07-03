@@ -204,7 +204,7 @@ public:
   void ChooseScreenShotFolder(HWND);
 
   static BOOL CALLBACK EnumDateFormatsProc(char *);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   void UpdateHzDisplay();
 #endif
   void UpdateWindowSizeAndBorder();
@@ -461,7 +461,7 @@ public:
   void ChooseScreenShotFolder(HWND);
 
   static BOOL CALLBACK EnumDateFormatsProc(char *);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   void UpdateHzDisplay();
 #endif
   void UpdateWindowSizeAndBorder();

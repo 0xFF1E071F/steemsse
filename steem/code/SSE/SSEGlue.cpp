@@ -189,14 +189,8 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     }
 #endif
   }
-#ifdef SSE_INT_MFP_OBJECT
-#if defined(SSE_GLUE_392D) && !defined(SSE_INT_MFP_TIMER_B_392A) //MFD?
-  if(OPTION_C2)
-    MC68901.CalcCyclesFromHblToTimerB();
-#endif
-#endif
 
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(OPTION_C2)
     MC68901.ComputeNextTimerB(CyclesIn);
 #endif
@@ -440,20 +434,15 @@ void TGlue::CheckSideOverscan() {
     16 pixels skipped by manipulating video counter, 4 more to skip
  */
         CurrentScanline.Bytes+=26;
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+#if defined(SSE_VID_BORDERS)
         if(!BigBorders)
 #endif
+        {
           shifter_pixel+=4;
-        if(HSCROLL0>=12) // 12+4 = 16 -> shift SDP before rendering
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
-          if(!BigBorders) 
-#endif
+          if(HSCROLL0>=12) // 12+4 = 16 -> shift SDP before rendering
             MMU.ShiftSDP(8);
-    
-#if defined(SSE_VID_BORDERS) 
-        if(!BigBorders)
-#endif
           shifter_draw_pointer+=8; // 8+16+2=26
+        }
 
         TrickExecuted|=TRICK_LINE_PLUS_26;
         
@@ -496,10 +485,10 @@ D4/Tekila
         {
           ASSERT(ST_TYPE==STE);
           MMU.ShiftSDP(4); // 2 words lost in the Shifter? 
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+#if defined(SSE_VID_BORDERS)
           if(BigBorders)
-#endif
             left_border=16; // border visible on real STE
+#endif
         }
 #endif//SSE_SHIFTER_HSCROLL
 
@@ -550,10 +539,10 @@ Kryos
                 ASSERT(Shifter.Preload==2);
                 // HSCROLL + 016:R0000: 3 word shift
                 MMU.ShiftSDP( HSCROLL0 ? 2 : 8 );
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+#if defined(SSE_VID_BORDERS)
                 if(BigBorders)
-#endif
                   left_border=16;
+#endif
               }
             }
             else
@@ -582,10 +571,6 @@ Closure STF2
       }//+20 or +26
 #if !defined(SSE_VID_BORDERS_LINE_PLUS_20)
       left_border=0;
-#endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && !defined(SSE_GLUE_392D)
-      if(OPTION_C2)
-        MC68901.AdjustTimerB(); //isn't it too late? TODO
 #endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
       overscan=OVERSCAN_MAX_COUNTDOWN;
@@ -736,11 +721,6 @@ Closure STF2
     Shifter.Preload=0; // for Forest after the line +2... should we?
 #endif
     TrickExecuted|=TRICK_0BYTE_LINE;
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-    CurrentScanline.StartCycle=CurrentScanline.EndCycle=-1;//never starts
-    if(OPTION_C2)
-      MC68901.AdjustTimerB();
-#endif
   }
 
 #endif//0byte
@@ -830,18 +810,7 @@ Closure STF2
 #if defined(SSE_VID_BORDERS) && defined(SSE_VID_BPOC)
         if(OPTION_HACKS && cycles_in_low_res==16) 
           if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border)
-#if defined(SSE_VID_D3D_ONLY) || !defined(SSE_VID_BORDERS_LB_DX)
             shifter_pixel+=1;
-#elif defined(SSE_VID_BORDERS_416_NO_SHIFT)
-            shifter_pixel+=(BORDER_40?4:1);
-#endif
-#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY) 
-          else if(BORDER_40)
-          { // fit text of Best Part of the Creation on a 800 display (pure hack)
-            MMU.ShiftSDP(4);      
-            shifter_pixel+=4; 
-          }
-#endif
 #endif
       }
 #if defined(SSE_SHIFTER_UNSTABLE_380)
@@ -862,11 +831,11 @@ Closure STF2
           CurrentScanline.Tricks|=TRICK_UNSTABLE;
           // fix hicolor pics shift
           if(shifter_pixel<=4)
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
-            shifter_pixel+=(BigBorders)?2:4;
-#else
-            shifter_pixel+=4;
+            shifter_pixel+=
+#if defined(SSE_VID_BORDERS)
+            (BigBorders)?2:
 #endif
+            4;
 #if defined(SSE_DEBUG) && defined(SSE_OSD_CONTROL)
           if((OSD_MASK2 & OSD_CONTROL_PRELOAD) && Shifter.Preload)
             TRACE_OSD("y %d R1 %d R0 %d LOAD %d",scan_y,r1cycle,r0cycle,Shifter.Preload);
@@ -1146,10 +1115,6 @@ Closure STF2
     draw_line_off=true;
     memset(PCpal,0,sizeof(long)*16); // all colours black
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-    if(OPTION_C2)
-      MC68901.AdjustTimerB(); // Fixes 1st value of TIMERB04.TOS
-#endif
   }
 #endif//#if defined(SSE_GLUE_LINE_MINUS_106)
 
@@ -1254,7 +1219,7 @@ detect unstable: switch MED/LOW - Beeshift
 #if defined(SSE_SHIFTER_DOLB1)
       MMU.ShiftSDP(8); // again...
 #endif
-#if defined(SSE_VID_BORDERS_416_NO_SHIFT)
+#if defined(SSE_VID_BORDERS)
       if(!BigBorders)
 #endif
         Shifter.HblPixelShift=4; 
@@ -1286,7 +1251,7 @@ detect unstable: switch MED/LOW - Beeshift
   // test
   if(!(CurrentScanline.Tricks
     &(TRICK_0BYTE_LINE|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2))
-#if defined(SSE_INT_MFP_TIMER_B_392D) // check Lethal Xcess beta, TB2/Oxy
+#if defined(SSE_GLUE_CHECK_OVERSCAN_AT_SYNC_CHANGE) // check Lethal Xcess beta, TB2/Oxy
     && CyclesIn>ScanlineTiming[LINE_STOP][FREQ_60] // > 372
 #else
     && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_60] // we're at 372 min
@@ -1393,7 +1358,7 @@ TODO Closure doesn't agree with 'Bees' for WS1?
   +2;
 #endif
 
-#if defined(SSE_INT_MFP_TIMER_B_392D) // TB2/OXY
+#if defined(SSE_GLUE_CHECK_OVERSCAN_AT_SYNC_CHANGE) // TB2/OXY
   if(CyclesIn<ScanlineTiming[LINE_STOP][FREQ_50] 
 #else
   if(CyclesIn<=ScanlineTiming[LINE_STOP][FREQ_50] 
@@ -1402,7 +1367,7 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     |TRICK_LINE_MINUS_106|TRICK_LINE_PLUS_44))
     || FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_60])==60)
     ; // no need to test
-#if defined(SSE_INT_MFP_TIMER_B_392D)
+#if defined(SSE_GLUE_CHECK_OVERSCAN_AT_SYNC_CHANGE)
   else if(CyclesIn==ScanlineTiming[LINE_STOP][FREQ_50] && !(m_SyncMode&2) // now!
     || FreqAtCycle(ScanlineTiming[LINE_STOP][FREQ_50])==60
 #else
@@ -1438,10 +1403,6 @@ TODO Closure doesn't agree with 'Bees' for WS1?
     CurrentScanline.EndCycle=ScanlineTiming[HSYNC_ON][FREQ_50];
 #else
     CurrentScanline.EndCycle=464;
-#endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-    if(OPTION_C2)
-      MC68901.AdjustTimerB();
 #endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN; 
@@ -1650,7 +1611,7 @@ void TGlue::CheckVerticalOverscan() {
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
     overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
     if(!OPTION_C2)
 #endif
     time_of_next_timer_b=time_of_next_event+cpu_cycles_from_hbl_to_timer_b
@@ -2329,13 +2290,6 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   }
 
   freq_change_this_scanline=true; // all switches are interesting
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  if(OPTION_C2)
-  {
-    CALC_CYCLES_FROM_HBL_TO_TIMER_B((NewRes&2) ? MONO_HZ : shifter_freq);
-    calc_time_of_next_timer_b();
-  }
-#endif
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
   if(shifter_last_draw_line==400 && !(m_ShiftMode&2) && screen_res<2)
     shifter_last_draw_line>>=1; // simplistic?
@@ -2373,7 +2327,7 @@ void TGlue::SetSyncMode(BYTE NewSync) {
 
 #if defined(SSE_SHIFTER_RENDER_SYNC_CHANGES) //no!
   Shifter.Render(CyclesIn,DISPATCHER_SET_SYNC);
-#elif defined(SSE_INT_MFP_TIMER_B_392D)
+#elif defined(SSE_GLUE_CHECK_OVERSCAN_AT_SYNC_CHANGE)
   if(OPTION_C2 && FetchingLine())
     CheckSideOverscan(); // force check to adapt timer B to right off...
 #endif
@@ -2391,10 +2345,6 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   AddFreqChange(new_freq);
 #endif
   AdaptScanlineValues(CyclesIn);
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  if(OPTION_C2)
-    MC68901.AdjustTimerB(); 
-#endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
   if(FullScreen && border==BORDERS_AUTO_OFF)
   {

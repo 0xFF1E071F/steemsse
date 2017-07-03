@@ -253,16 +253,6 @@ void osd_draw()
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
-
-#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY)
-  if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
-#ifdef SSE_VID_D3D_WINDOW
-    x1+=16+8;
-#else
-    x1+=16;
-#endif
-#endif
-
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED_392) //option!=mode
   if(FullScreen && !screen_res && SCANLINES_INTERPOLATED)
@@ -465,15 +455,6 @@ void osd_draw()
     // TODO refactor in basic function?
     RECT cliprect={THE_LEFT,0,THE_RIGHT,y1};
     int x=0;
-#if defined(SSE_VID_BORDERS_LB_DX) && !defined(SSE_VID_D3D_ONLY)
-    if(BORDER_40 && border && !SCANLINES_INTERPOLATED)
-#ifdef SSE_VID_D3D_WINDOW
-      x+=16+8;// argh! forget this, no BORDER_40 with D3D, it
-    // was for fullscreen anyway
-#else
-      x+=16;
-#endif
-#endif
     int start_y=0+8;
     for(unsigned int i=0;i<strlen(Debug.m_OsdMessage);i++)
     {
@@ -952,12 +933,12 @@ LRESULT __stdcall ResetInfoWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       osd_get_reset_info(&sl);
 
       RECT rc;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       if (FullScreen){
         get_fullscreen_rect(&rc);
         rc.top-=MENUHEIGHT;
       }else
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
       {
         GetClientRect(StemWin,&rc);
         rc.bottom-=2;
