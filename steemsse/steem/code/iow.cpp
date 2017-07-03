@@ -448,13 +448,8 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                 mfp_reg[n]=io_src_b;
 #if defined(SSE_INT_MFP_TIMER_B_AER) // maybe Timer B's AER bit changed?
                 ASSERT(n==MFPR_AER || n==MFPR_DDR);
-#if defined(SSE_INT_MFP_TIMER_B_392A)
                 if(OPTION_C2 && n==MFPR_AER && (old_aer&8)!=(io_src_b&8))
                   MC68901.ComputeNextTimerB(TMC68901::ChangingAer);
-#else
-                if(OPTION_C2)
-                  CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq); //update
-#endif
 #endif
               }
               BYTE new_gpip=BYTE(mfp_reg[MFPR_GPIP] & ~mfp_reg[MFPR_DDR]);
@@ -1289,7 +1284,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
     return 1;
   }
 */
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
           if(hPasti) 
 #else
           if (hPasti && pasti_active) 

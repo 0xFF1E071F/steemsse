@@ -821,7 +821,7 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     if (LoadOrSave==LS_SAVE){
       //ask Pasti for variable block, save length as a long, followed by block
 #if USE_PASTI
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4) 
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) 
       if (hPasti && (pasti_active||SF314[0].ImageType.Manager==MNGR_PASTI
         ||SF314[1].ImageType.Manager==MNGR_PASTI)){
 #else

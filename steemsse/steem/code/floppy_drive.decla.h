@@ -89,7 +89,7 @@ public:
 
   ~TFloppyImage()            { RemoveDisk(); }
 
-#if defined(SSE_DISK_PASTI_NO_RESET) || defined(SSE_DISK_GHOST)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) || defined(SSE_DISK_GHOST)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
   int SetDisk(EasyStr,EasyStr="",BPBINFO* = NULL,BPBINFO* = NULL);
@@ -164,7 +164,7 @@ public:
   ~TFloppyImage()            { RemoveDisk(); }
 
 
-#if defined(SSE_DISK_PASTI_NO_RESET)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   EasyStr GetImageFile() {return ImageFile;}
 #endif
 

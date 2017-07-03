@@ -45,11 +45,11 @@ EXT void res_change();
 
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE bad_drawing INIT(0);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 #endif
 
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
 EXT BYTE draw_grille_black INIT(6);
 #else
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
@@ -60,14 +60,14 @@ EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT BYTE draw_fs_topgap INIT(0);
 extern BYTE prefer_pc_hz[2][3];
 extern BYTE tested_pc_hz[2][3];
 #endif
 #else
 EXT int bad_drawing INIT(0);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 #endif
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
@@ -106,11 +106,11 @@ EXT BYTE display_option_fs_bpp INIT(0);
 #else
 EXT bool display_option_8_bit_fs INIT(false);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT void get_fullscreen_rect(RECT *);
 #endif
 #if defined(SSE_VAR_RESIZE)
@@ -156,14 +156,12 @@ EXT int cpu_cycles_from_hbl_to_timer_b;
 #define CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN 84 //SS 84 = 56+28
 #define CYCLES_FROM_HBL_TO_RIGHT_BORDER_CLOSE (CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320)
 
-#if !defined(SSE_INT_MFP_TIMER_B_AER) || defined(SSE_INT_MFP_TIMER_B_392A) //Steem 3.2:
 #define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) \
   switch (freq){ \
     case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; \
     case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; \
     default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); \
 }
-#endif
 
 #define HBLS_PER_SECOND_AVE 15700 // Average between 50 and 60hz
 #define HBLS_PER_SECOND_MONO (501.0*71.42857)

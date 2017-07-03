@@ -308,12 +308,6 @@ bool SteemDisplay::Blit()
     sy=draw_blit_source_rect.top;
     sw=draw_blit_source_rect.right;
     sh=draw_blit_source_rect.bottom;
-#if defined(SSE_VID_BORDERS_LB_DX)
-    if(BORDER_40 && border) // clip from larger to 800
-    {
-      sx+=16; // eg BPOC
-    }
-#endif
     dx=max((XVM_FullW-sw)/2,0);
     dy=max((XVM_FullH-sh)/2,0);
     if (sh>XVM_FullH) sh=XVM_FullH;
@@ -364,13 +358,6 @@ Screen *screen; /* back pointer to correct screen */
     if(SideBorderSizeWin==VERY_LARGE_BORDER_SIDE_WIN)
     {
       dx=(w-(draw_blit_source_rect.right-4))/2;; // 412 (TODO 413)
-    }
-#endif
-
-#if defined(SSE_VID_BORDERS_LB_DX)
-    if(BORDER_40 && border) // clip from larger to 800
-    {
-      sx+=16; // eg BPOC
     }
 #endif
 

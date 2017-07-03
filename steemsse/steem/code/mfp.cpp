@@ -127,7 +127,7 @@ Practically on the ST, the request is placed by clearing the bit in the GPIP.
 //---------------------------------------------------------------------------
 void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
 {
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(OPTION_C2)
   {
     // use our new function instead
@@ -140,17 +140,7 @@ void calc_time_of_next_timer_b() //SS called only by mfp_set_timer_reg()
   if (cycles_in<cpu_cycles_from_hbl_to_timer_b){
     if (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line){
         time_of_next_timer_b=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b
-#if defined(SSE_INT_MFP_TIMER_B_WOBBLE_HACK) 
-        // previous hack for Sunny invalidated by TIMERB08.TOS
-        + (OPTION_C2&&OPTION_HACKS?0:TB_TIME_WOBBLE);  // note syntax looks wrong
-#else
         +TB_TIME_WOBBLE;
-#endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) && !defined(SSE_GLUE_392D)
-      if(OPTION_C2&&(Glue.CurrentScanline.Tricks&TRICK_LINE_MINUS_106)
-        && LINECYCLES>166+28+4) // not if Timer B occurred in shift mode 2
-        time_of_next_timer_b+=scanline_time_in_cpu_cycles[shifter_freq_idx]; 
-#endif 
     }else{
       time_of_next_timer_b=cpu_timer_at_start_of_hbl+160000;  //put into future
     }
@@ -285,7 +275,7 @@ void mfp_set_timer_reg(int reg,BYTE old_val,BYTE new_val)
 /*  Steem authors shift 1st timeout 12 cycles later, we use a parameter
     to test that.
     This is explained by internal MFP delays, but it also covers a pre-IRQ
-    delay (see MFP_TIMER_DATA_REGISTER_ADVANCE).
+    delay.
 */
     INSTRUCTION_TIME(OPTION_C2?MFP_TIMER_SET_DELAY:12); // SSEParameters.h 8
 #else
@@ -316,26 +306,22 @@ register. This is of course correct in Steem but hey, I didn't even know that.
                           // SS or pulse, but it's very unlikely (not emulated)
 
           mfp_timer_timeout[timer]=ABSOLUTE_CPU_TIME; //SS as modified
-#if defined(SSE_TIMING_MULTIPLIER_392)
-#if defined(SSE_INT_MFP_392C)
+          //SS compute next timeout, which depends on current counter + prescale
+
+#if defined(SSE_INT_MFP_RATIO_PRECISION)
           double precise_cycles0=mfp_timer_prescale[new_control]
             *mfp_timer_counter[timer]/64;
+#if defined(SSE_INT_MFP_PRESCALE)
           if(OPTION_C2)
             precise_cycles0-=prescale_count; // we count it here now
-          precise_cycles0*=CPU_CYCLES_PER_MFP_CLK*cpu_cycles_multiplier;
-#else
-          double precise_cycles0= 
-            double(mfp_timer_prescale[new_control] * mfp_timer_counter[timer]/64)
-            * CPU_CYCLES_PER_MFP_CLK * cpu_cycles_multiplier;
+#endif
+          precise_cycles0*=CPU_CYCLES_PER_MFP_CLK;
+#if defined(SSE_TIMING_MULTIPLIER_392)
+          precise_cycles0*=cpu_cycles_multiplier;
 #endif
           mfp_timer_timeout[timer]+=(int)precise_cycles0;
-#if defined(SSE_INT_MFP_RATIO_PRECISION_392)
-/*  As soon as there's a fractional part (almost all the time), that means
-    that the CPU can't be interrupted before next CPU cycle after IRQ.
-*/
-          if(OPTION_C2 && precise_cycles0-(int)precise_cycles0)
+          if(OPTION_C2 && (precise_cycles0-(int)precise_cycles0)) //generally
             mfp_timer_timeout[timer]++; 
-#endif
 #else
           mfp_timer_timeout[timer]+=int(double(mfp_timer_prescale[new_control]
             *mfp_timer_counter[timer]/64)*CPU_CYCLES_PER_MFP_CLK);
@@ -352,18 +338,18 @@ register. This is of course correct in Steem but hey, I didn't even know that.
     complicated at all!
 */
           double precise_cycles= mfp_timer_prescale[new_control]
-                                  *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))
+            *(int)(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer]))
 #if defined(SSE_TIMING_MULTIPLIER_392) //let's not forget this...
-                                    *cpu_cycles_multiplier
+            *cpu_cycles_multiplier
 #endif
-                                    *CPU_CYCLES_PER_MFP_CLK;
+            *CPU_CYCLES_PER_MFP_CLK;
           mfp_timer_period[timer]=(int)precise_cycles;
           if(OPTION_C2)
           {
             mfp_timer_period_fraction[timer]
               =(precise_cycles-mfp_timer_period[timer])*1000;
             mfp_timer_period_current_fraction[timer]=0;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_TIMER_CHECK)
             MC68901.Period[timer]=precise_cycles;
 #endif
           }
@@ -381,7 +367,6 @@ register. This is of course correct in Steem but hey, I didn't even know that.
             TRACE_LOG(" (%d)\n",mfp_reg[MFPR_TADR+timer]);
           else
           {
-            //if(prescale_count) TRACE_LOG(" Prescale count %d",prescale_count); //rare?
             TRACE_LOG(" prescaler %d MFP cycles %d CPU cycles %d.%d next timeout %d\n",
             mfp_timer_prescale[new_control],
             mfp_timer_prescale[new_control]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+timer])),
@@ -398,7 +383,7 @@ register. This is of course correct in Steem but hey, I didn't even know that.
             * CPU_CYCLES_PER_MFP_CLK);
 #endif
 
-#if defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_PRESCALE)
 /*
 Changing the prescale value with the timer running
 can cause the first Time Out pulse to occur at an indeterminate
@@ -448,9 +433,6 @@ TODO
           mfp_timer_timeout[timer]/=8000;
 #endif
 
-#if defined(SSE_INT_MFP_392C) && !defined(SSE_INT_MFP_392D1) //d1: we don't come here if C2 anyway
-          if(!OPTION_C2)
-#endif
           // Take off number of cycles already counted
           mfp_timer_timeout[timer]-=prescale_count;
 
@@ -469,17 +451,13 @@ TODO
           mfp_timer_timeout[timer]+=cpu_time_of_first_mfp_tick;
 #endif
 
-#if defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_PRESCALE)
           } //if(!OPTION_C2)
 #endif
 
 #if defined(SSE_INT_MFP_TIMERS)
           if(OPTION_C2) 
           {
-#if defined(SSE_INT_MFP_RATIO_PRECISION) && !defined(SSE_INT_MFP_RATIO_PRECISION_392)
-            if(mfp_timer_period_fraction[timer])
-              mfp_timer_timeout[timer]++; 
-#endif
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 /*  This should be confirmed (or not...), we consider that delay timers
     have some wobble, like timer B, maybe because of CPU/MFP clock sync.
@@ -510,12 +488,8 @@ TODO
 #if defined(SSE_INT_MFP_CHECKTIMEOUT_ON_STOP) 
 /*  Idea, see just above, this version OK with LXS
 */
-          if(OPTION_C2 && !new_val 
-            && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0
-#if defined(SSE_INT_MFP_392)
-            && old_val!=8 
-#endif
-            )
+          if(OPTION_C2 && !new_val && old_val!=8 
+            && mfp_timer_enabled[timer] && ACT-mfp_timer_timeout[timer]>=0)
           {
             BYTE i_ab=mfp_interrupt_i_ab(mfp_timer_irq[timer]);
             BYTE i_bit=mfp_interrupt_i_bit(mfp_timer_irq[timer]);
@@ -538,9 +512,6 @@ TODO
 
           mfp_timer_enabled[timer]=false;
           mfp_timer_period_change[timer]=0;
-#if defined(SSE_INT_MFP_392B) && !defined(SSE_INT_MFP_392B1)
-          MC68901.Prescale[timer]=0; // and Counter is up to date
-#endif
           dbg_log(EasyStr("  Set control to ")+new_control+" (reg=$"+HEXSl(new_val,2)+")"+
                 "; counter="+mfp_timer_counter[timer]/64+" ;"+
                 LPSTR((timer<2 && (new_val & BIT_3)) ? "event count mode.":"stopped.") );
@@ -590,7 +561,7 @@ TODO
 
     if (new_control==0){  // timer stopped
       mfp_timer_counter[timer]=((int)BYTE_00_TO_256(new_val))*64;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
       MC68901.Counter[timer]=new_val;
       MC68901.Prescale[timer]=0;
 #endif
@@ -639,16 +610,6 @@ void mfp_init_timers() // For load state and CPU speed change
 
 int mfp_calc_timer_counter(int timer)
 {
-#if defined(SSE_INT_MFP_392B)
-  ASSERT(timer>=0 && timer<4);
-#if defined(SSE_INT_MFP_392B1) 
-  // temporarily assume prescale doesn't change when the timer isn't running
-  // Froggies Over The Fence menu
-  // TODO HW test
-#else
-  MC68901.Prescale[timer]=0; // 0 if the timer isn't running
-#endif
-#endif
   BYTE cr=mfp_get_timer_control_register(timer); //SS register before write
   if (cr & 7){ // SS delay timer
 #if defined(SSE_TIMINGS_CPUTIMER64)
@@ -671,7 +632,7 @@ int mfp_calc_timer_counter(int timer)
     stage=int(double(stage)/CPU_CYCLES_PER_MFP_CLK);
 #endif
     mfp_timer_counter[timer]=(stage/ticks_per_count)*64 + 64;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
     MC68901.Counter[timer]=mfp_timer_counter[timer]/64;
     MC68901.Prescale[timer]=ticks_per_count-((stage % ticks_per_count)+1);
 #else
@@ -680,7 +641,7 @@ int mfp_calc_timer_counter(int timer)
     return ticks_per_count-((stage % ticks_per_count)+1);
 #endif
   }
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_PRESCALE)
   //TRACE_LOG("calc timer %c cr %d counter %d prescale %d\n",'A'+timer,cr,MC68901.Counter[timer],MC68901.Prescale[timer]);
   return MC68901.Prescale[timer];
 #else
@@ -936,9 +897,6 @@ void TMC68901::Init() {
   IrqInfo[5].Timer=2;  // timer C
   IrqInfo[8].Timer=1;  // timer B
   IrqInfo[13].Timer=0;  // timer A
-#if !defined(SSE_INT_MFP_392)
-  Irq=false; //?
-#endif
 }
 
 
@@ -976,39 +934,7 @@ int TMC68901::UpdateNextIrq(COUNTER_VAR at_time) {
   return NextIrq;
 }
 
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS) 
-/*  Shifter tricks can change timing of timer B. This wasn't handled yet
-    in Steem. Don't think any game/demo depends on this, I added it for a
-    test program.
-    Refactoring due together with shifter tricks. [?]
-*/
-
-void TMC68901::AdjustTimerB() {
-  ASSERT(OPTION_C2); // another waste of cycles...
-  if(mfp_reg[MFPR_TBCR]!=8)
-    return;
-  int CyclesIn=LINECYCLES;
-  int linecycle_of_end_de=(mfp_reg[MFPR_AER]&8)
-    ? Glue.CurrentScanline.StartCycle : Glue.CurrentScanline.EndCycle;
-// ^^ TODO, think startcycle not correct for STE...
-  if(linecycle_of_end_de==-1) //0byte -> no timer B?
-    linecycle_of_end_de+=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
-  
-  if(CyclesIn<=linecycle_of_end_de 
-    && linecycle_of_end_de-(time_of_next_timer_b-28-LINECYCLE0) >2)
-  {
-//    int tmp=time_of_next_timer_b-LINECYCLE0;
-    bool adapt_time_of_next_event=(time_of_next_event==time_of_next_timer_b);
-    time_of_next_timer_b=LINECYCLE0+linecycle_of_end_de+28+TB_TIME_WOBBLE;
-//    TRACE_LOG("F%d y%d c%d timer b type %d %d -> %d adapt %d\n",TIMING_INFO,tmp,(mfp_reg[MFPR_AER]&8),time_of_next_timer_b-LINECYCLE0,adapt_time_of_next_event);
-    if(adapt_time_of_next_event)
-      time_of_next_event=time_of_next_timer_b;
-  }
-}
-
-#endif
-
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
 /*  Unique function (option C2) that sets up the timing of next
     "timer B event", as far as the MFP input is concerned.
     It should be correct also when timing of DE is changed by
@@ -1021,9 +947,12 @@ void TMC68901::ComputeNextTimerB(int info) {
   if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE))
   {
     // time of DE transition this scanline
-    cpu_cycles_from_hbl_to_timer_b = (mfp_reg[MFPR_AER]&8)
-    ? Glue.CurrentScanline.StartCycle // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
-    : Glue.CurrentScanline.EndCycle;
+    cpu_cycles_from_hbl_to_timer_b = 
+#if defined(SSE_INT_MFP_TIMER_B_AER)
+      // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
+      (mfp_reg[MFPR_AER]&8) ? Glue.CurrentScanline.StartCycle :
+#endif
+      Glue.CurrentScanline.EndCycle;
 
     // Don't trigger a spurious Timer B tick. The exact timing could be later.
     // There's a line with 2x TB ticks in 'Jambala', but it has no visible impact.
@@ -1034,11 +963,8 @@ void TMC68901::ComputeNextTimerB(int info) {
     else
     {
       // add MFP delays (read + irq) (TIMERB07.TOS)
-#if defined(SSE_INT_MFP_TIMER_B_392B)
-      cpu_cycles_from_hbl_to_timer_b+=22+4; 
-#else
       cpu_cycles_from_hbl_to_timer_b+=28;
-#endif
+
       // absolute
       tontb=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b;
       // add jitter
@@ -1059,79 +985,21 @@ void TMC68901::ComputeNextTimerB(int info) {
     prepare_next_event();
 }
 
-#elif defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
-/*  Timer B can be programmed to trigger on DE change (start or end of 
-    video picture).
-    However there's a delay between DE change and MFP IRQ.
-
-Motorola doc for MC68901
-Event Counter Mode:
-Minimum Active Time of TAl and TBI ............................................ .4 tCLK
-Minimum Inactive Time of TAl and TBI ............................................ 4 tCLK
-
-    The MFP will start its IRQ process only after 4 MFP clock cycles.
-
-Start Timer to Interrupt Request Error (See Note 3) ............ - 2 tCLK to - (4 tCLK + 800 ns)    
-    
-    There's also a delay for the IRQ itself.
-
-    It all comes down to 28 CPU cycles + wobble 0-4 cycles (based on cases, we 
-    didn't compute from the MFP doc).
-
-    It is a coincidence that this number corresponds to the delay between DE
-    signal and pixels appearing on the screen.
-
-    This mod just removes the confusion in Steem source by not using 
-    CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN, it doesn't change actual cycles.
-*/
-
-void TMC68901::CalcCyclesFromHblToTimerB() {
-  
-#if defined(SSE_GLUE_392D)
-  // our DE ON timing should be correct now
-  cpu_cycles_from_hbl_to_timer_b = (OPTION_C2 && (mfp_reg[MFPR_AER]&8))
-    ? Glue.CurrentScanline.StartCycle // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
-    : Glue.CurrentScanline.EndCycle;
-#else
-  cpu_cycles_from_hbl_to_timer_b=Glue.ScanlineTiming[TGlue::LINE_STOP][shifter_freq_idx];
-  if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
-    // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
-    cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
-#endif
-  cpu_cycles_from_hbl_to_timer_b+=28; // an addition of MFP delays
-  //TRACE("F%d y%d calctb %d\n",FRAME,scan_y,cpu_cycles_from_hbl_to_timer_b);
-}
-
-#elif defined(SSE_INT_MFP_TIMER_B_AER)
-
-void TMC68901::CalcCyclesFromHblToTimerB(int freq) {
-  switch (freq){ //this part was the macro
-    case MONO_HZ: cpu_cycles_from_hbl_to_timer_b=192;break; 
-    case 60: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320-4);break; 
-    default: cpu_cycles_from_hbl_to_timer_b=(CYCLES_FROM_HBL_TO_LEFT_BORDER_OPEN+320); 
-  }
-#ifdef SSE_GLUE
-  if(OPTION_C2 && (mfp_reg[MFPR_AER]&8)) 
-    // from Hatari, fixes Seven Gates of Jambala; Trex Warrior
-    cpu_cycles_from_hbl_to_timer_b-=Glue.DE_cycles[shifter_freq_idx];
-  ASSERT(cpu_cycles_from_hbl_to_timer_b<512); // can be short
-#endif
-}
-
 #endif
 
 
 void TMC68901::Reset() {
   Irq=false;
   IrqSetTime=ACT;
-#if defined(SSE_INT_MFP_392B)
+
   for(int t=0;t<4;t++)
   {
     Counter[t]=0;
     Prescale[t]=0;
+#if defined(SSE_INT_MFP_TIMER_CHECK)
     Period[t]=0.0;
-  }
 #endif
+  }
 #ifdef SSE_DEBUG
   //test for corruption
   ASSERT(IrqInfo[8].Timer==1 && IrqInfo[7].IsGpip && IrqInfo[13].IsTimer);

@@ -1236,7 +1236,7 @@ void TOptionBox::CreateDisplayPage()
                           x+5+Wid,y,Wid+50,200,Handle,(HMENU)207,HInstance,NULL);
   SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
   SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Normal"));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   //SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Max fullscreen"));
 #endif
   SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Large"));
@@ -1275,7 +1275,7 @@ T("For the window. This can change emulation speed")
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VID_3BUFFER_WIN) && defined(SSE_VID_3BUFFER_392) // DirectDraw-only
+#if defined(SSE_VID_DD_3BUFFER_WIN) && defined(SSE_VID_3BUFFER_392) // DirectDraw-only
   y-=LineHeight;
   Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
   Win=CreateWindow("Button",T("Triple Buffering"),mask,
@@ -1400,13 +1400,13 @@ T("For the window. This can change emulation speed")
 #if defined(SSE_X64_390)
 
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(LPARAM)CStrT("384 x 270"));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_BORDERS_LIMIT_TO_245)
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(LPARAM)CStrT("400 x 275"));
 #else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(LPARAM)CStrT("400 x 278"));
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 
 #if defined(SSE_VID_BORDERS_412)
 #if defined(SSE_VID_BORDERS_413) // !
@@ -1440,13 +1440,13 @@ T("For the window. This can change emulation speed")
 #endif
 #else//x64
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("384 x 270"));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_BORDERS_LIMIT_TO_245)
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 275"));
 #else
   SendMessage(BorderSizeOption,CB_ADDSTRING,0,(long)CStrT("400 x 278"));
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_BORDERS_412)
 #if defined(SSE_VID_BORDERS_413) // !
 #if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_416)
@@ -1832,7 +1832,7 @@ void TOptionBox::CreateFullscreenPage()
   const int LineHeight=30;
   int mask;
   long Offset=0;
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   long Wid=0;
 #else // DirectDraw
 #if defined(SSE_VID_D3D_OPTION)
@@ -1842,7 +1842,7 @@ void TOptionBox::CreateFullscreenPage()
     mask|=WS_DISABLED;
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_ST_ASPECT_RATIO)
   CreateWindow("Button",T("Direct3D"),
     WS_CHILD | BS_GROUPBOX,
     page_l,y,page_w,45,Handle,(HMENU)99,HInstance,NULL); //v3.7.2 + 10
@@ -1865,13 +1865,13 @@ void TOptionBox::CreateFullscreenPage()
   ToolAddWindow(ToolTip,Win,T("You can use Direct3D instead of DirectDraw for fullscreen. It should be more compatible with Windows 7 or 8."));
   y+=LineHeight;
 #endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if defined(SSE_VID_D3D)
 
 #if defined(SSE_VID_D3D_LIST_MODES)
 /*  We do some D3D here, listing all modes only when necessary to save memory.
     Or we could have another function in display, but then code bloat...
 */
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
 #endif
@@ -1929,45 +1929,24 @@ void TOptionBox::CreateFullscreenPage()
   Wid+=w;
 #endif
   
-#if defined(SSE_GUI_ST_AR_OPTION) && !defined(SSE_VID_STRETCH_ASPECT_RATIO)
-  // option has been moved
-  y-=LineHeight;
 #if defined(SSE_VID_D3D_CRISP_OPTION)
-  y-=7;
-#endif
-  Offset+=Wid+HorizontalSeparation;
-//  Offset=0;
-  Wid=GetCheckBoxSize(Font,T("ST aspect ratio")).Width;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("ST aspect ratio"),mask,
-    page_l +Offset,y-1,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-#if SSE_VERSION>=372
-  ToolAddWindow(ToolTip,Win,T("You like those distorted pixels? That's the option for you"));
-#else
-  ToolAddWindow(ToolTip,Win,T("As is visible on many screenshots, the ST aspect ratio was distorted, with too high pixels. D3D fullscreen."));
-#endif
-  y+=LineHeight+5;
-#endif
-
-#if defined(SSE_VID_D3D_CRISP_OPTION)
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   Offset=10-10;
 #else
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_ST_ASPECT_RATIO)
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
 #else
   y-=LineHeight/2; // this is hard to fit!
 #endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if defined(SSE_VID_D3D)
   Wid=GetCheckBoxSize(Font,T("Crisp Rendering")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Crisp Rendering"),mask,
     page_l +Offset,y-1,Wid,25,Handle,(HMENU)7324,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_D3D_CRISP,0);
   ToolAddWindow(ToolTip,Win,T("You like those big pixels? That's the option for you"));
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   y+=LineHeight;
 #else
   y+=LineHeight+5;
@@ -1977,7 +1956,7 @@ void TOptionBox::CreateFullscreenPage()
 
 #endif
 
-#if !defined(SSE_VID_DIRECT3D)
+#if !defined(SSE_VID_D3D)
   const int LineHeight=30;
   int mask;
 #endif
@@ -2014,7 +1993,7 @@ void TOptionBox::CreateFullscreenPage()
   y-=LineHeight*2;
 #endif
 
-#if defined(SSE_VID_3BUFFER) && defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_3BUFFER_392)
+#if defined(SSE_VID_3BUFFER) && defined(SSE_VID_D3D) && !defined(SSE_VID_3BUFFER_392)
   Offset=10;
   mask&=~WS_DISABLED;
   Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
@@ -2025,7 +2004,7 @@ void TOptionBox::CreateFullscreenPage()
   y+=LineHeight;
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   w=get_text_width(T("Drawing mode"));
   CreateWindow("Static",T("Drawing mode"),WS_CHILD ,
                           page_l,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
@@ -2091,7 +2070,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   SendMessage(Win,CB_SETCURSEL,min((int)display_option_fs_bpp,nconfig-1),0);
 #endif
 
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   y=old_y;
 #else
 #if defined(SSE_GUI_DD_FULLSCREEN_LE)
@@ -2170,7 +2149,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
     page_l,y,page_w,170,Handle,(HMENU)99,HInstance,NULL);
   y+=20;
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 
 #if defined(SSE_VID_GUI_392)
   w=GetCheckBoxSize(Font,T("VSync")).Width;
@@ -2220,7 +2199,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   SendMessage(Win,BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_DD_SIMPLIFY_VSYNC)
+#if !defined(SSE_VID_D3D) && !defined(SSE_VID_DD_SIMPLIFY_VSYNC)
   y+=30;
 
   CreateWindow("Static",T("Preferred PC refresh rates:"),WS_CHILD,
@@ -2289,17 +2268,17 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
     page_l+page_w-90,y,80,23,Handle,(HMENU)225,HInstance,NULL);
 
   y+=40;
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 
 #if !defined(SSE_GUI_392) //moved up
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   y+=LineHeight;
 #endif
 #if defined(SSE_GUI_DD_FULLSCREEN_LE)
   y+=LineHeight;
 #endif
   w=GetCheckBoxSize(Font,T("Confirm before quit")).Width;
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   Win=CreateWindow("Button",T("Confirm before quit"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10,y,w,23,Handle,(HMENU)226,HInstance,NULL);
@@ -2311,7 +2290,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   SendMessage(Win,BM_SETCHECK,FSQuitAskFirst,0);
 #endif//#if !defined(SSE_GUI_392)
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
@@ -2338,11 +2317,11 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   UpdateHzDisplay();
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,204);
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
   SetPageControlsFont();
   ShowPageControls();
 }
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 void TOptionBox::UpdateHzDisplay()
 {
   if (Handle==NULL) return;
@@ -2978,7 +2957,7 @@ void TOptionBox::CreateStartupPage()
                     T("This option, when checked, makes Steem hide the mouse before it draws to the screen.")+" "+
                     T("Unfortunately this can make the mouse pointer flicker when Steem is running."));
   y+=30;
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   Wid=GetCheckBoxSize(Font,T("Never use Direct3D")).Width;
   Win=CreateWindow("Button",T("Never use Direct3D"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3300,HInstance,NULL);
@@ -3489,35 +3468,6 @@ Windows 2000	5.0
   ToolAddWindow(ToolTip,Win,tip_text.Text);
 #endif
 
-#if defined(SSE_VID_3BUFFER) && !defined(SSE_VID_GUI_392) // SSE -> Display
-#if !defined(SSE_VID_D3D_ONLY)
-  Offset+=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("Triple buffering")).Width;
-  Win=CreateWindow("Button",T("Triple buffering"), mask,
-               page_l +Offset,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER,0);
-#if defined(SSE_VID_3BUFFER_NO_VSYNC)
-  tip_text=T("Works with windows and fullscreen.");
-#else
-  tip_text=T("This may reduce tearing at the price of high CPU use.");
-#endif
-  ToolAddWindow(ToolTip,Win,tip_text.Text);
-#endif
-  y+=LineHeight;
-#endif
-
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO) && !defined(SSE_VID_GUI_IS_AND_PAL)
-  Offset=0;
-  Wid=GetCheckBoxSize(Font,T("PAL aspect ratio")).Width;
-  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("PAL aspect ratio"),mask,
-    page_l +Offset,y-1,Wid,25,Handle,(HMENU)7315,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-  ToolAddWindow(ToolTip,Win,
-    T("The good old distorted screen. Works in window stretch mode and fullscreen"));
-  y+=LineHeight;
-#endif
-
 #if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -3691,7 +3641,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,OPTION_WIN_VSYNC,0);
 #endif
-#if defined(SSE_VID_3BUFFER) && !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_3BUFFER) && !defined(SSE_VID_D3D)
   Win=GetDlgItem(Handle,1034); 
   if(Win!=NULL) 
     SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER,0);

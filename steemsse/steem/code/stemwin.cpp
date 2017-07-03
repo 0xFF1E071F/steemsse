@@ -44,8 +44,7 @@ void StemWinResize(int xo,int yo)
 #endif
 
 
-//#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO) && defined(WIN32) //ux382
+#if defined(SSE_VID_ST_ASPECT_RATIO)
 /*  v3.8.0
     With this little mod we have PAL aspect ratio in windowed mode too.
 */
@@ -83,17 +82,8 @@ void StemWinResize(int xo,int yo)
 #endif
 
 #if defined(SSE_VID_D3D1)
-  if(D3D9_OK && OPTION_D3D
-#if defined(SSE_VID_D3D_380)
-    && Disp.pD3DDevice // "D3DX: pDevice pointer is invalid"
-#endif
-    )
-#if 0 && defined(SSE_VID_D3D_FS_392A)
-    if(FullScreen && OPTION_HACKS)
-      Disp.ScreenChange();//radical - but too slow on some displays
-    else
-#endif
-      Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
+  if(D3D9_OK && Disp.pD3DDevice)
+    Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
 #endif
 #if defined(SSE_GUI_STATUS_BAR)
 #if defined(SSE_VID_FS_GUI_392B)
@@ -295,7 +285,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
 
         int x_gap=0,y_gap=0;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         if (draw_fs_blit_mode!=DFSM_LAPTOP){
 #ifndef NO_CRAZY_MONITOR
           if (extended_monitor){
@@ -310,13 +300,13 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
             x_gap=(800 - (BORDER_SIDE+320+BORDER_SIDE)*2)/2;
             y_gap=(600-(BORDER_TOP*2+400+BORDER_BOTTOM*2))/2;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
           }else if (draw_fs_topgap){
             y_gap=draw_fs_topgap;
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
           }
         }
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
         HBRUSH br=(HBRUSH)GetStockObject(BLACK_BRUSH);
         RECT rc;
         if (x_gap){
@@ -1176,7 +1166,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #endif
       if (FullScreen){
         if (wPar){  //Activating
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
           if (using_res_640_400){
             using_res_640_400=0;
             change_fullscreen_display_mode(true);
@@ -1919,7 +1909,7 @@ LRESULT __stdcall FSQuitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 {
   HRESULT Ret;
-#if defined(SSE_VS2008_WARNING_392) && defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VS2008_WARNING_392) && defined(SSE_VID_D3D)
 #elif defined(SSE_VID_BPP_NO_CHOICE)
   int bpp=32;
   if(!SSEConfig.VideoCard32bit)
@@ -1938,7 +1928,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #else
   int bpp=int(display_option_8_bit_fs ? 8:16);
 #endif
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   RECT rc={0,MENUHEIGHT,monitor_width,monitor_height};
 //  int hz256=0;
 #if !defined(SSE_VS2008_WARNING_390)
@@ -1951,7 +1941,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
 #else
   int hz256=int(display_option_8_bit_fs ? 0:1);
 #endif  
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_BORDERS_GUI_392)
   int hz_ok=0,hz=prefer_pc_hz[hz256][1+(border!=0)]
 #else
@@ -1986,14 +1976,14 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
   if (draw_fs_blit_mode==DFSM_LAPTOP){
     rc.right=monitor_width;rc.bottom=monitor_height;
   }
-#endif//#if defined(SSE_VID_D3D_ONLY)
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+#endif//#if defined(SSE_VID_D3D)
+#if defined(SSE_VID_D3D) && defined(SSE_VS2008_WARNING_390)
   if ((Ret=Disp.SetDisplayMode())!=DD_OK) 
 #else
   if ((Ret=Disp.SetDisplayMode(rc.right,rc.bottom,bpp,hz,&hz_ok))!=DD_OK) 
 #endif
     return Ret;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_BORDERS_GUI_392)
   if (hz) tested_pc_hz[hz256][1+(border!=0)]=MAKEWORD(hz,hz_ok);
 #else
@@ -2005,7 +1995,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
   SetWindowPos(StemWin,HWND_TOPMOST,0,0,rc.right,rc.bottom,0);
 #endif
   if (resizeclippingwindow){
-#if defined(SSE_VID_D3D_ONLY) 
+#if defined(SSE_VID_D3D) 
 #elif defined(SSE_VID_DD_NO_FS_CLIPPER)
     SetWindowPos(StemWin,0,0,0,rc.right,rc.bottom,SWP_NOZORDER);
 #else
@@ -2025,7 +2015,7 @@ HRESULT change_fullscreen_display_mode(bool resizeclippingwindow)
                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     }
   }
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   OptionBox.UpdateHzDisplay();
 #endif
   HDC DC=GetDC(StemWin);

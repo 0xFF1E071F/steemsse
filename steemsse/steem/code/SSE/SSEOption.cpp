@@ -41,7 +41,7 @@ void TOption::Init() {
   OsdDriveInfo=1;
   StatusBar=1;
   DriveSound=1;
-#ifdef SSE_VID_DIRECT3D
+#ifdef SSE_VID_D3D
   Direct3D=1;
 #endif
   SampledYM=true;
@@ -76,7 +76,7 @@ void TOption::Init() {
   DriveSound=0;
   SingleSideDriveMap=0;
   GhostDisk=0;
-#ifdef SSE_VID_DIRECT3D
+#ifdef SSE_VID_D3D
   Direct3D=1;
 #else
   Direct3D=0; // just in case

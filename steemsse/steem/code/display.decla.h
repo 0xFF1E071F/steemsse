@@ -95,7 +95,7 @@ EXT int monitor_width,monitor_height; //true size of monitor, for LAPTOP mode.
 #define NUM_HZ 6
 #define DISP_MAX_FREQ_LEEWAY 5
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE HzIdxToHz[NUM_HZ];
 #else
@@ -128,24 +128,24 @@ public: //temp
   IDirect3DTexture9* pD3DTexture;
   ID3DXSprite* pD3DSprite;
 #endif//#if defined(SSE_VID_D3D)
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   IDirectDrawClipper *DDClipper;
 #if defined(SSE_VID_DD7)
   IDirectDraw7 *DDObj;
   IDirectDrawSurface7 *DDPrimarySur,*DDBackSur;
   DDSURFACEDESC2 DDBackSurDesc;
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   IDirectDrawSurface7 *DDBackSur2; // our second back buffer
 #endif
 #else
   IDirectDraw2 *DDObj;
   IDirectDrawSurface *DDPrimarySur,*DDBackSur;
   DDSURFACEDESC DDBackSurDesc;
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   IDirectDrawSurface *DDBackSur2; // our second back buffer
 #endif
 #endif//dd7?
-#endif//!defined(SSE_VID_D3D_ONLY)
+#endif//!defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_FS_392D)
   D3DPRESENT_PARAMETERS d3dpp; // double use for w,h, but we need other params
 #endif
@@ -169,10 +169,10 @@ public: //temp
 #if defined(SSE_VID_D3D_382)
   UINT D3DFsW,D3DFsH;
 #endif//#if defined(SSE_VID_D3D_382)
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   DWORD DDLockFlags;
   int DDClosestHz[3][2][NUM_HZ];
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 #if !defined(SSE_VID_D3D_NO_FREEIMAGE)
   int ScreenShotFormatOpts;
 #endif
@@ -180,7 +180,7 @@ public: //temp
 #endif//#ifdef WIN32
 
   Str ScreenShotNextFile;
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   COUNTER_VAR VSyncTiming; // must be public
 #endif
 #if defined(SSE_VID_DD_FS_MAXRES)
@@ -199,11 +199,11 @@ public: //temp
 #endif
 
 #ifdef WIN32
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   bool DDDisplayModePossible[3][2];
   bool DDBackSurIsAttached,DDExclusive;
 #endif
-#if !defined(SSE_VID_D3D_ONLY) && defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   bool SurfaceToggle;
 #endif
   bool DrawToVidMem,BlitHideMouse;
@@ -240,7 +240,7 @@ public: //temp
 private:
 #ifdef WIN32
   // DD Only
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   HRESULT InitDD();
 #if defined(SSE_VID_DD7)
   static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC2,LPVOID);
@@ -250,7 +250,7 @@ private:
   HRESULT DDCreateSurfaces();
   void DDDestroySurfaces();
   HRESULT DDError(char *,HRESULT);
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_UTIL)
   int STXPixels();
   int STYPixels();
@@ -296,7 +296,7 @@ public:
   HRESULT Init();
   HRESULT Lock();
   void VSync();
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   BOOL BlitIfVBlank(); // our polling function
 #endif
   bool Blit();
@@ -305,7 +305,7 @@ public:
 #ifdef SHOW_WAVEFORM
   void DrawWaveform();
 #endif
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_D3D) && defined(SSE_VS2008_WARNING_390)
   void RunStart(bool=0),RunEnd();
 #else
   void RunStart(bool=0),RunEnd(bool=0);
@@ -314,7 +314,7 @@ public:
   void ChangeToFullScreen(),ChangeToWindowedMode(bool=0);
   void DrawFullScreenLetterbox(),FlipToDialogsScreen();
   bool CanGoToFullScreen();
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_D3D) && defined(SSE_VS2008_WARNING_390)
   HRESULT SetDisplayMode();
 #else
   HRESULT SetDisplayMode(int,int,int,int=0,int* = NULL);
@@ -356,7 +356,7 @@ class SteemDisplay
 private:
 #ifdef WIN32
   // DD Only
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   HRESULT InitDD();
 #if defined(SSE_VID_DD7)
   static HRESULT WINAPI DDEnumModesCallback(LPDDSURFACEDESC2,LPVOID);
@@ -366,7 +366,7 @@ private:
   HRESULT DDCreateSurfaces();
   void DDDestroySurfaces();
   HRESULT DDError(char *,HRESULT);
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 
 #if defined(SSE_VID_UTIL)
   int STXPixels();
@@ -410,7 +410,7 @@ private:
   // GDI Only
   bool InitGDI();
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_DD7)
   IDirectDraw7 *DDObj;
   IDirectDrawSurface7 *DDPrimarySur,*DDBackSur;
@@ -421,7 +421,7 @@ private:
   DDSURFACEDESC DDBackSurDesc;
 #endif
 
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 #if defined(SSE_VID_DD7)
   IDirectDrawSurface7 *DDBackSur2; // our second back buffer
 #else
@@ -436,7 +436,7 @@ private:
   bool DDBackSurIsAttached,DDExclusive;
   bool DDDisplayModePossible[3][2];
   int DDClosestHz[3][2][NUM_HZ];
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
   HBITMAP GDIBmp;
   HDC GDIBmpDC;
   BYTE *GDIBmpMem;
@@ -480,7 +480,7 @@ public:
 #ifdef SHOW_WAVEFORM
   void DrawWaveform();
 #endif
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_D3D) && defined(SSE_VS2008_WARNING_390)
   void RunStart(bool=0),RunEnd();
 #else
   void RunStart(bool=0),RunEnd(bool=0);
@@ -489,7 +489,7 @@ public:
   void ChangeToFullScreen(),ChangeToWindowedMode(bool=0);
   void DrawFullScreenLetterbox(),FlipToDialogsScreen();
   bool CanGoToFullScreen();
-#if defined(SSE_VID_D3D_ONLY) && defined(SSE_VS2008_WARNING_390)
+#if defined(SSE_VID_D3D) && defined(SSE_VS2008_WARNING_390)
   HRESULT SetDisplayMode();
 #else
   HRESULT SetDisplayMode(int,int,int,int=0,int* = NULL);
@@ -533,7 +533,7 @@ public:
 #if defined(SSE_VID_SAVE_NEO)
   neochrome_file *pNeoFile;
 #endif
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   long VSyncTiming; // must be public
   BOOL BlitIfVBlank(); // our polling function
 #endif

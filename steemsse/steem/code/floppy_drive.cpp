@@ -141,12 +141,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
               }
 #endif
               f_PastiDisk=true;
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) &&! defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-              pasti_active=true;
-              //TRACE_LOG("pasti_active %d\n",pasti_active);
-#endif
             }else{
-
 #ifdef SSE_DISK_EXT
               STT=has_extension(fn,DISK_EXT_STT);
               DIM=has_extension(fn,DISK_EXT_DIM);
@@ -171,11 +166,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #if defined(SSE_TOS_PRG_AUTORUN)
               PRG=OPTION_PRG_SUPPORT && has_extension(fn,DISK_EXT_PRG);
               TOS=OPTION_PRG_SUPPORT && has_extension(fn,DISK_EXT_TOS);
-#endif
-
-#if defined(SSE_GUI_DM_PASTI_ONLY_STX)
-              if(OPTION_PASTI_JUST_STX&& drive!=-1 && SF314[1-drive].ImageType.Extension!=EXT_STX)
-                pasti_active=false;
 #endif
             }
             HOffset=zippy.current_file_offset;
@@ -207,15 +197,8 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       return FIMAGE_NODISKSINZIP;
     }
   }
-  else if (Type==DISK_PASTI
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && !defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-    && (IsSameStr_I(Ext,DISK_EXT_STX)||pasti_active)
-#endif
-    ){
+  else if (Type==DISK_PASTI){
     f_PastiDisk=true;
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH) && !defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-    pasti_active=true;
-#endif
   }else if (Type==0){
     TRACE_LOG("Disk type 0\n");
     return FIMAGE_WRONGFORMAT;
@@ -242,9 +225,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
       RemoveDisk();
 #endif
 #if defined(SSE_DISK)
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-      pasti_active=true; //3.6.1, because RemoveDisk clears it
-#endif
       ASSERT(drive!=-1);
       if(drive!=-1)
       {
@@ -325,10 +305,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
     if(drive==-1  || !ImageSCP[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-#if USE_PASTI  && !defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
-      pasti_active=false;
-#endif
     Disk[drive].TrackBytes=ImageSCP[drive].nBytes;
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_SCP;
@@ -342,10 +318,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
     if(drive==-1  || !ImageSTW[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-#if USE_PASTI && !defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
-      pasti_active=false;
-#endif
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_STW;
     SF314[drive].State.reading=SF314[drive].State.writing=0;
@@ -380,10 +352,6 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
 #endif
     if(drive==-1  || !ImageHFE[drive].Open(File))
       return FIMAGE_WRONGFORMAT;
-#if USE_PASTI && !defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-    if(SF314[1-drive].ImageType.Extension!=EXT_STX)
-      pasti_active=false;
-#endif
     Disk[drive].TrackBytes=DISK_BYTES_PER_TRACK; //default
     SF314[drive].ImageType.Manager=MNGR_WD1772;
     SF314[drive].ImageType.Extension=EXT_HFE;
@@ -812,13 +780,6 @@ Header:
   ImageFile=OriginalFile;
   PastiDisk=f_PastiDisk;
 
-#if USE_PASTI && defined(SSE_DISK_PASTI_AUTO_SWITCH2)
-/*  We deactivate pasti even without option 'Pasti only for STX' if we're
-    running CAPS or WD1772 manager.
-*/
-  if(pasti_active && !OPTION_PASTI_JUST_STX && SF314[drive].ImageType.Manager!=MNGR_PASTI)
-    pasti_active=false;
-#endif
 #if defined(SSE_DISK_392)
   if(SF314[drive].ImageType.Extension)
     m_DiskInDrive=true; // simpler so
@@ -867,7 +828,7 @@ Header:
 extension_list[SF314[drive].ImageType.Extension],SF314[drive].ImageType.Manager,Sides,TracksPerSide,SectorsPerTrack,SF314[drive].State.adat);
 #endif
 
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   // catch player's mistake
   if(SF314[drive].ImageType.Manager!=MNGR_PASTI && pasti_active)
   {
@@ -1481,7 +1442,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       pdi.fileBuf=PastiBuf;
       pdi.bufSize=PastiBufLen;
       if (pasti->SaveImg(drive,0,&pdi)==FALSE){
-#if !(defined(SSE_DISK_PASTI_NO_RESET))
+#if !(defined(SSE_DISK_PASTI_AUTO_SWITCH))
         int err=pasti->GetLastError();
         if (err!=pastiErrUnimpl){
           Alert(T("Unable to save to disk image, changes have been lost!"),T("Disk Image Error"),MB_OK);
@@ -1490,16 +1451,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
       }
     }
     pasti->Eject(drive,ABSOLUTE_CPU_TIME);
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-/*  3.6.1 Disable Pasti at once when ejecting STX disk if the other disk
-    isn't STX and option 'Pasti only for STX' is checked.
-*/
-    if(OPTION_PASTI_JUST_STX && 
-      SF314[1-floppy_current_drive()].ImageType.Extension!=EXT_STX)
-    {
-      pasti_active=false;
-    }
-#endif
   }
 #endif
   if (PastiBuf) delete[] PastiBuf;

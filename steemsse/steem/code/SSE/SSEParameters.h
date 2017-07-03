@@ -130,12 +130,6 @@ Some STFs                32.02480    8.0071
 
 #define  CPU_STF_PAL 8021247
 #define  CPU_STF_ALT (8007100) //ljbk's? 
-/*  The CPU clock should be the same for STF and STE.
-    We use a slightly different value (217 cycles only) to help some cases:
-    DSOTS, Japtro
-    At least, it's protected by 'Hacks' in v3.9.0
-    TODO
-*/
 #if defined(SSE_CPU_MFP_RATIO_STE)
 #define  CPU_STE_PAL (OPTION_HACKS?8021030:CPU_STF_PAL)
 #else
@@ -367,33 +361,24 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
     time to IRQ.
     DSOTS, Extreme rage, Schnusdie, Lethal Xcess, Panic
 
-    MFP_TIMER_DATA_REGISTER_ADVANCE is the latency between timer condition
-    (as seen in data register) and IRQ.
-    Overscan Demos
-
     MFP_WRITE_LATENCY supposes that data is copied with some delay into
     registers, which may have unintended effects.
     Audio Artistic (timer is stopped before IRQ so it triggers only once)
     Spurious.tos (mask out just after IRQ triggers spurious)
-
-    It would seem to make sense that:
-    MFP_WRITE_LATENCY + MFP_TIMER_DATA_REGISTER_ADVANCE = MFP_TIMER_SET_DELAY
-    but those delays are likely variable due to the interaction between CPU and
-    MFP clocks and other factors.
 */
 
 #define MFP_CLOCK 2457600
 #define MFP_IACK_LATENCY (28) 
 
-#if defined(SSE_INT_MFP_392D1)
-#define MFP_TIMER_DATA_REGISTER_ADVANCE (2)
-#elif defined(SSE_INT_MFP_TIMER_B_392B) //?
-#define MFP_TIMER_DATA_REGISTER_ADVANCE (2)
-#else
-#define MFP_TIMER_DATA_REGISTER_ADVANCE (4)
+#if defined(SSE_INT_MFP_PRESCALE)
+/*  Explanation for the negative value:
+    Time necessary to copy the register value to the IO lines. But then it
+    is general, not just for data timers...
+*/
+#define MFP_READ_REGISTER_DELAY (-2)
 #endif
 
-#if defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_PRESCALE)
 // compensates the non-substraction in mfp_set_timer_reg()
 // seems likelier this way
 #define MFP_TIMER_SET_DELAY (4) 
@@ -402,7 +387,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 
-#if defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_PRESCALE)
 #define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
@@ -410,7 +395,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define MFP_TIMERS_WOBBLE (4) // &
 #endif
 
-#if defined(SSE_INT_MFP_392D1)
+#if defined(SSE_INT_MFP_PRESCALE)
 #define MFP_WRITE_LATENCY (2)
 #else
 #define MFP_WRITE_LATENCY (4)//(8) 
@@ -494,7 +479,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 // VERSION //
 /////////////
 
-#define SSE_VERSION 392
+#define SSE_VERSION 393 // normally will be 400
 
 
 ///////////
@@ -516,11 +501,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define LARGE_BORDER_BOTTOM 45
 #define VERY_LARGE_BORDER_BOTTOM 45
 #else
-#if defined(SSE_VID_BORDERS_LB_DX)
-#define LARGE_BORDER_SIDE 48 // trick, making it 40 at rendering
-#else
 #define LARGE_BORDER_SIDE 40 // making many hacks necessary 
-#endif
 #define LARGE_BORDER_SIDE_WIN 40 // max for 800x600 display (fullscreen)
 
 #define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
@@ -547,12 +528,12 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
 
 #if defined(SSE_VID_BORDERS_GUI_392) // 0:no border
-#if defined(SSE_VID_D3D_ONLY) || !defined(SSE_VID_BORDERS_LB_DX)
+#if defined(SSE_VID_D3D)
 #define BIGGEST_DISPLAY 3 //416
 #else
 #define BIGGEST_DISPLAY 4 //416
 #endif
-#elif defined(SSE_VID_D3D_ONLY)
+#elif defined(SSE_VID_D3D)
 #define BIGGEST_DISPLAY 2 //no more 400
 #elif defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
 #define BIGGEST_DISPLAY 3
@@ -562,7 +543,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 
 #endif
 
-#if defined(SSE_VID_STRETCH_ASPECT_RATIO)
+#if defined(SSE_VID_ST_ASPECT_RATIO)
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
 #endif
 

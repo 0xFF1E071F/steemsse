@@ -222,7 +222,7 @@ void power_on()
 #endif
   disable_input_vbl_count=50*3; // 3 seconds
 
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   Disp.VSyncTiming=0;
 #endif
 
@@ -315,7 +315,7 @@ void reset_peripherals(bool Cold)
   shifter_fetch_extra_words=0; //unspecified
   shifter_first_draw_line=0;
   shifter_last_draw_line=shifter_y;
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(!OPTION_C2)
 #endif
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);

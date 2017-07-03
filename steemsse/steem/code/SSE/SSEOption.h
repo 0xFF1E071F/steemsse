@@ -125,13 +125,13 @@ extern struct TOption SSEOption;
 
 #define OPTION_WIN_VSYNC (SSEOption.WinVSync)
 #define OPTION_3BUFFER (SSEOption.TripleBufferWin) //temp for old build
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #define OPTION_3BUFFER_WIN (SSEOption.TripleBufferWin)
 #endif
 #define OPTION_3BUFFER_FS (SSEOption.TripleBufferFS)
 #define OPTION_DRIVE_SOUND (SSEOption.DriveSound)
 #define OPTION_GHOST_DISK (SSEOption.GhostDisk)
-#define OPTION_D3D (SSEOption.Direct3D)
+//#define OPTION_D3D (SSEOption.Direct3D)
 #if defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
 #define OPTION_SAMPLED_YM (true)
 #else

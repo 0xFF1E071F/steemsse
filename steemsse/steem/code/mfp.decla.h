@@ -20,9 +20,7 @@ inline int abs_quick(int i) //was in emu.cpp (!)
   return -i;
 }
 
-#if defined(SSE_INT_MFP_TIMER_B_392B)
-#define TB_TIME_WOBBLE (rand() % 7) //0-6 (TIMERB07.TOS)
-#elif defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
+#if defined(SSE_INT_MFP_TIMER_B_WOBBLE2)
 #define TB_TIME_WOBBLE (rand() & 2)
 #else
 #define TB_TIME_WOBBLE (rand() & 4)
@@ -107,7 +105,7 @@ EXT BYTE mfp_gpip_input_buffer;
 
 #define MFP_CLK 2451
 
-#if defined(SSE_INT_MFP_392)
+#if defined(SSE_INT_MFP_392) //TODO option c2
 #define MFP_CLK_EXACT MFP_CLOCK // (2457600) it is used in rs232
 #else
 #define MFP_CLK_EXACT 2451134 // Between 2451168 and 2451226 cycles
@@ -152,16 +150,12 @@ struct TMC68901 {
   COUNTER_VAR IrqSetTime;
   COUNTER_VAR IackTiming;
   COUNTER_VAR WriteTiming;
-#if defined(SSE_INT_MFP_392B)
-  double Period[4]; // to record the period as double
-#endif
+  double Period[4]; // to record the period as double (debug use only for now)
   WORD IPR;//unused
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
   BYTE Wobble[4];
 #endif
-#if defined(SSE_INT_MFP_392B)
-  BYTE Counter[4],Prescale[4];
-#endif
+  BYTE Counter[4],Prescale[4]; // to hold real values
   BYTE LastRegisterWritten;
   BYTE LastRegisterFormerValue;
   BYTE LastRegisterWrittenValue;
@@ -178,18 +172,9 @@ struct TMC68901 {
   void Init();
   void Reset();
   int UpdateNextIrq(COUNTER_VAR at_time=-1);
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   enum {SettingTimer=-3,ChangingAer=-2,NewScanline=-1}; //for little cheats!
   void ComputeNextTimerB(int info);
-#elif defined(SSE_INT_MFP_TIMER_B_AER)
-#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE)
-  void CalcCyclesFromHblToTimerB();
-#else
-  void CalcCyclesFromHblToTimerB(int freq);
-#endif
-#endif
-#if defined(SSE_INT_MFP_TIMER_B_SHIFTER_TRICKS)
-  void AdjustTimerB();
 #endif
 
 };
@@ -199,19 +184,6 @@ struct TMC68901 {
 extern TMC68901 MC68901; // declaring the singleton
 
 #endif//#if defined(SSE_INT_MFP_OBJECT)
-
-#if !defined(SSE_INT_MFP_TIMER_B_392A)
-#if defined(SSE_INT_MFP_TIMER_B_390) && defined(SSE_GLUE) 
-#define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB()
-#elif defined(SSE_INT_MFP_TIMER_B_AER)
-#define CALC_CYCLES_FROM_HBL_TO_TIMER_B(freq) MC68901.CalcCyclesFromHblToTimerB(freq)
-#endif
-#endif
-
-
-
-//#endif//SSE_INT_MFP_OBJECT
-
 
 inline BYTE mfp_get_timer_control_register(int);
 
@@ -307,7 +279,7 @@ void mfp_gpip_transition(int,bool);
 void mfp_check_for_timer_timeouts();
 #endif
 
-#if defined(SSE_INT_MFP_392) // new mods, time to inline
+#if defined(SSE_INT_MFP_INLINE)
 
 inline void mfp_calc_timer_period(int t) {
   double precise_cycles= 
@@ -318,7 +290,7 @@ inline void mfp_calc_timer_period(int t) {
   precise_cycles*=cpu_cycles_multiplier; //cpu_cycles_multiplier is a double
 #endif
   mfp_timer_period[t]=(int)precise_cycles;
-#if defined(SSE_INT_MFP_392B)
+#if defined(SSE_INT_MFP_TIMER_CHECK) 
   MC68901.Period[t]=precise_cycles;
 #endif
 #if defined(SSE_INT_MFP_RATIO_PRECISION)

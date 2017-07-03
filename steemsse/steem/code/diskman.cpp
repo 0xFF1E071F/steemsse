@@ -33,16 +33,12 @@ bool ExtensionIsPastiDisk(char *Ext)
 #if USE_PASTI
   if (Ext==NULL || hPasti==NULL) return false;
   if (*Ext=='.') Ext++;
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
-/*  v3.9.2. We change again the way pasti.dll works in Steem.
-    If the option isn't checked (pasti_active is false), Pasti will run
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
+/*  If the option isn't checked (pasti_active is false), Pasti will run
     STX images only, without us changing pasti_active.
     If the option is checked, Pasti will get all DMA/FDC writes.
 */
   if(!pasti_active)
-    return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
-#elif defined(SSE_DISK_PASTI_ONLY_STX)
-  if(OPTION_PASTI_JUST_STX)
     return (IsSameStr_I(Ext,DISK_EXT_STX)) ? true : false;
 #endif
   char *t=pasti_file_exts;
@@ -111,11 +107,11 @@ int ExtensionIsDisk(char *Ext,bool returnPastiDisksOnlyWhenPastiOn)
   }
 
 #if USE_PASTI
-  if (hPasti 
-#if !(defined(SSE_DISK_PASTI_ALWAYS_DISPLAY_STX_DISKS))
-    && pasti_active
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
+  if (hPasti){
+#else
+  if (hPasti && pasti_active){
 #endif
-    ){
     if (ExtensionIsPastiDisk(Ext)){
       return DISK_PASTI;
     }else if (ret==DISK_COMPRESSED){
@@ -1537,37 +1533,17 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
                 | int(pasti_active ? MF_CHECKED:0),2023,
                 T("Use Pasti for all floppies and ACSI"));
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,
                 T("Pasti Configuration"));
-#elif defined(SSE_GUI_DM_REGROUP_PASTI)
-              HMENU PastiPop=CreatePopupMenu();
-              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING 
-                | int(pasti_active ? MF_CHECKED:0),2023,T("Enable"));
-              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING,
-                2024,T("Configuration"));
-#if defined(SSE_GUI_DM_PASTI_ONLY_STX_392) // present it the other way
-              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-                (!OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Run ST/MSA images"));
-#elif defined(SSE_GUI_DM_PASTI_ONLY_STX)
-              InsertMenu(PastiPop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-                (OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Not for ST/MSA"));
-#endif
-              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | MF_POPUP,
-              (UINT)PastiPop,T("&Pasti"));
 #else
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_active ? MF_CHECKED:0),2023,T("Use Pasti"));
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,T("Pasti Configuration"));
 //              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(pasti_use_all_possible_disks ? MF_CHECKED:0),
 //                                    2024,T("Use Pasti For All Compatible Images"));
-
-#if defined(SSE_GUI_DM_PASTI_ONLY_STX) //option moved from 'SSE' page
-              InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
-                (OPTION_PASTI_JUST_STX?MF_CHECKED:0),2026,T("Pasti only for STX"));
-#endif
 #endif
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
             }
@@ -2155,13 +2131,7 @@ That will toggle bit x.
           }
           if (LOWORD(wPar)==2023){ //SS option use pasti
 
-#if defined(SSE_DISK_PASTI_NO_RESET)
-/*  More complicated than it looked, not foolproof.
-    Maybe there's a better way but we created TFloppyDrive::GetImageFile()
-    for the occasion.
-    No error message if you go native with a STX disk in, or Pasti with a DIM 
-    disk in, the disk will just disappear.
-*/
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH) // no reset, just reinsert
             pasti_active=!pasti_active;
             //TRACE_LOG("pasti_active %d\n",pasti_active);
             for(int i=0;i<2;i++)
@@ -2175,7 +2145,6 @@ That will toggle bit x.
               }
             }
             This->RefreshDiskView();
-            
 #else
             bool cancel=false;
             if (pc!=rom_addr){
@@ -2198,25 +2167,6 @@ That will toggle bit x.
           }//if (LOWORD(wPar)==2023
           break;
 
-#if defined(SSE_GUI_DM_PASTI_ONLY_STX)
-        case 2026:
-          OPTION_PASTI_JUST_STX=!OPTION_PASTI_JUST_STX;
-          TRACE_LOG("Option Pasti just STX %d\n",OPTION_PASTI_JUST_STX);
-          for(int i=0;i<2;i++) // necessary, later refactor (structure) TODO
-          {
-            if(FloppyDrive[i].NotEmpty())
-            {
-              EasyStr name=FloppyDrive[i].DiskName;
-              EasyStr path=FloppyDrive[i].GetImageFile(); 
-              This->EjectDisk(i);
-              This->InsertDisk(i,name,path,0,0,"",true);
-              This->RefreshDiskView();
-            }
-          }            
-
-          break;
-
-#endif
 #endif//pasti
         case 2025:
           This->ShowDatabaseDiag();

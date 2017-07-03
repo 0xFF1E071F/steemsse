@@ -996,7 +996,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
   if (CSF.GetInt("Options","NoDirectDraw",0)) TryDD=0;
   if (TryDD && StepByStepInit){
-#ifdef SSE_VID_D3D_ONLY
+#ifdef SSE_VID_D3D
     if (Alert(T("DirectX can cause problems on some set-ups, would you like Steem to stop using Direct3D for this session? (Note: Not using Direct3D slows down Steem).")+" "+
               T("To permanently stop using Direct3D turn on Options->Startup->Never Use Direct3D."),
                 T("No Direct3D?"),MB_ICONQUESTION | MB_YESNO)==IDYES){
@@ -1059,7 +1059,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
     EasyStr Mess="STARTUP: Display Init finished. ";
     switch (Disp.Method){
       case DISPMETHOD_NONE:Mess+="It failed, nothing will be drawn.";break;
-#ifdef SSE_VID_D3D_ONLY
+#ifdef SSE_VID_D3D
       case DISPMETHOD_DD:  Mess+="Direct3D will be used to draw.";break;
 #else
       case DISPMETHOD_DD:  Mess+="DirectDraw will be used to draw.";break;

@@ -19,10 +19,10 @@ to the PC display.
 
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE bad_drawing INIT(0);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT BYTE draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 #endif
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
 EXT BYTE draw_grille_black INIT(6);
 #else
 EXT BYTE draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
@@ -34,14 +34,14 @@ EXT bool border INIT(1),border_last_chosen INIT(1);
 #else
 EXT BYTE border INIT(2),border_last_chosen INIT(2);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT BYTE draw_fs_topgap INIT(0);
 BYTE prefer_pc_hz[2][3]={{0,0,0},{0,0,0}};
 BYTE tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 #else
 EXT int bad_drawing INIT(0);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT int draw_fs_blit_mode INIT( UNIX_ONLY(DFSM_STRAIGHTBLIT) WIN_ONLY(DFSM_STRETCHBLIT) );
 #endif
 EXT int draw_fs_fx INIT(DFSFX_NONE),draw_grille_black INIT(6);
@@ -72,7 +72,7 @@ EXT BYTE display_option_fs_bpp INIT(0);
 #else
 EXT bool display_option_8_bit_fs INIT(false);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 EXT bool prefer_res_640_400 INIT(0),using_res_640_400 INIT(0);
 #endif
 #if defined(SSE_VAR_RESIZE)
@@ -253,7 +253,7 @@ void draw_begin()
     draw_first_possible_line=0;
     draw_last_possible_line=shifter_y;
 #if defined(SSE_VID_DISABLE_AUTOBORDER)
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     draw_fs_topgap=40;
 #endif
 #else
@@ -266,7 +266,7 @@ void draw_begin()
 #endif
   }
   UNIX_ONLY( draw_fs_topgap=0; )
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   if (draw_grille_black>0) Disp.DrawFullScreenLetterbox(); //TODO test FS here
 #endif
 
@@ -299,7 +299,7 @@ void draw_begin()
     bool using_grille=0;
     if (draw_dest_increase_y>draw_line_length){
 #ifdef WIN32
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       if (FullScreen){
         if (draw_fs_fx==DFSFX_GRILLE) using_grille=true;
       }else 
@@ -381,7 +381,7 @@ void draw_set_jumps_and_source()
   bool big_draw=CanUse_400;
   UNIX_ONLY( if (FullScreen) big_draw=true;  )
 #ifdef WIN32
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
   if(FullScreen)
     big_draw=false;
 #else
@@ -400,7 +400,7 @@ void draw_set_jumps_and_source()
 #endif
       ) big_draw=0;
   }else 
-#endif//#if defined(SSE_VID_D3D_ONLY)    
+#endif//#if defined(SSE_VID_D3D)    
     if (big_draw){
     if (ResChangeResize==0){
       big_draw=0; // always stretch
@@ -426,10 +426,10 @@ void draw_set_jumps_and_source()
         ow=640 + BORDER_SIDE*2 + BORDER_SIDE*2;
         oh=400 + BORDER_TOP*2 + BORDER_BOTTOM*2;
 #ifdef WIN32
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         if (FullScreen) ox=(800-ow)/2, oy=(600-oh)/2;
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       }else if (FullScreen && using_res_640_400==0){
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
         if (overscan && border==2 && emudetect_falcon_extra_height) oh=480;
@@ -483,7 +483,7 @@ void draw_set_jumps_and_source()
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_3BUFFER_392)
+#if !defined(SSE_VID_D3D) && !defined(SSE_VID_3BUFFER_392)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
@@ -494,13 +494,13 @@ void draw_set_jumps_and_source()
     int p=1; // 640 width 400 height
 #ifdef WIN32
     if (FullScreen
-#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_3BUFFER_392)
+#if !defined(SSE_VID_D3D) && !defined(SSE_VID_3BUFFER_392)
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
       ){
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
 #endif
     }else if (screen_res<2){
@@ -550,7 +550,7 @@ void draw_set_jumps_and_source()
 #endif
 #ifdef WIN32
 
-#if !defined(SSE_VID_D3D_FS_392A) || !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D_FS_392A) || !defined(SSE_VID_D3D)
       if (FullScreen
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
@@ -566,10 +566,10 @@ void draw_set_jumps_and_source()
 #endif
     }else if (FullScreen
 #if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_3BUFFER_392)
-      && !(SCANLINES_INTERPOLATED&&(OPTION_3BUFFER||OPTION_D3D))
+      && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
       ){
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
 #endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
@@ -609,7 +609,7 @@ void draw_set_jumps_and_source()
     }else{
       draw_dest_increase_y=2*draw_line_length;
 #if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES)
-      if(SCANLINES_INTERPOLATED && OPTION_D3D)
+      if(SCANLINES_INTERPOLATED)
         draw_blit_source_rect.right-=2;
 #endif
     }
@@ -659,7 +659,7 @@ void draw_set_jumps_and_source()
         && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
 #endif
       ){
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_STRETCH)
       if(!(D3D9_OK && OPTION_D3D))
 #endif
@@ -1214,7 +1214,7 @@ void inline draw_scanline_to_end()
 //---------------------------------------------------------------------------
 bool draw_blit()
 {
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   // we blit the unlocked backsurface
   if (!draw_lock 
 #if !defined(SSE_VID_D3D_3BUFFER) 
@@ -1288,7 +1288,7 @@ void draw(bool osd)
   int save_shifter_first_draw_line=shifter_first_draw_line;
   int save_shifter_last_draw_line=shifter_last_draw_line;
 #endif
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   // we blit the unlocked backsurface
   if (!draw_lock 
 #if !defined(SSE_VID_D3D_3BUFFER)
@@ -1358,7 +1358,7 @@ void draw(bool osd)
   DEBUG_ONLY( update_display_after_trace(); )
 }
 //---------------------------------------------------------------------------
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
 void get_fullscreen_rect(RECT *rc)
 {
   if (draw_fs_blit_mode==DFSM_LAPTOP){
@@ -1383,18 +1383,10 @@ void get_fullscreen_rect(RECT *rc)
   }else
 #endif
   if (border & 1){
-#if defined(SSE_VID_BORDERS_LB_DX)
-    // not sure about this...
-    rc->left=(800 - (SideBorderSizeWin+320+SideBorderSizeWin)*2)/2;
-    rc->top=(600 - (BORDER_TOP+200+BORDER_BOTTOM)*2)/2;
-    rc->right=rc->left + (SideBorderSizeWin+320+SideBorderSizeWin)*2;
-    rc->bottom=rc->top + (BORDER_TOP+200+BORDER_BOTTOM)*2;
-#else
     rc->left=(800 - (BORDER_SIDE+320+BORDER_SIDE)*2)/2;
     rc->top=(600 - (BORDER_TOP+200+BORDER_BOTTOM)*2)/2;
     rc->right=rc->left + (BORDER_SIDE+320+BORDER_SIDE)*2;
     rc->bottom=rc->top + (BORDER_TOP+200+BORDER_BOTTOM)*2;
-#endif
   }else{
     rc->left=0;
     rc->top=int(using_res_640_400 ? 0:40);
@@ -1408,7 +1400,7 @@ void get_fullscreen_rect(RECT *rc)
 #endif
   }
 }
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 //---------------------------------------------------------------------------
 void init_screen()
 {
@@ -1445,7 +1437,7 @@ void init_screen()
   draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
 #endif
   // This is used to know where to cause the timer B event
-#if defined(SSE_INT_MFP_TIMER_B_392A)
+#if defined(SSE_INT_MFP_TIMER_B_392)
   if(!OPTION_C2)
 #endif
   CALC_CYCLES_FROM_HBL_TO_TIMER_B(shifter_freq);

@@ -209,25 +209,6 @@ const POINT WinSize[4][5]={ {{320,200},{640,400},{960, 600},{1280,800},{-1,-1}},
 {-1,-1}}
 };
 
-#if !defined(SSE_VID_D3D_ONLY) && !defined(SSE_VID_BORDERS_GUI_392)
- POINT WinSizeBorderLarge[4][5]={ 
-{{320+LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)}, 
-{960+(LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,200+(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{640+(LARGE_BORDER_SIDE_WIN*2)*2,400+2*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{1280+(LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+LARGE_BORDER_BOTTOM)},
-{-1,-1}},
-{{800,600},
-{-1,-1}}
-};
-#endif
 
 #if defined(SSE_VID_BORDERS_412)
 
@@ -252,7 +233,7 @@ POINT WinSizeBorderVeryLarge[4][5]={
 };
 #else  // 412*280
 POINT WinSizeBorderVeryLarge[4][5]={ 
-{{320+VERY_LARGE_BORDER_SIDE_WIN*2,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
+{{320+VERY_LARGE_BORDER_SIDE_WIN*2/*TODO*/,200+(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {640+(VERY_LARGE_BORDER_SIDE_WIN*2)*2+2,400+2*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)}, 
 {960+(VERY_LARGE_BORDER_SIDE_WIN*3)*2, 600+3*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
 {1280+(VERY_LARGE_BORDER_SIDE_WIN*4)*2,800+4*(BORDER_TOP+VERY_LARGE_BORDER_BOTTOM)},
@@ -454,10 +435,6 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
 int ChangeBorderSize(int size_in) {
-  //TRACE_LOG("Setting display size to %d (%d)\n",size_in,DISPLAY_SIZE);
-
-  //ASSERT(size_in!=3);
-  
   int size=size_in; // use lost?
   if(size<0||size>BIGGEST_DISPLAY)
     size=0;
@@ -510,7 +487,7 @@ int ChangeBorderSize(int size_in) {
         case 0:
           WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
           break;
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
         case 1:
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
           break;
@@ -533,7 +510,7 @@ int ChangeBorderSize(int size_in) {
           WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
           break;
 #endif
-#endif//#if defined(SSE_VID_D3D_ONLY)
+#endif//#if defined(SSE_VID_D3D)
 #endif//#if defined(SSE_VID_BORDERS_GUI_392)
         }//sw
       }
@@ -1386,7 +1363,7 @@ void CheckResetDisplay(bool NOT_ONEGAME(AlwaysHide))
   if (pc==rom_addr && StemWin && runstate==RUNSTATE_STOPPED && AlwaysHide==0){
     if (ResetInfoWin==NULL){
       if (FullScreen==0) SetWindowLong(StemWin,GWL_STYLE,GetWindowLong(StemWin,GWL_STYLE) | WS_CLIPCHILDREN);
-#if defined(SSE_VID_D3D_ONLY) || defined(SSE_VID_DD_NO_FS_CLIPPER)
+#if defined(SSE_VID_D3D) || defined(SSE_VID_DD_NO_FS_CLIPPER)
       ResetInfoWin=CreateWindow("Steem Reset Info Window","",WS_CHILD,
                             0,0,0,0,HWND(StemWin),(HMENU)9876,Inst,NULL);
 #else

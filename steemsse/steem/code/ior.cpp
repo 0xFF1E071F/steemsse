@@ -387,7 +387,7 @@ Receiver Data Register is retained.
         //  Hatari also counts 4 cycles of wait states
 
         
-#if defined(SSE_INT_MFP_392E) //see below, we put it after the read
+#if defined(SSE_INT_MFP_JAM_AFTER_READ) //see below, we put it after the read
         if(!OPTION_C2)
         {
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
@@ -401,12 +401,8 @@ Receiver Data Register is retained.
         if (addr & 1){
 
 #if defined(SSE_INT_MFP_READ_DELAY_392)
-/*  Explanation for the negative value:
-    Time necessary to copy the register value to the IO lines. But then it
-    is general, not just for data timers...
-*/
           if(OPTION_C2)
-            INSTRUCTION_TIME(-2);
+            INSTRUCTION_TIME(MFP_READ_REGISTER_DELAY);
 #endif
 
           if (addr==0xfffa01){
@@ -478,18 +474,6 @@ Receiver Data Register is retained.
             }
 #endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
-
-#if defined(SSE_INT_MFP_READ_DELAY) // no...
-/*  MC68901 doc:    "
-    Start Timer to Read Timer Error + 0 to – (tpsc + 6tCLK + 400ns)
-    Start Timer to Interrupt Request Error (note 3) - 2tCLK to – (4tCLK + 800ns)"
-    Compare 400ns with 800ns. We interpret this as a short delay between 
-    timeout and IRQ (+-4 cycles). 
-    Steem computes timer timeout on the IRQ basis, so we correct here.
-*/
-              if(OPTION_C2)
-                INSTRUCTION_TIME(MFP_TIMER_DATA_REGISTER_ADVANCE);
-#endif
               mfp_calc_timer_counter(n-MFPR_TADR);
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
               if (n==MFPR_TBDR){
@@ -498,24 +482,14 @@ Receiver Data Register is retained.
                   // Timer B is in event count mode, check if it has counted down since the start of
                   // this instruction. Due to MFP delays this very, very rarely gets changed under 4
                   // cycles from the point of the signal.
-#if defined(SSE_INT_MFP_392E)
-                  //because we were in advance?
+#if defined(SSE_INT_MFP_TIMER_B_392)
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) 
                     >= (OPTION_C2?0:5)){ // >=5 = >4
-#elif defined(SSE_INT_MFP_TIMER_B_392E1)
-                  //why wait more? 
-                  if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) >= 0){
-#elif defined(SSE_INT_MFP_TIMER_B_392E)
-/*  This gives the best result in TIMERB07.TOS without messing TIMERB01.TOS.
-    Maybe there's a problem with my test programs, because it implies IRQ 
-    occurs before the register is updated... doesn't make much sense. :)
-*/
-                  if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) >= 2){
 #else
                   if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4){
 #endif
                     if (!ior_byte
-#if defined(SSE_INT_MFP_TIMER_B_392C)
+#if defined(SSE_INT_MFP_TIMER_B_SUNNY)
 /*  Finally a legit fix for Sunny STE.
 
 	clr.b $fffa1b                                    ; 013A82: 4239 00FF FA1B 
@@ -557,10 +531,6 @@ Receiver Data Register is retained.
                   }
                 }
               }
-#if defined(SSE_INT_MFP_READ_DELAY)
-              if(OPTION_C2)
-                INSTRUCTION_TIME(-MFP_TIMER_DATA_REGISTER_ADVANCE);
-#endif
               LOG_ONLY( DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) log_to(LOGSECTION_MFP_TIMERS,Str("MFP: ")+HEXSl(old_pc,6)+
                       " - Read timer "+char('A'+(n-MFPR_TADR))+" counter as "+ior_byte); )
             }else if (n>=MFPR_SCR){
@@ -571,9 +541,9 @@ Receiver Data Register is retained.
           }
 #if defined(SSE_INT_MFP_READ_DELAY_392)
           if(OPTION_C2)
-            INSTRUCTION_TIME(2);
+            INSTRUCTION_TIME(-MFP_READ_REGISTER_DELAY);
 #endif
-#if defined(SSE_INT_MFP_392E)
+#if defined(SSE_INT_MFP_JAM_AFTER_READ)
 /*  Counting the bus jam after the read makes sense in the way we can
     remove the 'if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4)'
     This seems to fix Down TLN.

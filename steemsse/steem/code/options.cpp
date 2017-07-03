@@ -103,7 +103,7 @@ bool TOptionBox::ChangeBorderModeRequest(int newborder)
 #else
   }else if ((border^newval) & 1){
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     if (FullScreen && draw_fs_blit_mode!=DFSM_LAPTOP){
       if (IDCANCEL==Alert(T("This will cause the monitor to change resolution"),
                 T("Change Border Mode"),MB_OKCANCEL | MB_DEFBUTTON1 | MB_ICONEXCLAMATION)){
@@ -1001,9 +1001,9 @@ void TOptionBox::SetBorder(int newborder)
     change_window_size_for_border_change(oldborder,newborder);
     draw(false);
     InvalidateRect(StemWin,NULL,0);
-#if !(defined(SSE_VID_D3D_ONLY) && defined(SSE_BUGFIX_392))
+#if !(defined(SSE_VID_D3D) && defined(SSE_BUGFIX_392))
     if (Handle) if (GetDlgItem(Handle,210)) EnableWindow(GetDlgItem(Handle,210),border==0 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       && draw_fs_blit_mode!=DFSM_LAPTOP
 #endif
       );
@@ -1124,7 +1124,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 //            This->ChangeOSD(!osd_on);
           }
           break;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         case 204:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int proceed=1,new_mode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);  //carry on, don't change res
@@ -1166,7 +1166,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
         case 206:
           if (HIWORD(wPar)==BN_CLICKED){
             FSDoVsync=!FSDoVsync;
@@ -1181,7 +1181,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
             TRACE_LOG("Option FullScreenDefaultHz = %d\n",OPTION_FULLSCREEN_DEFAULT_HZ);
 #if defined(SSE_VID_GUI_392)
-            if(FullScreen && OPTION_D3D && D3D9_OK)
+            if(FullScreen && D3D9_OK)
               Disp.ScreenChange();
 #endif
           }
@@ -1194,7 +1194,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_FAKE_FULLSCREEN=!OPTION_FAKE_FULLSCREEN;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
             TRACE_LOG("Option FakeFullScreen = %d\n",OPTION_FAKE_FULLSCREEN);
-            if(FullScreen && OPTION_D3D && D3D9_OK)
+            if(FullScreen && D3D9_OK)
               Disp.ScreenChange();
           }
           break;
@@ -1243,21 +1243,21 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
                 draw(false);
                 InvalidateRect(StemWin,NULL,0);
               }
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
               This->UpdateHzDisplay();
 #endif
             }
           }
           break;
 #endif//!defined(SSE_VID_BPP_NO_CHOICE)
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         case 210:
           if (HIWORD(wPar)==BN_CLICKED){
             prefer_res_640_400=!prefer_res_640_400;
             SendMessage(HWND(lPar),BM_SETCHECK,prefer_res_640_400,0);
           }
           break;
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 
 #if defined(SSE_STF)          // option ST model
         case 211:
@@ -1354,7 +1354,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         case 220:case 222:case 224:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int i=(LOWORD(wPar)-220)/2;
@@ -1385,14 +1385,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
         case 226:
           if (HIWORD(wPar)==BN_CLICKED){
             FSQuitAskFirst=!FSQuitAskFirst;
             SendMessage(HWND(lPar),BM_SETCHECK,FSQuitAskFirst,0);
           }
           break;
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
         case 280:
           if (HIWORD(wPar)==BN_CLICKED){
             draw_fs_fx=(SendMessage(HWND(lPar),BM_GETCHECK,0,0)==BST_CHECKED ? DFSFX_GRILLE:DFSFX_NONE);
@@ -1525,7 +1525,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 
 #if !defined(SSE_VID_DD_FS_IS_392)
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
             draw_fs_blit_mode=(OPTION_INTERPOLATED_SCANLINES)?DFSM_STRETCHBLIT:
 #if defined(SSE_VID_D3D2)
               (D3D9_OK && OPTION_D3D) ? DFSM_STRETCHBLIT :
@@ -1533,7 +1533,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               DFSM_STRAIGHTBLIT;
 #endif
 
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES) && !defined(SSE_VID_GUI_IS_AND_PAL)
             Disp.ScreenChange();
 #endif
@@ -1550,7 +1550,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VID_3BUFFER_392)
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_WIN_VSYNC,0);
 #elif defined(SSE_GUI_OPTIONS_REFRESH) 
-#if !defined(SSE_VID_3BUFFER_NO_VSYNC) &&!defined(SSE_VID_D3D_3BUFFER)
+#if !defined(SSE_VID_D3D_3BUFFER)
             if(OPTION_WIN_VSYNC)
               OPTION_3BUFFER=false;
 #endif
@@ -1573,7 +1573,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
         case 1034: // Option Triple Buffer Win
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1590,10 +1590,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if(HIWORD(wPar)==BN_CLICKED)
           {
             OPTION_3BUFFER=!OPTION_3BUFFER;
-#if !defined(SSE_VID_3BUFFER_NO_VSYNC)
             if(OPTION_3BUFFER)
               OPTION_WIN_VSYNC=false;
-#endif
             TRACE_LOG("Option Triple Buffer: %d\n",OPTION_3BUFFER);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER,0); //was disabled in 390?
 #if defined(SSE_GUI_OPTIONS_REFRESH)
@@ -2091,12 +2089,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VID_D3D_OPTION) && !defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D_OPTION) && !defined(SSE_VID_D3D)
         case 7314: // option D3D
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_D3D=!OPTION_D3D;
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D,0);
-#ifndef SSE_VID_D3D_ONLY
+#ifndef SSE_VID_D3D
 #if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_CRISP_OPTION)
@@ -2115,10 +2113,10 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
     EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^!i); 
 #endif
 #endif
-#endif//#ifndef SSE_VID_D3D_ONLY
+#endif//#ifndef SSE_VID_D3D
             TRACE_LOG("Option D3D %d\n",OPTION_D3D);
 
-#ifndef SSE_VID_D3D_ONLY
+#ifndef SSE_VID_D3D
     Disp.ScreenChange();
 #endif
 
@@ -2185,7 +2183,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #if defined(SSE_VID_D3D_382)
             Disp.D3DUpdateWH(Disp.D3DMode);
             TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
-            if(FullScreen && OPTION_D3D && old_mode!=Disp.D3DMode)
+            if(FullScreen && old_mode!=Disp.D3DMode)
             {
 #if defined(SSE_VID_GUI_392)
               Disp.ScreenChange();
@@ -2229,12 +2227,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
 #if defined(SSE_VID_D3D_382)
-            if(FullScreen && OPTION_D3D && D3D9_OK)
-#if defined(SSE_VID_D3D_FS_392A__)
-              Disp.ScreenChange();
-#else
+            if(FullScreen && D3D9_OK)
               Disp.D3DSpriteInit();
-#endif
 #endif
           }
           break;

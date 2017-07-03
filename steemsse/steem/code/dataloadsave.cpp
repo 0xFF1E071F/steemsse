@@ -216,10 +216,6 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     pli.buffer=Buf;
     pli.bufSize=8192;
     pasti->LoadConfig(&pli,NULL);
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    // SetDisk() is called before OptionBox.LoadData()
-    OPTION_PASTI_JUST_STX=pCSF->GetInt("Pasti","PastiJustStx",OPTION_PASTI_JUST_STX);
-#endif
   }
 #endif
 
@@ -408,10 +404,8 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
       p=val+strlen(val)+1;
     }
   }
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(OPTION_PASTI_JUST_STX));  
-#elif SSE_VERSION>391
-  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(true));  
+#if defined(SSE_DISK_PASTI)
+  pCSF->SetStr("Pasti","PastiJustStx",EasyStr(true));  // legacy for older versions
 #endif
 #endif
 
@@ -440,26 +434,17 @@ bool TDiskManager::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Disks","Disk_B_DiskInZip",FloppyDrive[1].DiskInZip);
 
   if (FinalSave){
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    {//scope
-    bool pasti_active_save=pasti_active; //3.6.1, because RemoveDisk clears it
-#endif
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
     // keep manager info for final snapshot save or pasti state not saved
-    //TImageType save_type[2]={SF314[0].ImageType,SF314[1].ImageType};//BCC don't like that
     TImageType save_type[2];
     save_type[0]=SF314[0].ImageType;
     save_type[1]=SF314[1].ImageType;
 #endif
     FloppyDrive[0].RemoveDisk();
     FloppyDrive[1].RemoveDisk();
-#if defined(SSE_DISK_PASTI_AUTO_SWITCH4B)
+#if defined(SSE_DISK_PASTI_AUTO_SWITCH)
     SF314[0].ImageType=save_type[0];
     SF314[1].ImageType=save_type[1];
-#endif
-#if defined(SSE_DISK_PASTI_ONLY_STX)
-    pasti_active=pasti_active_save; //we want correct state saved
-    }
 #endif
   }
 
@@ -913,7 +898,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
     SSEConfig.SwitchSTType(ST_TYPE);
 #endif
-#if defined(SSE_CPU_MFP_RATIO_OPTION2)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
     OPTION_CPU_CLOCK=pCSF->GetInt("Options","FinetuneCPUclock",OPTION_CPU_CLOCK);
     CpuCustomHz=pCSF->GetInt("Machine","CpuCustomHz",CpuCustomHz);
 #endif
@@ -999,15 +984,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_VID_3BUFFER_392) // It's 2 options now
     OPTION_3BUFFER_FS=pCSF->GetInt("Display","TripleBufferFS",OPTION_3BUFFER_FS);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     OPTION_3BUFFER_WIN=pCSF->GetInt("Display","TripleBufferWin",OPTION_3BUFFER_WIN);
 #endif
 #elif defined(SSE_VID_3BUFFER)
     OPTION_3BUFFER=pCSF->GetInt("Display","TripleBuffer",OPTION_3BUFFER);
-#endif
-#if defined(SSE_VID_D3D_OPTION) &&!defined(SSE_VID_D3D_ONLY)
-    OPTION_D3D=pCSF->GetInt("Options","Direct3D",OPTION_D3D);
-    Disp.ScreenChange();
 #endif
 #if defined(SSE_GUI_ST_AR_OPTION)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
@@ -1125,11 +1106,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     frameskip=pCSF->GetInt("Options","FrameSkip",frameskip);
 #endif
 //    osd_on=(bool)pCSF->GetInt("Options","OSD",osd_on);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     draw_fs_blit_mode=pCSF->GetInt("Options","DrawFSMode",draw_fs_blit_mode);
 #endif
     FSDoVsync=(bool)pCSF->GetInt("Display","FSDoVsync",FSDoVsync);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     prefer_res_640_400=(bool)pCSF->GetInt("Display","Prefer640x400",prefer_res_640_400);
 #endif
 #if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
@@ -1141,7 +1122,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
       "FakeFullScreen",OPTION_FAKE_FULLSCREEN);
 #endif
     ResChangeResize=(bool)pCSF->GetInt("Display","ResChangeResize",ResChangeResize);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     draw_fs_fx=pCSF->GetInt("Options","InterlaceMode",draw_fs_fx);
     if (draw_fs_fx==DFSFX_BLUR) draw_fs_fx=DFSFX_NONE;
 #endif
@@ -1153,12 +1134,12 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     int sl=pCSF->GetInt("Display","DrawWinMode_LowRes",-1);
     int sm=pCSF->GetInt("Display","DrawWinMode_MedRes",-1);
     if (sl<0){
-#if defined(SSE_VID_D3D_ONLY)
+#if defined(SSE_VID_D3D)
       sl=sm=DWM_NOSTRETCH;
 #else
       sl=sm=int((draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) ? DWM_STRETCH:DWM_NOSTRETCH);
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
       if (draw_fs_fx==DFSFX_GRILLE && sl==DWM_NOSTRETCH) sl=sm=DWM_GRILLE;
 #endif
     }
@@ -1204,7 +1185,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     gamma[2]=pCSF->GetInt("Options","GammaB",gamma[2]);
 #endif
     make_palette_table(brightness,contrast);
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
     for (int c16=0;c16<2;c16++){
       Str c256=LPSTR(c16 ? "":"_256");
       for (int res=0;res<3;res++){
@@ -1212,7 +1193,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
         tested_pc_hz[c16][res]=(WORD)pCSF->GetInt("Options",Str("TestedHz_")+res+c256,tested_pc_hz[c16][res]);
       }
     }
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
     Disp.DoAsyncBlit=pCSF->GetInt("Options","DoAsyncBlit",Disp.DoAsyncBlit);
 
     ScreenShotFol=pCSF->GetStr("Options","ScreenShotFol",WriteDir+SLASH+"screenshots");
@@ -1481,7 +1462,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 
   pCSF->SetStr("Options","FrameSkip",EasyStr(frameskip));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   pCSF->SetStr("Options","DrawFSMode",EasyStr(draw_fs_blit_mode));
 #endif
   pCSF->SetStr("Display","FSDoVsync",LPSTR(FSDoVsync ? "1":"0"));
@@ -1492,7 +1473,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_D3D_FAKE_FULLSCREEN)
   pCSF->SetStr("Display","FakeFullScreen", EasyStr(OPTION_FAKE_FULLSCREEN));
 #endif
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   pCSF->SetStr("Display","Prefer640x400",LPSTR(prefer_res_640_400 ? "1":"0"));
 #endif
   pCSF->SetStr("Options","ShowToolTips",EasyStr(ShowTips));
@@ -1544,14 +1525,14 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_3BUFFER_392)
   pCSF->SetStr("Display","TripleBufferFS",EasyStr(OPTION_3BUFFER_FS));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   pCSF->SetStr("Display","TripleBufferWin",EasyStr(OPTION_3BUFFER_WIN));
 #endif
 #elif defined(SSE_VID_3BUFFER)
   pCSF->SetStr("Display","TripleBuffer",EasyStr(OPTION_3BUFFER));
 #endif
-#if defined(SSE_VID_D3D_OPTION)
-  pCSF->SetStr("Display","Direct3D",EasyStr(OPTION_D3D)); 
+#if defined(SSE_VID_D3D) // for older versions
+  pCSF->SetStr("Display","Direct3D",EasyStr(true)); 
 #endif
 #if defined(SSE_GUI_ST_AR_OPTION)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
@@ -1657,7 +1638,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","SlowMotionSpeed",EasyStr(slow_motion_speed));
 
   pCSF->SetStr("Options","Page",EasyStr(Page));
-#if !defined(SSE_VID_D3D_ONLY)
+#if !defined(SSE_VID_D3D)
   for (int c16=0;c16<2;c16++){
     Str c256=LPSTR(c16 ? "":"_256");
     for (int res=0;res<3;res++){
@@ -1666,7 +1647,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
     }
   }
   pCSF->SetInt("Options","InterlaceMode",draw_fs_fx);
-#endif//#if !defined(SSE_VID_D3D_ONLY)
+#endif//#if !defined(SSE_VID_D3D)
   pCSF->SetInt("Options","DoAsyncBlit",Disp.DoAsyncBlit);
 
   pCSF->SetStr("Options","Volume",EasyStr(MaxVolume));
@@ -1760,7 +1741,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_STF)
   pCSF->SetStr("Machine","STType",EasyStr(ST_TYPE));
 #endif
-#if defined(SSE_CPU_MFP_RATIO_OPTION2)
+#if defined(SSE_CPU_MFP_RATIO_OPTION)
   pCSF->SetStr("Options","FinetuneCPUclock",EasyStr(OPTION_CPU_CLOCK));
   pCSF->SetStr("Machine","CpuCustomHz",EasyStr(CpuCustomHz));
 #endif

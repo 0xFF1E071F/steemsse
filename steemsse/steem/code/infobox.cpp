@@ -393,7 +393,7 @@ void TGeneralInfo::CreateAboutPage()
 #elif defined(UNIX)
   Text+="Unix32 "
 #endif
-#if !defined(SSE_NO_DD)
+#if defined(SSE_VID_DD)
   Text+="DD ";
 #endif
 #if defined(SSE_VID_D3D)
