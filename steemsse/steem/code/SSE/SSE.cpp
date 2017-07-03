@@ -46,6 +46,6 @@ void TOsdControl::StartScroller(EasyStr text) {
 
 #endif
 
-#endif
+#endif//#if defined(SSE_BUILD)
 
 

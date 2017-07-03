@@ -100,6 +100,10 @@ void TOption::Init() {
 
 TConfig SSEConfig;
 
+#if defined(SSE_GUI_FONT_FIX)
+HFONT my_gui_font=NULL; // use global, not member, because of constructor order
+#endif
+
 TConfig::TConfig() {
 #ifdef WIN32
   ZeroMemory(this,sizeof(TConfig));
@@ -107,6 +111,48 @@ TConfig::TConfig() {
   memset(this,0,sizeof(TConfig));
 #endif
 }
+
+TConfig::~TConfig() {
+#if defined(SSE_GUI_FONT_FIX)
+  if(my_gui_font)
+  {
+    DeleteObject(my_gui_font); // free Windows resource
+#ifndef LEAN_AND_MEAN
+    my_gui_font=NULL;
+#endif
+  }
+#endif
+}
+
+#if defined(SSE_GUI_FONT_FIX)
+/*  Steem used DEFAULT_GUI_FONT at several places to get the GUI font.
+    On some systems it is different, and it can seriously mess the GUI.
+    With this mod, we create a logical font with the parameters of
+    DEFAULT_GUI_FONT on a normal system.
+    Only if it fails do we use DEFAULT_GUI_FONT.
+    Notice that this function is called as soon as needed, which is
+    in a constructor. That means we can't reliably use TRACE() here.
+*/
+
+HFONT TConfig::GuiFont() {
+  if(my_gui_font==NULL)
+  {
+    my_gui_font=CreateFont(-11, 0, 0, 0, FW_NORMAL, 0, 0, 0, ANSI_CHARSET, 
+      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE,
+      "MS Shell Dlg");
+    ASSERT(my_gui_font);
+    if(!my_gui_font) // fall back
+      my_gui_font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);
+#ifdef SSE_DEBUG__
+    LOGFONT fi;
+    GetObject(my_gui_font,sizeof(fi),&fi);
+#endif
+  }
+  return my_gui_font;
+}
+
+#endif
+
 
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE) 
 

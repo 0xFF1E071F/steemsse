@@ -1884,6 +1884,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible
+
 #endif//bugfix
 
 #else//!SS
