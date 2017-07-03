@@ -125,9 +125,11 @@ LRESULT __stdcall NotifyInitWndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       GetClientRect(Win,&rc);
 
       DC=GetDC(Win);
-
+#if defined(SSE_GUI_FONT_FIX)
+      SelectObject(DC,SSEConfig.GuiFont());
+#else
       SelectObject(DC,GetStockObject(DEFAULT_GUI_FONT));
-
+#endif
       HBRUSH br=CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
       FillRect(DC,&rc,br);
       DeleteObject(br);

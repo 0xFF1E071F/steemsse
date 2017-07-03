@@ -1129,13 +1129,15 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 }
 //---------------------------------------------------------------------------
 
-
 //#define LOGSECTION LOGSECTION_INIT //SS
 
 bool MakeGUI()
 {
+#if defined(SSE_GUI_FONT_FIX)
+  fnt=SSEConfig.GuiFont();
+#else
 	fnt=(HFONT)GetStockObject(DEFAULT_GUI_FONT);
-
+#endif
   MidGUIRGB=GetMidColour(GetSysColor(COLOR_3DFACE),GetSysColor(COLOR_WINDOW));
   DkMidGUIRGB=GetMidColour(GetSysColor(COLOR_3DFACE),MidGUIRGB);
 

@@ -198,8 +198,12 @@ struct TConfig {
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();
+  ~TConfig();
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
   int GetBitsPerPixel();
+#endif
+#if defined(SSE_GUI_FONT_FIX)
+  HFONT GuiFont();
 #endif
 #if defined(SSE_STF)
   int SwitchSTType(int new_type); // adapt to new machine

@@ -257,9 +257,13 @@ compatible only with the STF"));
 
   Wid=GetTextSize(Font,T("Monitor")).Width;
   CreateWindow("Static",T("Monitor"),WS_CHILD,page_l,y+4,Wid,20,Handle,HMENU(8091),HInstance,NULL);
-
+#ifdef TEST02
+  Win=CreateWindow("Combobox","",WS_CHILD|WS_TABSTOP|CBS_DROPDOWNLIST|WS_VSCROLL,
+            page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)8200,HInstance,NULL);
+#else
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
-                          page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)8200,HInstance,NULL);
+         page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)8200,HInstance,NULL);
+#endif
   CBAddString(Win,T("Colour")+" ("+T("Low/Med Resolution")+")");
   CBAddString(Win,T("Monochrome")+" ("+T("High Resolution")+")");
 #ifndef NO_CRAZY_MONITOR

@@ -30,7 +30,11 @@ TStemDialog::TStemDialog()
 {
   Handle=NULL;
   Focus=NULL;
+#if defined(SSE_GUI_FONT_FIX)
+  Font=SSEConfig.GuiFont();
+#else
   Font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);
+#endif
   Left=100;Top=100;
   FSLeft=50;FSTop=50;
 
