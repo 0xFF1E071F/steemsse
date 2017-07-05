@@ -1118,26 +1118,11 @@ void event_scanline()
   screen_event_pointer++;
 #endif
 
-#if !defined(SSE_VID_D3D_3BUFFER)
 #if defined(SSE_VID_DD_3BUFFER_WIN)
-
-#if defined(SSE_VID_3BUFFER_392)
   // DirectDraw Check for Window VSync at each ST scanline!
   if(OPTION_3BUFFER_WIN && !FullScreen)
     Disp.BlitIfVBlank();
-
-#else
-
-  if(OPTION_3BUFFER && !(scan_y%2)
-#if !defined(SSE_VID_3BUFFER_FS)
-    && !FullScreen
 #endif
-    )
-    Disp.BlitIfVBlank();
-#endif
-
-#endif
-#endif//#if !defined(SSE_VID_D3D_3BUFFER)
 
 #if defined(SSE_GLUE)
   Glue.Status.hbi_done=false;
@@ -1252,21 +1237,8 @@ void event_vbl_interrupt() //SS misleading name?
   if (draw_lock){
     draw_end();
 #if defined(SSE_VID_DD_3BUFFER_WIN)
-#if defined(SSE_VID_3BUFFER_392) && !defined(SSE_VID_D3D)
     if (VSyncing==0 && !OPTION_3BUFFER_WIN)
       draw_blit();
-#else
-    if (VSyncing==0 
-#if !defined(SSE_VID_D3D_3BUFFER)
-      &&( !OPTION_3BUFFER
-#if !defined(SSE_VID_3BUFFER_FS)
-      || FullScreen
-#endif
-      )
-#endif//#if !defined(SSE_VID_D3D_3BUFFER)
-      )
-      draw_blit();
-#endif
 #else
     if (VSyncing==0) draw_blit();
 #endif
@@ -1433,20 +1405,10 @@ void event_vbl_interrupt() //SS misleading name?
   LOOP{
     timer=timeGetTime();
 
-#if defined(SSE_VID_DD_3BUFFER_WIN) && !defined(SSE_VID_D3D)
-#if defined(SSE_VID_3BUFFER_392) 
+#if defined(SSE_VID_DD_3BUFFER_WIN)
     if(OPTION_3BUFFER_WIN && !FullScreen)
       Disp.BlitIfVBlank();
-#else
-  if(OPTION_3BUFFER
-#if !defined(SSE_VID_3BUFFER_FS)
-    && !FullScreen
 #endif
-    )
-    Disp.BlitIfVBlank();
-#endif//defined(SSE_VID_3BUFFER_392)
-#endif
-
 
     // Break if used up enough time and processed at least 3 messages
     if (int(frame_delay_timeout-timer)<=time_for_exact_limit && m>=3) break;
@@ -1484,13 +1446,12 @@ void event_vbl_interrupt() //SS misleading name?
     int time_to_sleep=(int(frame_delay_timeout)-int(timeGetTime()))-time_for_exact_limit;
     if (time_to_sleep>0){
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Sleeping for ")+time_to_sleep);
-#if !defined(SSE_VID_D3D_3BUFFER)
+
 #if defined(SSE_VID_DD_3BUFFER_WIN)
 /*  This is the part responsible for high CPU use.
     Sleep(1) is sure to make us miss VBLANK.
     Maybe check probability of VBLANK but it depends on HZ
 */
-#if defined(SSE_VID_3BUFFER_392)
       if(OPTION_3BUFFER_WIN && !FullScreen)
       {
         int limit=(int)(frame_delay_timeout)-(int)(time_for_exact_limit);
@@ -1499,22 +1460,7 @@ void event_vbl_interrupt() //SS misleading name?
         }while( (int)(timeGetTime())<limit);
       }
       else
-#else
-      if(OPTION_3BUFFER
-#if !defined(SSE_VID_3BUFFER_FS)
-        && !FullScreen
 #endif
-        )
-      {
-        int limit=(int)(frame_delay_timeout)-(int)(time_for_exact_limit);
-        do {
-          Disp.BlitIfVBlank();
-        }while( (int)(timeGetTime())<limit);
-      }
-      else
-#endif
-#endif
-#endif//#if !defined(SSE_VID_D3D_3BUFFER)
       Sleep(DWORD(time_to_sleep));
 
     }
@@ -1535,21 +1481,12 @@ void event_vbl_interrupt() //SS misleading name?
       // Wait until desired time (to nearest 1000th of a second).
       do{
         timer=timeGetTime();
-#if !defined(SSE_VID_D3D_3BUFFER)
+
 #if defined(SSE_VID_DD_3BUFFER_WIN)
-#if defined(SSE_VID_3BUFFER_392)
         if(OPTION_3BUFFER_WIN && !FullScreen)
           Disp.BlitIfVBlank();
-#else
-        if(OPTION_3BUFFER //&& OPTION_WIN_VSYNC
-#if !defined(SSE_VID_3BUFFER_FS)
-          && !FullScreen 
 #endif
-          )
-          Disp.BlitIfVBlank();
-#endif//#if defined(SSE_VID_3BUFFER_392)
-#endif
-#endif
+
       }while (int(frame_delay_timeout-timer)>0);
       log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: Finished speed limiting at ")+(timer-run_start_time));
 

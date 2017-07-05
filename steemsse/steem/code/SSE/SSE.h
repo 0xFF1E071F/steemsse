@@ -1026,7 +1026,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_VID_SDL        // Simple DirectMedia Layer (TODO?)
 
 // no crash...
-#define SSE_VID_ADJUST_DRAWING_ZONE1 // attempt to avoid crash DD+D3D
+#define SSE_VID_ADJUST_DRAWING_ZONE1 // attempt to avoid crash DD
 #define SSE_VID_ADJUST_DRAWING_ZONE2 // DD+D3D
 #define SSE_VID_ANTICRASH_392
 #define SSE_VID_CHECK_POINTERS
@@ -1046,14 +1046,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_GAMMA
 #define SSE_VID_GUI_392
 #define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
-#if defined(SSE_VID_3BUFFER)
-#define SSE_VID_3BUFFER_FS // fullscreen
-#define SSE_VID_3BUFFER_392 // reorganise triple buffer
-#endif
 
 #if defined(WIN32)
 #define SSE_VID_2SCREENS //392
 #define SSE_VID_3BUFFER // Triple Buffering
+#if defined(SSE_VID_3BUFFER)
+#define SSE_VID_3BUFFER_FS // fullscreen Triple Buffering // DD + D3D
+#endif
 #define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
 #define SSE_VID_BORDERS // optional larger borders
 #define SSE_VID_FREEIMAGE // mods in use of this plugin
@@ -1064,6 +1063,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_SCANLINES_INTERPOLATED_392
 #define SSE_VID_SCANLINES_INTERPOLATED_392B // mixed output
 #define SSE_VID_ST_ASPECT_RATIO // like SainT, higher pixels
+#if defined(SSE_VID_ST_ASPECT_RATIO)
+#define SSE_VID_ST_ASPECT_RATIO_WIN
+#endif
 #define SSE_VID_VSYNC_WINDOW // yeah!
 #endif//WIN32
 
@@ -1090,19 +1092,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_VID_D3D)
 
-#define SSE_VID_D3D1 //adaptation
-#define SSE_VID_D3D2 //adaptation
 #define SSE_VID_D3D_LIST_MODES // player can choose
-#define SSE_VID_D3D_OPTION
-#define SSE_VID_D3D_OPTION5//enable/disable DD options
-#define SSE_VID_D3D_STRETCH
-#if defined(SSE_VID_ST_ASPECT_RATIO)
-#define SSE_VID_D3D_ST_ASPECT_RATIO 
-#endif
-#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 #define SSE_VID_D3D_CRISP //D3D can do that
 #define SSE_VID_D3D_CRISP_OPTION //the harder part!
-#define SSE_VID_D3D_373 // avoid crash
 #define SSE_VID_D3D_382
 #if defined(SSE_VID_3BUFFER_FS)
 #define SSE_VID_D3D_3BUFFER
@@ -1111,42 +1103,41 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_D3D_390
 #define SSE_VID_D3D_390B // update BLIT ERROR message
 #define SSE_VID_D3D_CRISP_390
-#define SSE_VID_D3D_CHECK_HARDWARE
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
 #define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
 #define SSE_VID_D3D_FS_392C // double creation at "activate"?
 #define SSE_VID_D3D_FS_392D // memorise d3dpp
 #define SSE_VID_D3D_FS_392D1 // delete/create texture with sprite
 #define SSE_VID_D3D_FS_392D1B // pic at start
+#define SSE_VID_D3D_CHECK_HARDWARE
+#define SSE_VID_D3D_FS_DEFAULT_HZ
+#define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
+#define SSE_VID_D3D_SCREENSHOT
+#if defined(SSE_VID_ST_ASPECT_RATIO)
+#define SSE_VID_D3D_ST_ASPECT_RATIO 
+#endif
+#define SSE_VID_D3D_STRETCH
+#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 
 #endif//d3d
 
 #ifdef SSE_VID_DD // DirectDraw
+
 #define SSE_VID_DD_BLIT_TRY_BLOCK //useless?
 #define SSE_VID_DD_FS_32BIT
+#define SSE_VID_DD_FS_IS_392
 #define SSE_VID_RECORD_AVI //avifile not so good 
 #define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
 #define SSE_VID_DD_SCREENSHOT_391
 #if defined(SSE_VID_3BUFFER)
-#define SSE_VID_DD_3BUFFER_WIN // windowed mode
+#define SSE_VID_3BUFFER_WIN // window Triple Buffering (DD)
+#define SSE_VID_DD_3BUFFER_WIN
 #endif
-#define SSE_VID_DD_FS_IS_392 // don't change the option, ignore it
-#endif
-
 #if defined(SSE_VID_ST_ASPECT_RATIO)
-
-#define SSE_GUI_ST_AR_OPTION
-
+#define SSE_VID_DD_ST_ASPECT_RATIO 
 #endif
 
-
-#if defined(SSE_VID_D3D)
-
-#define SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ
-#define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
-#define SSE_VID_D3D_SCREENSHOT
-
-#endif
+#endif//dd
 
 
 #if defined(SSE_VID_EXT_MON)
@@ -1163,20 +1154,13 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_VID_FREEIMAGE1 //init library
 #define SSE_VID_FREEIMAGE2 //always convert pixels
-#define SSE_VID_FREEIMAGE3 //flip pic
-#define SSE_VID_FREEIMAGE3 //remove WBMP
+#define SSE_VID_FREEIMAGE3 //flip pic + remove WBMP
 #if defined(SSE_DELAY_LOAD_DLL) && !defined(MINGW_BUILD) //TODO check this again
 #define SSE_VID_FREEIMAGE4 // use official header
 #endif
 
 #endif//freeimage
 
-
-#if defined(SSE_VID_SDL)
-
-#define SSE_VID_SDL_DEACTIVATE
-
-#endif//sdl
 
 #if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D) && !defined(BCC_BUILD)
 #define SSE_VID_D3D_2SCREENS // don't think there will be DD version (Win 2000 min)

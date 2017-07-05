@@ -470,7 +470,7 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       ddsd.ddsCaps.dwCaps|=DDSCAPS_FLIP | DDSCAPS_COMPLEX;
       ddsd.dwFlags|=DDSD_BACKBUFFERCOUNT;
       ddsd.dwBackBufferCount=1;
-#if defined(SSE_VID_3BUFFER_392)
+#if defined(SSE_VID_3BUFFER_FS)
       // In fullscreen mode, this is as simple as that, like in the D3D build.
       if(OPTION_3BUFFER_FS)
         ddsd.dwBackBufferCount++;
@@ -519,17 +519,8 @@ HRESULT SteemDisplay::DDCreateSurfaces()
     return DDError("SetClipper FAILED",Ret);
   }
 
-#if defined(SSE_VID_3BUFFER_FS) && !defined(SSE_VID_3BUFFER_392)
-/*  When option Triple Buffer is set, we use the same system for fullscreen
-    stretch mode as for window. 
-    392 : not anymore
-*/
-  if(!FullScreen || OPTION_3BUFFER) 
-#else
   if (FullScreen==0)
-#endif
-
-    {
+  {
     if (DrawToVidMem==0) ExtraFlags=DDSCAPS_SYSTEMMEMORY; // Like malloc
     for (int n=0;n<2;n++){
 #if defined(SSE_VID_DD7)
@@ -585,30 +576,16 @@ HRESULT SteemDisplay::DDCreateSurfaces()
       }else{
 #if defined(SSE_VID_DD_3BUFFER_WIN)
         // Let's create a second back surface for our "triple buffer"
-#if defined(SSE_VID_3BUFFER_392)
         if(OPTION_3BUFFER_WIN)
-#else
-        if(OPTION_3BUFFER)
-#endif
         {
           Ret=DDObj->CreateSurface(&DDBackSurDesc,&DDBackSur2,NULL);
           if(Ret!=DD_OK)
           {
             REPORT_DD_ERR("DDBackSur2",Ret);
             DDBackSur2=NULL; // doc doesn't state it is null
-#if !defined(SSE_VID_3BUFFER_392)
-            OPTION_3BUFFER=false; // reset option
-#if defined(SSE_GUI_OPTIONS_REFRESH)
-            OptionBox.SSEUpdateIfVisible(); 
-#endif
-#endif
           }
           VSyncTiming=0;
           SurfaceToggle=true; // will be toggled false at first lock
-#if !defined(SSE_VID_3BUFFER_392)
-          if(FullScreen)
-            draw_fs_blit_mode=DFSM_STRETCHBLIT; // only working one
-#endif
         }
 #endif
         break;
@@ -791,7 +768,7 @@ bool SteemDisplay::InitGDI()
 
 HRESULT SteemDisplay::Lock() // SS called by draw_begin()
 {
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Lock();
@@ -830,11 +807,7 @@ HRESULT SteemDisplay::Lock() // SS called by draw_begin()
 #else
       IDirectDrawSurface *OurBackSur;
 #endif
-#if defined(SSE_VID_3BUFFER_392)
       if(OPTION_3BUFFER_WIN && DDBackSur2)
-#else
-      if(OPTION_3BUFFER && DDBackSur2)
-#endif
       {
         SurfaceToggle=!SurfaceToggle; // toggle at lock
         OurBackSur=(SurfaceToggle) ? DDBackSur2: DDBackSur;
@@ -889,7 +862,7 @@ HRESULT SteemDisplay::Lock() // SS called by draw_begin()
 //---------------------------------------------------------------------------
 void SteemDisplay::Unlock()
 {
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Unlock();
@@ -912,13 +885,8 @@ void SteemDisplay::Unlock()
 #else
     IDirectDrawSurface 
 #endif
-      *OurBackSur=
-#if defined(SSE_VID_3BUFFER_392)
-      (OPTION_3BUFFER_WIN && DDBackSur2 && SurfaceToggle) 
-      ? DDBackSur2:DDBackSur;
-#else
-      (OPTION_3BUFFER && DDBackSur2 && SurfaceToggle) ? DDBackSur2:DDBackSur;
-#endif
+      *OurBackSur=(OPTION_3BUFFER_WIN && DDBackSur2 && SurfaceToggle) 
+        ? DDBackSur2 : DDBackSur;
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
     // moved here because now we draw garbage after lock (note: DD-only)
       if(COLOUR_MONITOR && shifter_last_draw_line==400)
@@ -1009,23 +977,8 @@ void SteemDisplay::VSync()
   BOOL Blanking=FALSE;
   DDObj->GetVerticalBlankStatus(&Blanking);
   if (Blanking==FALSE){
-#if defined(SSE_VID_DD_FS_MAXRES)
+#if defined(SSE_VID_VSYNC_WINDOW)
     DWORD botline=GetScreenHeight(); // simpler and compatible with max res
-#elif defined(SSE_VID_VSYNC_WINDOW)
-    DWORD botline; //=480-40;
-    if(FullScreen)
-#if defined(SSE_VID_BORDERS_GUI_392)
-      if (border)
-#else
-      if (border & 1)
-#endif
-        botline=600-40;
-      else if (using_res_640_400)
-        botline=400-40;
-      else
-        botline=480-40;
-    else // window
-      botline=GetScreenHeight();    
 #else
     DWORD botline=480-40;
     if (border & 1){
@@ -1055,7 +1008,7 @@ void SteemDisplay::VSync()
 //---------------------------------------------------------------------------
 bool SteemDisplay::Blit()
 {
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Blit();
@@ -1107,18 +1060,14 @@ bool SteemDisplay::Blit()
                 draw_blit_source_rect.right/=2; 
 #endif
 
-#if defined(SSE_VID_3BUFFER_FS)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 #if defined(SSE_VID_DD7)
             IDirectDrawSurface7 
 #else
             IDirectDrawSurface 
 #endif
               *OurBackSur;
-#if defined(SSE_VID_3BUFFER_392)
             if(OPTION_3BUFFER_WIN && DDBackSur2)
-#else
-            if(OPTION_3BUFFER && DDBackSur2)
-#endif
             {
               OurBackSur=(!SurfaceToggle) ? DDBackSur2:DDBackSur;
               
@@ -1187,14 +1136,8 @@ bool SteemDisplay::Blit()
 #else
           IDirectDrawSurface 
 #endif
-            *OurBackSur=
-#if defined(SSE_VID_3BUFFER_392)
-            (OPTION_3BUFFER_WIN && !SurfaceToggle && DDBackSur2)
-#else
-            (OPTION_3BUFFER && !SurfaceToggle && DDBackSur2) 
-#endif
-            ? DDBackSur2: DDBackSur;
-
+            *OurBackSur= (OPTION_3BUFFER_WIN && !SurfaceToggle && DDBackSur2)
+              ? DDBackSur2: DDBackSur;
           hRet=DDPrimarySur->Blt(&Dest,OurBackSur,&draw_blit_source_rect,
             DDBLT_WAIT,NULL);
 #else
@@ -1234,19 +1177,14 @@ bool SteemDisplay::Blit()
 #endif
 
       for (int i=0;i<2;i++){
-#if defined(SSE_VID_3BUFFER)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 #if defined(SSE_VID_DD7)
         IDirectDrawSurface7 
 #else
         IDirectDrawSurface 
 #endif
-          *OurBackSur=
-#if defined(SSE_VID_3BUFFER_392)
-          (OPTION_3BUFFER_WIN && !SurfaceToggle && DDBackSur2) 
-          ? DDBackSur2:DDBackSur;
-#else
-          (OPTION_3BUFFER && !SurfaceToggle && DDBackSur2) ? DDBackSur2:DDBackSur;
-#endif
+          *OurBackSur=(OPTION_3BUFFER_WIN && !SurfaceToggle && DDBackSur2) 
+            ? DDBackSur2:DDBackSur;
         hRet=OurBackSur->GetBltStatus(DDGBS_CANBLT); // for surface lost
         if(hRet==DD_OK)
           hRet=DDPrimarySur->Blt(&dest,OurBackSur,&draw_blit_source_rect,
@@ -1375,7 +1313,7 @@ void SteemDisplay::RunStart(bool Temp)
   {
     float stx=STXPixels();
     float sty=STYPixels();
-#if defined(SSE_VID_ST_ASPECT_RATIO)
+#if defined(SSE_VID_DD_ST_ASPECT_RATIO)
     if(OPTION_ST_ASPECT_RATIO && screen_res<2)
       sty*=ST_ASPECT_RATIO_DISTORTION; // "reserve" more pixels
 #endif
@@ -1464,19 +1402,14 @@ void SteemDisplay::RunEnd(bool Temp)
     SaveSurDesc.dwHeight=h;
     hRet=DDObj->CreateSurface(&SaveSurDesc,&SaveSur,NULL);
     if (hRet==DD_OK){
-#if defined(SSE_VID_3BUFFER_FS)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
 #if defined(SSE_VID_DD7)
       IDirectDrawSurface7 
 #else
       IDirectDrawSurface 
 #endif
-        *OurBackSur=
-#if defined(SSE_VID_3BUFFER_392)
-        (OPTION_3BUFFER_WIN && DDBackSur2 && !SurfaceToggle) 
-        ? DDBackSur2: DDBackSur;
-#else
-        (OPTION_3BUFFER && DDBackSur2 && !SurfaceToggle) ? DDBackSur2: DDBackSur;
-#endif
+        *OurBackSur= (OPTION_3BUFFER_WIN && DDBackSur2 && !SurfaceToggle) 
+          ? DDBackSur2: DDBackSur;
       hRet=SaveSur->Blt(&rcDest,OurBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
 #else
       hRet=SaveSur->Blt(&rcDest,DDBackSur,&draw_blit_source_rect,DDBLT_WAIT,NULL);
@@ -1661,7 +1594,7 @@ void SteemDisplay::ScreenChange()
 {
   draw_end();
   TRACE_LOG("ScreenChange()\n");
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
     SDL.EnterSDLVideoMode(); 
@@ -1705,12 +1638,6 @@ void SteemDisplay::ChangeToFullScreen()
     ) return;
 
   TRACE_LOG("Going fullscreen...\n");
-
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_D3D)\
-  && !defined(SSE_VID_DD_FS_IS_392)
-  if(SCANLINES_INTERPOLATED)
-    draw_fs_blit_mode=DFSM_STRETCHBLIT; // only compatible FS mode
-#endif
 
   draw_end();
   if (runstate==RUNSTATE_RUNNING){
@@ -2038,11 +1965,7 @@ HRESULT SteemDisplay::RestoreSurfaces()
     if (hRet==DD_OK){
       hRet=DDBackSur->Restore();
 #if defined(SSE_VID_DD_3BUFFER_WIN)
-#if defined(SSE_VID_3BUFFER_392)
       if(OPTION_3BUFFER_WIN && hRet==DD_OK && DDBackSur2) 
-#else
-      if(OPTION_3BUFFER && hRet==DD_OK && DDBackSur2) 
-#endif
         hRet=DDBackSur2->Restore();
       SurfaceToggle=true;
       VSyncTiming=0;
@@ -3186,13 +3109,11 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3dpp.hDeviceWindow=StemWin;
   UINT Width=monitor_width; // default
   UINT Height=monitor_height;
-#if defined(SSE_VID_3BUFFER_392)
-  d3dpp.BackBufferCount=((OPTION_3BUFFER_FS&&FullScreen)?2:1);
-#elif defined(SSE_VID_D3D_382)
-  d3dpp.BackBufferCount=((OPTION_3BUFFER&&FullScreen)?2:1);
-#else
-  d3dpp.BackBufferCount=1;  
+  d3dpp.BackBufferCount=
+#if defined(SSE_VID_3BUFFER_FS)
+    (OPTION_3BUFFER_FS&&FullScreen)?2: // as simple as this
 #endif
+    1;
 #if defined(SSE_VID_D3D_LIST_MODES)
   if(FullScreen && !OPTION_FAKE_FULLSCREEN)
   {
@@ -3223,7 +3144,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #else
     d3dpp.BackBufferFormat=Mode.Format;
 #endif
-#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+#if defined(SSE_VID_D3D_FS_DEFAULT_HZ)
     d3dpp.FullScreen_RefreshRateInHz=(OPTION_FULLSCREEN_DEFAULT_HZ)
       ?0:Mode.RefreshRate;
 #else
@@ -3636,9 +3557,7 @@ VOID SteemDisplay::D3DRelease()
   {
     pD3D->Release();
     pD3D = NULL;
-#if defined(SSE_VID_D3D_373)
     D3D9_OK=false;
-#endif
   }
 }
 
@@ -3654,7 +3573,7 @@ void SteemDisplay::D3DUnlock() {
 
 HRESULT SteemDisplay::D3DSpriteInit() {
   HRESULT hr=E_FAIL;
-#if defined(SSE_VID_D3D_373)
+#if defined(SSE_VID_CHECK_POINTERS)
   if(!pD3D||!pD3DDevice)
     return hr;
 #endif

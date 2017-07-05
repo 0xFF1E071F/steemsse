@@ -278,7 +278,7 @@ public:
   hxc_button ste_microwire_but;
 #endif
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   hxc_button use_sdl_but;    
 #endif
 
@@ -544,7 +544,7 @@ public:
   hxc_button ste_microwire_but;
 #endif
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   hxc_button use_sdl_but;    
 #endif
 

@@ -661,7 +661,7 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
     else if(b->id==4009)
       OPTION_MICROWIRE=b->checked;
 #endif   
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
     else if(b->id==4011)
       USE_SDL=b->checked;
 #endif   

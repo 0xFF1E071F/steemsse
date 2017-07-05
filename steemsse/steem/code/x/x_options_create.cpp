@@ -1410,7 +1410,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   use_sdl_but.create(XD,page_p,page_l,y,0,25,
     button_notify_proc,this,BT_CHECKBOX,T("Use SDL"),4011,BkCol);
   use_sdl_but.set_check(USE_SDL);

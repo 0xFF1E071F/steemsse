@@ -257,7 +257,7 @@ extern BYTE SideBorderSize,BottomBorderSize, SideBorderSizeWin;
 #define BORDER_SIDE SideBorderSize // avoids much rewriting in Steem!!!!!!!!!!!
 #define BORDER_EXTRA (SideBorderSize-ORIGINAL_BORDER_SIDE) // 0 8 16, in pixels
 #define BORDER_BOTTOM BottomBorderSize // !!!!!!!!!!!!!!!!!!!!!!!
-int ChangeBorderSize(int size); // gui.cpp
+void ChangeBorderSize(int size); // gui.cpp
 #endif
 
 #if defined(SSE_VID_BORDERS_BIGTOP) // more hacks...

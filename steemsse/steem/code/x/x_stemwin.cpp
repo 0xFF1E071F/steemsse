@@ -3,7 +3,7 @@
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.LeaveSDLVideoMode();

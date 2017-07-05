@@ -499,14 +499,10 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; HI");  
 #if defined(SSE_VID_BORDERS_GUI_392)
     TRACE("; Border %d",border);
-#elif defined(SSE_VID_BORDERS)
-    else if(DISPLAY_SIZE)
-      //TRACE("Dispay size %d\n", DISPLAY_SIZE);
-      TRACE("; Size %d", DISPLAY_SIZE);
 #endif
     if(extended_monitor)
       TRACE("; EXT %dx%d",em_width,em_height);
-#if defined(SSE_VID_3BUFFER_392)
+#if defined(SSE_VID_3BUFFER)
     if(FullScreen)
       TRACE("; FS 3B%d VS%d",OPTION_3BUFFER_FS,FSDoVsync);
     else

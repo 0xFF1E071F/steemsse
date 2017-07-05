@@ -1174,7 +1174,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+#if defined(SSE_VID_D3D_FS_DEFAULT_HZ)
         case 209:
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_FULLSCREEN_DEFAULT_HZ=!OPTION_FULLSCREEN_DEFAULT_HZ;
@@ -1454,17 +1454,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_GUI_392)// Option Display size
-        case 1026:
-          if (HIWORD(wPar)==CBN_SELENDOK)
-          {
-            DISPLAY_SIZE=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-            TRACE_LOG("Option Display size %d\n",DISPLAY_SIZE);
-            ChangeBorderSize(DISPLAY_SIZE);
-          }
-	  break;
-#endif
-
 #if defined(SSE_HACKS) // Option Hacks
         case 1027:
           if(HIWORD(wPar)==BN_CLICKED)
@@ -1475,6 +1464,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
+
 #if defined(SSE_GUI_MOUSE_CAPTURE_OPTION) // Option Capture mouse
         case 1028:
           if(HIWORD(wPar)==BN_CLICKED)
@@ -1523,17 +1513,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
             StemWinResize();
 #endif
-
-#if !defined(SSE_VID_DD_FS_IS_392)
-#if !defined(SSE_VID_D3D)
-            draw_fs_blit_mode=(OPTION_INTERPOLATED_SCANLINES)?DFSM_STRETCHBLIT:
-#if defined(SSE_VID_D3D2)
-              (D3D9_OK && OPTION_D3D) ? DFSM_STRETCHBLIT :
-#endif
-              DFSM_STRAIGHTBLIT;
-#endif
-
-#endif//#if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES) && !defined(SSE_VID_GUI_IS_AND_PAL)
             Disp.ScreenChange();
 #endif
@@ -1547,22 +1526,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           {
             OPTION_WIN_VSYNC=!OPTION_WIN_VSYNC;
             TRACE_LOG("Option Window VSync: %d\n",OPTION_WIN_VSYNC);
-#if defined(SSE_VID_3BUFFER_392)
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_WIN_VSYNC,0);
-#elif defined(SSE_GUI_OPTIONS_REFRESH) 
-#if !defined(SSE_VID_D3D_3BUFFER)
-            if(OPTION_WIN_VSYNC)
-              OPTION_3BUFFER=false;
-#endif
-            OptionBox.SSEUpdateIfVisible();
-            Disp.ScreenChange();
-#endif
           }
           break;
 #endif
 
-#if defined(SSE_VID_3BUFFER_392) 
-
+#if defined(SSE_VID_3BUFFER_FS) 
         case 1037: // Option Triple Buffer FS
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1572,8 +1541,9 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             Disp.ScreenChange(); // must delete and create surface
           }
           break;
+#endif
 
-#if defined(SSE_VID_DD_3BUFFER_WIN)
+#if defined(SSE_VID_3BUFFER_WIN)
         case 1034: // Option Triple Buffer Win
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1581,23 +1551,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option Triple Buffer Win: %d\n",OPTION_3BUFFER_WIN);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER_WIN,0);
             Disp.ScreenChange(); // must delete and create surface
-          }
-          break;
-#endif
-
-#elif defined(SSE_VID_3BUFFER) // Option Triple Buffer
-        case 1034:
-          if(HIWORD(wPar)==BN_CLICKED)
-          {
-            OPTION_3BUFFER=!OPTION_3BUFFER;
-            if(OPTION_3BUFFER)
-              OPTION_WIN_VSYNC=false;
-            TRACE_LOG("Option Triple Buffer: %d\n",OPTION_3BUFFER);
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_3BUFFER,0); //was disabled in 390?
-#if defined(SSE_GUI_OPTIONS_REFRESH)
-            OptionBox.SSEUpdateIfVisible();
-#endif
-            Disp.ScreenChange();
           }
           break;
 #endif
@@ -1612,6 +1565,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
+
 #if defined(SSE_OSD_SHOW_TIME)
         case 1036:
           if(HIWORD(wPar)==BN_CLICKED)
@@ -2034,7 +1988,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
         case 7304: // SDL
           if (HIWORD(wPar)==BN_CLICKED){
             USE_SDL=!USE_SDL;
@@ -2087,58 +2041,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option Ghost disk %d\n",OPTION_GHOST_DISK);
           }
           break;
-#endif
-
-#if defined(SSE_VID_D3D_OPTION) && !defined(SSE_VID_D3D)
-        case 7314: // option D3D
-          if (HIWORD(wPar)==BN_CLICKED){
-            OPTION_D3D=!OPTION_D3D;
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D,0);
-#ifndef SSE_VID_D3D
-#if defined(SSE_VID_D3D_OPTION5) //duplicate! TODO
-#if defined(SSE_VID_D3D_LIST_MODES)
-#if defined(SSE_VID_D3D_CRISP_OPTION)
-  WORD items[]={7315,7319,7324,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
-  for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^ (i<4) ); 
-#else
-  WORD items[]={7315,7319,205,280,208,204,210,220,221,222,223,224,225,226,0xFFFF};
-  for(int i=0;items[i]!=0xFFFF;i++) //^ just a trick
-    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^ (i<3) ); 
-#endif
-#else
-
-  WORD items[]={7315,280,208,0xFFFF};
-  for(int i=0;items[i]!=0xFFFF;i++)
-    EnableWindow(GetDlgItem(Win,items[i]),!OPTION_D3D^!i); 
-#endif
-#endif
-#endif//#ifndef SSE_VID_D3D
-            TRACE_LOG("Option D3D %d\n",OPTION_D3D);
-
-#ifndef SSE_VID_D3D
-    Disp.ScreenChange();
-#endif
-
-            //Disp.Init();//big mistake!
-          }
-          break;
-
-#endif
-
-#if defined(SSE_GUI_ST_AR_OPTION) && !defined(SSE_VID_GUI_IS_AND_PAL)
-        case 7315: // Option Aspect Ratio
-          if (HIWORD(wPar)==BN_CLICKED){
-            OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-            TRACE_LOG("Option Aspect Ratio %d\n",OPTION_ST_ASPECT_RATIO);
-#if defined(SSE_VID_380)
-            if(ResChangeResize)
-              StemWinResize();
-#endif
-          }
-          break;
-
 #endif
 
 #if defined(SSE_GUI_OPTION_FOR_TESTS)

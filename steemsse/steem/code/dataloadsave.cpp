@@ -937,20 +937,8 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VAR_EMU_DETECT) 
     OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
 #endif
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
-#endif
-#if !defined(SSE_VID_BORDERS_GUI_392) // DISPLAY_SIZE is border
-#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
-    DISPLAY_SIZE=pCSF->GetInt("Display","BorderSize",DISPLAY_SIZE);
-    if(DISPLAY_SIZE<0||DISPLAY_SIZE>BIGGEST_DISPLAY
-#if defined(SSE_VID_380)
-      || Disp.Method==DISPMETHOD_GDI // Disp has already been initialised
-#endif
-      )
-      DISPLAY_SIZE=0;
-    ChangeBorderSize(DISPLAY_SIZE);
-#endif
 #endif
 #if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
     OPTION_SAMPLED_YM=pCSF->GetInt("Sound","PsgMod",OPTION_SAMPLED_YM);
@@ -982,15 +970,13 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_VSYNC_WINDOW)
     OPTION_WIN_VSYNC=pCSF->GetInt("Display","WinVSync",OPTION_WIN_VSYNC);
 #endif
-#if defined(SSE_VID_3BUFFER_392) // It's 2 options now
+#if defined(SSE_VID_3BUFFER_FS)
     OPTION_3BUFFER_FS=pCSF->GetInt("Display","TripleBufferFS",OPTION_3BUFFER_FS);
-#if !defined(SSE_VID_D3D)
+#endif
+#if defined(SSE_VID_3BUFFER_WIN)
     OPTION_3BUFFER_WIN=pCSF->GetInt("Display","TripleBufferWin",OPTION_3BUFFER_WIN);
 #endif
-#elif defined(SSE_VID_3BUFFER)
-    OPTION_3BUFFER=pCSF->GetInt("Display","TripleBuffer",OPTION_3BUFFER);
-#endif
-#if defined(SSE_GUI_ST_AR_OPTION)
+#if defined(SSE_VID_ST_ASPECT_RATIO)
     OPTION_ST_ASPECT_RATIO=pCSF->GetInt("Display","STAspectRatio",OPTION_ST_ASPECT_RATIO);
 #endif
 #if defined(SSE_GUI_CUSTOM_WINDOW_TITLE)
@@ -1113,7 +1099,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if !defined(SSE_VID_D3D)
     prefer_res_640_400=(bool)pCSF->GetInt("Display","Prefer640x400",prefer_res_640_400);
 #endif
-#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+#if defined(SSE_VID_D3D_FS_DEFAULT_HZ)
     OPTION_FULLSCREEN_DEFAULT_HZ=(bool)pCSF->GetInt("Display",
       "FullScreenDefaultHz",OPTION_FULLSCREEN_DEFAULT_HZ);
 #endif
@@ -1152,10 +1138,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_BORDERS_GUI_392)
     border=min(pCSF->GetInt("Display","Border",border),BIGGEST_DISPLAY);
     border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),BIGGEST_DISPLAY);
-#elif defined(SSE_VID_DISABLE_AUTOBORDER)
-    //border=min(pCSF->GetInt("Display","Border",border),1);
-    border=pCSF->GetInt("Display","Border",border)&1;
-    border_last_chosen=pCSF->GetInt("Display","BorderLastChosen",border)&1;
 #else
     border=min(pCSF->GetInt("Display","Border",border),2);
     border_last_chosen=min(pCSF->GetInt("Display","BorderLastChosen",border),2);
@@ -1466,7 +1448,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","DrawFSMode",EasyStr(draw_fs_blit_mode));
 #endif
   pCSF->SetStr("Display","FSDoVsync",LPSTR(FSDoVsync ? "1":"0"));
-#if defined(SSE_VID_D3D_FULLSCREEN_DEFAULT_HZ)
+#if defined(SSE_VID_D3D_FS_DEFAULT_HZ)
   pCSF->SetStr("Display","FullScreenDefaultHz",
     EasyStr(OPTION_FULLSCREEN_DEFAULT_HZ));
 #endif
@@ -1490,13 +1472,8 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   //pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
   pCSF->SetStr("Options","EmuDetect",EasyStr(OPTION_EMU_DETECT));
 #endif
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
-#endif
-#if !defined(SSE_VID_BORDERS_GUI_392)
-#if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_NO_LOAD_SETTING)
-  pCSF->SetStr("Display","BorderSize",EasyStr(DISPLAY_SIZE));  
-#endif
 #endif
 #if defined(SSE_YM2149_FIX_TABLES)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
@@ -1523,18 +1500,16 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_VSYNC_WINDOW)
   pCSF->SetStr("Display","WinVSync",EasyStr(OPTION_WIN_VSYNC));
 #endif
-#if defined(SSE_VID_3BUFFER_392)
+#if defined(SSE_VID_3BUFFER_FS)
   pCSF->SetStr("Display","TripleBufferFS",EasyStr(OPTION_3BUFFER_FS));
-#if !defined(SSE_VID_D3D)
-  pCSF->SetStr("Display","TripleBufferWin",EasyStr(OPTION_3BUFFER_WIN));
 #endif
-#elif defined(SSE_VID_3BUFFER)
-  pCSF->SetStr("Display","TripleBuffer",EasyStr(OPTION_3BUFFER));
+#if defined(SSE_VID_3BUFFER_WIN)
+  pCSF->SetStr("Display","TripleBufferWin",EasyStr(OPTION_3BUFFER_WIN));
 #endif
 #if defined(SSE_VID_D3D) // for older versions
   pCSF->SetStr("Display","Direct3D",EasyStr(true)); 
 #endif
-#if defined(SSE_GUI_ST_AR_OPTION)
+#if defined(SSE_VID_ST_ASPECT_RATIO)
   pCSF->SetStr("Display","STAspectRatio",EasyStr(OPTION_ST_ASPECT_RATIO));
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)

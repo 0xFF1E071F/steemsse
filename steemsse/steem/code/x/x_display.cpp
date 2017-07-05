@@ -207,7 +207,7 @@ bool SteemDisplay::InitXSHM()
 HRESULT SteemDisplay::Lock()
 {
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Lock();
@@ -289,7 +289,7 @@ void SteemDisplay::VSync()
 bool SteemDisplay::Blit()
 {
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Blit();
@@ -479,7 +479,7 @@ void SteemDisplay::WaitForAsyncBlitToFinish()
 void SteemDisplay::Unlock()
 {
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.Unlock();
@@ -508,7 +508,7 @@ void SteemDisplay::ScreenChange()
 {
 
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   // temp, dubious
   if(USE_SDL && !SDL.InUse)
   {
