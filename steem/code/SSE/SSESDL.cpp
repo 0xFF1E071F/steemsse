@@ -1,4 +1,4 @@
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
 
 //we had a working display (window), but stopped development
 //we keep it just in case
@@ -113,4 +113,4 @@ void TSDL::Unlock(){
 
 
 
-#endif//#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#endif//#if defined(SSE_VID_SDL)

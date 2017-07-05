@@ -336,13 +336,6 @@ POINT WinSizeBorderVeryLarge2[4][5]={
 };
 #endif//bigtop
 #endif//416
-/*
-#if defined(SSE_VID_BORDERS_BIGTOP)
-#undef BORDER_TOP
-#define BORDER_TOP (  (DISPLAY_SIZE==BIGGEST_DISPLAY) \
-  ? BIG_BORDER_TOP : ORIGINAL_BORDER_TOP )
-#endif
-*/
 
   // used?
  POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOTTOM)},
@@ -434,18 +427,13 @@ BYTE STCharToPCChar[128]={199,  0,233,226,228,224,229,231,234,235,232,239,238,23
 
 extern int draw_last_scanline_for_border,res_vertical_scale; // forward
 
-int ChangeBorderSize(int size_in) {
-  int size=size_in; // use lost?
+void ChangeBorderSize(int size) {
+
   if(size<0||size>BIGGEST_DISPLAY)
     size=0;
-  //if(1||size!=DISPLAY_SIZE) //todo
+
+  switch(size)
   {
-#if !defined(SSE_VID_BORDERS_GUI_392)
-    DISPLAY_SIZE=size;
-#endif
-    switch(size)
-    {
-#if defined(SSE_VID_BORDERS_GUI_392)
     case 0: //no border
     case 1:
       SideBorderSize=ORIGINAL_BORDER_SIDE;
@@ -462,86 +450,42 @@ int ChangeBorderSize(int size_in) {
       SideBorderSizeWin=VERY_LARGE_BORDER_SIDE; // show 416
       BottomBorderSize=VERY_LARGE_BORDER_BOTTOM;
       break;
-#endif//#if defined(SSE_VID_BORDERS_GUI_392)
-    }//sw
-    int i,j;
-    for(i=0;i<4;i++) 
+  }//sw
+  int i,j;
+  for(i=0;i<4;i++) 
+  {
+    for(j=0;j<5;j++) 
     {
-      for(j=0;j<5;j++) 
+      switch(size)
       {
-        switch(size)
-        {
-#if defined(SSE_VID_BORDERS_GUI_392)
-        case 0:
-        case 1:
-          WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
-          break;
-        case 2:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
-          break;
-        case 3:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-          break;
+      case 0:
+      case 1:
+        WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
+        break;
+      case 2:
+        WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
+        break;
+      case 3:
+        WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
+        break;
+      }//sw
+    }//nxt j
+  }//nxt i
+  draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
 
-#else//!392
-        case 0:
-          WinSizeBorder[i][j]=WinSizeBorderOriginal[i][j];
-          break;
-#if defined(SSE_VID_D3D)
-        case 1:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
-          break;
-        case 2:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-          break;
-#else
-        case 1:
-          WinSizeBorder[i][j]=WinSizeBorderLarge[i][j];
-          break;
-        case 2:
-#if defined(SSE_VID_BORDERS_412)
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge[i][j];
-#else
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-#endif
-          break;
-#if defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
-        case 3:
-          WinSizeBorder[i][j]=WinSizeBorderVeryLarge2[i][j];
-          break;
-#endif
-#endif//#if defined(SSE_VID_D3D)
-#endif//#if defined(SSE_VID_BORDERS_GUI_392)
-        }//sw
-      }
-    }
-#if defined(SSE_VID_DISABLE_AUTOBORDER2) && !defined(SSE_VID_BORDERS_GUI_392)
-    SendMessage(OptionBox.BorderSizeOption,CB_SETCURSEL,DISPLAY_SIZE,0);
-#endif
-    draw_last_scanline_for_border=shifter_y+res_vertical_scale*(BORDER_BOTTOM);
+  TRACE_LOG("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
 
-    TRACE_LOG("ChangeBorderSize(%d) side %d side win %d bottom %d\n",size_in,SideBorderSize,SideBorderSizeWin,BottomBorderSize);
+  StemWinResize();
 
-    StemWinResize();
+  Disp.ScreenChange();
 
-    Disp.ScreenChange();
-
-#if defined(SSE_GUI_390B)
 #if defined(SSE_VID_ANTICRASH_392)
-    draw_begin(); // Lock() will update draw_line_length
-    draw_end(); // but we must Unlock() or trouble when changing display mode
-#else
-    draw_set_jumps_and_source(); // avoid crash when running?
-#endif
-#endif
-    return TRUE;
-  }
-#if !defined(SSE_VS2008_WARNING_382)
-  return FALSE;
+  draw_begin(); // Lock() will update draw_line_length
+  draw_end(); // but we must Unlock() or trouble when changing display mode
 #endif
 }
 
-#endif
+#endif//#if defined(SSE_VID_BORDERS)
 
 #if defined(SSE_GUI_STATUS_BAR)
 #if defined(SSE_GUI_STATUS_BAR_ICONS)

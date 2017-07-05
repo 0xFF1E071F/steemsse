@@ -614,7 +614,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
       ///////////////// RENDER VIDEO /////////////////        
-        draw_scanline(border1,0,0,0); // see SSE_VID_ADJUST_DRAWING_ZONE1
+        draw_scanline(border1,0,0,0);
       }
     }
     scanline_drawn_so_far=pixels_in;

@@ -385,15 +385,7 @@ void draw_set_jumps_and_source()
   if(FullScreen)
     big_draw=false;
 #else
-  if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
-/*  About this complication, it is necessary to have interpolated
-    scanlines working in fullscreen mode with triple buffer.
-    There are many more places where we test that.
-*/
-    && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-    ){
+  if (FullScreen){
     if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP
 #if defined(SSE_VID_D3D_STRETCH_FORCE)      
       || D3D9_OK && OPTION_D3D
@@ -482,24 +474,12 @@ void draw_set_jumps_and_source()
 #if defined(SSE_VID_D3D_382)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
-
-#if !defined(SSE_VID_D3D) && !defined(SSE_VID_3BUFFER_392)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-#endif
     )
 #endif
     ){
     int p=1; // 640 width 400 height
 #ifdef WIN32
-    if (FullScreen
-#if !defined(SSE_VID_D3D) && !defined(SSE_VID_3BUFFER_392)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-#endif//#if !defined(SSE_VID_D3D)
-      ){
+    if (FullScreen){
 #if !defined(SSE_VID_D3D)
       if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
 #endif
@@ -552,9 +532,6 @@ void draw_set_jumps_and_source()
 
 #if !defined(SSE_VID_D3D_FS_392A) || !defined(SSE_VID_D3D)
       if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
 #if defined(SSE_VID_D3D_STRETCH)
         && !(D3D9_OK && OPTION_D3D)//TODO specify the switches
 #endif
@@ -564,11 +541,7 @@ void draw_set_jumps_and_source()
 #endif
 
 #endif
-    }else if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && !defined(SSE_VID_3BUFFER_392)
-      && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-      ){
+    }else if (FullScreen){
 #if !defined(SSE_VID_D3D)
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
 #endif
@@ -580,23 +553,8 @@ void draw_set_jumps_and_source()
     }
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_3BUFFER_392) // option_3buffer or not -> false if fullscreen anyway
     if(SCANLINES_INTERPOLATED && !screen_res && !FullScreen) 
       ow/=2;
-#else
-    if(!screen_res && SCANLINES_INTERPOLATED && 
-#if defined(SSE_VID_3BUFFER)
-      (!FullScreen ||OPTION_3BUFFER
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER)
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-      )
-#else
-      !FullScreen
-#endif
-      ) 
-      ow/=2;
-#endif
 #endif
 
     draw_blit_source_rect.left=ox;
@@ -654,11 +612,7 @@ void draw_set_jumps_and_source()
         ow+=(BORDER_SIDE+BORDER_SIDE) * 2;
       }
       oh=shifter_y+res_vertical_scale*(BORDER_TOP+BORDER_BOTTOM);
-    }else if (FullScreen
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_3BUFFER) && !defined(SSE_VID_3BUFFER_392)
-        && !(SCANLINES_INTERPOLATED&&OPTION_3BUFFER)
-#endif
-      ){
+    }else if (FullScreen){
 #if !defined(SSE_VID_D3D)
 #if defined(SSE_VID_D3D_STRETCH)
       if(!(D3D9_OK && OPTION_D3D))
@@ -1218,14 +1172,7 @@ bool draw_blit()
   // we blit the unlocked backsurface
   if (!draw_lock 
 #if !defined(SSE_VID_D3D_3BUFFER) 
-#if defined(SSE_VID_3BUFFER_392)
     || OPTION_3BUFFER_WIN && !FullScreen 
-#else
-    || OPTION_3BUFFER 
-#endif
-#endif
-#if !defined(SSE_VID_3BUFFER_FS)
-    && !FullScreen
 #endif
     ){ 
 #else
@@ -1292,14 +1239,7 @@ void draw(bool osd)
   // we blit the unlocked backsurface
   if (!draw_lock 
 #if !defined(SSE_VID_D3D_3BUFFER)
-#if defined(SSE_VID_3BUFFER_392)
     || OPTION_3BUFFER_WIN && !FullScreen
-#else
-    || OPTION_3BUFFER 
-#endif
-#endif
-#if !defined(SSE_VID_3BUFFER_FS)
-    && !FullScreen
 #endif
     ){ 
 #else

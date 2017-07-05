@@ -947,7 +947,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
   HD6301.Init();
 #endif
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
 #if defined(SSE_GUI_NOTIFY1)
   SetNotifyInitText(T("SDL"));
 #endif

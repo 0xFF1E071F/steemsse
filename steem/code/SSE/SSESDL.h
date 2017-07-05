@@ -2,7 +2,7 @@
 #ifndef SSESDL_H
 #define SSESDL_H
 
-#if defined(SSE_VID_SDL) //&& !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
 
 #include <SDL-WIN/include/SDL.h> 
 
@@ -20,9 +20,9 @@
 #pragma comment(lib, "../../3rdparty/SDL-WIN/bcclib/SDL.lib")
 #endif
 #endif//win32
-#endif //!defined(SSE_VID_SDL_DEACTIVATE)
+#endif 
 
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
 
 struct TSDL {
   bool Available;
@@ -44,6 +44,6 @@ struct TSDL {
 
 extern TSDL SDL;
 
-#endif//!defined(SSE_VID_SDL_DEACTIVATE)
+#endif
 
 #endif//SSESDL_H

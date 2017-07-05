@@ -44,9 +44,9 @@ void StemWinResize(int xo,int yo)
 #endif
 
 
-#if defined(SSE_VID_ST_ASPECT_RATIO)
-/*  v3.8.0
-    With this little mod we have PAL aspect ratio in windowed mode too.
+#if defined(SSE_VID_ST_ASPECT_RATIO_WIN)
+/*  With this little mod we have optional PAL aspect ratio in windowed mode
+    too, in stretch modes.
 */
 #if defined(SSE_VID_BORDERS_GUI_392)
   if (border){
@@ -81,7 +81,7 @@ void StemWinResize(int xo,int yo)
   }
 #endif
 
-#if defined(SSE_VID_D3D1)
+#if defined(SSE_VID_D3D)
   if(D3D9_OK && Disp.pD3DDevice)
     Disp.D3DSpriteInit(); //smooth res changes (eg in GEM)
 #endif
@@ -1727,7 +1727,7 @@ void HandleButtonMessage(UINT Id,HWND hBut)
 void SetStemWinSize(int w,int h,int xo,int yo)
 {
   TRACE_LOG("SetStemWinSize %d %d %d %d\n",xo,yo,w,h);
-#if defined(SSE_VID_SDL) && !defined(SSE_VID_SDL_DEACTIVATE)
+#if defined(SSE_VID_SDL)
   if(SDL.InUse)
   {
     SDL.LeaveSDLVideoMode();

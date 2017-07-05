@@ -254,22 +254,8 @@ void osd_draw()
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_392) //option!=mode
   if(FullScreen && !screen_res && SCANLINES_INTERPOLATED)
     x1/=2;
-#else
-#if defined(SSE_VID_D3D)
-  if(FullScreen && !screen_res 
-    && (OPTION_INTERPOLATED_SCANLINES || draw_win_mode[screen_res]==DWM_GRILLE))
-#else
-  if(OPTION_INTERPOLATED_SCANLINES && !screen_res && FullScreen
-#if defined(SSE_VID_D3D_382)
-    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE //TODO
-#endif    
-    )
-#endif
-    x1/=2;
-#endif
 #endif
   y1=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
   bool can_have_scroller=true;
