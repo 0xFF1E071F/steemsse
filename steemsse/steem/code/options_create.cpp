@@ -60,8 +60,6 @@ void TOptionBox::CreateMachinePage()
   CreateWindow("Static",T("ST model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
-#if defined(SSE_VAR_REFACTOR_392)
-
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
 
@@ -71,25 +69,6 @@ void TOptionBox::CreateMachinePage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[2]));
 #endif
   SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
-
-#else
-  Win=STTypeOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-    page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
-#if defined(SSE_X64_390) //TODO also for x86
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[0]));
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[1]));
-#if defined(SSE_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[2]));
-#endif
-#else
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[0]));
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[1]));
-#if defined(SSE_STF_MEGASTF)
-  SendMessage(STTypeOption,CB_ADDSTRING,0,(long)CStrT(st_model_name[2]));
-#endif
-#endif
-  SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
-#endif//ref
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
@@ -107,8 +86,6 @@ compatible only with the STF"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
-#if defined(SSE_VAR_REFACTOR_392)
-
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
 
@@ -119,24 +96,6 @@ compatible only with the STF"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("DL6 WU1 WS1"));
   SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
 
-#else
-  Win=MMUWakeUpOption=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-    page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
-#if defined(SSE_X64_390)
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("Ignore"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL3 WU2 WS2"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL4 WU2 WS4"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL5 WU1 WS3"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(LPARAM)CStrT("DL6 WU1 WS1"));
-#else//x64
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("Ignore"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL3 WU2 WS2"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL4 WU2 WS4"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL5 WU1 WS3"));
-  SendMessage(MMUWakeUpOption,CB_ADDSTRING,0,(long)CStrT("DL6 WU1 WS1"));
-#endif//x64
-  SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
-#endif//ref
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
     T("Check Hints for cases"));
@@ -363,7 +322,7 @@ void TOptionBox::MachineUpdateIfVisible()
 
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
-#if defined(SSE_VAR_REFACTOR_392)
+
 #if defined(SSE_GUI_OPTIONS_STF)//390
 #if defined(SSE_STF)
   HWND Win=GetDlgItem(Handle,211); //ST Model
@@ -376,20 +335,7 @@ void TOptionBox::MachineUpdateIfVisible()
     SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
 #endif
 #endif
-#else
-#if defined(SSE_GUI_OPTIONS_STF)//390
-#if defined(SSE_STF)
-  HWND Win=GetDlgItem(Handle,211); //ST Model
-  if(Win!=NULL) 
-    SendMessage(STTypeOption,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
-#endif
-#if defined(SSE_MMU_WU)
-  Win=GetDlgItem(Handle,212); //WU
-  if(Win!=NULL) 
-    SendMessage(MMUWakeUpOption,CB_SETCURSEL,OPTION_WS,0);
-#endif
-#endif
-#endif
+
 #if (defined(SSE_MMU_256K) && defined(SSE_MMU_2560K)) \
 || defined(SSE_MMU_MONSTER_ALT_RAM)
 /*  
@@ -1309,7 +1255,7 @@ void TOptionBox::CreateDisplayPage()
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) && defined(SSE_VID_GUI_IS_AND_PAL)
+#if defined(SSE_VID_SCANLINES_INTERPOLATED) // + PAL aspect ratio in some modes
   y-=LineHeight;
   Wid=GetCheckBoxSize(Font,T("ST Monitor")).Width;
   Win=CreateWindow("Button",T("ST Monitor"),
@@ -1322,31 +1268,17 @@ void TOptionBox::CreateDisplayPage()
 #endif
 
 #if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
-#if defined(SSE_VID_DISABLE_AUTOBORDER2)
   Offset=10;
   y+=10;
-#else
-  y-=40;
-  Offset=220-5;
-#endif
   Wid=GetCheckBoxSize(Font,T("Lock window size")).Width;
   ASSERT(Wid>0);
   Win=CreateWindow("Button",T("Lock window size"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)7317,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_BLOCK_RESIZE,0);
- // ToolAddWindow(ToolTip,Win,
-   // T("If you don't want to stretch the main window by accident"));
-#if !defined(SSE_VID_DISABLE_AUTOBORDER2)
-  y+=40;
-#endif
 #endif
 
 #if defined(SSE_VID_LOCK_ASPET_RATIO)
-#if defined(SSE_VID_DISABLE_AUTOBORDER2)
   Offset+=Wid+10;
-#else
-  y-=16;
-#endif
   Wid=GetCheckBoxSize(Font,T("Lock aspect ratio")).Width;
   ASSERT(Wid>0);
   mask=WS_CHILD  | WS_TABSTOP | BS_CHECKBOX;
@@ -1355,17 +1287,10 @@ void TOptionBox::CreateDisplayPage()
   Win=CreateWindow("Button",T("Lock aspect ratio"),mask,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)7318,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
-#if defined(SSE_VID_DISABLE_AUTOBORDER2)
   y+=10;
-#else
-  y+=16;
-#endif
 #endif
 
-
-
-
-#if defined(SSE_VID_DISABLE_AUTOBORDER2)
+#if defined(SSE_BUILD)
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y-25,page_w,20+30+30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
 #else
@@ -1730,7 +1655,7 @@ void TOptionBox::CreateFullscreenPage()
 
 #endif//#if defined(SSE_VID_D3D_LIST_MODES)
   
-#if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_GUI_D3D_CRISP_OPTION)
   Wid=GetCheckBoxSize(Font,T("Crisp Rendering")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Crisp Rendering"),mask,
@@ -1747,6 +1672,9 @@ void TOptionBox::CreateFullscreenPage()
 #endif
 
 #if defined(SSE_VID_FS_GUI_OPTION)
+/*  This is handy if it works. Blame Microsoft and video card drivers 
+    if it doesn't.
+*/
   w=GetCheckBoxSize(Font,T("Fullscreen GUI")).Width;
   Win=CreateWindow("Button",T("Fullscreen GUI"),mask,
     page_l,y,w,23,Handle,(HMENU)7325,HInstance,NULL);
@@ -1801,9 +1729,6 @@ void TOptionBox::CreateFullscreenPage()
 #if defined(SSE_VID_DD_FS_MAXRES)
     ToolAddWindow(ToolTip,Win,
 T("Flip recommended. Only 'Max Resolution' will work with large borders"));
-#elif defined(SSE_VID_D3D_STRETCH_FORCE)
-    ToolAddWindow(ToolTip,Win,T("(DirectDraw) Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode."));
-
 #else
     ToolAddWindow(ToolTip,Win,T("DirectDraw: Screen Flip only works with 384 x 270. Straight blit OK with 400 x 278. For higher than 400 first switch to laptop mode.\
                                  \rDirect3D: Screen Flip or Straight Blit for small crisp screen. Stretch Blit or Laptop for big screen."));

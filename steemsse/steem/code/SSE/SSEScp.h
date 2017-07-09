@@ -54,7 +54,6 @@ struct TSCP_track_header {
   DWORD track_data_checksum; //? see hxc project
 };
 
-#if defined(SSE_DISK_MFM0)
 
 struct  TImageSCP:public TImageMfm {
   // interface (the same as for STW disk images)
@@ -86,44 +85,6 @@ struct  TImageSCP:public TImageMfm {
   TSCP_track_header track_header;
   BYTE rev;
 };
-
-#else
-
-struct  TImageSCP {
-  // interface (the same as for STW disk images)
-  bool Open(char *path);
-  void Close();
-  bool LoadTrack(BYTE side,BYTE track,bool reload=false);
-  WORD GetMfmData(WORD position); 
-  void SetMfmData(WORD position, WORD mfm_data);
-  int GetNextTransition(BYTE& us_to_next_flux);
-  // other functions
-  TImageSCP();
-  ~TImageSCP();
-  void ComputePosition();
-  int UnitsToNextFlux(DWORD position);
-  int UsToNextFlux(int units_to_next_flux);
-#if !defined(SSE_WD1772_BIT_LEVEL)||defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
-  BYTE GetDelay(int position);
-#endif
-  void IncPosition();
-  void Init();
-#if defined(SSE_BOILER) && defined(SSE_DISK_SCP_TO_MFM_PREVIEW)
-  void InterpretFlux(); // was a dev step
-#endif
-  // variables
-  FILE *fCurrentImage;
-  DWORD *TimeFromIndexPulse; // from IP
-  DWORD nBits;
-  DWORD Position;
-  WORD nBytes;
-  TSCP_file_header file_header;
-  TSCP_track_header track_header;
-  BYTE Id; //0,1, same as drive
-  BYTE rev;
-};
-
-#endif
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
 

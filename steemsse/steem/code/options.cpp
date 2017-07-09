@@ -1509,13 +1509,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_INTERPOLATED_SCANLINES=!OPTION_INTERPOLATED_SCANLINES;
             TRACE_LOG("Interpolate scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
-#if defined(SSE_VID_GUI_IS_AND_PAL) //only one option now
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
             StemWinResize();
-#endif
-#if defined(SSE_VID_D3D_INTERPOLATED_SCANLINES) && !defined(SSE_VID_GUI_IS_AND_PAL)
-            Disp.ScreenChange();
-#endif
           }
           break;
 #endif
@@ -2122,7 +2117,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-#if defined(SSE_VID_D3D_CRISP_OPTION) // Option Crisp D3D
+#if defined(SSE_GUI_D3D_CRISP_OPTION) // Option Crisp D3D
         case 7324:
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_D3D_CRISP=!OPTION_D3D_CRISP;
@@ -2890,19 +2885,17 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           contrast=SendDlgItemMessage(Win,2003,TBM_GETPOS,0,0)-128;
           sprintf(tmp,"Contrast:%d",contrast);
           SendDlgItemMessage(Win,2002,WM_SETTEXT,0,LPARAM(tmp));
-#else
-          brightness=SendDlgItemMessage(Win,2001,TBM_GETPOS,0,0)-128;
-          SendDlgItemMessage(Win,2000,WM_SETTEXT,0,LPARAM((T("Brightness")+": "+brightness).Text));
-          contrast=SendDlgItemMessage(Win,2003,TBM_GETPOS,0,0)-128;
-          SendDlgItemMessage(Win,2002,WM_SETTEXT,0,LPARAM((T("Contrast")+": "+contrast).Text));
-#endif
-#if defined(SSE_VID_GAMMA)
           for(int i=0;i<3;i++)
           {
             gamma[i]=SendDlgItemMessage(Win,2005+i*2,TBM_GETPOS,0,0)-128;
             sprintf(tmp,"Gamma %s:%d",rgb_txt[i],gamma[i]);
             SendDlgItemMessage(Win,2004+i*2,WM_SETTEXT,0,LPARAM(tmp));
           }
+#else
+          brightness=SendDlgItemMessage(Win,2001,TBM_GETPOS,0,0)-128;
+          SendDlgItemMessage(Win,2000,WM_SETTEXT,0,LPARAM((T("Brightness")+": "+brightness).Text));
+          contrast=SendDlgItemMessage(Win,2003,TBM_GETPOS,0,0)-128;
+          SendDlgItemMessage(Win,2002,WM_SETTEXT,0,LPARAM((T("Contrast")+": "+contrast).Text));
 #endif
           make_palette_table(brightness,contrast);
           if (flashlight_flag==0) palette_convert_all();

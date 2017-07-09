@@ -304,29 +304,12 @@ void TSF314::Read() {
   ASSERT(!State.writing);
   ASSERT(IMAGE_STW || IMAGE_SCP || IMAGE_HFE); // only for those now
   ASSERT(Id==DRIVE);
-#if defined(SSE_DISK) && defined(SSE_DISK_STW)
+#if defined(SSE_DISK_MFM0)
   //it works but side could change again in the interval
-
-#if defined(SSE_DISK_MFM0) //proper C++
   if(Disk[Id].current_side!=CURRENT_SIDE && ImageType.Manager==MNGR_WD1772)
   {
     MfmManager->LoadTrack(CURRENT_SIDE,Track());
   }
-#else
-  if(Disk[Id].current_side!=CURRENT_SIDE && (IMAGE_STW||IMAGE_HFE|IMAGE_SCP))
-  {
-    if(IMAGE_STW)
-      ImageSTW[Id].LoadTrack(CURRENT_SIDE,Track());
-#if defined(SSE_DISK_HFE)
-    else if(IMAGE_HFE)
-      ImageHFE[Id].LoadTrack(CURRENT_SIDE,Track());
-#endif
-#if defined(SSE_DISK_SCP)
-    else if(IMAGE_SCP)
-      ImageSCP[Id].LoadTrack(CURRENT_SIDE,Track());
-#endif
-  }
-#endif
 #endif
 
 #if defined(SSE_DISK_SCP) || defined(SSE_DISK_HFE)
@@ -352,28 +335,14 @@ void TSF314::Read() {
   }
   else // get next byte regardless of timing
     Disk[Id].current_byte++;
-#if defined(SSE_DISK_MFM0) //proper C++
+#if defined(SSE_DISK_MFM0)
   if(ImageType.Manager==MNGR_WD1772)
   {
     WD1772.Mfm.encoded=MfmManager->GetMfmData(new_position
       ?Disk[Id].current_byte:0xffff);
   }
-#else
-#if defined(SSE_DISK_STW)
-  if(IMAGE_STW)
-    WD1772.Mfm.encoded=ImageSTW[Id].GetMfmData(Disk[Id].current_byte);
 #endif
-#if defined(SSE_DISK_HFE)
-  else if(IMAGE_HFE)
-    WD1772.Mfm.encoded=ImageHFE[Id].GetMfmData(
-      new_position?Disk[Id].current_byte:0xffff);//ImageHFE[Id].GetMfmData(Disk[Id].current_byte);
-#endif
-#if defined(SSE_DISK_SCP)
-  else if(IMAGE_SCP)//position kept in SCP manager?
-    WD1772.Mfm.encoded=ImageSCP[Id].GetMfmData(
-      new_position?Disk[Id].current_byte:0xffff);
-#endif
-#endif
+
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND) && defined(SSE_WD1772_EMU)
   ASSERT(!(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1));
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
@@ -444,33 +413,20 @@ void TSF314::Write() {
   }
   else
     Disk[Id].current_byte++;
+
 #if defined(SSE_DRIVE_SINGLE_SIDE_RND) && defined(SSE_WD1772_EMU)
   if(SSEOption.SingleSideDriveMap&(Id+1) && CURRENT_SIDE==1)
     ; 
   else
 #endif
-#if defined(SSE_DISK_MFM0) //proper C++
+#if defined(SSE_DISK_MFM0)
   if(ImageType.Manager==MNGR_WD1772)
   {
     MfmManager->SetMfmData(new_position?Disk[Id].current_byte:0xffff,
       WD1772.Mfm.encoded);
   }
-#else
-#if defined(SSE_DISK_STW)
-  if(IMAGE_STW)
-    ImageSTW[Id].SetMfmData(Disk[Id].current_byte,WD1772.Mfm.encoded);
 #endif
-#if defined(SSE_DISK_HFE)
-  else if(IMAGE_HFE)
-    ImageHFE[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
-      WD1772.Mfm.encoded);//Disk[Id].current_byte,WD1772.Mfm.encoded);
-#endif
-#if defined(SSE_DISK_SCP)
-  else if(IMAGE_SCP)
-    ImageSCP[Id].SetMfmData(new_position?Disk[Id].current_byte:0xffff,
-      WD1772.Mfm.encoded);
-#endif
-#endif
+
 #if defined(SSE_WD1772_EMU)
   // set up next byte event
   if(Disk[Id].current_byte<=Disk[Id].TrackBytes)

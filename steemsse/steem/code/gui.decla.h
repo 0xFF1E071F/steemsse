@@ -593,10 +593,10 @@ EXT  POINT WinSizeBorderLarge[4][5];
 #endif
 //EXT  POINT WinSizeBorderLarge2[4][5];
 
-EXT  POINT WinSizeBorderVeryLarge[4][5];
+EXT  POINT WinSizeBorderLarge[4][5];
 
 #if defined(SSE_VID_BORDERS_416)
-EXT  POINT WinSizeBorderVeryLarge2[4][5];
+EXT  POINT WinSizeBorderMax[4][5];
 #endif
 
 EXT  POINT WinSizeBorder[4][5];

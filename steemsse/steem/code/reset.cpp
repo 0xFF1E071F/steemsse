@@ -226,7 +226,7 @@ void power_on()
   Disp.VSyncTiming=0;
 #endif
 
-#if defined(SSE_VID_DISABLE_AUTOBORDER3) 
+#if defined(SSE_VID_DISABLE_AUTOBORDER_HIRES) 
   if(MONO && SSEOption.MonochromeDisableBorder)
     border=0;
   else

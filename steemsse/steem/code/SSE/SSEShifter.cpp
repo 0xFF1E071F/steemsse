@@ -665,7 +665,7 @@ void TShifter::Vbl() {
 
 #undef LOGSECTION
 
-#define LOGSECTION LOGSECTION_VIDEO
+#define LOGSECTION LOGSECTION_VIDEO_RENDERING
 
 #ifdef WIN32
 
@@ -679,7 +679,10 @@ void TShifter::DrawBufferedScanlineToVideo() {
 #if defined(SSE_VID_ANTICRASH_392)
     // Don't access video memory beyond the surface, it causes a crash
     if(draw_store_dest_ad+amount_drawn>draw_mem+Disp.VideoMemorySize)
+    {
+      TRACE_LOG("Video memory overflow\n");
       return;
+    }
 #endif
 
     // From draw_temp_line_buf to draw_store_dest_ad
@@ -716,6 +719,9 @@ void TShifter::RoundCycles(int& cycles_in) { //TODO
   if(shifter_hscroll_extra_fetch && !HSCROLL) 
     cycles_in-=16;
 }
+
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_VIDEO
 
 
 void TShifter::SetPal(int n, WORD NewPal) {

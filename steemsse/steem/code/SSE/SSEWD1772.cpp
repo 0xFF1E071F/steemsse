@@ -1275,11 +1275,6 @@ void TWD1772::OnUpdate() {
   {
     return;
   }
-#else
-  if(!(IMAGE_STW)&&!(IMAGE_SCP)&&!(IMAGE_HFE)) // only for those images
-  {
-    return;
-  }
 #endif
   switch(prg_phase)
   {
@@ -1398,29 +1393,11 @@ r1       r0            1772
 
     if(CR&CR_V)
     {
-#if defined(SSE_DISK_MFM0) //proper C++
+#if defined(SSE_DISK_MFM0)
       if(SF314[DRIVE].ImageType.Manager==MNGR_WD1772)
       {
         SF314[DRIVE].MfmManager->LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
       }
-#else
-      // that's not proper C++... 
-      if(IMAGE_STW)
-      {
-        ImageSTW[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
-      }
-#if defined(SSE_DISK_SCP)
-      else if(IMAGE_SCP)
-      {
-        ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
-      }
-#endif
-#if defined(SSE_DISK_HFE)
-      else if(IMAGE_HFE)
-      {
-        ImageHFE[DRIVE].LoadTrack(CURRENT_SIDE,SF314[DRIVE].Track());
-      }
-#endif
 #endif
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
       update_time=time_of_next_event+ MsToCycles(15);
@@ -2054,23 +2031,11 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
   if(CommandType(io_src_b)==2 || CommandType(io_src_b)==3) //or no condition?
   {
-#if defined(SSE_DISK_MFM0) //proper C++
-      if(SF314[DRIVE].ImageType.Manager==MNGR_WD1772)
-      {
-        SF314[DRIVE].MfmManager->LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
-      }
-#else
-    // there's certainly a more elegant C++ way... TODO!
-    if(IMAGE_STW)
-      ImageSTW[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
-#if defined(SSE_DISK_SCP)
-    else if(IMAGE_SCP)
-      ImageSCP[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
-#endif
-#if defined(SSE_DISK_HFE)
-    else if(IMAGE_HFE)
-      ImageHFE[DRIVE].LoadTrack(floppy_current_side(),floppy_head_track[DRIVE]);
-#endif
+#if defined(SSE_DISK_MFM0)
+    if(SF314[DRIVE].ImageType.Manager==MNGR_WD1772)
+    {
+      SF314[DRIVE].MfmManager->LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+    }
 #endif
   }
 

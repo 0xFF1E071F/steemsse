@@ -103,17 +103,6 @@ Bit 0-> Bit 1-> Bit 2-> Bit 3-> Bit 4-> Bit 5-> Bit 6-> Bit 7->(next byte)"
     return index;
 }
 
-#if !defined(SSE_DISK_MFM0)
-
-void  TImageHFE::ComputePosition(WORD position) {
-  // when we start reading/writing, where on the disk?
-  ASSERT(TRACKBYTES); // good old div /0 crashes the PC like it did the ST
-  position=position%TRACKBYTES; // 0-~6256, safety
-  TRACE_LOG("HFE old position %d new position %d\n",Position,position);
-  Position=Disk[DRIVE].current_byte=position;
-}
-
-#endif
 
 WORD TImageHFE::GetMfmData(WORD position) {
   WORD mfm_data=0xFFFF;
@@ -130,18 +119,6 @@ WORD TImageHFE::GetMfmData(WORD position) {
   return mfm_data;
 }
 
-#if !defined(SSE_DISK_MFM0)
-
-void TImageHFE::IncPosition(){
-  ASSERT(TRACKBYTES);
-  Position=(Position+1)%TRACKBYTES;
-#if defined(SSE_DISK_HFE_TRIGGER_IP)
-  if(!Position)
-    SF314[Id].IndexPulse(true);
-#endif
-}
-
-#endif
 
 void TImageHFE::Init() {
   fCurrentImage=NULL;
@@ -150,11 +127,8 @@ void TImageHFE::Init() {
   IMAGE_SIZE=0;
 }
 
-#if defined(SSE_DISK_MFM0) 
+
 bool TImageHFE::LoadTrack(BYTE side,BYTE track,bool) {
-#else
-bool TImageHFE::LoadTrack(BYTE side,BYTE track) {
-#endif
   ASSERT(Id==0||Id==1);
   bool ok=false;
   if(side<NUM_SIDES && track<NUM_TRACKS && ImageData)  
@@ -237,9 +211,8 @@ TRACE_LOG("RPM %d  WP %d WA %X offset %d step %X TR0/1 %X%X TR1/1 %X%X\n",
   }//if(fCurrentImage)
   if(!ok)
     Close();
-#if defined(SSE_DISK_MFM0) //proper C++
-  else SF314[Id].MfmManager=this;
-#endif
+  else 
+    SF314[Id].MfmManager=this;
   return ok;
 }
 

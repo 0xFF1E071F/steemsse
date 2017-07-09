@@ -1030,22 +1030,20 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_ADJUST_DRAWING_ZONE2 // DD+D3D
 #define SSE_VID_ANTICRASH_392
 #define SSE_VID_CHECK_POINTERS
-
-#define SSE_VID_EXT_MON
-#define SSE_VID_SCREENSHOTS_NUMBER
-#define SSE_VID_UTIL // miscellaneous functions
-#define SSE_VID_380
-#define SSE_VID_392_SCREEN_CHANGE_TIMING // useful if VSYNC is used
+//
+#define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
 #define SSE_VID_DISABLE_AUTOBORDER
-#define SSE_VID_DISABLE_AUTOBORDER2 // move options around
-#define SSE_VID_DISABLE_AUTOBORDER3 // different for monochrome
+#define SSE_VID_DISABLE_AUTOBORDER_HIRES // different for monochrome
+#define SSE_VID_EXT_MON
 #define SSE_VID_FS_382
 #define SSE_VID_FS_GUI_OPTION
 #define SSE_VID_FS_GUI_392 // dialog boxes weren't erased when moved (DD+D3D)
 #define SSE_VID_FS_GUI_392B // changing res triggered status bar refresh (DD+D3D)
 #define SSE_VID_GAMMA
 #define SSE_VID_GUI_392
-#define SSE_VID_BPP_CHOICE // 8bit, 16bit or 32bit at choice
+#define SSE_VID_SCREEN_CHANGE_TIMING // useful if VSYNC is used
+#define SSE_VID_SCREENSHOTS_NUMBER
+#define SSE_VID_UTIL // miscellaneous functions
 
 #if defined(WIN32)
 #define SSE_VID_2SCREENS //392
@@ -1056,6 +1054,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BLOCK_WINDOW_SIZE // option can't change size of window
 #define SSE_VID_BORDERS // optional larger borders
 #define SSE_VID_FREEIMAGE // mods in use of this plugin
+#define SSE_VID_FS_PROPER_QUIT_BUTTON // top right + made bigger icon
 #define SSE_VID_LOCK_ASPET_RATIO // 
 #define SSE_VID_MEMORY_LOST // no message box
 #define SSE_VID_SAVE_NEO // screenshots in ST Neochrome format
@@ -1081,58 +1080,60 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_BORDERS_416 
 #define SSE_VID_BORDERS_LIMIT_TO_245
 #define SSE_VID_BORDERS_LINE_PLUS_20
-#define SSE_VID_BORDERS_413_381
 #define SSE_VID_BORDERS_BIGTOP_381
 #define SSE_VID_BORDERS_GUARD_EM // don't mix large borders & extended res
 #define SSE_VID_BORDERS_GUARD_R2 // don't mix large borders & hi res
 //#define SSE_VID_BORDERS_NO_LOAD_SETTING // start at 384 x 270
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_BORDERS_GUI_392 // two options -> one option for on/off + size
+#endif
 
 #endif//borders
 
 
 #if defined(SSE_VID_D3D)
 
-#define SSE_VID_D3D_LIST_MODES // player can choose
+#if defined(SSE_VID_2SCREENS) && !defined(BCC_BUILD) // (Win 2000 min)
+#define SSE_VID_D3D_2SCREENS // DD does it itself
+#endif
+#define SSE_VID_D3D_FAKE_FULLSCREEN
+#define SSE_VID_D3D_LIST_MODES // player can choose (TODO switch broken)
 #define SSE_VID_D3D_CRISP //D3D can do that
-#define SSE_VID_D3D_CRISP_OPTION //the harder part!
+#define SSE_GUI_D3D_CRISP_OPTION //the harder part!
 #define SSE_VID_D3D_382
 #if defined(SSE_VID_3BUFFER_FS)
 #define SSE_VID_D3D_3BUFFER
 #endif
 #define SSE_VID_D3D_INTERPOLATED_SCANLINES
-#define SSE_VID_D3D_390
-#define SSE_VID_D3D_390B // update BLIT ERROR message
-#define SSE_VID_D3D_CRISP_390
 #define SSE_VID_D3D_FS_392A // changing fullscreen size caused trash in borders
-#define SSE_VID_D3D_FS_392B // fullscreen GUI could fail to appear
 #define SSE_VID_D3D_FS_392C // double creation at "activate"?
 #define SSE_VID_D3D_FS_392D // memorise d3dpp
 #define SSE_VID_D3D_FS_392D1 // delete/create texture with sprite
-#define SSE_VID_D3D_FS_392D1B // pic at start
-#define SSE_VID_D3D_CHECK_HARDWARE
 #define SSE_VID_D3D_FS_DEFAULT_HZ
 #define SSE_VID_D3D_NO_FREEIMAGE //saves some KB
+#define SSE_VID_D3D_PIC_AT_START
 #define SSE_VID_D3D_SCREENSHOT
 #if defined(SSE_VID_ST_ASPECT_RATIO)
 #define SSE_VID_D3D_ST_ASPECT_RATIO 
 #endif
-#define SSE_VID_D3D_STRETCH
-#define SSE_VID_D3D_STRETCH_FORCE // only stretch: better for list modes
 
 #endif//d3d
 
 #ifdef SSE_VID_DD // DirectDraw
 
-#define SSE_VID_DD_BLIT_TRY_BLOCK //useless?
-#define SSE_VID_DD_FS_32BIT
-#define SSE_VID_DD_FS_IS_392
-#define SSE_VID_RECORD_AVI //avifile not so good 
-#define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
-#define SSE_VID_DD_SCREENSHOT_391
 #if defined(SSE_VID_3BUFFER)
 #define SSE_VID_3BUFFER_WIN // window Triple Buffering (DD)
 #define SSE_VID_DD_3BUFFER_WIN
 #endif
+#define SSE_VID_DD_BLIT_TRY_BLOCK //useless?
+#define SSE_VID_DD_FS_32BIT
+#define SSE_VID_DD_FS_IS_392
+#if defined(SSE_VID_BORDERS)
+#define SSE_VID_DD_FS_MAXRES // using the display's natural resolution 
+#endif
+#define SSE_VID_DD_NO_FS_CLIPPER // clipper makes the fullscreen GUI unusable in Windows 10
+#define SSE_VID_RECORD_AVI //avifile not so good 
+#define SSE_VID_DD_SCREENSHOT_391
 #if defined(SSE_VID_ST_ASPECT_RATIO)
 #define SSE_VID_DD_ST_ASPECT_RATIO 
 #endif
@@ -1162,23 +1163,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//freeimage
 
 
-#if defined(SSE_VID_2SCREENS) && defined(SSE_VID_D3D) && !defined(BCC_BUILD)
-#define SSE_VID_D3D_2SCREENS // don't think there will be DD version (Win 2000 min)
-#endif
-#if defined(SSE_VID_D3D)
-#define SSE_VID_D3D_FAKE_FULLSCREEN
-#endif
-#if defined(SSE_VID_DD) && defined(SSE_VID_BORDERS)
-#define SSE_VID_DD_FS_MAXRES // using the display's natural resolution 
-#endif
-
-#if defined(SSE_VID_GUI_392)
-#define SSE_VID_GUI_IS_AND_PAL // one option for Interpolated Scanlines and PAL Aspect Ratio
-#define SSE_VID_FS_PROPER_QUIT_BUTTON // top right + made bigger icon
-#if defined(SSE_VID_BORDERS)
-#define SSE_VID_BORDERS_GUI_392 // two options -> one option for on/off + size
-#endif
-#endif
 
 
 #if defined(SSE_WD1772)
@@ -1389,7 +1373,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACSI_LED
 #endif
 #define SSE_ACSI_LS
-#define SSE_ACSI_MEGASTF
 #define SSE_ACSI_MODESELECT
 #define SSE_ACSI_OPTION
 #define SSE_ACSI_REQUEST_SENSE
@@ -1625,7 +1608,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DEBUG_FDC_TRACE_STR // trace read STR (careful)
 #define SSE_DEBUG_WRITE_TRACK_TRACE_IDS
 //#define SSE_YM2149_REPORT_DRIVE_CHANGE // as FDC trace
-#define SSE_DEBUG_FDC_TRACE_IRQ //for some reason was commented out in v3.7.2
+#define SSE_DEBUG_FDC_TRACE_IRQ
 #endif//floppy
 
 #ifdef SSE_IKBD_6301
@@ -1868,7 +1851,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+#define SSE_BUGFIX_393
 #define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible
+#define SSE_VID_D3D_2SCREENS_393 // negative coordinates
 
 #endif//bugfix
 

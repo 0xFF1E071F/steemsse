@@ -108,7 +108,6 @@ bool TImageSTW::Create(char *path) {
 
 #endif
 
-#if defined(SSE_DISK_MFM0)
 
 WORD TImageSTW::GetMfmData(WORD position) {
   WORD mfm_data=0xFFFF;
@@ -131,26 +130,6 @@ WORD TImageSTW::GetMfmData(WORD position) {
   return mfm_data;
 }
 
-#else
-
-WORD TImageSTW::GetMfmData(WORD position) {
-  WORD mfm_data=0;
-  if(TrackData && position<TRACKBYTES)
-  {
-    mfm_data=TrackData[position];
-    SWAP_WORD(&mfm_data);
-  }
-#ifdef SSE_DEBUG
-  else 
-  {
-    TRACE_LOG("GetMfmData(%c:%d) error\n",'A'+DRIVE,position);
-    TRACE_OSD("STW ERR");
-  }
-#endif
-  return mfm_data;
-}
-
-#endif
 
 void TImageSTW::Init() {
   Version=0x0100; // 1.0
@@ -162,11 +141,8 @@ void TImageSTW::Init() {
   TRACKBYTES=DISK_BYTES_PER_TRACK;
 }
 
-#if defined(SSE_DISK_MFM0) 
+
 bool  TImageSTW::LoadTrack(BYTE side,BYTE track,bool) {
-#else
-bool  TImageSTW::LoadTrack(BYTE side,BYTE track) {
-#endif
   ASSERT(Id==0||Id==1);
   bool ok=false;
   if(side<N_SIDES && track<N_TRACKS && ImageData)  
@@ -244,13 +220,11 @@ bool TImageSTW::Open(char *path) {
   }//if(fCurrentImage)
   if(!ok)
     Close();
-#if defined(SSE_DISK_MFM0) //proper C++
-  else SF314[Id].MfmManager=this;
-#endif
+  else 
+    SF314[Id].MfmManager=this;
   return ok;
 }
 
-#if defined(SSE_DISK_MFM0)
 
 void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
   // must compute new starting point?
@@ -265,20 +239,6 @@ void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
     IncPosition();
   }
 }
-
-#else
-
-void TImageSTW::SetMfmData(WORD position,WORD mfm_data) {
-  if(TrackData && position<TRACKBYTES)
-  {
-    TrackData[position]=mfm_data;
-    SWAP_WORD(&TrackData[position]);
-    if(!FloppyDrive[Id].ReadOnly)
-      FloppyDrive[Id].WrittenTo=true;
-  }
-}
-
-#endif
 
 #endif//defined(SSE_DISK_STW)
 

@@ -386,11 +386,7 @@ void draw_set_jumps_and_source()
     big_draw=false;
 #else
   if (FullScreen){
-    if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP
-#if defined(SSE_VID_D3D_STRETCH_FORCE)      
-      || D3D9_OK && OPTION_D3D
-#endif
-      ) big_draw=0;
+    if (draw_fs_blit_mode==DFSM_STRETCHBLIT || draw_fs_blit_mode==DFSM_LAPTOP) big_draw=0;
   }else 
 #endif//#if defined(SSE_VID_D3D)    
     if (big_draw){
@@ -530,12 +526,8 @@ void draw_set_jumps_and_source()
 #endif
 #ifdef WIN32
 
-#if !defined(SSE_VID_D3D_FS_392A) || !defined(SSE_VID_D3D)
-      if (FullScreen
-#if defined(SSE_VID_D3D_STRETCH)
-        && !(D3D9_OK && OPTION_D3D)//TODO specify the switches
-#endif
-        ){
+#if !defined(SSE_VID_D3D)
+      if (FullScreen){
         ox=(800-ow)/2;oy=(600-oh)/2;
       }
 #endif
@@ -614,9 +606,6 @@ void draw_set_jumps_and_source()
       oh=shifter_y+res_vertical_scale*(BORDER_TOP+BORDER_BOTTOM);
     }else if (FullScreen){
 #if !defined(SSE_VID_D3D)
-#if defined(SSE_VID_D3D_STRETCH)
-      if(!(D3D9_OK && OPTION_D3D))
-#endif
       WIN_ONLY( oy=int(using_res_640_400 ? 0:40); )
 #endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
@@ -1180,9 +1169,9 @@ bool draw_blit()
 #endif
     if (bAppMinimized==0){
       if (BytesPerPixel==1) palette_flip();
-#if defined(SSE_VID_392_SCREEN_CHANGE_TIMING)
+#if defined(SSE_VID_SCREEN_CHANGE_TIMING)
 /*  Check for screen change right after the blit so that we
-    don't erase the frame (fullscreen) just before it's rendered (test)
+    don't erase the frame (fullscreen) just before it's rendered
 */
       bool ok=Disp.Blit();
       if(runstate==RUNSTATE_RUNNING)

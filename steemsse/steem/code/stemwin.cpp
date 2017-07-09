@@ -1041,12 +1041,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
       InvalidateRect(Win,&rc,0);
 #ifndef ONEGAME
       if (FullScreen){
-#if defined(SSE_VID_D3D) && defined(SSE_VID_FS_GUI_OPTION) && !defined(SSE_VID_D3D_2SCREENS)
-        //circles  around a bug I don't understand
-        if(OPTION_D3D)
-          cw=Disp.D3DFsW, ch=Disp.D3DFsH; // make size correct
-#endif
-
 #if defined(SSE_VID_FS_PROPER_QUIT_BUTTON)
         SetWindowPos(GetDlgItem(Win,106),0,cw-43,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windowed mode
         SetWindowPos(GetDlgItem(Win,116),0,cw-20,0,0,0,SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);//SS backs to windowed mode
@@ -1478,12 +1472,18 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     We check here if the player dragged the main window over to another screen.
 */
     case WM_MOVE:
-      POINT myPoint={LOWORD(lPar),HIWORD(lPar)};
+#if defined(SSE_VID_D3D_2SCREENS_393) // signed 16bit, fool :)
+      POINT myPoint={(short)LOWORD(lPar),(short)HIWORD(lPar)};
+#else
+      POINT myPoint={(LOWORD(lPar),HIWORD(lPar)};
+#endif
       // Get Windows handle to monitor. This function requires Windows 2000.
       HMONITOR hCurrentMonitor=MonitorFromPoint(myPoint,MONITOR_DEFAULTTOPRIMARY);
       if(!PtInRect(&Disp.rcMonitor,myPoint)) // player dragged to other monitor
       {
-        //TRACE("change monitor\n");
+        TRACE_VID_R("Detect change monitor (%d,%d) not in (%d,%d,%d,%d) handle %p\n",
+          myPoint.x,myPoint.y,Disp.rcMonitor.left,Disp.rcMonitor.top,
+          Disp.rcMonitor.right,Disp.rcMonitor.bottom,hCurrentMonitor);
         Disp.D3DCheckCurrentMonitorConfig(hCurrentMonitor);
       }
       break;
