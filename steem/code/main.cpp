@@ -1215,7 +1215,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 
 #ifndef ONEGAME
 
-#if defined(SSE_VID_D3D_FS_392D1B)
+#if defined(SSE_VID_D3D_PIC_AT_START)
   bool snapshot_was_loaded=false;
 #endif
 
@@ -1246,7 +1246,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
       else
 #endif
       if (LoadSnapShot(BootStateFile)) BootInMode|=BOOT_MODE_RUN;
-#if defined(SSE_VID_D3D_FS_392D1B)
+#if defined(SSE_VID_D3D_PIC_AT_START)
       snapshot_was_loaded=true;
 #endif
       LastSnapShot=BootStateFile;
@@ -1290,7 +1290,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
       }
       if (Load){
         LoadSnapShot(WriteDir+SLASH+AutoSnapShotName+".sts",0,true,0); // Don't add to history, don't change disks
-#if defined(SSE_VID_D3D_FS_392D1B)
+#if defined(SSE_VID_D3D_PIC_AT_START)
         snapshot_was_loaded=true;
 #endif
       }
@@ -1323,8 +1323,8 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   if (OGInit()==0) QuitSteem();
   PostMessage(StemWin,WM_SYSCOMMAND,SC_MAXIMIZE,0);
 #endif
-#if defined(SSE_VID_D3D_FS_392D1B)
-  if(!snapshot_was_loaded) // res_change() will erase starting pic
+#if defined(SSE_VID_D3D_PIC_AT_START)
+  if(!snapshot_was_loaded) // otherwise res_change() will erase starting pic
 #endif
   res_change();
 

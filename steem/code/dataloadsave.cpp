@@ -998,7 +998,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
 #endif
-#if defined(SSE_VID_DISABLE_AUTOBORDER3) // monochrome
+#if defined(SSE_VID_DISABLE_AUTOBORDER_HIRES) // monochrome - must be manually inserted
     SSEOption.MonochromeDisableBorder=pCSF->GetInt("Main","MonochromeDisableBorder",0);
 #endif
 #if defined(SSE_GUI_OPTION_FOR_TESTS)
@@ -1024,7 +1024,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_INT_MFP_OPTION) && !defined(SSE_C2_NOT_OPTIONAL)
   OPTION_C2=pCSF->GetInt("Options","Chipset2",OPTION_C2);
 #endif
-#if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_GUI_D3D_CRISP_OPTION)
   OPTION_D3D_CRISP=pCSF->GetInt("Display","Direct3DCrisp",OPTION_D3D_CRISP);
 #endif
 #if defined(SSE_ACSI_OPTION)
@@ -1523,14 +1523,17 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_2SCREENS)
-  // assume Steem will be started on primary display next time:  swap  
+#if !defined(SSE_VID_D3D_2SCREENS_393) 
+  // 392: assume Steem will be started on primary display next time:  swap  
+  // 393: 3 screens current + can start on aux -> assume nothing
   if(Disp.m_Adapter==1)
   {
     UINT buf=Disp.oldD3DMode;
     Disp.oldD3DMode=Disp.D3DMode;
     Disp.D3DMode=buf;
   }
-  pCSF->SetStr("Display","oldD3DMode",EasyStr(Disp.oldD3DMode));
+#endif
+  pCSF->SetStr("Display","oldD3DMode",EasyStr(Disp.oldD3DMode)); // still only for 2 (!)
 #endif
   pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
 #endif
@@ -1538,7 +1541,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_INT_MFP_OPTION)//TODO
   pCSF->SetStr("Options","Chipset2",EasyStr(OPTION_C2));
 #endif
-#if defined(SSE_VID_D3D_CRISP_OPTION)
+#if defined(SSE_GUI_D3D_CRISP_OPTION)
   pCSF->SetStr("Display","Direct3DCrisp",EasyStr(OPTION_D3D_CRISP));
 #endif
 #if defined(SSE_ACSI_OPTION)

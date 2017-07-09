@@ -581,6 +581,19 @@ enum logsection_enum_tag {
 #endif
 #endif
 
+// TRACE_VID_R 3.9.3
+#if defined(SSE_DEBUG)
+#ifdef __cplusplus // visible only to C++ objects
+#define TRACE_VID_R Debug.LogSection=LOGSECTION_VIDEO_RENDERING, Debug.TraceLog //!
+#endif//C++
+#else
+#if defined(VC_BUILD) // OK for Unix?
+#define TRACE_VID_R(x) // no code left?
+#else
+#define TRACE_VID_R // some code left to the compiler
+#endif
+#endif
+
 #if defined(SSE_BOILER_TRACE_EVENTS) //3.8.0
 #define TRACE_EVENT(x) Debug.TraceEvent(x)
 #else

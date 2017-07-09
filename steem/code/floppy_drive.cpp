@@ -1466,7 +1466,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #endif
 #endif
 
-#if defined(SSE_DISK_MFM0)
   // use polymorphism for closing (for opening it wouldn't make it simpler)
   if(SF314[drive].ImageType.Manager==MNGR_WD1772 && SF314[drive].MfmManager)
   {
@@ -1474,33 +1473,6 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     SF314[drive].MfmManager->Close();
   }
   SF314[drive].State.reading=SF314[drive].State.writing=0; //? TODO
-#else
-
-#if defined(SSE_DISK_STW)
-  if(SF314[drive].ImageType.Extension==EXT_STW)
-    ImageSTW[drive].Close();
-  STWDisk=0;
-  SF314[drive].State.reading=SF314[drive].State.writing=0;
-#endif
-#if defined(SSE_DISK_SCP)
-  if(SF314[drive].ImageType.Extension==EXT_SCP)
-    ImageSCP[drive].Close();
-  SCPDisk=0;
-#if !defined(SSE_DISK_STW)
-  SF314[drive].State.reading=SF314[drive].State.writing=0;
-#endif
-#endif
-#if defined(SSE_DISK_HFE)
-  if(SF314[drive].ImageType.Extension==EXT_HFE)
-    ImageHFE[drive].Close();
-  HFEDisk=0;
-#if !defined(SSE_DISK_STW) && !defined(SSE_DISK_SCP)
-  SF314[drive].State.reading=SF314[drive].State.writing=0;
-#endif
-
-#endif//SSE_DISK_MFM0
-
-#endif//#if defined(SSE_DISK_392)
 
   if (f) fclose(f);
   f=NULL;

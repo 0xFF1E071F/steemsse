@@ -156,16 +156,10 @@ void run()
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED)
     return; // cancel "run" until reset
-#if defined(SSE_GUI_STATUS_BAR_ICONS)
-
-  else if(
-#if defined(SSE_VID_D3D_390B)
-    M68000.ProcessingState==TM68000::BLIT_ERROR
+#if defined(SSE_GUI_STATUS_BAR_ALERT)
+  else if(M68000.ProcessingState==TM68000::BLIT_ERROR
 #ifdef SSE_BOILER
     ||M68000.ProcessingState==TM68000::BOILER_MESSAGE
-#endif
-#else
-    M68000.ProcessingState==TM68000::BOILER_MESSAGE
 #endif
     )
   {
@@ -1321,7 +1315,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
 #endif  
-#if !defined(SSE_VID_392_SCREEN_CHANGE_TIMING) // -> draw_blit()
+#if !defined(SSE_VID_SCREEN_CHANGE_TIMING) // -> draw_blit()
   if (mixed_output>0){
     mixed_output--;
     if (mixed_output==2){

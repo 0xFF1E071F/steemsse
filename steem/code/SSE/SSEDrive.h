@@ -38,8 +38,8 @@ struct TSF314 {
 #endif
   // DATA
 #if defined(SSE_DISK_MFM0) 
-  TImageMfm *MfmManager;
-#endif//mfm
+  TImageMfm *MfmManager; //polymorphic
+#endif
 
 #if defined(SSE_DRIVE_SOUND)
 #ifdef WIN32

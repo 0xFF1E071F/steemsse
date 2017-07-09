@@ -149,14 +149,14 @@ public: //temp
 #if defined(SSE_VID_D3D_FS_392D)
   D3DPRESENT_PARAMETERS d3dpp; // double use for w,h, but we need other params
 #endif
-#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+#if defined(SSE_VID_D3D)
   D3DFORMAT m_DisplayFormat;
   D3DDEVTYPE m_DeviceType;
   DWORD m_vtx_proc;
+#endif
 #if defined(SSE_VID_D3D_2SCREENS)
   UINT m_Adapter,oldD3DMode;
   RECT rcMonitor;
-#endif
 #endif
 #if defined(SSE_VID_ANTICRASH_392)
   int VideoMemorySize;
@@ -373,11 +373,11 @@ private:
   int STYPixels();
 #endif
 
-#if defined(SSE_VID_D3D_CHECK_HARDWARE)
+
   D3DFORMAT DisplayFormat;
   D3DDEVTYPE DeviceType;
   DWORD vtx_proc;
-#endif
+
 
 #if defined(SSE_VID_D3D)
 public:
@@ -400,9 +400,6 @@ public:
 #if defined(SSE_VID_D3D_382)
   UINT D3DFsW,D3DFsH;
   void D3DUpdateWH(UINT mode);
-#if !defined(SSE_VID_D3D_390)
-  void Cls();
-#endif
 #endif
 private:
 #endif//d3d
