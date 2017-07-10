@@ -1792,7 +1792,14 @@ That will toggle bit x.
 */
         case 1048:  
         case 1049:
-          SSEOption.SingleSideDriveMap^=1<< (LOWORD(wPar)-1048);
+          SSEOption.SingleSideDriveMap^=(1<<(LOWORD(wPar)-1048));
+          break;
+#endif
+
+#if defined(SSE_DRIVE_FREEBOOT)
+        case 1052:
+        case 1053:
+          SSEOption.FreebootDriveMap^=(1<<(LOWORD(wPar)-1052));
           break;
 #endif
 
@@ -3083,20 +3090,41 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       if (disk==1) This->SetNumFloppies(3-num_connected_floppies);
       return 0;
 
-#if defined(SSE_DRIVE_SINGLE_SIDE) //TODO switch for those context options
+#if defined(SSE_GUI_DM_DRIVE_OPTIONS)
     case WM_RBUTTONDOWN: // right click on drive, make context menu
     {
       GET_THIS;
       ASSERT(disk==(disk&1));
       This->MenuTarget=disk;
       HMENU Pop=CreatePopupMenu();
+
+#if defined(SSE_DRIVE_SINGLE_SIDE)
+/*  The first 520 ST were equipped with a single side drive unfortunately.
+    The external model was called SF354 (double side was SF314).
+    The first STF also had an internal single side drive.
+    Because of that, almost all games were single sided for a long time.
+*/
 #if defined(SSE_DRIVE_SINGLE_SIDE_NOPASTI)
       if(SF314[disk].ImageType.Manager!=MNGR_PASTI)
 #endif
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | 
         (int)(( (SSEOption.SingleSideDriveMap)&(This->MenuTarget+1)) ? 
-        MF_CHECKED:0),1048+This->MenuTarget,
-        T("SF354 (single side - caution!)"));
+         MF_CHECKED:0),1048+This->MenuTarget,T("SF354 (single side - caution!)"));
+#endif
+
+#if defined(SSE_DRIVE_FREEBOOT)
+/*  The Freeboot was a hardware mod that could force the drive side to 1 (B)
+    with a switch. Using it fooled the ST into thinking it was reading
+    side A (based on the YM2149 register) when in fact it was B, so you could 
+    for example have two single sided games on one double sided disk, or disk B
+    on side B.
+    It worked because the WD1772 doesn't check side (it couldn't, it doesn't
+    know the side it's operating on).
+*/
+      InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | 
+        (int)(( (SSEOption.FreebootDriveMap)&(This->MenuTarget+1)) ? 
+         MF_CHECKED:0),1052+This->MenuTarget, T("Freeboot side B - caution!"));
+#endif
 
 #if defined(SSE_DRIVE_SWITCH_OFF_MOTOR)
       if(SF314[This->MenuTarget].State.motor)
@@ -3104,7 +3132,6 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
         InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,
           1046+This->MenuTarget,T("Stop motor"));
       }
-
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
       if(OPTION_DRIVE_SOUND)
       {
@@ -3112,7 +3139,6 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
           1044+This->MenuTarget,T("Toggle seek sound"));
       }
 #endif
-
 #endif
       POINT pt;
       GetCursorPos(&pt); // menu will appear at the mouse pointer
@@ -3121,7 +3147,7 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
       DestroyMenu(Pop);
       return 0; // mimic
     }
-#endif
+#endif//ctxt
 
     case WM_COMMAND:
       GET_THIS;

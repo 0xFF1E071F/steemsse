@@ -193,7 +193,13 @@ void TCaps::WritePsgA(int data) {
   else 
     WD1772.drivenew=-2;
   if(!WD1772.drivenew || WD1772.drivenew==1)
+  {
     SF314[WD1772.drivenew].newside=((data&BIT_0)==0);
+#if defined(SSE_DRIVE_FREEBOOT) //not tested as there's no freeboot image yet
+    if(SSEOption.FreebootDriveMap&(WD1772.drivenew+1))
+      SF314[WD1772.drivenew].newside=1;
+#endif
+  }
 }
 
 
