@@ -41,6 +41,9 @@ struct TOption {
   unsigned int StatusBarGameName:1;
   unsigned int DriveSound:1;
   unsigned int SingleSideDriveMap:2;
+#if defined(SSE_DRIVE_FREEBOOT) //we will imitate what we did for single side
+  unsigned int FreebootDriveMap:2;
+#endif
   //unsigned int PSGMod:1;
   unsigned int SampledYM:1;
   //unsigned int PSGFixedVolume:1;

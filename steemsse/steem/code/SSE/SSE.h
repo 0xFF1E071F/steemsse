@@ -494,6 +494,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_GUI_DM_WRONG_IMAGE_ALERT
 #define SSE_GUI_DM_DOUBLE_CLK_GO_UP //habit with some file managers
+#define SSE_GUI_DM_DRIVE_OPTIONS
 #define SSE_GUI_DM_GHOST
 #define SSE_GUI_DM_INSERT_DISK_B
 #define SSE_GUI_DM_INSERT_DISK_B_LS//load/save option
@@ -1834,6 +1835,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #if defined(SSE_BETA) //next version
+
+#define SSE_DRIVE_FREEBOOT //393
 
 #endif//beta
 

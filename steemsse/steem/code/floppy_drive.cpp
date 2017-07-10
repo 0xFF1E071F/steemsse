@@ -982,6 +982,12 @@ bool TFloppyImage::SeekSector(int Side,int Track,int Sector,bool Format)
     return true;// -> RNF
 #endif
 
+#if defined(SSE_DRIVE_FREEBOOT)
+  // for ST, MSA, DIM, #sectors and tracks must be the same... (AFAIK)
+  if(SSEOption.FreebootDriveMap&(DRIVE+1))
+    Side=1;
+#endif
+
   if (STT_File){
     DWORD TrackStart=STT_TrackStart[Side][Track],Magic=0;
     WORD DataFlags;

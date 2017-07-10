@@ -667,7 +667,7 @@ void TImageMfm::IncPosition(){
 #endif
 }
 
-#endif
+#endif//mfm
 
 #endif//drive
 
