@@ -1071,7 +1071,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//video
 
-
 #if defined(SSE_VID_BORDERS)
 
 #define SSE_VID_BPOC // Best Part of the Creation
@@ -1090,7 +1089,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #endif//borders
-
 
 #if defined(SSE_VID_D3D)
 
@@ -1162,8 +1160,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 #endif//freeimage
-
-
 
 
 #if defined(SSE_WD1772)
@@ -1837,6 +1833,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA) //next version
 
 #define SSE_DRIVE_FREEBOOT //393
+#define SSE_JOYSTICK_PADDLES //393
 
 #endif//beta
 
@@ -1857,6 +1854,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_393
 #define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
+#define SSE_VS2008_WARNING_393
 
 #endif//bugfix
 
