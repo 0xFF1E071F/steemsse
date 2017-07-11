@@ -616,7 +616,10 @@ inline void check_io_write_l() {
 
 inline void handle_ioaccess() {
   if (ioaccess){                             
-    switch (ioaccess & IOACCESS_NUMBER_MASK){     
+#if defined(SSE_TIMING_NO_IO_W_DELAY) && defined(SSE_BUGFIX_393)
+    ASSERT(!(ioaccess&7));
+#endif
+    switch (ioaccess & IOACCESS_NUMBER_MASK){    
 #if !defined(SSE_TIMING_NO_IO_W_DELAY)
       case 1: io_write_b(ioad,LOBYTE(iobuffer)); 
         break;    
@@ -774,6 +777,7 @@ already fetched. One word will be in IRD and another one in IRC.
 #endif
 
   /////////// CALL CPU EMU FUNCTION ///////////////
+//  ASSERT(ir!=0x8178);
   m68k_high_nibble_jump_table[ir>>12]();
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
@@ -5626,6 +5630,9 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
+#if defined(SSE_BUGFIX_393)
+    CHECK_IOW_W; 
+#endif
   }
 }
 
