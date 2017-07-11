@@ -414,13 +414,15 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
     case 0xff9201:
     {
       int Ret=0;
-
       if (Joy[N_JOY_STE_A_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_A_0));
       }else{
-#if defined(SSE_VS2008_WARNING_390) 
-        Ret|=(stick[N_JOY_STE_A_0] & BIT_7);
-        Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
+#if defined(SSE_VS2008_WARNING_393) // I completely misunderstood the warning
+        Ret|=(int)(bool)(stick[N_JOY_STE_A_0] & BIT_7);
+        Ret|=(bool)(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
+#elif defined(SSE_VS2008_WARNING_390) 
+        Ret|=(stick[N_JOY_STE_A_0] & BIT_7); // and made this incorrect (0x80 in stead of 1!)
+        Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1; // and here
 #else
 #if defined(SSE_BUILD)//MFD?
         Ret|=(BOOL)(stick[N_JOY_STE_A_0] & BIT_7);
@@ -433,9 +435,12 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       if (Joy[N_JOY_STE_B_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_B_0));
       }else{
-#if defined(SSE_VS2008_WARNING_390) 
-        Ret|=(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
-        Ret|=(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
+#if defined(SSE_VS2008_WARNING_393)
+        Ret|=bool(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
+        Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
+#elif defined(SSE_VS2008_WARNING_390) 
+        Ret|=(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2; // and here
+        Ret|=(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3; // and here
 #else
         Ret|=bool(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
         Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
@@ -477,6 +482,46 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       Ret=~Ret;
       return BYTE((addr==0xff9202) ? HIBYTE(Ret):LOBYTE(Ret));
     }
+#if defined(SSE_JOYSTICK_PADDLES)
+/*
+FF9210 ---- ---- xxxx xxxx (X Paddle 0)
+FF9212 ---- ---- xxxx xxxx (Y Paddle 0)
+FF9214 ---- ---- xxxx xxxx (X Paddle 1)
+FF9216 ---- ---- xxxx xxxx (Y Paddle 1)
+
+ Paddles. One pair of paddles can be plugged into Joystick 0 (Paddle 0).
+ A second set can be plugged into Joystick 1 (Paddle 1). 
+ The current position of each of the four paddles is reported at these
+ locations. The fire buttons are the same as for the respective joystick.
+ The triggers for the paddles are read as bits one and two of FF9202
+ (JOY0 Left and Right) 
+ Thx Petari for proof of concept (check his versions of Oids).
+*/
+    case 0xff9210:
+    case 0xff9212:
+    case 0xff9214:
+    case 0xff9216: 
+      return 0xff; //high byte not connected
+
+    case 0xff9211: // A X 0
+    case 0xff9213: // A Y 2
+    case 0xff9215: // B X 4
+    case 0xff9217: // B Y 6
+    {
+      int a=addr-0xff9211;
+      int st_joystick=(a<4)?N_JOY_STE_A_0:N_JOY_STE_B_0;
+      int axis=(a&2)?1:0;
+      int DirID=Joy[st_joystick].DirID[4]; // 4 down arbitrary
+      int joynum=(HIBYTE(DirID)-10)/10;
+      BYTE rv;
+      if(!IsJoyActive(st_joystick))
+        // my STE with no STE joystick in
+        rv=0x80+ (rand()%15) + (0x10*(a==0)) + (0x20*(a==2)); 
+      else 
+        rv=4+(HIBYTE(GetAxisPosition(axis,&JoyPos[joynum]))/4);
+      return rv;
+    }
+#else
     case 0xff9210: return 0xff;
     case 0xff9211: return 6;   // Nonsense
     case 0xff9212: return 0xff;
@@ -485,6 +530,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
     case 0xff9215: return 9;   // Nonsense
     case 0xff9216: return 0xff;
     case 0xff9217: return 15;   // Nonsense
+#endif
     case 0xff9220: return b11111011; // Don't ask why
     case 0xff9221: return b11111110;
     case 0xff9222: return b11111011; // Don't ask why
