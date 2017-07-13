@@ -1475,7 +1475,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #if defined(SSE_VID_D3D_2SCREENS_393) // signed 16bit, fool :)
       POINT myPoint={(short)LOWORD(lPar),(short)HIWORD(lPar)};
 #else
-      POINT myPoint={(LOWORD(lPar),HIWORD(lPar)};
+      POINT myPoint={LOWORD(lPar),HIWORD(lPar)};
 #endif
       // Get Windows handle to monitor. This function requires Windows 2000.
       HMONITOR hCurrentMonitor=MonitorFromPoint(myPoint,MONITOR_DEFAULTTOPRIMARY);

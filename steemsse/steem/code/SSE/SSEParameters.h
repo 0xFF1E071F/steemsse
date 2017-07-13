@@ -66,6 +66,9 @@ The ACIA master clock is 500kHz.
 
 #if defined(SSE_BLITTER)
 
+
+#define BLITTER_LATCH_LATENCY 4 // not sure what it precisely is nor of value
+
 #if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_MAIN_LOOP)
 #define BLITTER_BLIT_MODE_CYCLES (256) //not used in v3.9.1
 #endif

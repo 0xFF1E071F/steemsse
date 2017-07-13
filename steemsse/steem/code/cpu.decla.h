@@ -489,12 +489,29 @@ inline void ReadBusTimingL();
 #define CPU_ABUS_ACCESS_READ  ReadBusTiming()
 #define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
 #define BLT_ABUS_ACCESS_READ  ReadBusTiming()
+#if defined(SSE_BLT_BUS_ARBITRATION_393A)
+/*  Blitter start check should be pre read, post write.
+    Timing is counted right before the R/W, so we now check
+    for blitter start right at the end of the timing count but
+    only for reads (at least this way we won't forget macros - bugfix Giana STE).
+    Need different routines for PUSH and POP now.
+*/
+inline void PopTiming();
+inline void PopTimingL();
+inline void PushTiming();
+inline void PushTimingL();
+#define CPU_ABUS_ACCESS_READ_POP PopTiming()
+#define CPU_ABUS_ACCESS_READ_POP_L PopTimingL()
+#define CPU_ABUS_ACCESS_WRITE_PUSH PushTiming()
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L PushTimingL()
+#else
 inline void StackTiming();
 inline void StackTimingL();
 #define CPU_ABUS_ACCESS_READ_POP StackTiming()
 #define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
 #define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
 #define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
+#endif
 inline void WriteBusTiming();
 inline void WriteBusTimingL();
 #define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
@@ -625,6 +642,9 @@ inline void FetchTiming() {
   else
   {  INSTRUCTION_TIME_BUS(4);}
 #endif
+#if defined(SSE_BLT_BUS_ARBITRATION_393A)
+  CHECK_BLITTER_START
+#endif
 }
 
 inline void FetchTimingL() {
@@ -650,6 +670,9 @@ inline void ReadBusTiming() {
    { INSTRUCTION_TIME_ROUND(4);}
   else
    { INSTRUCTION_TIME_BUS(4);}
+#endif
+#if defined(SSE_BLT_BUS_ARBITRATION_393A)
+  CHECK_BLITTER_START
 #endif
 }
 
@@ -685,6 +708,61 @@ inline void WriteBusTimingL() {
   WriteBusTiming();
 }
 
+#if defined(SSE_BLT_BUS_ARBITRATION_393A)
+
+inline void PushTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0;
+#endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND;}
+  else
+   { INSTRUCTION_TIME_BUS;}
+#else
+  if((MEM_ADDRESS)r[15]<himem)
+  {  INSTRUCTION_TIME_ROUND(4);}
+  else
+  {  INSTRUCTION_TIME_BUS(4);}
+#endif
+}
+
+inline void PushTimingL() {
+  PushTiming();
+  PushTiming();
+}
+
+inline void PopTiming() {
+#if defined(SSE_BLT_390B)
+  Blit.BlitCycles=0;
+#endif
+#if defined(SSE_CPU_392C)
+  M68000.ThinkingCycles=0;
+#endif
+#if defined(SSE_CPU_392D) // bus access always 4 cycles
+  if(abus<himem)
+   { INSTRUCTION_TIME_ROUND;}
+  else
+   { INSTRUCTION_TIME_BUS;}
+#else
+  if((MEM_ADDRESS)r[15]<himem)
+  {  INSTRUCTION_TIME_ROUND(4);}
+  else
+  {  INSTRUCTION_TIME_BUS(4);}
+#endif
+  CHECK_BLITTER_START
+}
+
+inline void PopTimingL() {
+  PopTiming();
+  PopTiming();
+}
+
+#else
+
 inline void StackTiming() {
 #if defined(SSE_BLT_390B)
   Blit.BlitCycles=0;
@@ -710,6 +788,7 @@ inline void StackTimingL() {
   StackTiming();
 }
 
+#endif
 
 #elif defined(SSE_MMU_ROUNDING_BUS)
 
@@ -1230,7 +1309,6 @@ inline void SetDestWToAddr() {
     DEBUG_CHECK_WRITE_W(abus);  
 #endif
   }
-
 }
 
 inline void SetDestLToAddr() {
@@ -1441,8 +1519,8 @@ inline void FetchWord(WORD &dest_word) {
     if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
       ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
   }
-#if defined(SSE_BLT_392) 
-  CHECK_BLITTER_START // eg Another Kid's Story 
+#if defined(SSE_BLT_392) && !defined(SSE_BLT_BUS_ARBITRATION_393A)
+  CHECK_BLITTER_START
 #endif
 }
 
@@ -1483,7 +1561,9 @@ inline void PrefetchIrc() {
 #endif
     IRC=*lpfetch;
   prefetched_2=true;
+#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
+#endif
 }
 
 #define PREFETCH_IRC PrefetchIrc();
@@ -2372,17 +2452,23 @@ inline void sr_check_z_n_l_for_r0()
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
+#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
+#endif
 }
 
 inline void ReadW() {
   m68k_src_w=m68k_dpeek(abus);
+#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
+#endif
 }
 
 inline void ReadL() {
   m68k_src_l=m68k_lpeek(abus);
+#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
+#endif
 }
 
 #else

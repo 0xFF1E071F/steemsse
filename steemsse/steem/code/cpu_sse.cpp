@@ -616,7 +616,7 @@ inline void check_io_write_l() {
 
 inline void handle_ioaccess() {
   if (ioaccess){                             
-#if defined(SSE_TIMING_NO_IO_W_DELAY) && defined(SSE_BUGFIX_393)
+#if defined(SSE_TIMING_NO_IO_W_DELAY)
     ASSERT(!(ioaccess&7));
 #endif
     switch (ioaccess & IOACCESS_NUMBER_MASK){    
@@ -778,6 +778,8 @@ already fetched. One word will be in IRD and another one in IRC.
 
   /////////// CALL CPU EMU FUNCTION ///////////////
 //  ASSERT(ir!=0x8178);
+//  ASSERT(ir!=0xe1d0);//bitshift
+  //ASSERT(ir!=0xd750);//add
   m68k_high_nibble_jump_table[ir>>12]();
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
@@ -5630,8 +5632,8 @@ Dn,<ea> :         |                 |               |
     m68k_DEST_W|=m68k_src_w;
     SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
     SR_CHECK_Z_AND_N_W;
-#if defined(SSE_BUGFIX_393)
-    CHECK_IOW_W; 
+#if defined(SSE_BUGFIX_393B)
+    CHECK_IOW_W; //(D-Bug 117)
 #endif
   }
 }
@@ -6886,6 +6888,7 @@ void                              m68k_muls(){
     - Best case : 38 cycles with $0 or $FFFF
     - Worst case : 70 cycles with $5555
 */
+
   INSTRUCTION_TIME(34); //TODO blitter? 
   int LastLow=0;
   int Val=WORD(m68k_src_w);
@@ -7976,7 +7979,9 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((signed short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   case BITS_ba9_001:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -7985,7 +7990,9 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -8003,7 +8010,9 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   }case BITS_ba9_011:{
     SR_CLEAR(SR_N+SR_V+SR_Z);
@@ -8023,7 +8032,9 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   }
 #if defined(SSE_DEBUG)  
@@ -8036,6 +8047,9 @@ void                              m68k_bit_shift_right_to_mem(){
   abus=dest_addr; 
 #endif
   CPU_ABUS_ACCESS_WRITE; //nw
+#if defined(SSE_BUGFIX_393B1)
+  CHECK_IOW_W; //after we count timing :)
+#endif
 }
 
 
@@ -8069,7 +8083,9 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((signed short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   case BITS_ba9_001:
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C+SR_X);
@@ -8078,7 +8094,9 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   case BITS_ba9_010:{
     SR_CLEAR(SR_N+SR_V+SR_Z+SR_C);
@@ -8096,7 +8114,9 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   }case BITS_ba9_011:{
     SR_CLEAR(SR_N+SR_V+SR_Z);
@@ -8116,7 +8136,9 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
+#if !defined(SSE_BUGFIX_393B1)
     CHECK_IOW_W;
+#endif
     break;
   }
 #if defined(SSE_DEBUG)    
@@ -8129,6 +8151,9 @@ void                              m68k_bit_shift_left_to_mem(){
   abus=dest_addr; 
 #endif
   CPU_ABUS_ACCESS_WRITE; //nw
+#if defined(SSE_BUGFIX_393B1)
+  CHECK_IOW_W;
+#endif
 }
 
 
