@@ -1832,6 +1832,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
+#define SSE_BLT_RESTART_393
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_JOYSTICK_PADDLES //393
 
@@ -1852,6 +1853,10 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA_BUGFIX)
 
 #define SSE_BUGFIX_393
+#define SSE_BUGFIX_393A //blitter don't wipe all ioaccess
+#define SSE_BUGFIX_393B //forgotten check io macro OR.W
+#define SSE_BUGFIX_393B1 //badly placed check io macros bitshift
+#define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
 #define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
 #define SSE_VS2008_WARNING_393

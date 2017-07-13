@@ -202,8 +202,11 @@ void ASMCALL Blitter_Start_Now()
 #if defined(SSE_BLT_392)
   Blit.Request=0;
 #endif
-
+#if defined(SSE_BUGFIX_393A)
+  ioaccess&=~IOACCESS_FLAG_DO_BLIT; 
+#else
   ioaccess=0;
+#endif
   Blit.Busy=true;
   dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Start_Now changing GPIP bit from "+
           bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 1");
@@ -1190,7 +1193,7 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           {
 #if defined(SSE_BLT_392)
             Blit.Request=1;
-            Blit.TimeToSwapBus=ACT+4; // latching delay?
+            Blit.TimeToSwapBus=ACT+BLITTER_LATCH_LATENCY; 
 #endif
             ioaccess|=IOACCESS_FLAG_DO_BLIT;
           }
@@ -1232,7 +1235,14 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #if defined(SSE_BLT_RESTART)
           Blit.Restarted=true; // trick; changes #blit cycles and arbitration cycles
 #endif
-#if defined(SSE_BLT_RESTART2)//no...
+#if defined(SSE_BLT_RESTART_393) // seems more logical, same way as for start
+          if(Blit.Request) // not during TAS (BLIT03K)
+          {
+            ASSERT(Blit.YCount);
+            Blit.Request++;
+            Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_LATCH_LATENCY;
+          }
+#elif defined(SSE_BLT_RESTART2)//no...
           if (Blit.YCount)
             ioaccess|=IOACCESS_FLAG_DO_BLIT;
 #else
@@ -1320,7 +1330,7 @@ void Blitter_CheckRequest() {
       Blitter_Draw();
     }
   }
-  // hog mode + blit mode, start
+  // hog mode + blit mode, start + restart
   else if((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
     Blitter_Start_Now(); 
 }
