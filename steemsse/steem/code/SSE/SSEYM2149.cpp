@@ -51,6 +51,10 @@ bool TYM2149::LoadFixedVolTable() {
   ASSERT(p_fixed_vol_3voices);
   EasyStr filename=RunDir+SLASH+YM2149_FIXED_VOL_FILENAME;
   FILE *fp=fopen(filename.Text,"r+b");
+#if defined(SSE_YM2149_DYNAMIC_TABLE1)
+  EasyStr filename2=RunDir+SLASH+"ym2149_fixed_vol2.bin";
+  FILE *fp2=fopen(filename2.Text,"w+b");
+#endif
   if(fp && p_fixed_vol_3voices)
   {
     int nwords=fread(p_fixed_vol_3voices,sizeof(WORD),16*16*16,fp);
@@ -69,6 +73,11 @@ bool TYM2149::LoadFixedVolTable() {
 */
     for(int i=0;i<16*16*16;i++)
       p_fixed_vol_3voices[i]>>=1; 
+#if defined(SSE_YM2149_DYNAMIC_TABLE1)
+    nwords=fwrite(p_fixed_vol_3voices,sizeof(WORD),16*16*16,fp2);
+    ASSERT(nwords==16*16*16);
+    fclose(fp2);
+#endif
 #endif
 #if defined(SSE_SOUND_MOVE_ZERO)
     // move the zero to make it match DMA's (tentative) //was bad idea

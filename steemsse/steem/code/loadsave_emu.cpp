@@ -1284,19 +1284,27 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #endif
 
 #if SSE_VERSION>=392
-  if(Version>=56) //392
+  if(Version>=56)
   {
-    //ReadWriteStruct(MMU); // for MonSTer alt-RAM...
-    //ASSERT(MMU.FreqMod[5]==2);
-
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
     ReadWrite(MMU.MonSTerHimem);
 #else
     ReadWrite(dummy[0]);
 #endif
-
   }
 #endif
+
+#if SSE_VERSION>=393
+  if(Version>=57)
+  {
+#if defined(SSE_STF_LACESCAN)
+    BYTE tmp=SSEConfig.LaceScanOn;
+    ReadWrite(tmp);
+    SSEConfig.LaceScanOn=tmp;
+#endif
+  }
+#endif
+
 
 #endif//sse_build
 

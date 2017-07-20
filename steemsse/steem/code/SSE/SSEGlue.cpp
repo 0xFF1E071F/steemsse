@@ -280,13 +280,21 @@ void TGlue::CheckSideOverscan() {
       fetched_bytes_mod=-80;
       draw_line_off=true;
     }
+#ifdef SSE_BUGFIX_393 //argh!
+    else if( !(CurrentScanline.Tricks&2) 
+#else
     else if( !(CurrentScanline.Tricks&0x10) 
+#endif
       && CyclesIn>=ScanlineTiming[LINE_STOP][FREQ_72]
       && !(ShiftModeAtCycle(ScanlineTiming[LINE_STOP][FREQ_72])&2))
     {
       // note 14x2=28
       // 6-166 DE; we deduce 166+28=194 HSYNC stops DE
+#ifdef SSE_BUGFIX_393
+      CurrentScanline.Tricks|=2;
+#else
       CurrentScanline.Tricks|=0x10; // we have no bit for +14, it's right off
+#endif
       fetched_bytes_mod=14;
     }
     shifter_draw_pointer+=fetched_bytes_mod;
@@ -1735,13 +1743,13 @@ void TGlue::EndHBL() {
 }
 
 
-int TGlue::FetchingLine() {
+int TGlue::FetchingLine() { //TODO inline
   // does the current scan_y involve fetching by the MMU?
   // notice < shifter_last_draw_line, not <=
 
   return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
 
-#if defined(SSE_VID_BORDERS_BIGTOP) //?? what is this, TODO
+#if defined(SSE_VID_BORDERS_BIGTOP) & !defined(SSE_STF_LACESCAN)
 //          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
       && (DISPLAY_SIZE<BIGGEST_DISPLAY 
       || scan_y>=draw_first_scanline_for_border+
@@ -1787,6 +1795,7 @@ void TGlue::IncScanline() {
   PreviousScanline=CurrentScanline; // auto-generated
   CurrentScanline=NextScanline;
 
+
   if(CurrentScanline.Tricks)
     ; // don't change #bytes
   else if(FetchingLine() //TODO seems sketchy!
@@ -1804,6 +1813,39 @@ void TGlue::IncScanline() {
   AdaptScanlineValues(-1);
   ASSERT(CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
   TrickExecuted=0;
+
+#if defined(SSE_STF_LACESCAN)
+/*  Emulate hardware overscan scanlines of the LaceScan circuit.
+    It is a hack that intercepts the 'DE' line between the GLUE and the 
+    Shifter. Hence only possible on the STF/Mega ST (on the STE, GLUE and
+    Shifter are one chip).
+    Compared with software overscan, scanlines are 6 byte longer.
+*/
+  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)
+  {
+    if(FetchingLine()) // there are also more fetching lines
+    {
+      bool BigBorders=false;
+#if defined(SSE_VID_BORDERS)
+      BigBorders=(SideBorderSize==VERY_LARGE_BORDER_SIDE  && border);
+#endif
+      left_border=right_border=0; // using Steem's existing system
+      if(COLOUR_MONITOR)
+      {
+        //TrickExecuted=CurrentScanline.Tricks=TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44;
+        CurrentScanline.Bytes=(shifter_freq_at_start_of_vbl==50)?236:234;
+        if(!BigBorders)
+          shifter_draw_pointer+=8; // as for "left off", skip non displayed border
+      }
+      else
+      {
+        CurrentScanline.Bytes=100;
+        TrickExecuted=CurrentScanline.Tricks=2; // needed by Shifter.Render()
+      }
+    }
+  }
+#endif
+
   NextScanline.Tricks=0; // eg for 0byte lines mess
   shifter_skip_raster_for_hscroll = (HSCROLL!=0); // one more fetch at the end
   Glue.Status.scanline_done=false;
@@ -2496,6 +2538,35 @@ LOOP
 void TGlue::Vbl() {
   cpu_timer_at_start_of_hbl=time_of_next_event;
   scan_y=-scanlines_above_screen[shifter_freq_idx];
+
+#if defined(SSE_STF_LACESCAN)
+  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)
+  {
+    int start;
+    // hack to get correct display
+    if(COLOUR_MONITOR)
+    {
+      if(shifter_freq_at_start_of_vbl==50)
+      {
+        start=(border==3)?-39:-30;
+        shifter_last_draw_line=245;
+      }
+      else //TODO
+      {
+        start=-20;
+        shifter_last_draw_line=start+1+238;
+      }
+    }
+    else
+    {
+      start=-50;
+      shifter_last_draw_line=446;
+    }
+    scan_y=start;
+    shifter_first_draw_line=start+1;
+  }
+#endif
+
   Status.hbi_done=Status.sdp_reload_done=false;
   Status.vbl_done=true;
 #if defined(SSE_SHIFTER_UNSTABLE)//TODO...

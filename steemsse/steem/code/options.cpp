@@ -999,6 +999,9 @@ void TOptionBox::SetBorder(int newborder)
 #endif
     if (FullScreen) change_fullscreen_display_mode(true);
     change_window_size_for_border_change(oldborder,newborder);
+#ifdef SSE_BUGFIX_393
+    if(newborder>=oldborder)
+#endif
     draw(false);
     InvalidateRect(StemWin,NULL,0);
 #if !(defined(SSE_VID_D3D) && defined(SSE_BUGFIX_392))
@@ -2144,8 +2147,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
-
-
         case 8100: // Memory size
           if (HIWORD(wPar)==CBN_SELENDOK){
             DWORD Conf=CBGetSelectedItemData(HWND(lPar));
@@ -2161,6 +2162,15 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->NewMonitorSel=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             if (This->NewMonitorSel==This->GetCurrentMonitorSel()) This->NewMonitorSel=-1;
+#ifdef SSE_VAR_393
+            //TRACE("NewMonitorSel %d border %d\n",This->NewMonitorSel,border);
+            else if(This->NewMonitorSel==1) // hires, limit border
+            {
+              if(border>1)
+                border=1;
+              border_last_chosen=border;
+            }
+#endif
             CheckResetIcon();
           }
           break;

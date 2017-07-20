@@ -61,19 +61,22 @@ void TOptionBox::CreateMachinePage()
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
 
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
-    page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
+    page_l+5+Wid,y,80+20,200,Handle,(HMENU)211,HInstance,NULL);
 
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[0]));
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[1]));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STE]));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF]));
 #if defined(SSE_STF_MEGASTF)
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[2]));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[MEGASTF]));
+#endif
+#if defined(SSE_STF_LACESCAN)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF_OVERSCAN]));
 #endif
   SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
   ToolAddWindow(ToolTip,Win,
     T("The STE was more elaborated than the older STF but some programs are \
-compatible only with the STF"));
+compatible only with the STF - see the manual for other options"));
 #else
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
@@ -82,10 +85,16 @@ compatible only with the STF"));
 
 #if defined(SSE_GUI_OPTIONS_WU) && defined(SSE_MMU_WU)
   long Offset=Wid+40-20;
+#if defined(SSE_STF_LACESCAN) //make shorter...
+  Offset+=20;
+  Wid=get_text_width(T("Wake-up"));
+  CreateWindow("Static",T("Wake-up"),WS_CHILD,
+    page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
+#else
   Wid=get_text_width(T("Wake-up state"));
   CreateWindow("Static",T("Wake-up state"),WS_CHILD,
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-
+#endif
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid+Offset,y,85+20,200,Handle,(HMENU)212,HInstance,NULL);
 

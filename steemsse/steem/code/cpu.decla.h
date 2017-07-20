@@ -2268,7 +2268,9 @@ inline void m68kGetSourceLongNotA() {
 
 #define ILLEGAL  exception(BOMBS_ILLEGAL_INSTRUCTION,EA_INST,0);
 
-#if defined(SSE_VC_INTRINSICS_390E)
+#if defined(SSE_CPU_TRACE_REFACTOR) && defined(SSE_BUGFIX_393)
+#define DETECT_TRACE_BIT
+#elif defined(SSE_VC_INTRINSICS_390E) //MFD
 #define DETECT_TRACE_BIT {if (BITTEST(sr,SR_TRACE_BIT)) \
   ioaccess=TRACE_BIT_JUST_SET | (ioaccess & IOACCESS_FLAGS_MASK);}
 #else

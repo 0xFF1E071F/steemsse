@@ -108,7 +108,7 @@ THardDiskManager::THardDiskManager()
   update_mount();
 
   ApplyChanges=0;
-#if defined(SSE_GUI_FONT_FIX)
+#if defined(SSE_GUI_FONT_FIX__)
   Font=SSEConfig.GuiFont();
 #else
   Font=(HFONT)GetStockObject(DEFAULT_GUI_FONT);

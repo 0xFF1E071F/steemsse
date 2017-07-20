@@ -222,9 +222,14 @@ void TShifter::DrawScanlineToEnd()  {
 #endif
           ///////////////// RENDER VIDEO /////////////////
 #if defined(SSE_GLUE_HIRES_OVERSCAN)
-// experimental, right off, left off?
+/*  This is used for one demo that removes borders in high res, and for
+    hardware overscan.
+*/
           if(Glue.CurrentScanline.Tricks&2)
-#if defined(SSE_SHIFTER_382)
+#if defined(SSE_BUGFIX_393) //ugly bug was somehow caught by assembly routine, but not draw c
+            draw_scanline((BORDER_SIDE*2)/16- BORDER_SIDE/8, 
+            640/16+ BORDER_SIDE/4, (BORDER_SIDE*2)/16- BORDER_SIDE/8,0);
+#elif defined(SSE_SHIFTER_382)
             draw_scanline((BORDER_SIDE*2)/16-1, 640/16+3, 0,0);
 #else
             draw_scanline((BORDER_SIDE*2)/16-16, 640/16+16*2, (BORDER_SIDE*2)/16-16,0);
@@ -681,6 +686,9 @@ void TShifter::DrawBufferedScanlineToVideo() {
     if(draw_store_dest_ad+amount_drawn>draw_mem+Disp.VideoMemorySize)
     {
       TRACE_LOG("Video memory overflow\n");
+#ifdef SSE_BUGFIX_393
+      draw_end();
+#endif
       return;
     }
 #endif
