@@ -1220,6 +1220,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
 
 //#define SSE_YM2149_DYNAMIC_TABLE0 //temp, to build file
+//#define SSE_YM2149_DYNAMIC_TABLE1 //temp, to build quieter file
 #define SSE_YM2149_DYNAMIC_TABLE //using file
 #define SSE_GUI_OPTIONS_SAMPLED_YM
 #define SSE_YM2149_QUANTIZE_382
@@ -1832,9 +1833,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA) //next version
 
-#define SSE_BLT_RESTART_393
+//#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_JOYSTICK_PADDLES //393
+#define SSE_STF_LACESCAN // 393 we put LaceScan overscan among STF models
+#define SSE_VAR_393
 
 #endif//beta
 

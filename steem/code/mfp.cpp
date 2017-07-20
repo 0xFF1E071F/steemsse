@@ -944,6 +944,17 @@ int TMC68901::UpdateNextIrq(COUNTER_VAR at_time) {
 void TMC68901::ComputeNextTimerB(int info) {
   ASSERT(OPTION_C2);
   COUNTER_VAR tontb=0;
+
+#if defined(SSE_STF_LACESCAN)
+  // mfp receives the normal DE signal, not the tricked overscan DE
+  // in this emulation, it's a bit off compared with HW
+  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn &&
+    (COLOUR_MONITOR && (scan_y<0 || scan_y>=200))
+    || (!COLOUR_MONITOR && (scan_y<0 || scan_y>=400)))
+    ; // skip - notice TOS expects groups of lines with no timer B tick at reset
+  else
+#endif
+
   if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE))
   {
     // time of DE transition this scanline

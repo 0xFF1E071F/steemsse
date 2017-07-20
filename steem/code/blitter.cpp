@@ -778,7 +778,11 @@ BYTE Blitter_IO_ReadB(MEM_ADDRESS Adr)
     to a blitter without having to place an order with Atari.
     It's the exact same blitter for STF & STE.
 */
+#if defined(SSE_STF_LACESCAN)
+  if(ST_TYPE==STF)
+#else
  if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
+#endif
   {
     exception(BOMBS_BUS_ERROR,EA_READ,Adr);
     return 0;
@@ -855,7 +859,11 @@ void Blitter_IO_WriteB(MEM_ADDRESS Adr,BYTE Val)
 #else
 
 #if defined(SSE_STF_BLITTER)
+#if defined(SSE_STF_LACESCAN)
+  if(ST_TYPE==STF)
+#else
   if(ST_TYPE!=STE && ST_TYPE!=MEGASTF)
+#endif
   {
     exception(BOMBS_BUS_ERROR,EA_WRITE,Adr);
     return ;

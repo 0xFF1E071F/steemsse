@@ -617,10 +617,10 @@ inline void check_io_write_l() {
 inline void handle_ioaccess() {
   if (ioaccess){                             
 #if defined(SSE_TIMING_NO_IO_W_DELAY)
-    ASSERT(!(ioaccess&7));
+    ASSERT(!(ioaccess&7) || (ioaccess&0xfffffff8));
 #endif
     switch (ioaccess & IOACCESS_NUMBER_MASK){    
-#if !defined(SSE_TIMING_NO_IO_W_DELAY)
+#if !defined(SSE_TIMING_NO_IO_W_DELAY___)
       case 1: io_write_b(ioad,LOBYTE(iobuffer)); 
         break;    
       case 2: io_write_w(ioad,LOWORD(iobuffer)); 
@@ -780,6 +780,10 @@ already fetched. One word will be in IRD and another one in IRC.
 //  ASSERT(ir!=0x8178);
 //  ASSERT(ir!=0xe1d0);//bitshift
   //ASSERT(ir!=0xd750);//add
+//  ASSERT(ir!=0x46fc);
+//  ASSERT(ir!=0x4af9);
+  //ASSERT(ir!=0x4e90);
+  //ASSERT(!(ioaccess&7));
   m68k_high_nibble_jump_table[ir>>12]();
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
@@ -3220,14 +3224,18 @@ void                              m68k_move_to_sr(){
     #<data>       | 12(1/0)  4(1/0) |      np       |         nn np np          
 */
       DEBUG_ONLY( int debug_old_sr=sr; )
+      //ASSERT(!(ioaccess&7));
       m68k_GET_SOURCE_W; //EA
       INSTRUCTION_TIME(4); // nn
       sr=m68k_src_w;
       sr&=SR_VALID_BITMASK;
       REFETCH_IR; // np
       PREFETCH_IRC; // np
+      //ASSERT(!(ioaccess&7));
       DETECT_CHANGE_TO_USER_MODE;
+      //ASSERT(!(ioaccess&7));
       DETECT_TRACE_BIT;
+      //ASSERT(!(ioaccess&7));
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
       CHECK_STOP_ON_USER_CHANGE;
@@ -4620,6 +4628,9 @@ NOTES :
    these cycles.
   .RESET instruction have nothing to do with /RESET exception. 
 */
+#ifdef SSE_BUGFIX_393
+    ioaccess=0;
+#endif
     reset_peripherals(0);
     INSTRUCTION_TIME(124);//(??-)*
     PREFETCH_IRC;//np

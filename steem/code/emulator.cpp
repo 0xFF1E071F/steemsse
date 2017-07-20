@@ -554,6 +554,13 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].tx_irq_enabled=    (Val & b01100000)==BIT_5;
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
+
+#if defined(SSE_STF_LACESCAN)
+  // The overscan circuit is activated by using the free ACIA RTS pin (output)
+  if(ST_TYPE==STF_OVERSCAN && nACIA==NUM_ACIA_IKBD)
+    SSEConfig.LaceScanOn=((Val&BIT_6)!=0); // this is saved with the snapshot
+#endif
+
 #if defined(SSE_ACIA)
   if(OPTION_C1)
   {
@@ -566,6 +573,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
     return;
   }
 #endif
+
   if (acia[nACIA].tx_irq_enabled){
     acia[nACIA].irq=true;
   }else{
@@ -796,7 +804,11 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
 
     if (bank_length[bank]==KB512){ //real memory
 #ifdef SSE_STF_MMU
+#if defined(SSE_BUGFIX_393)
+      if(ST_TYPE!=STE) //this should be refactored Config.Ste .Stf ...
+#else
       if(ST_TYPE==STF)
+#endif
         ad&=~(BIT_20|BIT_10);
       else
 #endif
@@ -804,7 +816,11 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
     }
     else if (bank_length[bank]==KB128){ //real memory
 #ifdef SSE_STF_MMU
+#if defined(SSE_BUGFIX_393)
+      if(ST_TYPE!=STE)
+#else
       if(ST_TYPE==STF)
+#endif
         ad&=~(BIT_20|BIT_19|BIT_10|BIT_9);
       else
 #endif
@@ -816,7 +832,11 @@ MEM_ADDRESS mmu_confused_address(MEM_ADDRESS ad)
   else if (mmu_bank_length[bank]==KB512) { 
     if (bank_length[bank]==KB128){ //real memory
 #ifdef SSE_STF_MMU
+#if defined(SSE_BUGFIX_393)
+      if(ST_TYPE!=STE)
+#else
       if(ST_TYPE==STF)
+#endif
         ad&=~(BIT_18|BIT_9); // TOS OK, but diagnostic catridge?
       else
 #endif

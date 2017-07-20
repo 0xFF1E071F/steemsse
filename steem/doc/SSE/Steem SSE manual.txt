@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.9.2
+v3.9.3
 
 
 About Steem SSE
@@ -343,6 +343,8 @@ You can change this option during emulation but at your risk (ST crash
 possible).
 The Mega ST4 is like a STF with a blitter. When you choose it, Steem supposes
 you want the monochrome screen and GEMDOS hard disk emulation.
+The STF Overscan option emulates a STF equipped with the LaceScan auto-switch
+circuit active. The picture is bigger but you need appropriate drivers.
 
 The emulator will try to match a default compatible TOS when you change the
 option: 1.02 for STF, 1.04 for Mega ST4, 1.62 for STE.

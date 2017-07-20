@@ -378,7 +378,7 @@ LRESULT __stdcall PathDisplay_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 {
   switch (Mess){
     case WM_CREATE:
-#if defined(SSE_GUI_FONT_FIX)
+#if defined(SSE_GUI_FONT_FIX__)
       SetProp(Win,"DisplayPathFont",(HANDLE)SSEConfig.GuiFont());
 #else
       SetProp(Win,"DisplayPathFont",(HANDLE)GetStockObject(DEFAULT_GUI_FONT));
