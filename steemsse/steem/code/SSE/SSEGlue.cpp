@@ -2559,8 +2559,13 @@ void TGlue::Vbl() {
     }
     else
     {
+#if defined(SSE_VID_HIRES_BORDER_FIX)
+      start=0;
+      shifter_last_draw_line=500;
+#else
       start=-50;
-      shifter_last_draw_line=446;
+      shifter_last_draw_line=451;
+#endif
     }
     scan_y=start;
     shifter_first_draw_line=start+1;
