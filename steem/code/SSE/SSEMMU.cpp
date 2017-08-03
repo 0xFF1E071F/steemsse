@@ -74,7 +74,11 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     }else
       vc=xbios2+32000;
   }
+#if defined(SSE_GLUE_393C)
+  else if(Glue.de_v_on)
+#else
   else if(Glue.FetchingLine()) // lines where the counter actually moves
+#endif
   {
     Glue.CheckSideOverscan(); // this updates Bytes and StartCycle
     int bytes_to_count=Glue.CurrentScanline.Bytes;

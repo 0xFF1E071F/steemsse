@@ -1845,6 +1845,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload
 #define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
+#define SSE_GLUE_393C // not necessary, to test!
 #endif
 
 #endif//beta
