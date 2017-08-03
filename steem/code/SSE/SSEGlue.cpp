@@ -1763,7 +1763,7 @@ int TGlue::FetchingLine() { //TODO inline
 
   return (scan_y>=shifter_first_draw_line && scan_y<shifter_last_draw_line
 
-#if defined(SSE_VID_BORDERS_BIGTOP) & !defined(SSE_STF_LACESCAN)
+#if defined(SSE_VID_BORDERS_BIGTOP) & !defined(SSE_STF_HW_OVERSCAN)
 //          && scan_y>=draw_first_possible_line+(DISPLAY_SIZE>=3?6:0) 
       && (DISPLAY_SIZE<BIGGEST_DISPLAY 
       || scan_y>=draw_first_scanline_for_border+
@@ -1846,14 +1846,17 @@ void TGlue::IncScanline() {
   ASSERT(CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
   TrickExecuted=0;
 
-#if defined(SSE_STF_LACESCAN)
+#if defined(SSE_STF_HW_OVERSCAN)
 /*  Emulate hardware overscan scanlines of the LaceScan circuit.
     It is a hack that intercepts the 'DE' line between the GLUE and the 
     Shifter. Hence only possible on the STF/Mega ST (on the STE, GLUE and
     Shifter are one chip).
     Compared with software overscan, scanlines are 6 byte longer.
+    We also emulate the AutoSwitch Overscan circuit, which on STF is smaller
+    than LaceScan.
 */
-  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)
+
+  if(SSEConfig.OverscanOn && (ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH))
   {
     if(FetchingLine()) // there are also more fetching lines
     {
@@ -1865,13 +1868,15 @@ void TGlue::IncScanline() {
       if(COLOUR_MONITOR)
       {
         //TrickExecuted=CurrentScanline.Tricks=TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44;
-        CurrentScanline.Bytes=(shifter_freq_at_start_of_vbl==50)?236:234;
+        CurrentScanline.Bytes=(ST_TYPE==STF_LACESCAN)?236:224;
+        if(shifter_freq_at_start_of_vbl==60) //TODO
+          CurrentScanline.Bytes-=2; 
         if(!BigBorders)
           shifter_draw_pointer+=8; // as for "left off", skip non displayed border
       }
       else
       {
-        CurrentScanline.Bytes=100;
+        CurrentScanline.Bytes=(ST_TYPE==STF_LACESCAN)?100:96;
         TrickExecuted=CurrentScanline.Tricks=2; // needed by Shifter.Render()
       }
     }
@@ -2599,8 +2604,8 @@ void TGlue::Vbl() {
     scan_y=-scanlines_above_screen[2];
 #endif
 
-#if defined(SSE_STF_LACESCAN)
-  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)
+#if defined(SSE_STF_HW_OVERSCAN)
+  if(SSEConfig.OverscanOn && (ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH))
   {
     int start;
     // hack to get correct display

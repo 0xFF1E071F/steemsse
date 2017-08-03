@@ -3,8 +3,18 @@
 #define SSSTF_H
 
 // starting with 0 is easier for GUI; default is STE
+#if defined(SSE_STF_HW_OVERSCAN)
+enum ESTModels {STE,STF,
+#if defined(SSE_STF_MEGASTF)
+MEGASTF,
+#endif
 #if defined(SSE_STF_LACESCAN)
-enum ESTModels {STE,STF,MEGASTF,STF_OVERSCAN,N_ST_MODELS}; 
+STF_LACESCAN,
+#endif
+#if defined(SSE_STF_AUTOSWITCH)
+STF_AUTOSWITCH,
+#endif
+N_ST_MODELS}; 
 #else
 enum ESTModels {STE,STF,MEGASTF,N_ST_MODELS}; 
 #endif

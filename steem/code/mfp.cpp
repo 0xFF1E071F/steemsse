@@ -945,12 +945,13 @@ void TMC68901::ComputeNextTimerB(int info) {
   ASSERT(OPTION_C2);
   COUNTER_VAR tontb=0;
 
-#if defined(SSE_STF_LACESCAN)
+
+#if defined(SSE_STF_HW_OVERSCAN)
   // mfp receives the normal DE signal, not the tricked overscan DE
   // in this emulation, it's a bit off compared with HW
-  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn &&
-    (COLOUR_MONITOR && (scan_y<0 || scan_y>=200))
-    || (!COLOUR_MONITOR && (scan_y<0 || scan_y>=400)))
+  if((ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH) && SSEConfig.OverscanOn 
+    &&( (COLOUR_MONITOR && (scan_y<0 || scan_y>=200))
+    || (!COLOUR_MONITOR && (scan_y<0 || scan_y>=400))))
     ; // skip - notice TOS expects groups of lines with no timer B tick at reset
   else
 #endif

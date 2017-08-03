@@ -69,7 +69,10 @@ void TOptionBox::CreateMachinePage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[MEGASTF]));
 #endif
 #if defined(SSE_STF_LACESCAN)
-  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF_OVERSCAN]));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF_LACESCAN]));
+#endif
+#if defined(SSE_STF_AUTOSWITCH)
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF_AUTOSWITCH]));
 #endif
   SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
   Wid+=73;//by hand...
@@ -85,7 +88,7 @@ compatible only with the STF - see the manual for other options"));
 
 #if defined(SSE_GUI_OPTIONS_WU) && defined(SSE_MMU_WU)
   long Offset=Wid+40-20;
-#if defined(SSE_STF_LACESCAN) //make shorter...
+#if defined(SSE_STF_HW_OVERSCAN) //make shorter...
   Offset+=20;
   Wid=get_text_width(T("Wake-up"));
   CreateWindow("Static",T("Wake-up"),WS_CHILD,

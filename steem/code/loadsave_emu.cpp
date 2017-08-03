@@ -1297,10 +1297,10 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if SSE_VERSION>=393
   if(Version>=57)
   {
-#if defined(SSE_STF_LACESCAN)
-    BYTE tmp=SSEConfig.LaceScanOn;
+#if defined(SSE_STF_HW_OVERSCAN)
+    BYTE tmp=SSEConfig.OverscanOn;
     ReadWrite(tmp);
-    SSEConfig.LaceScanOn=tmp;
+    SSEConfig.OverscanOn=tmp;
 #endif
   }
 #endif
