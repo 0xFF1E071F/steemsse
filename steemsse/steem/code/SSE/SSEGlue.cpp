@@ -218,7 +218,11 @@ void TGlue::CheckSideOverscan() {
     This function is a big extension of draw_check_border_removal().
 */
 
+#if defined(SSE_GLUE_393C)
+  ASSERT(de_v_on||FetchingLine());
+#else
   ASSERT(FetchingLine());
+#endif
 
 #if defined(SSE_VS2008_WARNING_390) && defined(SSE_DEBUG)
   int t=0;
@@ -1627,6 +1631,9 @@ void TGlue::CheckVerticalOverscan() {
     if(on_overscan_limit==LIMIT_TOP) // top border off
     {
       shifter_first_draw_line=-29;
+#if defined(SSE_GLUE_393C)
+      de_start_line=34;
+#endif
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
       if(FullScreen && border==2) // TODO a macro
       {    //hack overscans
@@ -1637,11 +1644,18 @@ void TGlue::CheckVerticalOverscan() {
 #endif
     }
     else // bottom border off
+    {
 /*  At 60hz, fewer scanlines are displayed in the bottom border than 50hz
     Fixes It's a girl 2 last screen
 */
       shifter_last_draw_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
         ? 226 : 247;
+#if defined(SSE_GLUE_393C)
+      de_end_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
+        ? 258 : 308; // stopped at VBLANK
+#endif
+
+    }
   }
 
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_TRACE_CONTROL)
@@ -1801,18 +1815,28 @@ void TGlue::IncScanline() {
 
   Shifter.IncScanline();
   PreviousScanline=CurrentScanline; // auto-generated
+
+#if defined(SSE_GLUE_393C)
+  de_v_on=VCount>=de_start_line && VCount<=de_end_line;
+#endif
+
   CurrentScanline=NextScanline;
 
 
   if(CurrentScanline.Tricks)
     ; // don't change #bytes
+#if defined(SSE_GLUE_393C)
+  else if(de_v_on)
+    CurrentScanline.Bytes=(screen_res==2)?80:160;
+#else
   else if(FetchingLine() //TODO seems sketchy!
     || scan_y==-29 && (PreviousScanline.Tricks&TRICK_TOP_OVERSCAN)
     || !scan_y && !PreviousScanline.Bytes)
     CurrentScanline.Bytes=(screen_res==2)?80:160;
+#endif
   else
   {
-    ASSERT( !FetchingLine() );
+//    ASSERT( !FetchingLine() );
     NextScanline.Bytes=0;
   }
 #if defined(SSE_GLUE_392B)
@@ -2148,7 +2172,12 @@ void TGlue::GetNextScreenEvent() {
 #endif
   {
     screen_event_vector=event_start_vbl;
+#if defined(SSE_GLUE_393C)
+    int i=(nLines==501)?2:shifter_freq_idx; //temp quick fix
+    screen_event.time=ScanlineTiming[RELOAD_SDP][i];
+#else
     screen_event.time=ScanlineTiming[RELOAD_SDP][shifter_freq_idx];
+#endif
   }
 
   // event_vbl_interrupt() is Steem's internal frame or vbl routine, called
@@ -2559,6 +2588,16 @@ LOOP
 void TGlue::Vbl() {
   cpu_timer_at_start_of_hbl=time_of_next_event;
   scan_y=-scanlines_above_screen[shifter_freq_idx];
+
+#if defined(SSE_GLUE_393C)
+/*  shifter_freq_idx==2 only if screen is monochrome
+    Removing that long standing hack is necessary for this mod else
+    LEGACY/socks won't work anymore.
+*/
+  //if(nLines==501) //conservative, will miss the first vbl
+  if(m_ShiftMode&2) // risky
+    scan_y=-scanlines_above_screen[2];
+#endif
 
 #if defined(SSE_STF_LACESCAN)
   if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)

@@ -1898,14 +1898,26 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   {
     Glue.nLines=501; // not 500
     //TRACE_OSD("%d %d",Glue.VCount,scan_y); //0 -23
+#if defined(SSE_GLUE_393C)
+    Glue.de_start_line=34;
+    Glue.de_end_line=434;
+#endif
   }
   else if (Glue.m_SyncMode&2) // 50hz
   {
     Glue.nLines=313;
+#if defined(SSE_GLUE_393C)
+    Glue.de_start_line=63;
+    Glue.de_end_line=263;
+#endif
   }
   else // 60hz
   {
     Glue.nLines=263;
+#if defined(SSE_GLUE_393C)
+    Glue.de_start_line=34;
+    Glue.de_end_line=234;
+#endif
   }
 #else
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0

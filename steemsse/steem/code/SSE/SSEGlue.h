@@ -53,11 +53,15 @@ struct TGlue {
 #if defined(SSE_GLUE_393B)
   short nLines; // 313, 263, 501
 #endif
+#if defined(SSE_GLUE_393C)
+  short de_start_line,de_end_line;
+#endif
   BYTE m_ShiftMode,m_SyncMode; // both bits of shift mode are shadowed in GLU (ijor)
   BYTE Freq[NFREQS];
   BYTE cycle_of_scanline_length_decision; 
-  // we need keep info for only 3 scanlines:
-
+#if defined(SSE_GLUE_393C)
+  bool de_v_on;
+#endif
 #ifdef UNIX
 #undef Status // ?? ux382
 #endif
