@@ -1196,10 +1196,20 @@ void event_vbl_interrupt() //SS misleading name?
     Important for Relapse DMA sound
 */
   event_scanline_sub(); 
+#if defined(SSE_GLUE_393B)
+  ASSERT(Glue.VCount<Glue.nLines);
+  //if(Glue.VCount<Glue.nLines)
+    //Glue.VCount++; 
+  //else
+    //Glue.VCount=0;
+  Glue.VCount=0;
+#else
   ASSERT(Glue.VCount);
   if(Glue.VCount)//? points to some problem...
     Glue.VCount--; 
 #endif
+#endif
+
 #if defined(SSE_VID_VSYNC_WINDOW)
   bool VSyncing=( (OPTION_WIN_VSYNC&&bAppActive||FSDoVsync&&FullScreen) 
     && fast_forward==0 && slow_motion==0);
@@ -1880,6 +1890,24 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if the program changes frequency.
     We do it when VBI is enabled, by convenience.
 */
+
+#if defined(SSE_GLUE_393B)
+  //Glue.VCount=0;
+  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
+  if(Glue.m_ShiftMode&2) // 72hz (monochrome)
+  {
+    Glue.nLines=501; // not 500
+    //TRACE_OSD("%d %d",Glue.VCount,scan_y); //0 -23
+  }
+  else if (Glue.m_SyncMode&2) // 50hz
+  {
+    Glue.nLines=313;
+  }
+  else // 60hz
+  {
+    Glue.nLines=263;
+  }
+#else
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
     Glue.VCount=501; // not 500
@@ -1887,6 +1915,7 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     Glue.VCount=313;
   else // 60hz
     Glue.VCount=263;
+#endif
 }
 
 #endif

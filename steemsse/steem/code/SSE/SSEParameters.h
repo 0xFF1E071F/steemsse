@@ -250,7 +250,12 @@ enum {
   GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
+#if defined(SSE_GLUE_393A)
+  GLU_RELOAD_VIDEO_COUNTER_50=50, //problem: 2 cycles precision TODO
+  GLU_RELOAD_VIDEO_COUNTER_72=14, // + at last line
+#else
   GLU_RELOAD_VIDEO_COUNTER_50=64-2, //+ WU_sync_modifier (STE -2?)
+#endif
   GLU_TRIGGER_VBI_50=64,	//STE+4
   GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
   GLU_VERTICAL_OVERSCAN_50=GLU_HSYNC_ON_50+GLU_HSYNC_DURATION // 504 //+ WU_sync_modifier, STE -2
@@ -560,7 +565,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 #endif//vid
-
 
 
 
