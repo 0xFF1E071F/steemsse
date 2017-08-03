@@ -1834,6 +1834,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_BETA) //next version
 
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
+#define SSE_BOILER_393
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_GLUE_393
 #define SSE_JOYSTICK_PADDLES //393
