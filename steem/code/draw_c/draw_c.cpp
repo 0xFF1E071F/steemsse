@@ -723,11 +723,20 @@ extern "C" void ASMCALL draw_scanline_32_medres_pixelwise_400(int border1,int pi
 
 #if defined(SSE_DRAW_C_390B)
 #undef DRAW_BORDER_PIXELS
+
+#if defined(SSE_VID_HIRES_BORDER_BLACK)
+#define DRAW_BORDER_PIXELS(npixels) \
+  for(int i=npixels;i;i--) \
+  { \
+    DRAWPIXEL(0/*fore*/);\
+  }
+#else
 #define DRAW_BORDER_PIXELS(npixels) \
   for(int i=npixels;i;i--) \
   { \
     DRAWPIXEL(back);\
   }
+#endif
 #endif
 
 extern "C" void ASMCALL draw_scanline_8_hires(int border1,int picture,int border2,int){
@@ -756,10 +765,19 @@ extern "C" void ASMCALL draw_scanline_24_hires(int border1,int picture,int borde
 
 #if defined(SSE_DRAW_C_390B) && defined(SSE_DRAW_C_390_INTRINSICS)
 #undef DRAW_BORDER_PIXELS
+
+#if defined(SSE_VID_HIRES_BORDER_BLACK)
+#define DRAW_BORDER_PIXELS(npixels) {\
+  __stosd((DWORD*)draw_dest_ad,0/*fore*//*scan_y>478?back:fore*/,npixels);\
+  draw_dest_ad+=4*npixels;\
+}
+#else
 #define DRAW_BORDER_PIXELS(npixels) {\
   __stosd((DWORD*)draw_dest_ad,back,npixels);\
   draw_dest_ad+=4*npixels;\
 }
+#endif
+
 #endif
 
 extern "C" void ASMCALL draw_scanline_32_hires(int border1,int picture,int border2,int){

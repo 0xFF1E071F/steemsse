@@ -470,6 +470,57 @@ cglobal draw_scanline_24_hires,draw_scanline_32_hires
   mov ax,[esi]
 %endmacro
 
+
+
+%ifdef SSE ; for v3.9.3
+
+%macro DRAW_BORDER_HIRES 2 ;bpp,how_many
+  mov eax,%2
+
+  push edx           ; save edx
+  xor edx,edx        ; hires border is always black
+
+  jmp short %%next
+%%for:
+  %if %1==1
+    mov [edi],dx
+    %assign n 1
+    %rep 7
+      mov [edi+2*n],dx
+      %assign n n+1
+    %endrep
+  %elif %1==2
+    mov [edi],edx
+    %assign n 1
+    %rep 7
+      mov [edi+4*n],edx
+      %assign n n+1
+    %endrep
+  %elif %1==3
+    ; want a total of 16*3=12*4 bytes of edx
+    mov [edi],edx
+    %assign n 1
+    %rep 11
+      mov [edi+4*n],edx
+      %assign n n+1
+    %endrep
+  %elif %1==4
+    mov [edi],edx
+    %assign n 1
+    %rep 15
+      mov [edi+4*n],edx
+      %assign n n+1
+    %endrep
+  %endif
+  add edi,16*%1
+%%next:
+  dec eax
+  jns short %%for
+  pop edx                    ; restore edx
+%endmacro
+
+%else ;!SSE
+
 %macro DRAW_BORDER_HIRES 2 ;bpp,how_many
   mov eax,%2
 
@@ -510,6 +561,8 @@ cglobal draw_scanline_24_hires,draw_scanline_32_hires
   dec eax
   jns short %%for
 %endmacro
+
+%endif ;SSE?
 
 %macro DRAWPIXEL_HIRES 2 ;bpp,carelessly
   %if %1==1
