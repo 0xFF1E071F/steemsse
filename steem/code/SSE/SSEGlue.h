@@ -45,10 +45,14 @@ struct TGlue {
   // DATA
   int TrickExecuted; //make sure that each trick will only be applied once
   screen_event_struct screen_event;
+  // we need keep info for only 3 scanlines:
   TScanline PreviousScanline, CurrentScanline, NextScanline;
   short VCount;
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
+#if defined(SSE_GLUE_393B)
+  short nLines; // 313, 263, 501
+#endif
   BYTE m_ShiftMode,m_SyncMode; // both bits of shift mode are shadowed in GLU (ijor)
   BYTE Freq[NFREQS];
   BYTE cycle_of_scanline_length_decision; 

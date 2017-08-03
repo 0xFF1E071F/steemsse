@@ -1787,9 +1787,17 @@ void TGlue::IncScanline() {
 #endif
 #endif//dbg
 
+#if defined(SSE_GLUE_393B)
+//  ASSERT(VCount<nLines);
+  if(VCount<nLines)
+    VCount++;
+  //else
+    //VCount=0;
+#else
   ASSERT(VCount);
   if(VCount)//relz build could crash...
     VCount--;
+#endif
 
   Shifter.IncScanline();
   PreviousScanline=CurrentScanline; // auto-generated
@@ -2128,15 +2136,29 @@ void TGlue::GetNextScreenEvent() {
   // VBLANK is already on since a couple of scanlines. (? TODO)
   // VSYNC will start, which will trigger reloading of the Video Counter
   // by the MMU.
-  else if(!Status.sdp_reload_done && VCount==3)
+#if defined(SSE_GLUE_393B)
+  else if(!Status.sdp_reload_done && VCount==
+#if 1 //TODO param...
+    (nLines==501?nLines-1:nLines-3))
+#else
+    nLines-3) // HIRES: should be -1...
+#endif
+#else
+  else if(!Status.sdp_reload_done && VCount==3) // HIRES: should be 1...
+#endif
   {
     screen_event_vector=event_start_vbl;
     screen_event.time=ScanlineTiming[RELOAD_SDP][shifter_freq_idx];
   }
 
-  // VSYNC is triggered when the vertical counter is at the last but one
-  // line, some cycles into this line
+  // event_vbl_interrupt() is Steem's internal frame or vbl routine, called
+  // when all the cycles of the frame have elapsed. It normally happens during
+  // the ST's VSYNC (between VSYNC start and VSYNC end).
+#if defined(SSE_GLUE_393B)
+  else if(!Status.vbl_done && VCount==nLines-1)
+#else
   else if(!Status.vbl_done && VCount==1)
+#endif
   {
     screen_event_vector=event_vbl_interrupt;
     screen_event.time=CurrentScanline.Cycles;
@@ -2472,14 +2494,13 @@ void TGlue::Update() {
 
   // Reload video counter
   // Cases: DSOTS, Forest
-  // value isn't precise and sync/STE modifier aren't known  TODO
-  // 64+2 would break DSOTS STF2 though
-  ScanlineTiming[RELOAD_SDP][FREQ_50]= GLU_RELOAD_VIDEO_COUNTER_50+WU_sync_modifier;
-//  if(ST_TYPE==STE)
-  //  ScanlineTiming[RELOAD_SDP][FREQ_50]-=2;
+  ScanlineTiming[RELOAD_SDP][FREQ_50]=GLU_RELOAD_VIDEO_COUNTER_50+WU_sync_modifier;
   ScanlineTiming[RELOAD_SDP][FREQ_60]=ScanlineTiming[RELOAD_SDP][FREQ_50];//?
+#if defined(SSE_GLUE_393A)
+  ScanlineTiming[RELOAD_SDP][FREQ_72]=GLU_RELOAD_VIDEO_COUNTER_72+WU_sync_modifier;
+#else
   ScanlineTiming[RELOAD_SDP][FREQ_72]=ScanlineTiming[RELOAD_SDP][FREQ_50];//?
-
+#endif
   // Enable VBI
   // Cases: Forest, 3615GEN4-CKM, Dragonnels/Happy Islands, Auto 168, TCB...
   // but: TEST16.TOS

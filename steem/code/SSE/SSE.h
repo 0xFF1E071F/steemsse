@@ -1,4 +1,4 @@
-// for v3.9.2
+// for v3.9.3
 #pragma once // VC guard
 #ifndef SSE_H // BCC guard
 #define SSE_H
@@ -1835,11 +1835,17 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_DRIVE_FREEBOOT //393
+#define SSE_GLUE_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_STF_LACESCAN // 393 we put LaceScan overscan among STF models
 #define SSE_VAR_393
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
+
+#if defined(SSE_GLUE_393)
+#define SSE_GLUE_393A // param SDP reload
+#define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
+#endif
 
 #endif//beta
 
