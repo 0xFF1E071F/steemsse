@@ -268,7 +268,11 @@ void TShifter::DrawScanlineToEnd()  {
 #endif
       shifter_draw_pointer=nsdp;
     }
+#if defined(SSE_VID_HIRES_BORDER_FIX)
+    else if(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_possible_line)
+#else
     else if(scan_y>=draw_first_scanline_for_border && scan_y<draw_last_scanline_for_border)
+#endif
     {
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {

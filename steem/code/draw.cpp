@@ -249,6 +249,10 @@ void draw_begin()
 #endif
     draw_first_possible_line=draw_first_scanline_for_border;
     draw_last_possible_line=draw_last_scanline_for_border;
+#if defined(SSE_VID_HIRES_BORDER_FIX)
+    if(screen_res==2)
+      draw_last_possible_line+=20;
+#endif
   }else{
     draw_first_possible_line=0;
     draw_last_possible_line=shifter_y;

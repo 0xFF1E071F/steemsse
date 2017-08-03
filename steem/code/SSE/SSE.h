@@ -1838,6 +1838,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_STF_LACESCAN // 393 we put LaceScan overscan among STF models
 #define SSE_VAR_393
+#define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
 
 #endif//beta
