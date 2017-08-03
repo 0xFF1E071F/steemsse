@@ -1189,6 +1189,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }//if
 #endif
+
 #if defined(SSE_GLUE)
 /*  With GLU/video event refactoring, we call event_scanline() one time fewer,
     if we did now it would mess up some timings, so we call the sub
@@ -1841,25 +1842,25 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
   shifter_draw_pointer_at_start_of_line=shifter_draw_pointer=xbios2;
 #endif
 
-#if defined(SSE_STF_LACESCAN)
+#if defined(SSE_STF_HW_OVERSCAN)
   // hack to get correct display
-  if(ST_TYPE==STF_OVERSCAN && SSEConfig.LaceScanOn)
+  if(SSEConfig.OverscanOn && (ST_TYPE==STF_AUTOSWITCH||ST_TYPE==STF_LACESCAN))
   {
-    int off=0;
+    int off;
     if(COLOUR_MONITOR)
     {
       if (shifter_freq_at_start_of_vbl==50)
-        off=27*236-8*3;
+        off=(ST_TYPE==STF_LACESCAN)?(27*236-8*3):(23*224+4-10*8); 
+      // and 236*24-80+22+8+8+8+8+8 for other "generic" overscan circuit
       else //TODO
-        off=234*27-8*3; 
+        off=(ST_TYPE==STF_LACESCAN)?(27*234-8*3):(23*222+4-10*8);
 #if defined(SSE_VID_BORDERS) //visual comfort
       if(DISPLAY_SIZE>=2)
         off+=8;
 #endif
     }
     else //monochrome: normal size only
-      off+=100*18+4;
-
+      off=(ST_TYPE==STF_LACESCAN)?(100*18+4):(96*18+4);
     shifter_draw_pointer+=off;
     MMU.VideoCounter=shifter_draw_pointer;
   }

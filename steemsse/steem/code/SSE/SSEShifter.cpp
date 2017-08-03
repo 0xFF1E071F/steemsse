@@ -175,6 +175,10 @@ void TShifter::DrawScanlineToEnd()  {
 */
 
 #if defined(SSE_SHIFTER_HIRES_RASTER)
+#if defined(SSE_STF_HW_OVERSCAN)
+      if(SSEConfig.OverscanOn)
+        Scanline2[112]=0; //quick fix
+#endif
       if(HSCROLL0||Scanline2[112])
 #else
       if(HSCROLL)
@@ -691,7 +695,7 @@ void TShifter::DrawBufferedScanlineToVideo() {
     {
       TRACE_LOG("Video memory overflow\n");
 #ifdef SSE_BUGFIX_393
-      draw_end();
+      /////draw_end();
 #endif
       return;
     }

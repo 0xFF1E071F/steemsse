@@ -198,7 +198,7 @@ struct TConfig {
   unsigned int Port0Joy:1;
   unsigned int NoTrace:1;
   unsigned int old_DisableHardDrives:1;
-  unsigned int LaceScanOn:1;
+  unsigned int OverscanOn:1;
 
 #ifdef __cplusplus // visible only to C++ objects
   TConfig();

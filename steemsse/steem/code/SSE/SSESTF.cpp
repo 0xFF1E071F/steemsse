@@ -1,12 +1,20 @@
-#include "../pch.h"
+//#include "../pch.h"
 #include "SSE.h"
+#include "SSESTF.h"
 
 #if defined(SSE_STF)
-#include "SSESTF.h"
 //TODO this too belongs in config
-#if defined(SSE_STF_LACESCAN)
-char* st_model_name[]={"STE","STF","Mega ST4","STF Overscan"};
-#else
-char* st_model_name[]={"STE","STF","Mega ST4"};
+
+char* st_model_name[]={"STE","STF"
+#if defined(SSE_STF_MEGASTF)
+,"Mega ST4"
 #endif
+#if defined(SSE_STF_LACESCAN)
+,"STF LaceScan"
+#endif
+#if defined(SSE_STF_AUTOSWITCH)
+,"STF AutoSwitch"
+#endif
+};
+
 #endif//#if defined(SSE_STF)

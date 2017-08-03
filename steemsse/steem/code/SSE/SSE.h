@@ -1837,7 +1837,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_GLUE_393
 #define SSE_JOYSTICK_PADDLES //393
-#define SSE_STF_LACESCAN // 393 we put LaceScan overscan among STF models
+#define SSE_STF_HW_OVERSCAN //393 - considered as STF models
 #define SSE_VAR_393
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
@@ -1848,6 +1848,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393C // not necessary, to test!
 #endif
 
+#if defined(SSE_STF_HW_OVERSCAN)
+#define SSE_STF_AUTOSWITCH
+#define SSE_STF_LACESCAN
+#endif
 #endif//beta
 
 #ifdef SSE_BETA // long term, tests
