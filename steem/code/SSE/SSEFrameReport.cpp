@@ -35,9 +35,12 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
     timings" because Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_50]
     (and not FREQ_60) was written over: 0 instead of 40/56!
 */
-  ASSERT(m_nEvents>0&&m_nEvents<MAX_EVENTS);
+  //ASSERT(m_nEvents>0&&m_nEvents<MAX_EVENTS);
 #if !defined(SSE_VS2008_WARNING_382)
   int total_cycles= (shifter_freq_at_start_of_vbl==50) ?512:508;// Shifter.CurrentScanline.Cycles;//512;
+#endif
+#ifdef SSE_BOILER_393
+  if(m_nEvents>0&&m_nEvents<MAX_EVENTS)
 #endif
   m_FrameEvent[m_nEvents].Add(scanline, cycle, type, value);
 }
@@ -47,7 +50,10 @@ void TFrameEvents::Add(int scanline, int cycle, char type, int value) {
 
 void TFrameEvents::Add(int scanline, int cycle, char *type, int value) {
   m_nEvents++;  // starting from 0 each VBL, event 0 is dummy 
-  ASSERT(m_nEvents>0&&m_nEvents<MAX_EVENTS);
+  //ASSERT(m_nEvents>0&&m_nEvents<MAX_EVENTS);
+#ifdef SSE_BOILER_393
+  if(m_nEvents>0&&m_nEvents<MAX_EVENTS)
+#endif
   m_FrameEvent[m_nEvents].Add(scanline, cycle, type, value);
 }
 

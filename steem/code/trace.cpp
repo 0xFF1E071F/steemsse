@@ -10,6 +10,13 @@ of Steem and displaying information on what happened.
 #pragma message("Included for compilation: trace.cpp")
 #endif
 
+#if defined(SSE_BOILER_393) // more space for instruction, it was cut off by scroll bar
+#ifdef EXTRA_HEIGHT
+#error oh no!
+#endif
+#define EXTRA_HEIGHT 20 // more space for instruction, it was cut off by scroll bar
+#endif
+
 #if defined(SSE_BUILD)
 
 trace_display_entry t_d_e[MAX_TRACE_DISPLAY_ENTRIES];
@@ -367,9 +374,15 @@ void trace_display()
   trace_scroller.SetHeight(1);trace_scroller.SetWidth(1);
 
   if (trace_show_window){
+#if defined(SSE_BOILER_393)
+    SetWindowPos(trace_window_handle,HWND_TOP,0,0,max_x+30,y+153+ EXTRA_HEIGHT+
+      GetSystemMetrics(SM_CYCAPTION)+GetSystemMetrics(SM_CYHSCROLL),
+      SWP_NOMOVE | SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+#else
     SetWindowPos(trace_window_handle,HWND_TOP,0,0,
                   max_x+30,y+153+GetSystemMetrics(SM_CYCAPTION)+GetSystemMetrics(SM_CYHSCROLL),
                   SWP_NOMOVE | SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+#endif
   }else{
     ShowWindow(trace_window_handle,SW_HIDE);
   }
@@ -381,9 +394,15 @@ LRESULT __stdcall trace_window_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 {
 	switch (Mess){
     case WM_SIZE:
+#if defined(SSE_BOILER_393) 
+      MoveWindow(m_b_trace.handle,10,5,LOWORD(lPar)-20,50+EXTRA_HEIGHT,true);
+      MoveWindow(trace_repeat_trace_button,10,HIWORD(lPar)-35,LOWORD(lPar) - 20,30,true);
+      SetWindowPos(trace_scroller,0,0,0,LOWORD(lPar)-20,HIWORD(lPar)-145-EXTRA_HEIGHT,SWP_NOZORDER | SWP_NOMOVE);
+#else
       MoveWindow(m_b_trace.handle,10,5,LOWORD(lPar)-20,50,true);
       MoveWindow(trace_repeat_trace_button,10,HIWORD(lPar)-35,LOWORD(lPar) - 20,30,true);
       SetWindowPos(trace_scroller,0,0,0,LOWORD(lPar)-20,HIWORD(lPar)-145,SWP_NOZORDER | SWP_NOMOVE);
+#endif
       break;
     case WM_DRAWITEM:
     {
@@ -423,10 +442,15 @@ LRESULT __stdcall trace_window_WndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 //---------------------------------------------------------------------------
 void trace_window_init()
 {
+#if defined(SSE_BOILER_393) 
+  trace_window_handle=CreateWindowEx(/*WS_EX_TOOLWINDOW*/0,"Steem Trace Window","Trace",
+      WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX,
+      110,310,370,400+EXTRA_HEIGHT,NULL,NULL,Inst,0);
+#else
   trace_window_handle=CreateWindowEx(/*WS_EX_TOOLWINDOW*/0,"Steem Trace Window","Trace",
       WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_SIZEBOX | WS_MAXIMIZEBOX,
       110,310,370,400,NULL,NULL,Inst,0);
-
+#endif
   m_b_trace.owner=trace_window_handle;
   m_b_trace.handle=CreateWindowEx(512,WC_LISTVIEW,"",
       LVS_REPORT | LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | LVS_OWNERDRAWFIXED | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS,
@@ -441,26 +465,49 @@ void trace_window_init()
   m_b_trace.lb_height=1;
 
   m_b_trace.init();
+#if defined(SSE_BOILER_393)
+  CreateWindowEx(0,"Static","sr before",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFTNOWORDWRAP,
+      10,63+EXTRA_HEIGHT,50,17,trace_window_handle,(HMENU)0,Inst,NULL);
 
+  trace_sr_before_display=CreateWindowEx(512,"Static","trace sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
+      60,60+EXTRA_HEIGHT,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
+#else
   CreateWindowEx(0,"Static","sr before",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFTNOWORDWRAP,
       10,63,50,17,trace_window_handle,(HMENU)0,Inst,NULL);
 
   trace_sr_before_display=CreateWindowEx(512,"Static","trace sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
       60,60,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
+#endif
   SetWindowLong(trace_sr_before_display,GWL_USERDATA,(LONG)&trace_sr_before);
   SetWindowLong(trace_sr_before_display,GWL_WNDPROC,(long)sr_display_WndProc);
+#if defined(SSE_BOILER_393)
+  CreateWindowEx(0,"Static","sr after",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFTNOWORDWRAP,
+      10,83+EXTRA_HEIGHT,50,17,trace_window_handle,(HMENU)0,Inst,NULL);
+
+  trace_sr_after_display=CreateWindowEx(512,"Static","trace sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
+      60,80+EXTRA_HEIGHT,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
+#else
   CreateWindowEx(0,"Static","sr after",WS_VISIBLE | WS_CHILDWINDOW | SS_LEFTNOWORDWRAP,
       10,83,50,17,trace_window_handle,(HMENU)0,Inst,NULL);
 
   trace_sr_after_display=CreateWindowEx(512,"Static","trace sr display",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | SS_NOTIFY,
       60,80,200,20,trace_window_handle,(HMENU)0,Inst,NULL);
+#endif
   SetWindowLong(trace_sr_after_display,GWL_USERDATA,(LONG)&sr);
   SetWindowLong(trace_sr_after_display,GWL_WNDPROC,(long)sr_display_WndProc);
+#if defined(SSE_BOILER_393)
+  trace_scroller.CreateEx(512,WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,
+    10,105+EXTRA_HEIGHT,260,130,trace_window_handle,100,Inst);
+
+  trace_repeat_trace_button=CreateWindowEx(512,"Button","Repeat Trace",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | BS_PUSHBUTTON,
+      150,76+EXTRA_HEIGHT,130,35,trace_window_handle,(HMENU)1003,Inst,NULL);
+#undef EXTRA_HEIGHT
+#else
   trace_scroller.CreateEx(512,WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,10,105,260,130,trace_window_handle,100,Inst);
 
   trace_repeat_trace_button=CreateWindowEx(512,"Button","Repeat Trace",WS_BORDER | WS_VISIBLE | WS_CHILDWINDOW | BS_PUSHBUTTON,
       150,76,130,35,trace_window_handle,(HMENU)1003,Inst,NULL);
-
+#endif
   SetWindowAndChildrensFont(trace_window_handle,fnt);
 }
 
