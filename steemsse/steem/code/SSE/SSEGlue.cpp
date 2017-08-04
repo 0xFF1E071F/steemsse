@@ -1852,8 +1852,9 @@ void TGlue::IncScanline() {
     Shifter. Hence only possible on the STF/Mega ST (on the STE, GLUE and
     Shifter are one chip).
     Compared with software overscan, scanlines are 6 byte longer.
-    We also emulate the AutoSwitch Overscan circuit, which on STF is smaller
-    than LaceScan.
+    We also emulate the AutoSwitch Overscan circuit, which uses the GLUE clock
+    to time DE, so that 224 bytes are fetched at 50hz and 60hz. As it is
+    divisible by 4, GEM isn't troubled. Lacescan produces 234 bytes at 60hz.
 */
 
   if(SSEConfig.OverscanOn && (ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH))
@@ -1868,9 +1869,10 @@ void TGlue::IncScanline() {
       if(COLOUR_MONITOR)
       {
         //TrickExecuted=CurrentScanline.Tricks=TRICK_LINE_PLUS_26|TRICK_LINE_PLUS_44;
-        CurrentScanline.Bytes=(ST_TYPE==STF_LACESCAN)?236:224;
-        if(shifter_freq_at_start_of_vbl==60) //TODO
-          CurrentScanline.Bytes-=2; 
+        if(ST_TYPE==STF_LACESCAN)
+          CurrentScanline.Bytes=(shifter_freq_at_start_of_vbl==60)?234:236;
+        else
+          CurrentScanline.Bytes=224;
         if(!BigBorders)
           shifter_draw_pointer+=8; // as for "left off", skip non displayed border
       }
@@ -2611,26 +2613,13 @@ void TGlue::Vbl() {
     // hack to get correct display
     if(COLOUR_MONITOR)
     {
-      if(shifter_freq_at_start_of_vbl==50)
-      {
-        start=(border==3)?-39:-30;
-        shifter_last_draw_line=245;
-      }
-      else //TODO
-      {
-        start=-20;
-        shifter_last_draw_line=start+1+238;
-      }
+      start=(border==3)?-39:-30;
+      shifter_last_draw_line=245;
     }
     else
     {
-#if defined(SSE_VID_HIRES_BORDER_FIX)
-      start=0;
-      shifter_last_draw_line=500;
-#else
       start=-50;
       shifter_last_draw_line=451;
-#endif
     }
     scan_y=start;
     shifter_first_draw_line=start+1;
