@@ -1182,10 +1182,17 @@ Steem SSE will reset auto.sts and quit\nSorry!",
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     WORD *tmp=YM2149.p_fixed_vol_3voices; //always the same problem
 #endif
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    Filter *tmp2=YM2149.AntiAlias; //grr
+#endif
     ReadWriteStruct(YM2149);
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
     YM2149.p_fixed_vol_3voices=tmp;
 #endif
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    YM2149.AntiAlias=tmp2;
+#endif
+
 #if defined(SSE_YM2149_DRIVE_392)//older sapshot
     YM2149.SelectedDrive=floppy_current_drive();
     YM2149.SelectedSide=floppy_current_side();

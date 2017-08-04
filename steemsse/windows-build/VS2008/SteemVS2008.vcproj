@@ -52,7 +52,7 @@
 				AdditionalOptions="/GA "
 				InlineFunctionExpansion="0"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -256,7 +256,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHa "
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -455,7 +455,7 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -664,7 +664,7 @@
 				Optimization="0"
 				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -876,7 +876,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -1094,7 +1094,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DRAW_C"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -1311,7 +1311,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -1519,7 +1519,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHa /Zc:forScope "
 				OmitFramePointers="false"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -1725,7 +1725,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -1933,7 +1933,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHa /Zc:forScope "
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG;SSE_DRAW_C"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -2139,7 +2139,7 @@
 				InlineFunctionExpansion="0"
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DD"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -2350,7 +2350,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DRAW_C"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -2565,7 +2565,7 @@
 				Optimization="0"
 				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_DEBUG;SSE_DD"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -2773,7 +2773,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_LE;SSE_DD"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -2986,7 +2986,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_LE;SSE_DEBUG;SSE_DD"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -3190,7 +3190,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="false"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="_DEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_LE;SSE_DEBUG;SSE_D3D"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -3397,7 +3397,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty\;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
+				AdditionalIncludeDirectories="..\..\3rdparty\d3d;..\..\include\;..\..\steem\code\;..\..\3rdparty;&quot;C:\Program Files\Microsoft DirectX SDK\Include&quot;;..\..\Steem\"
 				PreprocessorDefinitions="NDEBUG;NO_DEBUG_BUILD;VC_BUILD;WIN32;_WINDOWS;STEVEN_SEAGAL;SSE_LE"
 				StringPooling="true"
 				ExceptionHandling="2"
@@ -5028,6 +5028,10 @@
 			</File>
 			<File
 				RelativePath="..\..\steem\code\patchesbox.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\steem\pch.h"
 				>
 			</File>
 			<File
@@ -6729,6 +6733,14 @@
 				</File>
 				<File
 					RelativePath="..\..\3rdparty\dsp\dsp.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\3rdparty\dsp\FIR-filter-class\filt.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\3rdparty\dsp\FIR-filter-class\filt.h"
 					>
 				</File>
 			</Filter>

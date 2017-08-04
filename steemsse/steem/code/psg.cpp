@@ -135,7 +135,7 @@ EXT const BYTE sound_time_method=1; // write cursor (hopefully!)
 #else
 EXT BYTE sound_time_method INIT(0);
 #endif
-#if defined(SSE_SOUND_FEWER_FILTERS) // I prefer this one
+#if defined(SSE_SOUND_FEWER_FILTERS)
 EXT BYTE sound_mode INIT(SOUND_MODE_MONITOR),sound_last_mode INIT(SOUND_MODE_MONITOR);
 #else
 EXT BYTE sound_mode INIT(SOUND_MODE_CHIP),sound_last_mode INIT(SOUND_MODE_CHIP);
@@ -392,6 +392,15 @@ HRESULT Sound_Start() // SS called by
     sound_record_start_time=timer+200; //start recording in 200ms time
     sound_record_open_file();
   }
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  if(YM2149.AntiAlias)
+  {
+    YM2149.time_at_vbl_start=YM2149.m_cycles;
+    YM2149.AntiAlias->init();
+  }
+#endif
+
   return DS_OK;
 }
 //---------------------------------------------------------------------------
@@ -785,6 +794,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     while(c>0)
     {       
       AlterV(Alter_V,v,dv,*source_p);
+
 #if defined(SSE_SOUND_MICROWIRE_MIXMODE)
       if(OPTION_MICROWIRE 
 #if defined(SSE_STF)
@@ -1436,9 +1446,14 @@ HRESULT Sound_VBL()
   if(OPTION_MAME_YM)
   {
 #if defined(SSE_YM2149_MAMELIKE3)
-    YM2149.psg_write_buffer(time_of_next_vbl_to_write);
+    YM2149.psg_write_buffer(time_of_next_vbl_to_write,true);
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+//    TRACE_OSD("%d",YM2149.frame_samples); // should be 882 @50hz
+    YM2149.frame_samples=0;
+    YM2149.time_at_vbl_start=YM2149.m_cycles;//YM2149.time_of_last_sample;
+#endif
     // Fill extra buffer, but without advancing the YM emu
-    for(int i=psg_buf_pointer[0];i<psg_buf_pointer[0]+PSG_WRITE_EXTRA;i++)
+    for(int i=max(1,psg_buf_pointer[0]);i<psg_buf_pointer[0]+PSG_WRITE_EXTRA;i++)
       *(psg_channels_buf+i)=*(psg_channels_buf+i-1);
 #else
     YM2149.psg_write_buffer(time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
@@ -1446,10 +1461,12 @@ HRESULT Sound_VBL()
   }
   else
 #endif
+  {//tmp
+  //TRACE_OSD("%d",max(max(psg_buf_pointer[2],psg_buf_pointer[1]),psg_buf_pointer[0]));
   for (int abc=2;abc>=0;abc--){
     psg_write_buffer(abc,time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
   }
-
+  }//tmp
   if (dma_sound_on_this_screen){
 #if defined(SSE_CARTRIDGE_BAT)
     if(SSEConfig.mv16)
@@ -2605,6 +2622,10 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 {
   ASSERT(reg<=15);
 
+#if defined(SSE_BOILER) //temp
+  //FrameEvents.Add(scan_y,LINECYCLES,"YM",reg);
+#endif
+
   // suggestions for global variables:  n_samples_per_vbl=sound_freq/shifter_freq,   shifter_y+(SCANLINES_ABOVE_SCREEN+SCANLINES_BELOW_SCREEN)
   if (reg==1 || reg==3 || reg==5 || reg==13){
     new_val&=15;
@@ -2636,7 +2657,11 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
     return;
   }
 
+#ifdef SSE_BUGFIX_393
+  int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq_at_start_of_vbl;
+#else
   int cpu_cycles_per_vbl=n_cpu_cycles_per_second/shifter_freq; //160000 at 50hz
+#endif
 
 #if SCREENS_PER_SOUND_VBL != 1
   cpu_cycles_per_vbl*=SCREENS_PER_SOUND_VBL;

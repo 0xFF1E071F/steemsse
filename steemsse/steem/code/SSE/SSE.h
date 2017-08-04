@@ -1845,6 +1845,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_393
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
+#define SSE_YM2149_MAMELIKE_393
 
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload
@@ -1856,6 +1857,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STF_AUTOSWITCH
 #define SSE_STF_LACESCAN
 #endif
+
+#if defined(SSE_YM2149_MAMELIKE_393)
+#define SSE_YM2149_MAMELIKE_ANTIALIAS
+#undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
+#endif
+
 #endif//beta
 
 #ifdef SSE_BETA // long term, tests
@@ -1877,7 +1884,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_393B //forgotten check io macro OR.W
 #define SSE_BUGFIX_393B1 //badly placed check io macros bitshift
 #define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
-#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible
+//#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
 #define SSE_VS2008_WARNING_393
 

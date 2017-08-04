@@ -12,6 +12,7 @@
 #include <psg.decla.h>
 #include <gui.decla.h>
 #include <stports.decla.h>
+#include <display.decla.h>
 #include "SSEYM2149.h"
 #include "SSEOption.h"
 #include "SSEInterrupt.h"
@@ -20,6 +21,9 @@
 TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
   p_fixed_vol_3voices=NULL;
+#endif
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  AntiAlias=NULL;
 #endif
 }
 
@@ -139,7 +143,10 @@ void TYM2149::Reset() {
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
   m_oversampling_count=0;
 #endif
-//  psg_reg[PSGR_MIXER]=0x77; //? sc68
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  time_at_vbl_start=0;
+  time_of_last_sample=0;
+#endif
 }
 
 #define NOISE_ENABLEQ(_chan)  ((psg_reg[PSGR_MIXER] >> (3 + _chan)) & 1)
@@ -156,8 +163,17 @@ void TYM2149::Reset() {
 #define ENVELOPE_PERIOD()       ((psg_reg[PSGR_ENVELOPE_PERIOD_LOW] \
   | (psg_reg[PSGR_ENVELOPE_PERIOD_HIGH]<<8)))
 
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+
+void TYM2149::psg_write_buffer(DWORD to_t, bool vbl) {
+  ASSERT(AntiAlias);
+#else
+
 void TYM2149::psg_write_buffer(DWORD to_t) {
+
+#endif
   ASSERT(OPTION_MAME_YM);
+
 #if defined(SSE_CARTRIDGE_BAT2)
 /*  B.A.T II plays the same samples on both the MV16 and the PSG, because
     the MV16 of B.A.T I wasn't included, it was just supported.
@@ -166,24 +182,57 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   if(SSEConfig.mv16 && DONGLE_ID==TDongle::BAT2)
     return; 
 #endif
+
+#if defined(SSE_YM2149_MAMELIKE_393)
+  if(!psg_n_samples_this_vbl)
+    return;
+#endif
+
   // compute #samples at our current sample rate
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[0]);
   to_t=max(to_t,t);
   to_t=min(to_t,psg_time_of_last_vbl_for_writing+PSG_CHANNEL_BUF_LENGTH);
   int count=max(min((int)(to_t-t),PSG_CHANNEL_BUF_LENGTH-psg_buf_pointer[0]),0);
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  if(!count && !AntiAlias)
+#else
   if(!count)
+#endif
     return;
 
   int *p=psg_channels_buf+psg_buf_pointer[0];
   ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
-  *p=0;
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  if(!AntiAlias)
+#endif
+    *p=0;
+
   ASSERT(sound_freq);
-  // YM2149 @2mhz = 1/4 * 8mhz clock 
-  double ym2149_cycles_per_sample=((double)CpuNormalHz/4)/(double)sound_freq; 
-  // timing doesn't need to be cycle accurate provided values are correct
-  COUNTER_VAR time_to_send_next_sample=m_cycles+(int)ym2149_cycles_per_sample;
-  int samples_sent=0;
+  // YM2149 @2mhz = 1/4 * 8mhz clock  - On STF, same as CPU
+  double ym2149_cycles_per_sample=((double)CpuNormalHz/4)/(double)sound_freq;
+
+  // when is next sample due?
+  COUNTER_VAR time_to_send_next_sample=(m_cycles+(int)ym2149_cycles_per_sample);
+
   COUNTER_VAR ym2149_cycles_at_start_of_loop=m_cycles;
+  int samples_sent=0;
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  COUNTER_VAR cycles_to_run=0;
+  if(AntiAlias)
+  {
+    COUNTER_VAR cpu_frame_cycles=FRAMECYCLES;
+    COUNTER_VAR psg_frame_cycles=cpu_frame_cycles/4;
+    COUNTER_VAR psg_already_run=m_cycles-time_at_vbl_start;
+    if(psg_already_run<0)
+      time_at_vbl_start=m_cycles,psg_already_run=0;
+    cycles_to_run=psg_frame_cycles-psg_already_run;
+    if(cycles_to_run<=0)
+      return;
+  }
+#endif
+
 
 /*  The following was inspired by MAME project, especially ay8910.cpp.
     thx Couriersud.
@@ -199,9 +248,24 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
   /* is 1, not 0, and can be modulated changing the volume. */
 
   /* buffering loop */
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  // override vbl: Steem may want to run longer
+  for(COUNTER_VAR i=0; ((AntiAlias&&!vbl)?(i<cycles_to_run):count);i++)
+#else
   while(count)
+#endif
   {
-    m_cycles+=8;  //the driver is clocked with clock / 8
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    if(AntiAlias)
+      m_cycles++;
+    else
+#endif
+      m_cycles+=8;  //the driver is clocked with clock / 8  (250Khz)
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    if(!AntiAlias||!(m_cycles%8)) {
+#endif
 
     // We compute noise then envelope, then we compute each tone and
     // mix each channel
@@ -235,9 +299,6 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     if (m_holding == 0)
     {
       m_count_env++;
-      //TRACE_OSD("%d/%d",m_count_env,ENVELOPE_PERIOD());
-      //TRACE_OSD("%d/%d %d",m_count_env,ENVELOPE_PERIOD(),TONE_PERIOD(0));
-      //TRACE_OSD("%d/%d %d",m_count_env,ENVELOPE_PERIOD(),m_count[0]);
       if (m_count_env >= ENVELOPE_PERIOD()) // "m_step"=1 for YM2149
       {
         m_count_env = 0;
@@ -352,17 +413,33 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     }
 
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-/*  At 44.1khz, makes no difference for Star Trek or Union Demo
-    but it does for Nostalgia credits... 
-*/
     ASSERT(m_oversampling_count<0xff);
     m_oversampling_count++;
     *p+=vol;
 #else
-    *p=vol;
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+/*  Thanks to this kick-ass filter, we avoid horrible aliasing in all
+    sample rates.
+    Notice that we must set the filter at about 10khz.
+    The Union Demo is a good test case. 
+    We have far better sound in Star Trek too.
+*/
+    if(AntiAlias)
+      *p=AntiAlias->do_sample(vol);
+    else
+#endif
+      *p=vol;
 #endif
 
-    if(m_cycles-time_to_send_next_sample>=0)
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    }//if
+#endif
+
+    if(m_cycles-time_to_send_next_sample>=0
+#if defined(SSE_BUGFIX_393) //anticrash
+      && (p-psg_channels_buf)<=PSG_CHANNEL_BUF_LENGTH
+#endif
+      )
     {
       ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
@@ -371,14 +448,29 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       m_oversampling_count=0;
       //TRACE_OSD("%d",*p);
 #endif
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+      int copy=*p;
+      *(++p)=copy; //same value, not zero
+#else
       *(++p)=0; //overshoot by 1 is OK
+#endif 
       count--;
       samples_sent++;
-      time_to_send_next_sample=ym2149_cycles_at_start_of_loop
-        +(int)(((double)samples_sent+1)*ym2149_cycles_per_sample);
-    }
 
-  }//wend count
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+      frame_samples++;
+      time_of_last_sample=m_cycles;
+      if(AntiAlias)
+      {
+        time_to_send_next_sample=(double)time_at_vbl_start
+          +((double)frame_samples+1.0)*ym2149_cycles_per_sample;
+      }
+      else
+#endif
+        time_to_send_next_sample=ym2149_cycles_at_start_of_loop
+          +(int)(((double)samples_sent+1)*ym2149_cycles_per_sample);
+    }
+  }
   psg_buf_pointer[0]=to_t-psg_time_of_last_vbl_for_writing;
   psg_buf_pointer[2]=psg_buf_pointer[1]=psg_buf_pointer[0];
 }
