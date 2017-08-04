@@ -1850,10 +1850,10 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
     if(COLOUR_MONITOR)
     {
       if (shifter_freq_at_start_of_vbl==50)
-        off=(ST_TYPE==STF_LACESCAN)?(27*236-8*3):(23*224+4-10*8); 
+        off=(ST_TYPE==STF_LACESCAN)?(27*236-8*3):(23*224+2*8); 
       // and 236*24-80+22+8+8+8+8+8 for other "generic" overscan circuit
       else //TODO
-        off=(ST_TYPE==STF_LACESCAN)?(27*234-8*3):(23*222+4-10*8);
+        off=(ST_TYPE==STF_LACESCAN)?(20*234-8*3):(16*224+2*8);
 #if defined(SSE_VID_BORDERS) //visual comfort
       if(DISPLAY_SIZE>=2)
         off+=8;
