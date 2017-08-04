@@ -1838,6 +1838,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_GLUE_393
 #define SSE_JOYSTICK_PADDLES //393
+#define SSE_SOUND_MICROWIRE_MIXMODE_393
+#undef SSE_SOUND_MICROWIRE_MIXMODE
+#undef  SSE_SOUND_MICROWIRE_MIXMODE2
 #define SSE_STF_HW_OVERSCAN //393 - considered as STF models
 #define SSE_VAR_393
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky

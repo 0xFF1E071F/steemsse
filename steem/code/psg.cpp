@@ -714,6 +714,24 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 
 #endif//mixing
 
+#if defined(SSE_SOUND_MICROWIRE_MIXMODE_393)
+/*  According to Atari doc, 0 means YM -12db and 2 means no YM, but it doesn't
+    work like this. 
+    On my STE, there's still YM sound at full voluem when it is 2,
+    and 0 mutes the YM.
+    Petari devised a HW hack/fix where '2' attenuates YM, we do the same in our 
+    emulation.
+    There are no commercial games using the (non-working) feature anyway.
+*/
+  if(ST_TYPE==STE && OPTION_MICROWIRE && dma_sound_mixer!=1)
+  {
+    if(dma_sound_mixer==2)
+      source>>=3;
+    else if(!dma_sound_mixer)
+      source=0;
+  }
+#endif
+
   // Dispatches to the correct function  
 #if defined(SSE_SOUND_RECORD_391B)
   if(Alter_V==CALC_V_CHIP)                    
