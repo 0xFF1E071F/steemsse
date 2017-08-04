@@ -441,6 +441,9 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #define DMA_SOUND_MULTIPLIER (32) // <<5 ?
 #endif
 
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+#define YM_LOW_PASS_FREQ (10.5) //in khz
+#endif
 
 /////////////
 // TIMINGS //

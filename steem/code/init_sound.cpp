@@ -285,6 +285,23 @@ HRESULT InitSound()
     SoundCaps.dwMaxSecondarySampleRate=100000; //Ignore!
   }
   UseSound=1;
+
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  ASSERT(!YM2149.AntiAlias)
+  if(!YM2149.AntiAlias)
+  {
+    if(YM2149.AntiAlias=new Filter(LPF,51,250.0,YM_LOW_PASS_FREQ))
+    {
+      if(int error=YM2149.AntiAlias->get_error_flag())
+      {
+        TRACE_LOG("AntiAlias error %d\n",error);
+        delete YM2149.AntiAlias; 
+        YM2149.AntiAlias=NULL;
+      }
+    }
+  }
+#endif
+
   return DS_OK;
 }
 //---------------------------------------------------------------------------
@@ -654,6 +671,13 @@ void SoundRelease()
     DSReleaseAllBuffers();
     DSObj->Release();DSObj=NULL;
   }
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+  if(YM2149.AntiAlias)
+  {
+    delete YM2149.AntiAlias;
+    YM2149.AntiAlias=NULL;
+  }
+#endif
 }
 //---------------------------------------------------------------------------
 HRESULT SoundStartBuffer(int flatlevel1,int flatlevel2)
