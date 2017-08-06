@@ -1504,15 +1504,35 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break;
 #endif
 
+#if defined(SSE_VID_ST_MONITOR_393)
+        case 1042:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
+            TRACE_LOG("ST Aspect Ratio: %d\n",OPTION_ST_ASPECT_RATIO);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+            StemWinResize();
+          }
+          break;
+#endif
+
 #if defined(SSE_VID_SCANLINES_INTERPOLATED)
-          // option Interpolate scanlines
+          // option Interpolated scanlines
         case 1032:
           if(HIWORD(wPar)==BN_CLICKED)
           {
+#if defined(SSE_VID_ST_MONITOR_393)
+            OPTION_SCANLINES=!OPTION_SCANLINES;
+            TRACE_LOG("Scanlines: %d\n",OPTION_SCANLINES);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_SCANLINES,0);
+#else
             OPTION_INTERPOLATED_SCANLINES=!OPTION_INTERPOLATED_SCANLINES;
-            TRACE_LOG("Interpolate scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
+            TRACE_LOG("Interpolated scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
+#endif
+#if !defined(SSE_VID_ST_MONITOR_393)
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
+#endif
             StemWinResize();
           }
           break;

@@ -291,7 +291,10 @@ void draw_begin()
   draw_dest_next_scanline=draw_dest_ad+draw_dest_increase_y;
   WIN_ONLY( draw_store_dest_ad=NULL; )
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+    if(SCANLINES_OK)
+      draw_grille_black=4;
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
@@ -299,6 +302,7 @@ void draw_begin()
       ) 
       draw_grille_black=4;
 #endif
+
   if (draw_grille_black>0){
     bool using_grille=0;
     if (draw_dest_increase_y>draw_line_length){
@@ -308,14 +312,25 @@ void draw_begin()
         if (draw_fs_fx==DFSFX_GRILLE) using_grille=true;
       }else 
 #endif
-        if (screen_res<2){
+      if (screen_res<2){
+
+#if defined(SSE_VID_ST_MONITOR_393)
+        if(SCANLINES_OK)
+          using_grille=true;
+#else
         if (draw_win_mode[screen_res]==DWM_GRILLE) using_grille=true;
+#endif
+
       }
 #else
       if (draw_fs_fx==DFSFX_GRILLE) using_grille=true;
 #endif
     }
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+
+#if defined(SSE_VID_ST_MONITOR_393)
+    if(SCANLINES_OK) 
+      using_grille=true;
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
     || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
@@ -469,7 +484,13 @@ void draw_set_jumps_and_source()
 #endif
   
   if (big_draw
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+    || (SCANLINES_INTERPOLATED
+#if defined(SSE_VID_D3D_382)
+      ||FullScreen && SCANLINES_OK && draw_win_mode[screen_res]==DWM_NOSTRETCH
+#endif
+    )
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
     || (SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
@@ -484,13 +505,25 @@ void draw_set_jumps_and_source()
       if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
 #endif
     }else if (screen_res<2){
+#if defined(SSE_VID_ST_MONITOR_393)
+      if (draw_win_mode[screen_res]==DWM_NOSTRETCH && SCANLINES_OK) 
+        p=2; // 640x200 low/med
+#else
       if (draw_win_mode[screen_res]==DWM_GRILLE) p=2; // 640x200 low/med
+#endif
     }
 #else
     if (draw_fs_fx==DFSFX_GRILLE) p=2; // 640x200 low/med
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+    if(SCANLINES_INTERPOLATED
+#if defined(SSE_VID_D3D_382)
+      ||FullScreen&&draw_win_mode[screen_res]==DWM_NOSTRETCH
+#endif
+      )
+      p=0;
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
     if(SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D_382)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
@@ -567,7 +600,18 @@ void draw_set_jumps_and_source()
         draw_blit_source_rect.right-=2;
 #endif
     }
-#if defined(SSE_VID_SCANLINES_INTERPOLATED_392B)
+
+#if defined(SSE_VID_ST_MONITOR_393)
+    if (mixed_output && (SCANLINES_INTERPOLATED
+#if defined(SSE_VID_D3D)
+      ||FullScreen&&screen_res<2&&draw_win_mode[screen_res]==DWM_NOSTRETCH
+#endif
+      ))
+    {
+      draw_scanline_lowres=jump_draw_scanline[2][BytesPerPixel-1][0]; //draw double
+      if (screen_res==0) draw_scanline=draw_scanline_lowres;
+    }
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED_392B)
     if (mixed_output && (SCANLINES_INTERPOLATED
 #if defined(SSE_VID_D3D)
       ||FullScreen&&screen_res<2&&draw_win_mode[screen_res]==DWM_GRILLE
@@ -1210,7 +1254,6 @@ void draw(bool osd)
 {
   // SS: this is called by init, load... not for actual emulation
   // It draws the screen in one time
-
   int save_scan_y=scan_y;
   MEM_ADDRESS save_sdp=shifter_draw_pointer;
   MEM_ADDRESS save_sdp_at_start_of_line=shifter_draw_pointer_at_start_of_line;

@@ -55,8 +55,12 @@ void StemWinResize(int xo,int yo)
 #endif
     while (WinSizeBorder[res][Idx].x>GetScreenWidth()) Idx--;
     int h=WinSizeBorder[res][Idx].y;
-    if(OPTION_ST_ASPECT_RATIO 
+    if(OPTION_ST_ASPECT_RATIO
+#if defined(SSE_VID_ST_MONITOR_393)
+      && res<2) // also non stretch, even if that's not beautiful
+#else
       && res<2 && WinSizeForRes[res]==1 && draw_win_mode[res]==0)
+#endif
       h*=ST_ASPECT_RATIO_DISTORTION;
     SetStemWinSize(WinSizeBorder[res][Idx].x,h,
       xo*WinSize[res][Idx].x/640,yo*WinSize[res][Idx].y/400);

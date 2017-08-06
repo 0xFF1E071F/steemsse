@@ -2901,6 +2901,7 @@ bool SteemDisplay::D3DBlit() {
 #endif
 
 #if defined(SSE_VID_D3D_FS_392A)
+    //TRACE_OSD_RECT(draw_blit_source_rect);//0 0 768 540
     d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
 #else
     bool use_scr_rect=(FullScreen && OPTION_D3D_CRISP && !OPTION_INTERPOLATED_SCANLINES
@@ -3565,6 +3566,12 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #endif
 
     // resolution adjustments, a bit ad hoc for now...
+#if defined(SSE_VID_ST_MONITOR_393)
+    if(FullScreen && !extended_monitor && (screen_res>=2 || OPTION_SCANLINES))
+    {
+      sh/=2;
+    }
+#else
     if(FullScreen)
     {
       if(screen_res>=2 ||SCANLINES_INTERPOLATED
@@ -3575,7 +3582,7 @@ HRESULT SteemDisplay::D3DSpriteInit() {
         if(!extended_monitor)
           sh/=2;
     }
-
+#endif
 #ifdef SSE_VID_EXT_FS1
     if(extended_monitor && stx==SurfaceWidth) //&&?
       sw=sh=1;

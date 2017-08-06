@@ -958,7 +958,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
     OSD_IMAGE_NAME=pCSF->GetInt("Options","OsdImageName", OSD_IMAGE_NAME);
 #endif
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+    OPTION_SCANLINES=pCSF->GetInt("Display","Scanlines",OPTION_SCANLINES);
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
     OPTION_INTERPOLATED_SCANLINES=pCSF->GetInt("Display","InterpolatedScanlines",OPTION_INTERPOLATED_SCANLINES);
 #endif
 #if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
@@ -1488,7 +1490,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
   pCSF->SetStr("Options","OsdImageName",EasyStr(OSD_IMAGE_NAME));  
 #endif
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+  pCSF->SetStr("Display","Scanlines",EasyStr(OPTION_SCANLINES));  
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
   pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(OPTION_INTERPOLATED_SCANLINES));  
 #endif
 #if defined(SSE_GUI_STATUS_BAR)

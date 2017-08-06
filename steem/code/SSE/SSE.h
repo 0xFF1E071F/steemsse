@@ -1845,6 +1845,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_393
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
+#define SSE_VID_ST_MONITOR_393 // 2 options again
 #define SSE_YM2149_MAMELIKE_393
 
 #if defined(SSE_GLUE_393)
