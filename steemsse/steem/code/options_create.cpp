@@ -1267,7 +1267,28 @@ void TOptionBox::CreateDisplayPage()
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED) // + PAL aspect ratio in some modes
+#if defined(SSE_VID_ST_MONITOR_393)
+  y-=LineHeight;
+
+  Wid=GetCheckBoxSize(Font,T("ST Aspect Ratio")).Width;
+  Win=CreateWindow("Button",T("ST Aspect Ratio"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          x,y,Wid,25,Handle,(HMENU)1042,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+  ToolAddWindow(ToolTip,Win,T("Tries to emulate aspect ratio of your typical monitor."));
+
+
+  x+=Wid+5;
+
+  //  The new option covers both former draw mode and interpolated
+  Wid=GetCheckBoxSize(Font,T("Scanlines")).Width;
+  Win=CreateWindow("Button",T("Scanlines"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    x,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_SCANLINES,0);
+
+  y+=LineHeight;
+
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED) // + PAL aspect ratio in some modes
   y-=LineHeight;
   Wid=GetCheckBoxSize(Font,T("ST Monitor")).Width;
   Win=CreateWindow("Button",T("ST Monitor"),
@@ -1333,8 +1354,8 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Double Size")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
-
-#if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
+#if defined(SSE_VID_ST_MONITOR_393)
+#elif defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
   CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
 #else
   CBAddString(Win,T("Double Size")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
@@ -1353,7 +1374,8 @@ void TOptionBox::CreateDisplayPage()
   CBAddString(Win,T("Normal Size"),0);
   CBAddString(Win,T("Double Height")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Height")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
-#if defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
+#if defined(SSE_VID_ST_MONITOR_393)
+#elif defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
   CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
 #else
   CBAddString(Win,T("Double Height")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));

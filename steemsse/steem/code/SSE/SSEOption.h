@@ -34,7 +34,11 @@ struct TOption {
   unsigned int Dsp:1; // giving the ability to disable buggy DSP
   unsigned int OsdImageName:1;
   unsigned int PastiJustSTX:1;
+#if defined(SSE_VID_ST_MONITOR_393)
+  unsigned int Scanlines:1; // = interpolated + normal
+#else
   unsigned int Interpolate:1;
+#endif
   unsigned int StatusBar:1;
   unsigned int WinVSync:1;
   unsigned int TripleBufferWin:1;
@@ -117,7 +121,14 @@ extern struct TOption SSEOption;
 //#define DSP_ENABLED (SSEOption.Dsp)
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define OPTION_PASTI_JUST_STX (SSEOption.PastiJustSTX)
+
+#if defined(SSE_VID_ST_MONITOR_393)
+#define OPTION_SCANLINES (SSEOption.Scanlines)
+#else
 #define OPTION_INTERPOLATED_SCANLINES (SSEOption.Interpolate)
+#endif
+
+#define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
 #if defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
 #define OPTION_STATUS_BAR (true)
 #define OPTION_STATUS_BAR_GAME_NAME (false)
@@ -140,7 +151,7 @@ extern struct TOption SSEOption;
 #else
 #define OPTION_SAMPLED_YM (SSEOption.SampledYM)
 #endif
-#define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
+
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
 #define OPTION_DRIVE_SOUND_SEEK_SAMPLE (SSEOption.DriveSoundSeekSample)
 #else

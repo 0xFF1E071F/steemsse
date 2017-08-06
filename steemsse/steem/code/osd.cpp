@@ -253,11 +253,15 @@ void osd_draw()
   int x1,y1;
   x1=draw_blit_source_rect.right-draw_blit_source_rect.left;
 
-#if defined(SSE_VID_SCANLINES_INTERPOLATED)
+#if defined(SSE_VID_ST_MONITOR_393)
+  if(FullScreen && !screen_res && SCANLINES_OK)
+    x1/=2;
+#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
   if(FullScreen && !screen_res && SCANLINES_INTERPOLATED)
     x1/=2;
 #endif
   y1=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
+  //TRACE_OSD("%d",y1);//540
   bool can_have_scroller=true;
 
   int seconds=max(min((timer-osd_start_time)/1000,DWORD(30)),DWORD(0));
