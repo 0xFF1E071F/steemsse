@@ -1479,7 +1479,7 @@ void agenda_floppy_readwrite_sector(int Data)
   floppy_irq_flag=0;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
 
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) && !defined(SSE_WD1772_393) // type II
   if(ADAT)
     fdc_str|=FDC_STR_T1_SPINUP_COMPLETE; // no real use...
   else

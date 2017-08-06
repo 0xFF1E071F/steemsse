@@ -1885,8 +1885,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_393B1 //badly placed check io macros bitshift
 #define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
 //#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
+#define SSE_VID_D3D_393 // update m_DisplayFormat
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
 #define SSE_VS2008_WARNING_393
+#define SSE_WD1772_393 // wrong status after interrupt command
 
 #endif//bugfix
 
