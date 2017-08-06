@@ -2999,6 +2999,10 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     (OPTION_3BUFFER_FS&&FullScreen)?2: // as simple as this
 #endif
     1;
+#if defined(SSE_VID_D3D_393) //sooner...
+  // Update monitor rectangle. Hopefully, this won't call us again!
+  D3DCheckCurrentMonitorConfig(); 
+#endif
 #if defined(SSE_VID_D3D_LIST_MODES)
   if(FullScreen && !OPTION_FAKE_FULLSCREEN)
   {
@@ -3040,7 +3044,14 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   {
     d3dpp.BackBufferFormat=m_DisplayFormat;
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+#if defined(SSE_BUGFIX_393)
+    HDC hdc = GetDC(StemWin);
+    ASSERT(hdc);
+    BytesPerPixel=GetDeviceCaps(hdc, BITSPIXEL)/8; // correct? there was a dc leak anyway
+    ReleaseDC(StemWin, hdc);
+#else
     BytesPerPixel=GetDeviceCaps(GetDC(StemWin), BITSPIXEL)/8;
+#endif
 #endif
   }
 #else//SSE_VID_D3D_LIST_MODES
@@ -3104,16 +3115,17 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   d3derr=pD3D->CreateDevice(m_Adapter,m_DeviceType,StemWin,m_vtx_proc,&d3dpp,&pD3DDevice);
 #ifdef SSE_DEBUG
   if(!d3dpp.Windowed)
-    TRACE_LOG("D3D Create fullscreen surface %dx%d screen %d format %d buffers %d %dhz flags %X err %d\n",
-    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,
+    TRACE_LOG("D3D Create fullscreen surface %dx%d screen %d format %d bpp %d buffers %d %dhz flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,BytesPerPixel,
     d3dpp.BackBufferCount,d3dpp.FullScreen_RefreshRateInHz,d3dpp.Flags,d3derr);
   else
-    TRACE_LOG("D3D Create windowed surface %dx%d screen %d format %d flags %X err %d\n",
-    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,d3derr);
+    TRACE_LOG("D3D Create windowed surface %dx%d screen %d format %d bpp %d flags %X err %d\n",
+    d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,m_Adapter,d3dpp.BackBufferFormat,BytesPerPixel,
+    d3dpp.Flags,d3derr);
 #else
   // release trace 
-  TRACE2("scr %d fmt %X flg %X FS%d W%d %dx%dx%d %dhz ERR %d\n",
-    m_Adapter,d3dpp.BackBufferFormat,d3dpp.Flags,FullScreen,d3dpp.Windowed,
+  TRACE2("scr %d fmt %d bpp %d flg %X FS%d W%d %dx%dx%d %dhz ERR %d\n",
+    m_Adapter,d3dpp.BackBufferFormat,BytesPerPixel,d3dpp.Flags,FullScreen,d3dpp.Windowed,
     d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,d3dpp.BackBufferCount,
     d3dpp.FullScreen_RefreshRateInHz,d3derr);
 #endif
@@ -3139,8 +3151,10 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if defined(SSE_VID_D3D_2SCREENS)
   if(!d3derr && FullScreen)
   {
+#if !defined(SSE_VID_D3D_393) // done before
     // Update monitor rectangle. Hopefully, this won't call us again!
     D3DCheckCurrentMonitorConfig(); 
+#endif
     // Compute size
     WORD cw=rcMonitor.right-rcMonitor.left;
     WORD ch=rcMonitor.bottom-rcMonitor.top;
@@ -3262,7 +3276,7 @@ HRESULT SteemDisplay::D3DInit()
   // do it once, keeping result
 #if defined(SSE_VID_D3D_2SCREENS)
   m_Adapter=D3DADAPTER_DEFAULT;
-  D3DCheckCurrentMonitorConfig(); // could Seem be started on second monitor?
+  D3DCheckCurrentMonitorConfig(); // could Steem be started on second monitor?
 
   // Probe capacities of video card, starting with desktop mode, HW
   // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization

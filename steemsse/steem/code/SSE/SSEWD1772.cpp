@@ -257,14 +257,24 @@ BYTE TWD1772::IORead(BYTE Line) {
     else
 #endif
     {
+#if !defined(SSE_WD1772_393)
       // IP
       if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-      // WP, SU
-      if(StatusType)
+#endif
+
+      if(StatusType) // type I command status
       {
+#if defined(SSE_WD1772_393)
+        // IP
+        if(floppy_track_index_pulse_active())
+          STR|=FDC_STR_T1_INDEX_PULSE;
+        else
+          STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
+#endif
+        // WP
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
         {
@@ -276,16 +286,26 @@ BYTE TWD1772::IORead(BYTE Line) {
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
 
+        // SU
 #if defined(SSE_DISK_STW) // was set already (hopefully)
+#if !defined(SSE_WD1772_393) // don't bet on it ;)
         if(SF314[drive].ImageType.Manager==MNGR_WD1772)
           ; else
 #endif
-          if(fdc_spinning_up)
-            STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
-          else
-            STR|=FDC_STR_T1_SPINUP_COMPLETE;
-      
-      } // else it should be set in fdc_execute()
+#endif
+        if(fdc_spinning_up) //should be up-to-date for WD1772 emu too
+          STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
+        else
+          STR|=FDC_STR_T1_SPINUP_COMPLETE;
+#if defined(SSE_WD1772_393)
+        // TR0: compute (again) now TODO
+        Lines.track0=(floppy_head_track[drive]==0); //update line...
+        if(Lines.track0)
+          STR|=STR_T00;
+        else
+          STR&=~STR_T00;
+#endif
+      } 
       
       if ((mfp_reg[MFPR_GPIP] & BIT_5)==0) // IRQ is currently raised
       {
@@ -1049,12 +1069,18 @@ void TWD1772::NewCommand(BYTE command) {
       IndexCounter=6;
       //TRACE_LOG("%d IP to spin up\n",IndexCounter);
       prg_phase=WD_TYPEI_SPINUP;
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=true; // use this too to make it shorter
+#endif
     }
     else
     {
       // Doc doesn't state motor is started if it wasn't spinning yet and h=1
       // We assume.
       Motor(true); // but does it make sense?
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=false;
+#endif
       prg_phase=WD_TYPEI_SPUNUP;
       STR|=STR_SU; // eg ST NICCC 2
 /*  Add a delay, not only for RESTORE (My Socks Are Weapons), but also
@@ -1079,10 +1105,16 @@ void TWD1772::NewCommand(BYTE command) {
       IndexCounter=6;
       //TRACE_LOG("%d IP to spin up\n",IndexCounter);
       prg_phase=WD_TYPEII_SPINUP;
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=true;
+#endif
     }
     else
     {
       Motor(true); 
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=false;
+#endif
       prg_phase=WD_TYPEII_SPUNUP;
       OnUpdate();
     }
@@ -1105,11 +1137,17 @@ void TWD1772::NewCommand(BYTE command) {
       IndexCounter=6;
       //TRACE_LOG("%d IP to spin up\n",IndexCounter);
       prg_phase=WD_TYPEIII_SPINUP;
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=true;
+#endif
     }
     else
     {
       Motor(true); 
       prg_phase=WD_TYPEIII_SPUNUP;
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=false;
+#endif
       OnUpdate();
     }
     break;
@@ -1119,7 +1157,19 @@ void TWD1772::NewCommand(BYTE command) {
     if(STR&STR_BUSY)
       STR&=~STR_BUSY;
     else // read STR is type I if FDC wasn't busy when interrupted (doc)
+    {
       StatusType=1;
+#if defined(SSE_WD1772_393)
+/*  Argh! When receiving the 'Interrupt Command' command and the fdc wasn't
+    busy (because of a CRC error, for example), we didn't clear STR bits.
+    Rogue's protection is bugged, it reads sectors with a CRC error and 
+    expects no error. It only works in TOS 1.0 because it is bugged too:
+    it doesn't return the CRC error either, it reads STR after using command
+    $D0. 
+*/
+      STR&=~(STR_CRC|STR_LD|STR_RT|STR_RNF);
+#endif
+    }
 
     if(CR&CR_I3) // immediate, D8
     {
@@ -1180,6 +1230,9 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
     case WD_TYPEII_SPINUP:
     case WD_TYPEIII_SPINUP:
       prg_phase++; // we assume next phase is spunup for this optimisation
+#if defined(SSE_WD1772_393)
+      fdc_spinning_up=false;
+#endif
       OnUpdate();
       break;
 
@@ -1673,7 +1726,9 @@ r1       r0            1772
     IDField.CRC[n_format_bytes]=DSR; // and we don't add to CRC
     if(n_format_bytes) //1
     {
-      if(!CrcLogic.Check(&IDField))
+      if(!CrcLogic.Check(&IDField)
+      //  && !(CR&CR_M)
+        )
       {
         TRACE_LOG("Read sector %c:%d-%d-%d CRC error\n",'A'+DRIVE,CURRENT_SIDE,IDField.track,IDField.num);
         STR|=STR_CRC; // caught by Dma.UpdateRegs() for OSD
@@ -2047,9 +2102,13 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     to STW
 */
   if(!(STR&STR_BUSY) 
+#if defined(SSE_WD1772_393)
+    || fdc_spinning_up // since we use it now...
+#else
     || prg_phase==WD_TYPEI_SPINUP
     || prg_phase==WD_TYPEII_SPINUP
     || prg_phase==WD_TYPEIII_SPINUP
+#endif
     || (io_src_b&0xF0)==0xD0 )
   {
     agenda_delete(agenda_fdc_motor_flag_off); // and others?
