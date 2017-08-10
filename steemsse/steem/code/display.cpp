@@ -3000,7 +3000,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     (OPTION_3BUFFER_FS&&FullScreen)?2: // as simple as this
 #endif
     1;
-#if defined(SSE_VID_D3D_393) //sooner...
+#if defined(SSE_VID_D3D_2SCREENS) && defined(SSE_VID_D3D_393) //sooner...
   // Update monitor rectangle. Hopefully, this won't call us again!
   D3DCheckCurrentMonitorConfig(); 
 #endif
