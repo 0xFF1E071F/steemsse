@@ -555,10 +555,10 @@ void ACIA_SetControl(int nACIA,BYTE Val)
   acia[nACIA].rx_irq_enabled=bool(Val & b10000000);
   LOG_ONLY( if (nACIA==0) log_to(LOGSECTION_IKBD,EasyStr("IKBD: ACIA control set to ")+itoa(Val,d2_t_buf,2)); )
 
-#if defined(SSE_STF_LACESCAN)
+#if defined(SSE_STF_HW_OVERSCAN)
   // The overscan circuit is activated by using the free ACIA RTS pin (output)
-  if(ST_TYPE==STF_OVERSCAN && nACIA==NUM_ACIA_IKBD)
-    SSEConfig.LaceScanOn=((Val&BIT_6)!=0); // this is saved with the snapshot
+  if((ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH)&& nACIA==NUM_ACIA_IKBD)
+    SSEConfig.OverscanOn=((Val&BIT_6)!=0); // this is saved with the snapshot
 #endif
 
 #if defined(SSE_ACIA)

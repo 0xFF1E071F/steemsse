@@ -1289,10 +1289,6 @@ detect unstable: switch MED/LOW - Beeshift
     CurrentScanline.Bytes-=2; 
     TrickExecuted|=TRICK_LINE_MINUS_2;
 
-#ifdef TEST02
-    //CurrentScanline.EndCycle-=4;
-#endif
-
 //    TRACE_LOG("-2 y %d c %d s %d e %d ea %d\n",scan_y,LINECYCLES,scanline_drawn_so_far,overscan_add_extra,ExtraAdded);
   }
 
