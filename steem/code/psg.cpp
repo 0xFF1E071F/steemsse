@@ -304,6 +304,9 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 #endif
 
+#if defined(SSE_YM2149_RECORD)
+bool written_to_env_this_vbl=true;
+#endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
@@ -1521,6 +1524,21 @@ HRESULT Sound_VBL()
     if (sound_mode==SOUND_MODE_SHARPCHIP)    chipmode=(psg_reg[PSGR_MIXER] & b00111111)==b00111111;
 #endif
     if (sound_record){
+
+#if defined(SSE_YM2149_RECORD)
+/*  Each VBL we dump PSG registers. We must write the envelope register
+    only if it was written to (even same value), otherwise we write $FF.
+*/
+      if(OPTION_SOUND_RECORD_FORMAT==TOption::SoundFormatYm)
+      {
+        // each VBL write 14 regs
+        fwrite(psg_reg,sizeof(BYTE),13,wav_file);
+        BYTE env=written_to_env_this_vbl?psg_reg[13]:0xFF;
+        fwrite(&env,sizeof(BYTE),1,wav_file);
+        written_to_env_this_vbl=false;
+      }
+      else
+#endif
       sound_record_to_wav(countdown_to_storing_values,write_time_1,chipmode,source_p);
     }
 
@@ -2704,6 +2722,9 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 // from Hatari, see
 // http://www.atari-forum.com/viewtopic.php?f=51&t=31610&sid=b4e1d8fc35b06785db51e4f8e44d013d&p=319952#p319936
       YM2149.m_count_env = 0; 
+#if defined(SSE_YM2149_RECORD)
+      written_to_env_this_vbl=true;
+#endif
     }
   }
   else
@@ -2849,6 +2870,9 @@ say, that the chip counts down.
         if (psg_reg[8+abc] & 16) psg_tone_start_time[abc]=abc_t[abc];
       }
 */
+#if defined(SSE_YM2149_RECORD)
+      written_to_env_this_vbl=true;
+#endif
       break;
     }
   }

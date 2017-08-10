@@ -36,6 +36,10 @@ EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
 EXT int pa_output_buffer_size INIT(128);
 #endif
 
+#if defined(SSE_YM2149_RECORD)
+extern bool written_to_env_this_vbl;
+#endif
+
 #ifdef IN_MAIN
 HRESULT InitSound();
 void SoundRelease();
@@ -97,15 +101,24 @@ void sound_record_open_file()
   if (wav_file) return;
   wav_file=fopen(WAVOutputFile.Text,"wb");
   if (wav_file==NULL){
+#if defined(SSE_YM2149_RECORD)
+    Alert(T("Could not open sound file for writing"),T("Sound Recording Error"),MB_ICONEXCLAMATION);
+#else
     Alert(T("Could not open WAV file for writing"),T("WAV Recording Error"),MB_ICONEXCLAMATION);
+#endif
     sound_record=false;
     return;
   }
+#if defined(SSE_YM2149_RECORD)
+  if(OPTION_SOUND_RECORD_FORMAT==TOption::SoundFormatWav)
+#endif
+  {//SS
   fprintf(wav_file,"RIFF    WAVEfmt ");
   fputc(16,wav_file);  fputc(0,wav_file);  fputc(0,wav_file);  fputc(0,wav_file); //size of header=16
   fputc(1,wav_file);  fputc(0,wav_file); //always
   for (int i=0;i<14;i++) fputc(0,wav_file); // Skip header (written when close)
   fprintf(wav_file,"data    ");
+  }//SS
 
   // Need to put size of file - 44 at position 40 in file (as int in binary little endian)
   // Need to put size of file - 8 at position 4 in file (as int in binary little endian)
@@ -118,6 +131,38 @@ void sound_record_close_file()
   if (!wav_file)return;
   fflush(wav_file);
   int length=ftell(wav_file);
+  
+#if defined(SSE_YM2149_RECORD)
+/*  Convert temp file to YM3 format.
+    temp file is a dump of PSG registers every VBL, in YM3, the same data
+    is grouped per register.
+    To do that we copy the temp file in memory, then create it again in 
+    the correct order.
+*/
+  if(!length) // just in case
+    ;
+  else if(OPTION_SOUND_RECORD_FORMAT==TOption::SoundFormatYm)
+  {
+    ASSERT(length%14==0);
+    int nframes=length/14;
+    fclose(wav_file);//must close/open for reading! (is open as "wb")
+    wav_file=fopen(WAVOutputFile.Text,"rb"); 
+    BYTE *copy=new BYTE[length];
+    size_t nb=fread(copy,sizeof(BYTE),length,wav_file);
+    ASSERT(nb==length);
+    fclose(wav_file); // close and reopen as if new file
+    wav_file=fopen(WAVOutputFile.Text,"wb");
+    fprintf(wav_file,"YM3!");  //header
+    // change order
+    for(int reg=0;reg<14;reg++) 
+      for(int i=0;i<nframes;i++)
+        fwrite(&copy[i*14+reg],sizeof(BYTE),1,wav_file);
+    delete[] copy; // and wavfile will be closed further
+    written_to_env_this_vbl=true; // reset this for next recording
+  }
+  else
+#endif
+  {//SS
   fseek(wav_file,4,SEEK_SET);
   SaveInt(length-8,wav_file);
   fseek(wav_file,40,SEEK_SET);
@@ -130,7 +175,7 @@ void sound_record_close_file()
   SaveInt(sound_freq*sound_bytes_per_sample,wav_file); //bytes per second
   fputc(sound_bytes_per_sample,wav_file);  fputc(0,wav_file);
   fputc(sound_num_bits,wav_file);  fputc(0,wav_file);
-
+  }//SS
   fclose(wav_file);
   wav_file=NULL;
   sound_record=false;
@@ -290,7 +335,7 @@ HRESULT InitSound()
   ASSERT(!YM2149.AntiAlias)
   if(!YM2149.AntiAlias)
   {
-    if(YM2149.AntiAlias=new Filter(LPF,51,250.0,YM_LOW_PASS_FREQ))
+    if((YM2149.AntiAlias=new Filter(LPF,51,250.0,YM_LOW_PASS_FREQ))!=NULL)
     {
       if(int error=YM2149.AntiAlias->get_error_flag())
       {
