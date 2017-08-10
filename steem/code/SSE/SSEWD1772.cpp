@@ -264,7 +264,19 @@ BYTE TWD1772::IORead(BYTE Line) {
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
 #endif
-
+#if defined(SSE_WD1772_393) // all command types
+      // WP
+      // disk has just been changed (30 VBL set at SetDisk())
+      if(floppy_mediach[drive])
+      {
+        STR&=(~FDC_STR_WRITE_PROTECT);
+        if(floppy_mediach[drive]/10!=1) 
+          STR|=FDC_STR_WRITE_PROTECT;
+      }
+      // Permanent status if disk is in
+      else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
+        STR|=FDC_STR_WRITE_PROTECT;
+#endif
       if(StatusType) // type I command status
       {
 #if defined(SSE_WD1772_393)
@@ -274,6 +286,7 @@ BYTE TWD1772::IORead(BYTE Line) {
         else
           STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
 #endif
+#if !defined(SSE_WD1772_393)
         // WP
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
@@ -285,7 +298,7 @@ BYTE TWD1772::IORead(BYTE Line) {
         // Permanent status if disk is in
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
-
+#endif
         // SU
 #if defined(SSE_DISK_STW) // was set already (hopefully)
 #if !defined(SSE_WD1772_393) // don't bet on it ;)
@@ -442,6 +455,10 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         SF314[drive].Sound_CheckCommand(io_src_b);
       }
 #endif//sound
+
+#if defined(SSE_WD1772_393C)
+    TimeOut=0;
+#endif
 
       // Steem's native and WD1772 managers
     if(SF314[drive].ImageType.Manager==MNGR_STEEM)
@@ -1160,7 +1177,7 @@ void TWD1772::NewCommand(BYTE command) {
     {
       StatusType=1;
 #if defined(SSE_WD1772_393)
-/*  Argh! When receiving the 'Interrupt Command' command and the fdc wasn't
+/*  Argh! When receiving the 'Force Interrupt' command and the fdc wasn't
     busy (because of a CRC error, for example), we didn't clear STR bits.
     Rogue's protection is bugged, it reads sectors with a CRC error and 
     expects no error. It only works in TOS 1.0 because it is bugged too:
@@ -1323,12 +1340,25 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
 void TWD1772::OnUpdate() {
 
   update_time=time_of_next_event+n_cpu_cycles_per_second; // we come here anyway
+
+
+#if defined(SSE_WD1772_393C)
+  if(TimeOut>1 && fdc_spinning_up)
+  {
+    STR|=STR_RNF;
+    TimeOut=0;
+    //Irq(true); // 'IDLE' 
+    return;
+  }
+#endif
+
 #if defined(SSE_DISK_MFM0)
   if(SF314[DRIVE].ImageType.Manager!=MNGR_WD1772)
   {
     return;
   }
 #endif
+
   switch(prg_phase)
   {
     
@@ -1453,7 +1483,11 @@ r1       r0            1772
       }
 #endif
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
+#if defined(SSE_WD1772_393B)
+      update_time=time_of_next_event+ MsToCycles(30); 
+#else
       update_time=time_of_next_event+ MsToCycles(15);
+#endif
     }
     else
     {
@@ -2096,20 +2130,29 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
 
 /*  CR will accept a new command when busy bit is clear or when command
     is 'Force Interrupt'.
-    Not documented (from Hatari?): also when the drive is still spinning up 
+    Suska: 'Force Interrupt' isn't accepted if busy is clear. $FF is ignored.
+    Not documented (from Hatari?): also when the drive is still spinning up
+    eg Overdrive 
     TODO only during a type I command? check in caps -> feature missing?
     TODO check general structure, not sure it's ideal even if limited
     to STW
 */
-  if(!(STR&STR_BUSY) 
-#if defined(SSE_WD1772_393)
-    || fdc_spinning_up // since we use it now...
+  if(!(STR&STR_BUSY)
+#if defined(SSE_WD1772_393B)
+    && (io_src_b&0xF0)!=0xD0 && io_src_b!=0xFF
+#endif
+#if defined(SSE_WD1772_393B)
+    || fdc_spinning_up // since we use it now... 
 #else
     || prg_phase==WD_TYPEI_SPINUP
     || prg_phase==WD_TYPEII_SPINUP
     || prg_phase==WD_TYPEIII_SPINUP
 #endif
-    || (io_src_b&0xF0)==0xD0 )
+#if defined(SSE_WD1772_393B)
+    || (STR&STR_BUSY) && (io_src_b&0xF0)==0xD0)
+#else
+    || (io_src_b&0xF0)==0xD0)
+#endif
   {
     agenda_delete(agenda_fdc_motor_flag_off); // and others?
     NewCommand(io_src_b); // one more function, more readable

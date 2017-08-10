@@ -224,6 +224,10 @@ struct TWD1772 {
   BYTE InterruptCondition; // guessed
   BYTE IndexCounter; // guessed
 
+#if defined(SSE_WD1772_393C)
+  BYTE TimeOut;
+#endif
+
 /*  Lines (pins). Some are necessary (eg direction), others not
     really yet (eg write_gate).
     TODO put them all in then (fun)

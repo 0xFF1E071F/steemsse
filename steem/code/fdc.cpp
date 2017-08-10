@@ -356,6 +356,10 @@ void floppy_fdc_command(BYTE cm)
       return;
     }
   }
+#if defined(SSE_WD1772_393B)
+  else if(ADAT && (cm & (BIT_7+BIT_6+BIT_5+BIT_4))==0xd0)
+    return;
+#endif
 
 #if defined(SSE_FDC_FORCE_INTERRUPT)
   // see note in SSEWD1772.cpp, IORead()
