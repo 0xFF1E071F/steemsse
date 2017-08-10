@@ -15,10 +15,13 @@
 
 
 struct TOption {
-
   BYTE STModel;
   BYTE DisplaySize;
   BYTE WakeUpState; 
+#if defined(__cplusplus) && defined(SSE_YM2149_RECORD)
+  BYTE SoundRecordFormat;
+  enum {SoundFormatWav,SoundFormatYm};
+#endif
   // More than 32 fields OK, if not we would get a warning (I hope)
   unsigned int Hacks:1;
   unsigned int Chipset1:1;
@@ -150,6 +153,10 @@ extern struct TOption SSEOption;
 #define OPTION_SAMPLED_YM (true)
 #else
 #define OPTION_SAMPLED_YM (SSEOption.SampledYM)
+#endif
+
+#if defined(SSE_YM2149_RECORD)
+#define OPTION_SOUND_RECORD_FORMAT (SSEOption.SoundRecordFormat)
 #endif
 
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)

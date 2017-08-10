@@ -1263,6 +1263,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     // Trying to write to ports on WINNT causes the program to be killed!
     WIN_ONLY( if (WinNT) sound_internal_speaker=0; )
 #endif
+
+#if defined(SSE_YM2149_RECORD)
+    OPTION_SOUND_RECORD_FORMAT=(BYTE)pCSF->GetInt("Sound","SoundRecordFormat",
+      OPTION_SOUND_RECORD_FORMAT);
+#endif
   }
 
   SEC(PSEC_PORTS){
@@ -1655,6 +1660,11 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
   pCSF->SetStr("Sound","InternalSpeaker",Str(sound_internal_speaker));
 #endif
+
+#if defined(SSE_YM2149_RECORD)
+  pCSF->SetStr("Sound","SoundRecordFormat",Str(OPTION_SOUND_RECORD_FORMAT));
+#endif
+
 #if defined(SSE_DONGLE_PORT)
   for (int p=0;p<4;p++){
 #else

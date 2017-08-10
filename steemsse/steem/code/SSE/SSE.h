@@ -1847,6 +1847,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
 #define SSE_VID_ST_MONITOR_393 // 2 options again
 #define SSE_YM2149_MAMELIKE_393
+#define SSE_YM2149_RECORD // record to YM file
 
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload

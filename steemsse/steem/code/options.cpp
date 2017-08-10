@@ -1904,6 +1904,15 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             psg_write_n_screens_ahead=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
           }
           break;
+
+#if defined(SSE_YM2149_RECORD)
+        case 7105:
+          if (HIWORD(wPar)==CBN_SELENDOK){
+            OPTION_SOUND_RECORD_FORMAT=(BYTE)SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
+          }
+          break;
+#endif
+
         case 7099: //SS sound output type
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->SoundModeChange(SendMessage(HWND(lPar),CB_GETCURSEL,0,0),true,0);
@@ -1918,8 +1927,18 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
             EnableAllWindows(0,Win);
+#if defined(SSE_YM2149_RECORD)
+            char wildcard[6]="*.wav";
+            if(OPTION_SOUND_RECORD_FORMAT)
+              strcpy(wildcard,"*.ym");
+            char filetype[6+5];
+            sprintf(filetype,"%s File",wildcard+2);
+            EasyStr NewWAV=FileSelect(HWND(FullScreen ? StemWin:Win),T("Choose Sound Output File"),
+                                        This->WAVOutputDir,FSTypes(1,filetype,wildcard,NULL),1,0,wildcard+2);
+#else
             EasyStr NewWAV=FileSelect(HWND(FullScreen ? StemWin:Win),T("Choose WAV Output File"),
                                         This->WAVOutputDir,FSTypes(1,T("WAV File").Text,"*.wav",NULL),1,0,"wav");
+#endif
             if (NewWAV.NotEmpty()){
               WAVOutputFile=NewWAV;
               This->WAVOutputDir=NewWAV;

@@ -2571,10 +2571,33 @@ void TOptionBox::CreateSoundPage()
                           page_l+page_w-10-70,y,70,23,Handle,(HMENU)7203,HInstance,NULL);
   y+=30;
 
+#if defined(SSE_YM2149_RECORD)
+/*  Add record to YM functionality using the asme GUI elements as for WAV.
+    We add a combobox to select format rather than radio buttons, this way
+    we can add more formats.
+*/
+  Wid=GetTextSize(Font,T("Format")).Width;
+  CreateWindow("Static",T("Format"),WS_CHILD,page_l+10,y+4,Wid,23,Handle,
+    (HMENU)7053,HInstance,NULL);
+  Offset=page_l+15+Wid;
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
+    Offset,y,60,200,Handle,(HMENU)7105,HInstance,NULL);
+  Offset+=80;
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Wav"));
+  SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("YM"));
+  SendMessage(Win,CB_SETCURSEL,OPTION_SOUND_RECORD_FORMAT,0);
+#endif
+
   Wid=GetCheckBoxSize(Font,T("Warn before overwrite")).Width;
+#if defined(SSE_YM2149_RECORD)
+  Win=CreateWindow("Button",T("Warn before overwrite"),WS_CHILD | WS_TABSTOP |
+                          BS_CHECKBOX | DisableIfMute,
+                          Offset,y,Wid,25,Handle,(HMENU)7204,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("Warn before overwrite"),WS_CHILD | WS_TABSTOP |
                           BS_CHECKBOX | DisableIfMute,
                           page_l+10,y,Wid,25,Handle,(HMENU)7204,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,RecordWarnOverwrite,0);
   y+=30;
   y+=5;
