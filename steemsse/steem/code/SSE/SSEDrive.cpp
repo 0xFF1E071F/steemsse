@@ -192,9 +192,17 @@ void TSF314::IndexPulse(bool image_triggered) {
 
   ASSERT(Id==0||Id==1);
   time_of_next_ip=time_of_next_event+n_cpu_cycles_per_second; 
-  
+
+
+#if defined(SSE_WD1772_393C)
+/*  timeout is normally 1.5s
+*/
+  if(fdc_spinning_up && FloppyDrive[Id].Empty())
+    WD1772.TimeOut++;
+#endif
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
     return; 
+
 
   time_of_last_ip=time_of_next_event; // record timing
 
