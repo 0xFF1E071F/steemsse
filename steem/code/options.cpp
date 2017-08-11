@@ -1693,6 +1693,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+        case 3306:
+          DSP_DISABLED=!DSP_DISABLED;
+          break;
+#endif
+
 #if !defined(SSE_VAR_NO_UPDATE_390)
         case 4200:case 4201:case 4202:case 4203:
           if (HIWORD(wPar)==BN_CLICKED){
