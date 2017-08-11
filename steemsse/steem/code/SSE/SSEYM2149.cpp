@@ -166,7 +166,7 @@ void TYM2149::Reset() {
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
 
 void TYM2149::psg_write_buffer(DWORD to_t, bool vbl) {
-  ASSERT(AntiAlias);
+  ASSERT(AntiAlias||DSP_DISABLED);
 #else
 
 void TYM2149::psg_write_buffer(DWORD to_t) {

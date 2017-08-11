@@ -2299,6 +2299,12 @@ void TOptionBox::CreateSoundPage()
 #endif
   Wid=GetCheckBoxSize(Font,T("Microwire")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+  if(DSP_DISABLED)
+    mask|=WS_DISABLED;
+#endif
+
   Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
   //SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
@@ -2572,7 +2578,7 @@ void TOptionBox::CreateSoundPage()
   y+=30;
 
 #if defined(SSE_YM2149_RECORD)
-/*  Add record to YM functionality using the asme GUI elements as for WAV.
+/*  Add record to YM functionality using the same GUI elements as for WAV.
     We add a combobox to select format rather than radio buttons, this way
     we can add more formats.
 */
@@ -2683,6 +2689,14 @@ void TOptionBox::CreateStartupPage()
                           page_l,y,GetCheckBoxSize(Font,T("Never use DirectSound")).Width,20,
                           Handle,(HMENU)3301,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,CSF.GetInt("Options","NoDirectSound",0),0);
+  y+=30;
+#endif
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+  Wid=GetCheckBoxSize(Font,T("Disable DSP")).Width;
+  Win=CreateWindow("Button",T("Disable DSP"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
+                          page_l,y,Wid,23,Handle,(HMENU)3306,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,DSP_DISABLED,0);
+  ToolAddWindow(ToolTip,Win,T("If you have some odd crashes, checking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"));
   y+=30;
 #endif
 #if !defined(SSE_SOUND_CAN_CHANGE_DRIVER) // moved to Sound

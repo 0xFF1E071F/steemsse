@@ -417,6 +417,12 @@ void SoundStopInternalSpeaker()
 #if defined(SSE_SOUND_MICROWIRE)   // microwire this!
 
 inline void Microwire(int channel,int &val) {
+
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+  if(DSP_DISABLED)
+    return;
+#endif
+
   double d_dsp_v=val;
   if(dma_sound_bass!=6)
     d_dsp_v=MicrowireBass[channel].FilterAudio(d_dsp_v,LOW_SHELF_FREQ,

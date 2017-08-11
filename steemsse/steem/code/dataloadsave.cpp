@@ -1665,6 +1665,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Sound","SoundRecordFormat",Str(OPTION_SOUND_RECORD_FORMAT));
 #endif
 
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+  pCSF->SetStr("Sound","NoDsp",EasyStr(DSP_DISABLED));  
+#endif
+
 #if defined(SSE_DONGLE_PORT)
   for (int p=0;p<4;p++){
 #else

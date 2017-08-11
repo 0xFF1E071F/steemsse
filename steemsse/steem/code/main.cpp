@@ -1096,6 +1096,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   }
   if (TrySound){
     dbg_log("STARTUP: InitSound Called");
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+    DSP_DISABLED=CSF.GetInt("Sound","NoDsp",DSP_DISABLED);
+#endif
     InitSound();
     dbg_log(EasyStr("STARTUP: InitSound finished. ")+LPSTR(UseSound ? "DirectSound will be used.":"DirectSound will not be used."));
   }

@@ -34,7 +34,7 @@ struct TOption {
   unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB 
   unsigned int UseSDL:1;
   unsigned int OsdDriveInfo:1;
-  unsigned int Dsp:1; // giving the ability to disable buggy DSP
+  unsigned int NoDsp:1; // giving the ability to disable buggy DSP
   unsigned int OsdImageName:1;
   unsigned int PastiJustSTX:1;
 #if defined(SSE_VID_ST_MONITOR_393)
@@ -121,7 +121,7 @@ extern struct TOption SSEOption;
 #define OPTION_WS (SSEOption.WakeUpState)
 #define USE_SDL (SSEOption.UseSDL)
 #define OPTION_DRIVE_INFO (SSEOption.OsdDriveInfo)
-//#define DSP_ENABLED (SSEOption.Dsp)
+//#define DSP_DISABLED (SSEOption.Dsp)
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define OPTION_PASTI_JUST_STX (SSEOption.PastiJustSTX)
 
@@ -157,6 +157,10 @@ extern struct TOption SSEOption;
 
 #if defined(SSE_YM2149_RECORD)
 #define OPTION_SOUND_RECORD_FORMAT (SSEOption.SoundRecordFormat)
+#endif
+
+#if defined(SSE_SOUND_OPTION_DISABLE_DSP)
+#define DSP_DISABLED (SSEOption.NoDsp)
 #endif
 
 #if defined(SSE_DRIVE_SOUND_SEEK_OPTION)
