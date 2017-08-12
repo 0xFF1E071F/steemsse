@@ -34,8 +34,6 @@ EXT WORD paddles_ReadMask INIT(0);
 EXT BYTE stick[8];
 #endif
 
-//#ifdef IN_MAIN
-
 #if defined(SSE_UNIX) || defined(MINGW_BUILD)
 char AxisToName[7]={'X','Y','Z','R','U','V','P'};
 #else
@@ -50,7 +48,11 @@ JOYINFOEX JoyPos[MAX_PC_JOYS];
 
 bool DisablePCJoysticks=0;
 
+#if defined(SSE_JOYSTICK_NO_MM)
+int JoyReadMethod=PCJOY_READ_DI;
+#else
 int JoyReadMethod=PCJOY_READ_WINMM;
+#endif
 
 #if defined(WIN32) && defined(NO_DIRECTINPUT)==0
 IDirectInput *DIObj=NULL;
@@ -424,11 +426,7 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
         Ret|=(stick[N_JOY_STE_A_0] & BIT_7); // and made this incorrect (0x80 in stead of 1!)
         Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1; // and here
 #else
-#if defined(SSE_BUILD)//MFD?
-        Ret|=(BOOL)(stick[N_JOY_STE_A_0] & BIT_7);
-#else
         Ret|=bool(stick[N_JOY_STE_A_0] & BIT_7);
-#endif
         Ret|=bool(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
 #endif
       }
@@ -559,7 +557,9 @@ void FreeJoysticks()
 void InitJoysticks(int Method)
 {
   FreeJoysticks();
-
+#if defined(SSE_JOYSTICK_NO_MM)
+  ASSERT(Method!=PCJOY_READ_WINMM);
+#endif
   JoyReadMethod=Method;
 
   if (Method==PCJOY_READ_DONT) return;
@@ -568,9 +568,19 @@ void InitJoysticks(int Method)
 #ifndef NO_DIRECTINPUT
     DIInitJoysticks();
 #endif
+
+#if !defined(SSE_JOYSTICK_NO_MM)
+/*  We disabled Multimedia joystick support because joyGetDevCaps (or joyGetPos
+    and joyGetPosEx for that matter) returns unexpected value JOYERR_PARMS or
+    crashes on recent systems, reason unknown.
+    (x64: UINT_PTR i)
+    The same system that returns JOYERR_PARMS when there's no joystick works for
+    the connected joystick, so this doesn't seem to be a parameter problem.
+*/
   }else if (Method==PCJOY_READ_WINMM){
     JOYCAPS jc;
     for (UINT i=0;i<2;i++){ // 2 is max for MMSystem
+      TRACE("joyGetDevCaps(%d,%p,%u)=%d\n",i,&jc,sizeof(JOYCAPS),joyGetDevCaps(i,&jc,sizeof(JOYCAPS)));
       if (joyGetDevCaps(i,&jc,sizeof(JOYCAPS))==JOYERR_NOERROR){
         JoyExists[i]=true;
 
@@ -616,6 +626,7 @@ void InitJoysticks(int Method)
         if (JoyInfo[i].AxisExists[AXIS_V]){
           JoyInfo[i].AxisMin[AXIS_V]=jc.wVmin;JoyInfo[i].AxisMax[AXIS_V]=jc.wVmax;
         }
+
         for (int n=0;n<6;n++){
           if (JoyInfo[i].AxisExists[n]){
             if (JoyInfo[i].AxisMin[n]>JoyInfo[i].AxisMax[n]){
@@ -633,6 +644,7 @@ void InitJoysticks(int Method)
         NumJoysticks++;
       }
     }
+#endif//#if !defined(SSE_JOYSTICK_NO_MM)
   }
   JoyGetPoses();
 }
@@ -643,6 +655,8 @@ void JoyGetPoses()
   bool Fail;
   for (int n=0;n<MAX_PC_JOYS;n++){
     if (JoyExists[n]){
+
+#if !defined(SSE_JOYSTICK_NO_MM)
       if (JoyReadMethod==PCJOY_READ_WINMM){
         if (JoyInfo[n].WaitRead){
           JoyInfo[n].WaitRead--;
@@ -669,7 +683,10 @@ void JoyGetPoses()
             JoyInfo[n].WaitReadTime=20; // 20 VBLs
           }
         }
-      }else if (JoyReadMethod==PCJOY_READ_DI){
+      }else 
+#endif//#if defined(SSE_JOYSTICK_NO_MM)
+
+        if (JoyReadMethod==PCJOY_READ_DI){
         DIJoyGetPos(n);
       }
     }
@@ -762,17 +779,32 @@ void TJoystickConfig::Show()
 
   HWND Win;
   int w;
-
+#if defined(SSE_JOYSTICK_NO_MM) // looks a bit silly now TODO
+  w=get_text_width(T("Read PC joystick(s)"));
+  CreateWindow("Static",T("Read PC joystick(s)"),WS_CHILD | WS_VISIBLE,
+                          10,14,w,23,Handle,(HMENU)90,HInstance,NULL);
+#else
   w=get_text_width(T("Read PC joystick(s) using"));
   CreateWindow("Static",T("Read PC joystick(s) using"),WS_CHILD | WS_VISIBLE,
                           10,14,w,23,Handle,(HMENU)90,HInstance,NULL);
+#endif
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | WS_VISIBLE |
                       CBS_HASSTRINGS | CBS_DROPDOWNLIST,
                       15+w,10,530-(15+w),200,Handle,(HMENU)91,HInstance,NULL);
+#if defined(SSE_JOYSTICK_NO_MM)
+  CBAddString(Win,T("Off"),PCJOY_READ_DONT);
+#else
   CBAddString(Win,T("Nothing (PC Joysticks Off)"),PCJOY_READ_DONT);
+#endif
+#if !defined(SSE_JOYSTICK_NO_MM)
   CBAddString(Win,T("Windows Multimedia"),PCJOY_READ_WINMM);
+#endif
 #ifndef NO_DIRECTINPUT
+#if defined(SSE_JOYSTICK_NO_MM)
+  CBAddString(Win,T("On"),PCJOY_READ_DI);
+#else
   CBAddString(Win,T("DirectInput"),PCJOY_READ_DI);
+#endif
 #endif
   CBSelectItemWithData(Win,JoyReadMethod);
   

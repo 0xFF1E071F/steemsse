@@ -1882,6 +1882,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BETA_BUGFIX)
 
+//#define SSE_BUGFIX_MORE_RLZ_TRACES // for interactive debugging with unfortunate player
+
 #define SSE_BUGFIX_393
 #define SSE_BUGFIX_393A //blitter don't wipe all ioaccess
 #define SSE_BUGFIX_393B //forgotten check io macro OR.W
@@ -1894,6 +1896,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_WD1772_393 // wrong status after interrupt command
 #define SSE_WD1772_393B // other fixes based on Suska (test)
 #define SSE_WD1772_393C //timeout (use?)
+#define SSE_JOYSTICK_NO_MM //circle around unsolved bug
 
 #endif//bugfix
 

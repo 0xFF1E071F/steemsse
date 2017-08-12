@@ -81,7 +81,9 @@ void SetNotifyInitText(char *NewText)
 #if defined(_DEBUG)
 #else
   if (NotifyWin==NULL) return;
-  
+#if defined(SSE_BUGFIX_MORE_RLZ_TRACES)
+  TRACE("notify %s\n",NewText);
+#endif  
   SendMessage(NotifyWin,WM_USER,12345,(LPARAM)NewText);
   UpdateWindow(NotifyWin);
 #endif
