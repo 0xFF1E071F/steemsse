@@ -196,7 +196,7 @@ void SaveAllDialogData(bool,Str,ConfigStoreFile*)
 //---------------------------------------------------------------------------
 bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisabled)
 {
-  TRACE_INIT("DiskMan.LoadData\n");
+
 #if USE_PASTI
   if (hPasti){
     EasyStringList sl(eslNoSort);
@@ -236,6 +236,7 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
     OPTION_DRIVE_SOUND_SEEK_SAMPLE=pCSF->GetInt("Disks","DriveSoundSeekSample",OPTION_DRIVE_SOUND_SEEK_SAMPLE);
 #endif
 #if defined(SSE_DRIVE_SOUND)
+
     OPTION_DRIVE_SOUND=pCSF->GetInt("Disks","DriveSound",OPTION_DRIVE_SOUND);
     SF314[0].Sound_Volume=SF314[1].Sound_Volume
       =pCSF->GetInt("Disks","DriveSoundVolume",SF314[0].Sound_Volume);
@@ -376,12 +377,10 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
   }
 #endif
 
-
   HardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
 #if defined(SSE_ACSI_HDMAN)
   AcsiHardDiskMan.LoadData(FirstLoad,pCSF,SecDisabled);
 #endif
-
   return true;
 }
 //---------------------------------------------------------------------------
@@ -656,10 +655,13 @@ bool TJoystickConfig::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *Se
     PCJoyEdit=pCSF->GetInt("Joysticks","PCJoyEdit",PCJoyEdit);
   }
 #endif
-
   SEC(PSEC_JOY){
 #ifdef WIN32
     int Method=pCSF->GetInt("Joysticks","JoyReadMethod",JoyReadMethod);
+#if defined(SSE_JOYSTICK_NO_MM)
+    if(Method==PCJOY_READ_WINMM)
+      Method=PCJOY_READ_DI;
+#endif
     if (FirstLoad && DisablePCJoysticks) Method=PCJOY_READ_DONT;
     if (FirstLoad || Method!=JoyReadMethod) InitJoysticks(Method);
 #else
@@ -698,6 +700,7 @@ bool TJoystickConfig::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *Se
       JoySetup[0][0].ToggleKey=0;
 #endif
     }
+
     for (int n=0;n<8;n++) SetJoyToDefaults(n,DefJoy[n]);
 
     UNIX_ONLY( ConfigST=bool(pCSF->GetInt("Joysticks","ConfigST",ConfigST)); )
@@ -736,7 +739,6 @@ bool TJoystickConfig::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *Se
     BasePort=pCSF->GetInt("Joysticks","BasePort",BasePort);
 
     mouse_speed=pCSF->GetInt("Joysticks","MouseSpeed",mouse_speed);
-
     UPDATE;
   }
 
@@ -1268,6 +1270,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OPTION_SOUND_RECORD_FORMAT=(BYTE)pCSF->GetInt("Sound","SoundRecordFormat",
       OPTION_SOUND_RECORD_FORMAT);
 #endif
+
   }
 
   SEC(PSEC_PORTS){
