@@ -13,8 +13,11 @@ user to configure the most common options.
 int SteemIntro()
 {
 	EasyStr caption=T("Welcome to Steem"),text;
-
+#if defined(SSE_VAR_STEEMINTRO_393)
+  text=T("Thank you for running Steem SSE. We hope you will get many hours of enjoyment from this program. Before you can start there's just a few things to set up.");
+#else
   text=T("Thank you for running the Steem Engine. We hope you will get many hours of enjoyment from this program. Before you can start there's just a few things to set up.");
+#endif
 #ifdef WIN32
   int Ret;
   MSGBOXPARAMS mbp;
@@ -38,11 +41,15 @@ int SteemIntro()
       EasyStr Path;Path.SetLength(MAX_PATH);
       SHGetPathFromIDList(idl,Path);
       Mal->Free(idl);
-
       EasyStr ThisExeName=GetEXEFileName();
       CreateDirectory(Path+"\\Steem Engine",NULL);
+#if defined(SSE_VAR_STEEMINTRO_393)
+      // note link is created for user
+      CreateLink(Path+"\\Steem Engine\\"+ stem_window_title +".lnk",ThisExeName,"Atari ST Emulator");
+#else
       CreateLink(Path+"\\Steem Engine\\Steem Engine.lnk",ThisExeName,"The STE Emulating Engine");
       CreateLink(Path+"\\Steem Engine\\Readme.lnk",RunDir+"\\readme.txt","Steem Engine Info");
+#endif
     }
   }
 #elif defined(UNIX)
@@ -78,6 +85,10 @@ int SteemIntro()
                 MB_ICONEXCLAMATION | MB_TASKMODAL | MB_TOPMOST | MB_SETFOREGROUND);
   }
 
+#if defined(SSE_VAR_STEEMINTRO_393)
+  if(tos_version<0x106) 
+    ST_TYPE=STF;
+#endif
 
 	caption=T("Disk Images");
   text=T("The next few settings regard the way Steem emulates disks. Steem, and all other ST emulators, use files with the extension ST, STT, DIM or MSA on a PC drive for its floppy disks. This is the format most things you download for the ST will be in. If you have some of these files already then you can tell Steem which folder they are in. This will become your home folder and makes it easy to switch disks in and out of drives. If you don't have any then select a suitable folder on your PC hard disk and Steem will create a blank disk for you there.")+"\n\n"+
@@ -150,7 +161,8 @@ int SteemIntro()
 #endif
 	if (proceed){
     int Let=0;
-    EasyStr Mess[9]; // SS overkill...
+#if !defined(SSE_VAR_STEEMINTRO_393) // overkill
+    EasyStr Mess[9];
     Mess[0]=T("Would you like to select a folder to be ST hard drive D now?");
     Mess[1]=T("Would you like to select a folder to be ST hard drive E now?");
     Mess[2]=T("Would you like to select a folder to be ST hard drive F now?");
@@ -160,18 +172,24 @@ int SteemIntro()
     Mess[6]=T("Would you like to select a folder to be ST hard drive J now?");
     Mess[7]=T("Would you like to select a folder to be ST hard drive K now?");
     Mess[8]=T("Would you like to select a folder to be ST hard drive L now?");
+#endif
     EasyStr Path=RunDir;
 #ifdef WIN32
     do{
       Path=ChooseFolder(NULL,T("Pick a Folder"),Path);
       if (Path.Empty()) break;
 		  NO_SLASH(Path);
-
+#if !defined(SSE_VAR_STEEMINTRO_393)
       if (Let>=9) break;
+#endif
       HardDiskMan.NewDrive(Path);
+#if !defined(SSE_VAR_STEEMINTRO_393)
       mbp.lpszText=Mess[Let++];
       mbp.dwStyle=MB_USERICON | MB_YESNO;
       Ret=MessageBoxIndirect(&mbp);
+#else
+      Ret=IDNO; //!
+#endif
     }while (Ret==IDYES);
 #elif defined(UNIX)
 		fileselect.set_corner_icon(&Ico16,ICO16_HARDDRIVE);
@@ -190,6 +208,9 @@ int SteemIntro()
 
 	caption=T("Get Ready For Steem!");
 	text=T("Congratulations, Steem is now ready to go. Click on the yellow play button to start emulation. To release the PC mouse press the Pause/Break key. To stop emulation click on the run button again or press Shift + Pause/Break.")+
+#if defined(SSE_VAR_STEEMINTRO_393)
+    T("\nYou can also use F12 to toggle emulation")+
+#endif
          "\n\n"+T("Have fun!");
 
 #ifdef WIN32

@@ -1844,6 +1844,8 @@ Beta: not SSE_PRIVATE_BUILD
 #undef  SSE_SOUND_MICROWIRE_MIXMODE2
 #define SSE_STF_HW_OVERSCAN //393 - considered as STF models
 #define SSE_VAR_393
+#define SSE_VAR_STEEMINTRO_393 // finally update this
+#define SSE_VAR_UPDATE_LINK 
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_HIRES_BORDER_BLACK // border is black
 #define SSE_VID_ST_MONITOR_393 // 2 options again
@@ -1878,6 +1880,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_MMU_LOW_LEVEL //?
 #define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
 #define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE
+//#define TEST_STEEM_INTRO
 #endif
 
 #if defined(SSE_BETA_BUGFIX)

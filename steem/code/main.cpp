@@ -572,6 +572,20 @@ bool Initialise()
 
   NoINI=(CSF.GetStr("Machine","ROM_File","")=="");
 
+#if defined(SSE_VAR_UPDATE_LINK)
+/*  Detect new version, rerun intro to give a chance to update Start Menu link with
+    new exe, if necessary.
+    Player can leave the intro right after that and rerun.
+*/
+  if(!NoINI)
+  {
+    char str[20];
+    strncpy(str,CSF.GetStr("Update","CurrentVersion",Str((char*)stem_version_text)).Text,19);
+    if(strncmp(str,(char*)stem_version_text,19))
+      NoINI=true; 
+  }
+#endif
+
   CSF.SetInt("Main","DebugBuild",0 DEBUG_ONLY( +1 ) );
 #if defined(SSE_BUILD)
   CSF.SetStr("Update","CurrentVersion",Str((char*)stem_version_text));
@@ -785,6 +799,9 @@ bool Initialise()
 #ifndef ONEGAME
   {
     int IntroResult=2;
+#ifdef TEST_STEEM_INTRO
+    SteemIntro();
+#endif
 #if !(defined(SSE_VAR_NO_INTRO))
     if (NoINI){
       WIN_ONLY( ShowWindow(NotifyWin,SW_HIDE); )
