@@ -1838,6 +1838,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_GLUE_393
 #define SSE_JOYSTICK_PADDLES //393
+#define SSE_MMU_393
 #define SSE_SOUND_OPTION_DISABLE_DSP // retake deleted code... 
 #define SSE_SOUND_MICROWIRE_MIXMODE_393
 #undef SSE_SOUND_MICROWIRE_MIXMODE
@@ -1856,6 +1857,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393A // param SDP reload
 #define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
 #define SSE_GLUE_393C // not necessary, to test!
+#define SSE_GLUE_393D // state of VSync line
 #endif
 
 #if defined(SSE_STF_HW_OVERSCAN)

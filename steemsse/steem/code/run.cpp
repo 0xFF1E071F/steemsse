@@ -1142,6 +1142,13 @@ void event_start_vbl()
   // This happens about 60 cycles into scanline 247 (50Hz) //SS but the timing in frame event plan was different
   //TRACE_LOG("F%d L%d reload SDP (%X) <- %X\n",FRAME,scan_y,shifter_draw_pointer,xbios2);
 
+#if defined(SSE_GLUE_393D)
+  ASSERT(!Glue.vsync);
+  Glue.vsync=true;
+#endif
+  // As soon as VSYNC is asserted, the MMU keeps on copying VBASE to VCOUNT
+  // We don't emulate the continuous copy but we copy at start and stop
+  // See event_trigger_vbi()
 #if defined(SSE_MMU)
   MMU.VideoCounter=
 #endif
@@ -1834,7 +1841,18 @@ with the contents of $FFFF8201 and $FFFF8203 (and $FFFF820D on STE)."
 
     Cases
     Beyond/Universal Coders
+
+update ijor:
+The video pointer is updated whenever VSYNC is asserted. 
+But it is not exactly that it is reloaded again at the end of VSYNC,
+it is constantly being reloaded during the whole period that the signal
+is asserted.
 */
+
+#if defined(SSE_GLUE_393D)
+  //ASSERT(Glue.vsync); // problems on 1st vbl, don't bother...
+  Glue.vsync=false;
+#endif
 
 #if defined(SSE_MMU)
   MMU.VideoCounter=
