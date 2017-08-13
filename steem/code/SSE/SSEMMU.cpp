@@ -74,8 +74,8 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
     }else
       vc=xbios2+32000;
   }
-#if defined(SSE_GLUE_393C)
-  else if(Glue.de_v_on)
+#if defined(SSE_GLUE_393C__)
+  else if(Glue.de_v_on) // but will be wrong on HW overscan?? revert?
 #else
   else if(Glue.FetchingLine()) // lines where the counter actually moves
 #endif
@@ -112,6 +112,13 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
       vc+=c;
     }
   }
+#if defined(SSE_MMU_393) && defined(SSE_GLUE_393D)
+  else if(Glue.vsync) 
+  {
+    ASSERT(shifter_draw_pointer_at_start_of_line==xbios2);
+    vc=xbios2; // during VSYNC, VCOUNT=VBASE
+  }
+#endif
   else // lines witout fetching (before or after frame)
     vc=shifter_draw_pointer_at_start_of_line;
 
@@ -182,7 +189,11 @@ void TMMU::WriteVideoCounter(MEM_ADDRESS addr, BYTE io_src_b) {
   const MEM_ADDRESS former_video_counter=VideoCounter;
 
   // change appropriate byte
-  DWORD_B(&VideoCounter,(0xff8209-addr)/2)=io_src_b;
+#if defined(SSE_MMU_393) && defined(SSE_GLUE_393D)
+  // it can be written but it would be overwritten at once during VSYNC
+  if(!Glue.vsync) 
+#endif
+    DWORD_B(&VideoCounter,(0xff8209-addr)/2)=io_src_b;
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK_14 & TRACE_CONTROL_VIDEO_COUNTER)
