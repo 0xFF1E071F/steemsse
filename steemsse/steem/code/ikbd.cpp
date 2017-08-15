@@ -1440,7 +1440,11 @@ or FIRE BUTTON MONITORING mode.
 void agenda_keyboard_replace(int) {
 
 #if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301_PASTE)
+  if(OPTION_C1 && !bPastingText)
+#else
   if(OPTION_C1) 
+#endif
   {
 #if defined(SSE_BUGFIX_392)
     ASSERT( ACIA_IKBD.LineRxBusy );
@@ -1584,11 +1588,18 @@ void keyboard_buffer_write_n_record(BYTE src)
 void keyboard_buffer_write(BYTE src) {
 
 #if defined(SSE_IKBD_6301)
+#if defined(SSE_IKBD_6301_PASTE)
+  if(OPTION_C1 && !bPastingText)
+#else
   if(OPTION_C1)
+#endif
   {
     if(!ACIA_IKBD.LineRxBusy)
     {
-#if defined(SSE_IKBD_6301_380)
+#if defined(SSE_IKBD_6301_MACRO)
+      ASSERT(HD6301.tdrs==src||macro_play_has_keys);
+      HD6301.tdrs=src;
+#elif defined(SSE_IKBD_6301_380)
       ASSERT(HD6301.tdrs==src);
 #else
       ACIA_IKBD.RDRS=src; // byte is being shifted

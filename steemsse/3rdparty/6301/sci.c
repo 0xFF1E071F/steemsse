@@ -323,7 +323,12 @@ tdr_putb (offs, value)
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
     TRACE("6301 TDRS %X\n",HD6301.tdrs);
 #endif
+#if defined(SSE_IKBD_6301_MACRO) 
+    // bugfix - didn't work because macro would record mouse as keys
+    keyboard_buffer_write(value); // call Steem's ikbd function
+#else
     keyboard_buffer_write_n_record(value); // call Steem's ikbd function
+#endif
     txinterrupts=1;
   }
   return 0;//warning

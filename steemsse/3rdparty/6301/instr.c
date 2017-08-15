@@ -69,7 +69,11 @@ instr_exec ()
       TRACE("6301 TDRS waiting %X\n",iram[TDR]);
 #endif
       HD6301.tdrs=iram[TDR];
+#if defined(SSE_IKBD_6301_MACRO)
+      keyboard_buffer_write(HD6301.tdrs); // call Steem's ikbd function
+#else
       keyboard_buffer_write_n_record(HD6301.tdrs); // call Steem's ikbd function
+#endif
       ACIA_IKBD.ByteWaitingRx=0;
       txinterrupts=1;
     }
