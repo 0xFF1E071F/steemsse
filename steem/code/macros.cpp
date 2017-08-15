@@ -191,6 +191,7 @@ void macro_record_mouse(int x_change,int y_change)
 //---------------------------------------------------------------------------
 void macro_record_key(BYTE STCode)
 {
+  //TRACE("rec key #%d %X\n",mrsc->keys,STCode);
   if (mrsc->keys<32) mrsc->keycode[mrsc->keys++]=STCode;
 }
 //---------------------------------------------------------------------------
@@ -212,6 +213,7 @@ bool macro_play_start()
   }
 
   fread(&macro_play_until,1,4,f);
+
   macro_play_store.Resize(macro_play_until+16);
 
   MACROFILEOPTIONS MFO;
@@ -320,6 +322,7 @@ void macro_play_mouse(int &x_change,int &y_change)
 void macro_play_keys()
 {
   for (DWORD n=0;n<mpsc->keys;n++){
+    //TRACE("play key #%d %X\n",n,mpsc->keycode[n]);
     keyboard_buffer_write(mpsc->keycode[n]);
   }
 }

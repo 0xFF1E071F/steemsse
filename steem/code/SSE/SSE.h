@@ -1837,6 +1837,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_393
 #define SSE_DRIVE_FREEBOOT //393
 #define SSE_GLUE_393
+#define SSE_IKBD_6301_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
 #define SSE_SOUND_OPTION_DISABLE_DSP // retake deleted code... 
@@ -1858,6 +1859,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
 #define SSE_GLUE_393C // not necessary, to test!
 #define SSE_GLUE_393D // state of VSync line
+#endif
+
+#if defined(SSE_IKBD_6301_393)
+#define SSE_IKBD_6301_MACRO // no reason it shouldn't work with C1
+#define SSE_IKBD_6301_PASTE // more like switching C1 off for a while ;)
 #endif
 
 #if defined(SSE_STF_HW_OVERSCAN)

@@ -62,6 +62,9 @@ struct TGlue {
 #if defined(SSE_GLUE_393C)
   bool de_v_on;
 #endif
+#if defined(SSE_GLUE_393D) 
+  bool vsync; // state of VSync line
+#endif
 #ifdef UNIX
 #undef Status // ?? ux382
 #endif

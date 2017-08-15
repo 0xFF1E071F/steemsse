@@ -34,6 +34,9 @@ bool RunMessagePosted=0;
 
 BYTE KeyDownModifierState[256];
 int PasteVBLCount=0,PasteSpeed=2;
+#if defined(SSE_IKBD_6301_PASTE)
+bool bPastingText=false;
+#endif
 Str PasteText;
 bool StartEmuOnClick=0;
 
@@ -1997,7 +2000,12 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 #endif
 {
   if (disable_input_vbl_count) return;
+#if defined(SSE_IKBD_6301_393)
+  if (!OPTION_C1 && ikbd_keys_disabled()) 
+    return; //in duration mode
+#else
   if (ikbd_keys_disabled()) return; //in duration mode
+#endif
 #if !defined(SSE_GUI_NO_MACROS)
   if (macro_play_has_keys) return;
 #endif
@@ -2035,10 +2043,19 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 #undef LOGSECTION
 #endif
 
-#if defined(SSE_IKBD_6301)
-/*  We don't write in a buffer, 6301 emu will do it after having scanned
-    ST_Key_Down.
-*/
+#if defined(SSE_IKBD_6301_MACRO) && !defined(SSE_GUI_NO_MACROS)
+    if (Up)
+      STCode|=MSB_B; // MSB_B = $80
+    if(OPTION_C1)
+    {
+      //We don't write in a buffer, 6301 emu will do it after having scanned
+      //ST_Key_Down.
+      if(macro_record)
+        macro_record_key(STCode);
+    }
+    else
+      keyboard_buffer_write_n_record(STCode);
+#elif defined(SSE_IKBD_6301)
     if(!OPTION_C1)
     {
       if (Up) STCode|=MSB_B; // MSB_B = $80
@@ -2431,6 +2448,9 @@ void PasteIntoSTAction(int Action)
   if (hGbl){
     PasteText=(char*)GlobalLock(hGbl);
     PasteVBLCount=PasteSpeed;
+#if defined(SSE_IKBD_6301_PASTE)
+    bPastingText=true;
+#endif
     SendDlgItemMessage(StemWin,114,BM_SETCHECK,1,0);
     GlobalUnlock(hGbl);
   }

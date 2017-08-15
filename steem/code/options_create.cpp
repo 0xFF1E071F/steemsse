@@ -2931,8 +2931,11 @@ void TOptionBox::CreateMacrosPage()
   CBAddString(Win,T("As Recorded"),0);
   EasyStr Ms=Str(" ")+T("Milliseconds");
   for (int n=1;n<=25;n++) CBAddString(Win,Str(n*20)+Ms,n);
+#if defined(SSE_IKBD_6301_MACRO)
+  CBSelectItemWithData(Win,0); // 'As Recorded' works best with 'C1'
+#else
   CBSelectItemWithData(Win,1);
-
+#endif
   DTree.SelectItemByPath(MacroSel);
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,10000);

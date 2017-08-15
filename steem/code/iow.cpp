@@ -163,7 +163,11 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
         ASSERT(acia_num==0 || acia_num==1);
         acia[acia_num].TDR=io_src_b; // no option test
         TRACE_LOG("%d PC %X ACIA %d TDR %X\n",ACT,old_pc,acia_num,io_src_b);
+#if defined(SSE_IKBD_6301_PASTE)
+        if(OPTION_C1 && !bPastingText)
+#else
         if(OPTION_C1)
+#endif
         {
 /*  Effect of write on status register.
     The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.

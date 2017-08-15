@@ -297,6 +297,10 @@ Str SnapShotGetLastBackupPath();
 void SnapShotGetOptions(EasyStringList*);
 
 EXT int PasteVBLCount,PasteSpeed;
+#if defined(SSE_IKBD_6301_PASTE)
+// need this var because PasteText will be "" with 2 chars still in the buffer
+EXT bool bPastingText; // maybe there's a better way, here we just make it work
+#endif
 EXT Str PasteText;
 EXT bool StartEmuOnClick;
 //---------------------------------------------------------------------------
