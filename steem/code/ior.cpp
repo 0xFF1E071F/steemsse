@@ -1164,7 +1164,8 @@ FF8240 - FF827F   palette, res
     /////////////////////////
     // Secret Emu Register //
     /////////////////////////
- 
+
+#if !defined(SSE_VAR_NO_EMU_DETECT)
     case 0xffc100:
 #ifdef DEBUG_BUILD
       if(addr==0xffc123) return (BYTE)runstate;
@@ -1239,6 +1240,11 @@ FF8240 - FF827F   palette, res
         }//sw
         break;
     }
+#endif//!defined(SSE_VAR_NO_EMU_DETECT)
+
+    /////////////
+    // Alt-RAM //
+    /////////////
 
 #if defined(SSE_MMU_MONSTER_ALT_RAM_IO)
     case 0xfffe00: {

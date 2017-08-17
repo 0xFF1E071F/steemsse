@@ -2147,7 +2147,6 @@ void TGlue::GetNextScreenEvent() {
     Conceptually, it is more satisfying, because Steem acts more like a real
     ST, where timings are also computed on the go by the Glue.
 */ 
-
   // VBI is set pending some cycles into first scanline of frame, 
   // when VSYNC stops.
   // The video counter will be reloaded again.
@@ -2239,8 +2238,6 @@ void TGlue::Reset(bool Cold) {
   CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz[shifter_freq_idx];
   ASSERT(CurrentScanline.Cycles<=512);
 #endif
-  
-
   if(Cold) // if warm, Glue keeps on running
   {
     cpu_timer_at_start_of_hbl=0;

@@ -553,6 +553,7 @@ void PortsRunEnd()
 //---------------------------------------------------------------------------
 void PortsOpenAll()
 {
+  TRACE_INIT("PortsOpenAll\n");
 #ifndef ONEGAME
   Str ErrorText,ErrorTitle;
   log_to(LOGSECTION_INIT,"STARTUP: Opening MIDIPort");

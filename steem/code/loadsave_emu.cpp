@@ -601,8 +601,13 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
   }
 
   if (Version>=29){
+#if defined(SSE_VAR_NO_EMU_DETECT)
+    bool dummy=0;
+    ReadWrite(dummy);
+#else
     ReadWrite(emudetect_called);
     if (LoadOrSave==LS_LOAD) emudetect_init();
+#endif
   }
 
   if (Version>=30){
@@ -669,7 +674,15 @@ int LoadSaveAllStuff(NOT_ONEGAME( FILE *f ) ONEGAME_ONLY( BYTE* &f ),
     fdc_spinning_up=spin_up;
   }
 
+#if defined(SSE_VAR_NO_EMU_DETECT)
+  if (Version>=34) 
+  {
+    bool dummy=0;
+    ReadWrite(dummy);
+  }
+#else
   if (Version>=34) ReadWrite(emudetect_write_logs_to_printer);
+#endif
 
   if (Version>=35){
     ReadWrite(psg_reg_data);

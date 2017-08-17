@@ -687,7 +687,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif
 
-#if defined(SSE_MMU_392) && !defined(SSE_LE)
+#if defined(SSE_MMU_392) //&& !defined(SSE_LE) //why not LE?
 #define SSE_MMU_MONSTER_ALT_RAM // HW hack for ST
 #endif
 
@@ -1821,9 +1821,11 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_MMU_256K
 #undef SSE_MMU_2560K
 #define NO_CRAZY_MONITOR //+ a little fix in emulator.cpp
-#define SSE_GUI_NO_MACROS //don't work with C1
-#define SSE_GUI_NO_PASTE
+//#define SSE_GUI_NO_MACROS
+//#define SSE_GUI_NO_PASTE
 #define SSE_GUI_NO_ICONCHOICE
+#define SSE_HACKS_NO_OPTION // of course!
+#define SSE_VAR_NO_EMU_DETECT
 
 #endif//LE
 

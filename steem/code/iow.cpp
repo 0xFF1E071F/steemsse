@@ -2179,6 +2179,8 @@ rasterline to allow horizontal fine-scrolling.
     }
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
+
+#if !defined(SSE_VAR_NO_EMU_DETECT)
     case 0xffc100: //secret Steem registers!
     {
 #ifdef DEBUG_BUILD
@@ -2226,6 +2228,7 @@ rasterline to allow horizontal fine-scrolling.
       }
       exception(BOMBS_BUS_ERROR,EA_WRITE,addr);
     }
+#endif//#if !defined(SSE_VAR_NO_EMU_DETECT)    
     case 0xfffd00:{ //?????
       break;
     }case 0xff9000:{ //?????
@@ -2360,6 +2363,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 //TODO replace L with 2 W
 void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
 {
+#if !defined(SSE_VAR_NO_EMU_DETECT)
   if (emudetect_called){
     if (addr==0xffc100){
       DWORD addr=io_src_l;
@@ -2398,6 +2402,7 @@ void ASMCALL io_write_l(MEM_ADDRESS addr,LONG io_src_l)
     }
 #endif
   }
+#endif//#if !defined(SSE_VAR_NO_EMU_DETECT)
 /*  SS same way for long accesses, so that a .L write will resolve in 4 .B writes.
     Notice the timing trick. At CPU emu level, the write is counted for eg 8 
     cycles, before coming here, the adjustment is here where it counts.

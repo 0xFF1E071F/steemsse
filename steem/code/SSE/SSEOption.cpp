@@ -22,12 +22,12 @@ TOption::TOption() {
 
 void TOption::Init() {
 
-#if defined(SSE_VAR_OPT_390)
 #ifdef WIN32
   ZeroMemory(this,sizeof(TOption));
 #else
   memset(this,0,sizeof(TOption));
 #endif
+
 #if defined(SSE_HACKS)
   Hacks=true;
 #endif
@@ -45,57 +45,12 @@ void TOption::Init() {
   Direct3D=1;
 #endif
   SampledYM=true;
-#else//opt390?
-#if defined(SSE_HACKS)
-  Hacks=TRUE;
-#endif
-  Chipset1=Chipset2=true;
-  Microwire=0;
-  STModel=0;//STE;
-  CaptureMouse=1;
-  DisplaySize=0; // original Steem 3.2
-  //StealthMode=0;
+//393
+  Microwire=1;
   EmuDetect=1;
-#if defined(DEBUG_BUILD)  
-  OutputTraceToFile=1;
-#else
-  OutputTraceToFile=0; 
-#endif
-  TraceFileLimit=0;
-  WakeUpState=0; 
-  UseSDL=0;
-  OsdDriveInfo=1;
-  Dsp=1;//irrelevant
-  OsdImageName=0;
-  PastiJustSTX=0; // dangerous? but handy!
-  Interpolate=0;
-  StatusBar=1;
-  WinVSync=0; // really need correct display (50hz, 100hz) or run at 60hz
-  TripleBuffer=0; // CPU intensive
-  StatusBarGameName=1;
-  DriveSound=0;
-  SingleSideDriveMap=0;
-  GhostDisk=0;
-#ifdef SSE_VID_D3D
-  Direct3D=1;
-#else
-  Direct3D=0; // just in case
-#endif
-  STAspectRatio=0;
-  DriveSoundSeekSample=0;
-  TestingNewFeatures=0; //not defined, not loaded, not enabled
-  BlockResize=1;
-  LockAspectRatio=0;
-  FinetuneCPUclock=0;
-  PRG_support=1;
-  Direct3DCrisp=0;
-#if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
-  VMMouse=0;
-#endif
-#if defined(SSE_OSD_SHOW_TIME)
-  OsdTime=0;
-#endif
-#endif//opt390?
+  PastiJustSTX=1;
+  FakeFullScreen=1; // safer than 32x200!
+  KeyboardClick=1;
 }
 
 TConfig SSEConfig;
@@ -132,6 +87,8 @@ TConfig::~TConfig() {
     Only if it fails do we use DEFAULT_GUI_FONT.
     Notice that this function is called as soon as needed, which is
     in a constructor. That means we can't reliably use TRACE() here.
+update: turns out it was a problem of Windows size setting instead, so
+this isn't enabled after all
 */
 
 HFONT TConfig::GuiFont() {

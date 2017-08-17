@@ -160,8 +160,8 @@ int SteemIntro()
 	proceed=!alert.ask(XD,text,caption,T("Yes")+"|"+T("No"),0,1);
 #endif
 	if (proceed){
-    int Let=0;
 #if !defined(SSE_VAR_STEEMINTRO_393) // overkill
+    int Let=0;
     EasyStr Mess[9];
     Mess[0]=T("Would you like to select a folder to be ST hard drive D now?");
     Mess[1]=T("Would you like to select a folder to be ST hard drive E now?");

@@ -652,7 +652,9 @@ void InitJoysticks(int Method)
 void JoyGetPoses()
 {
   static JOYINFO ji;
+#if !defined(SSE_JOYSTICK_NO_MM)
   bool Fail;
+#endif
   for (int n=0;n<MAX_PC_JOYS;n++){
     if (JoyExists[n]){
 

@@ -335,24 +335,40 @@ void TOptionBox::MachineUpdateIfVisible()
   if (Handle==NULL) return;
   if (GetDlgItem(Handle,8100)==NULL) return;
 
-#if defined(SSE_GUI_OPTIONS_STF)//390
-#if defined(SSE_STF)
+#if defined(SSE_GUI_OPTIONS_STF)
   HWND Win=GetDlgItem(Handle,211); //ST Model
   if(Win!=NULL) 
     SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
 #endif
-#if defined(SSE_MMU_WU)
+#if defined(SSE_GUI_OPTIONS_WU)
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
 #endif
-#endif
+
+
+#if defined(SSE_MMU_393)
+
+  // now it's smart, and should work with different builds (w/wo 256KB, 2.5MB...)
+  HWND cb_mem=GetDlgItem(Handle,8100);
+  BYTE MemConf[2]={MEMCONF_512,MEMCONF_512};
+  if(NewMemConf0==-1) // no new memory config selected
+    GetCurrentMemConf(MemConf);
+  else
+  {
+    MemConf[0]=NewMemConf0;
+    MemConf[1]=NewMemConf1;
+  }
+  DWORD dwMemConf=MAKELONG(MemConf[0],MemConf[1]);
+  // by Steem authors - could be used more?
+  int curs_index=CBFindItemWithData(cb_mem,dwMemConf); 
+  SendMessage(cb_mem,CB_SETCURSEL,curs_index,0);
+
+#else
 
 #if (defined(SSE_MMU_256K) && defined(SSE_MMU_2560K)) \
 || defined(SSE_MMU_MONSTER_ALT_RAM)
-/*  
 
-*/
   int memconf;
   long mem_len2;
 
@@ -435,6 +451,8 @@ void TOptionBox::MachineUpdateIfVisible()
 #endif
 
   SendMessage(GetDlgItem(Handle,8100),CB_SETCURSEL,memconf,0);
+
+#endif
 
   int monitor_sel=NewMonitorSel;
   if (monitor_sel<0) monitor_sel=GetCurrentMonitorSel();
@@ -3124,17 +3142,17 @@ void TOptionBox::CreateSSEPage() {
   Offset+=Wid+HorizontalSeparation;
 #endif
 
-#if defined(SSE_HACKS)  
-  
+#if defined(SSE_HACKS) && !defined(SSE_HACKS_NO_OPTION)
   Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
   Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)1027,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_HACKS,0);
   ToolAddWindow(ToolTip,Win,T("For an edgier emulation, recommended!"));
+  Offset+=Wid+HorizontalSeparation;
 #endif
 
-#if defined(SSE_VAR_EMU_DETECT) 
-  Offset+=Wid+HorizontalSeparation;
+#if defined(SSE_VAR_EMU_DETECT) && !defined(SSE_VAR_NO_EMU_DETECT)
+//  Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Emu detect")).Width;
   Win=CreateWindow("Button",T("Emu detect"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)1031,HInstance,NULL);

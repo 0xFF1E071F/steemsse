@@ -28,7 +28,6 @@ struct TOption {
   unsigned int Microwire:1;
   unsigned int PSGFilter:1;
   unsigned int CaptureMouse:1;
-  //unsigned int StealthMode:1;
   unsigned int EmuDetect:1;
   unsigned int OutputTraceToFile:1; 
   unsigned int TraceFileLimit:1; // stop TRACING to file at +-3+MB 
@@ -51,9 +50,7 @@ struct TOption {
 #if defined(SSE_DRIVE_FREEBOOT) //we will imitate what we did for single side
   unsigned int FreebootDriveMap:2;
 #endif
-  //unsigned int PSGMod:1;
   unsigned int SampledYM:1;
-  //unsigned int PSGFixedVolume:1;
   unsigned int GhostDisk:1;
   unsigned int Direct3D:1;
   unsigned int STAspectRatio:1;
@@ -90,9 +87,15 @@ extern struct TOption SSEOption;
 #endif
 
 // these macros were considered useful at some point
+
+
+#if defined(SSE_HACKS_NO_OPTION)
+#define OPTION_HACKS (TRUE) // C-compatible (6301)
+#else
 #define OPTION_HACKS (SSEOption.Hacks)
+#endif
 #if defined(SSE_IKBD_6301_NOT_OPTIONAL)
-#define OPTION_C1 (true)
+#define OPTION_C1 (true) 
 #else
 #define OPTION_C1 (SSEOption.Chipset1)
 #endif
@@ -115,7 +118,11 @@ extern struct TOption SSEOption;
 #else
 #define DISPLAY_SIZE (SSEOption.DisplaySize)
 #endif
+#if defined(SSE_VAR_NO_EMU_DETECT)
+#define OPTION_EMU_DETECT (false)
+#else
 #define OPTION_EMU_DETECT SSEOption.EmuDetect
+#endif
 #define OPTION_TRACE_FILE (SSEOption.OutputTraceToFile)
 #define TRACE_FILE_REWIND (SSEOption.TraceFileLimit)//keep?
 #define OPTION_WS (SSEOption.WakeUpState)
