@@ -581,7 +581,7 @@ bool Initialise()
   {
     char str[20];
     strncpy(str,CSF.GetStr("Update","CurrentVersion",Str((char*)stem_version_text)).Text,19);
-    if(strncmp(str,(char*)stem_version_text,19))
+    if(strncmp(str,(char*)stem_version_text,19)<0) // < as strings...
       NoINI=true; 
   }
 #endif

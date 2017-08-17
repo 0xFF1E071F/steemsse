@@ -148,7 +148,7 @@ void sound_record_close_file()
     fclose(wav_file);//must close/open for reading! (is open as "wb")
     wav_file=fopen(WAVOutputFile.Text,"rb"); 
     BYTE *copy=new BYTE[length];
-    size_t nb=fread(copy,sizeof(BYTE),length,wav_file);
+    int nb=fread(copy,sizeof(BYTE),length,wav_file);
     ASSERT(nb==length);
     fclose(wav_file); // close and reopen as if new file
     wav_file=fopen(WAVOutputFile.Text,"wb");

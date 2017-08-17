@@ -109,7 +109,11 @@ const MEM_ADDRESS mmu_bank_length_from_config[5]=
                   {128*1024,512*1024,2*1024*1024,0,7*1024*1024};
 #endif
 MEM_ADDRESS os_gemdos_vector=0,os_bios_vector=0,os_xbios_vector=0;
+#if defined(SSE_VAR_NO_EMU_DETECT)
+const bool emudetect_called=0,emudetect_write_logs_to_printer=0,emudetect_overscans_fixed=false;
+#else
 bool emudetect_called=0,emudetect_write_logs_to_printer=0,emudetect_overscans_fixed=false;
+#endif
 
 BYTE emudetect_falcon_mode=EMUD_FALC_MODE_OFF;
 BYTE emudetect_falcon_mode_size=0;
@@ -423,8 +427,11 @@ void intercept_xbios()
     log_os_call(14);
   }
 #endif
+
+#if defined(SSE_VAR_NO_EMU_DETECT)
+  if(false);
+#else
 #if defined(SSE_VAR_EMU_DETECT)
-  //if (!STEALTH_MODE 
   if(OPTION_EMU_DETECT
     && m68k_dpeek(sp)==37 && r[6]==r[7] && r[7]==0x456d753f){ // Vsync with Emu?, emudtect
 #else
@@ -437,6 +444,7 @@ void intercept_xbios()
     emudetect_init();
     M68K_PERFORM_RTE(;);  //don't need to check interrupts because sr won't actually have changed
   }
+#endif//#if defined(SSE_VAR_NO_EMU_DETECT)
 #if !(defined(DISABLE_STEMDOS))
   else if (m68k_dpeek(sp)==23 && stemdos_intercept_datetime){ // Get clock time
     time_t timer=time(NULL);
@@ -1169,12 +1177,14 @@ void emudetect_init()
 
 void emudetect_reset()
 {
+#if !defined(SSE_VAR_NO_EMU_DETECT)
   emudetect_called=0;
   emudetect_write_logs_to_printer=0;
   emudetect_falcon_stpal.DeleteAll();
   emudetect_falcon_pcpal.DeleteAll();
   emudetect_falcon_mode=0;
   emudetect_falcon_mode_size=1;
+#endif
 }
 
 void emudetect_falcon_palette_convert(int n)

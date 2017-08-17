@@ -192,10 +192,13 @@ EXT MEM_ADDRESS os_gemdos_vector,os_bios_vector,os_xbios_vector;
 void intercept_gemdos(),intercept_bios(),intercept_xbios();
 
 void emudetect_reset();
-
+#if defined(SSE_VAR_NO_EMU_DETECT)
+const EXT bool emudetect_called,emudetect_write_logs_to_printer,
+  emudetect_overscans_fixed;
+#else
 EXT bool emudetect_called,emudetect_write_logs_to_printer,
   emudetect_overscans_fixed;
-
+#endif
 #define EMUD_FALC_MODE_OFF 0
 #define EMUD_FALC_MODE_8BIT 1
 #define EMUD_FALC_MODE_16BIT 2

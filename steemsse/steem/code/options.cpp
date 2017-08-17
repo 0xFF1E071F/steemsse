@@ -853,7 +853,11 @@ void TOptionBox::Show()
   AddPageLabel(T("Ports"),12);
   AddPageLabel(T("MIDI"),4);
 #if !defined(SSE_GUI_NO_MACROS)
+#if defined(SSE_IKBD_6301_MACRO)
+  AddPageLabel(T("Record Input"),13);
+#else
   AddPageLabel(T("Macros"),13);
+#endif
 #endif
   // Configuration options
   AddPageLabel(T("General"),0);
@@ -1457,7 +1461,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 
-#if defined(SSE_HACKS) // Option Hacks
+#if defined(SSE_HACKS) && !defined(SSE_HACKS_NO_OPTION) // Option Hacks
         case 1027:
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -1490,7 +1494,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
-#if defined(SSE_VAR_EMU_DETECT) // Option Emu detect
+#if defined(SSE_VAR_EMU_DETECT) && !defined(SSE_VAR_NO_EMU_DETECT) // Option Emu detect
         case 1031:
           if(HIWORD(wPar)==BN_CLICKED)
           {

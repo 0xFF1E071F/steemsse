@@ -925,7 +925,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 
   SEC(PSEC_DISPFULL){
 
-#if defined(SSE_HACKS)
+#if defined(SSE_HACKS) && !defined(SSE_HACKS_NO_OPTION)
     OPTION_HACKS=pCSF->GetInt("Options","SpecificHacks",OPTION_HACKS);
 #endif
 #if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)
@@ -936,7 +936,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     if(!HD6301_OK)
       OPTION_C1=0;
 #endif
-#if defined(SSE_VAR_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) && !defined(SSE_VAR_NO_EMU_DETECT)
     OPTION_EMU_DETECT=pCSF->GetInt("Options","EmuDetect",OPTION_EMU_DETECT);
 #endif
 #if defined(SSE_VID_SDL)
@@ -1479,7 +1479,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Options","Chipset1",EasyStr(OPTION_C1));
 #endif
 #if defined(SSE_VAR_EMU_DETECT) 
-  //pCSF->SetStr("Options","StealthMode",EasyStr(STEALTH_MODE));
   pCSF->SetStr("Options","EmuDetect",EasyStr(OPTION_EMU_DETECT));
 #endif
 #if defined(SSE_VID_SDL)

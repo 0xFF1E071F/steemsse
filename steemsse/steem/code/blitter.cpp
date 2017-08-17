@@ -1240,9 +1240,6 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
 
 #if defined(SSE_BLT_MAIN_LOOP)
-#if defined(SSE_BLT_RESTART)
-          Blit.Restarted=true; // trick; changes #blit cycles and arbitration cycles
-#endif
 #if defined(SSE_BLT_RESTART_393) // seems more logical, same way as for start
           if(Blit.Request) // not during TAS (BLIT03K)
           {
@@ -1254,8 +1251,11 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           if (Blit.YCount)
             ioaccess|=IOACCESS_FLAG_DO_BLIT;
 #else
+#if defined(SSE_BLT_RESTART)
+          Blit.Restarted=true; // trick; changes #blit cycles and arbitration cycles
+#endif
 #if defined(SSE_BLT_392) // restart timing
-          INSTRUCTION_TIME(4); //BLIT03K TODO, it should be some latency
+          INSTRUCTION_TIME(4); //BLIT03K, Down -TLN, TODO, it should be some latency
 #endif
           Blitter_Draw();
 #endif
@@ -1338,7 +1338,7 @@ void Blitter_CheckRequest() {
       Blitter_Draw();
     }
   }
-  // hog mode + blit mode, start + restart
+  // hog mode + blit mode, start
   else if((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0)
     Blitter_Start_Now(); 
 }

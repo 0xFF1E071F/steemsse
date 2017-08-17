@@ -240,7 +240,7 @@ public:
   hxc_button specific_hacks_but;
 #endif
 
-#if defined(SSE_VAR_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) && !defined(SSE_VAR_NO_EMU_DETECT)
   hxc_button stealth_mode_but;
 #endif
 
@@ -506,7 +506,7 @@ public:
   hxc_button specific_hacks_but;
 #endif
 
-#if defined(SSE_VAR_EMU_DETECT) 
+#if defined(SSE_VAR_EMU_DETECT) && !defined(SSE_VAR_NO_EMU_DETECT)
   hxc_button stealth_mode_but;
 #endif
 
