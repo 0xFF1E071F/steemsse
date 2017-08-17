@@ -15,7 +15,13 @@ ASMOBJDIR = $(OUT)
 
 #3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj $(OUT)\AviFile.obj
 3RDPARTYOBJS = $(OUT)\div68kCycleAccurate.obj $(OUT)\dsp.obj $(OUT)\6301.obj
-3RDPARTYOBJS = $(3RDPARTYOBJS) $(OUT)\AviFile.obj $(OUT)\ArchiveAccessSSE.obj
+3RDPARTYOBJS = $(3RDPARTYOBJS) $(OUT)\ArchiveAccessSSE.obj
+3RDPARTYOBJS = $(3RDPARTYOBJS) $(OUT)\filt.obj
+
+!ifdef SSE_D3D
+!else
+3RDPARTYOBJS = $(3RDPARTYOBJS) $(OUT)\AviFile.obj 
+!endif
 
 # Format: no space at all between paths in INCLUDEPATHS!!
 INCLUDEPATHS = $(STEEMROOT)\code;$(BCCROOT)\Include;$(INCDIR);$(3RDPARTYROOT);
@@ -227,11 +233,14 @@ SSE:	SSE.obj SSEOption.obj SSEMMU.obj SSE6301.obj SSECpu.obj SSEDebug.obj \
 
 #3rdparty:	unrarlib div68kCycleAccurate dsp 6301
 
-3rdparty:	div68kCycleAccurate dsp 6301 AviFile.obj ArchiveAccessSSE
+#3rdparty:	div68kCycleAccurate dsp 6301 AviFile.obj ArchiveAccessSSE
+
 
 
 
 !ifdef SSE_D3D
+3rdparty:	div68kCycleAccurate dsp 6301 ArchiveAccessSSE filt
+
 ArchiveAccessSSE:
 #        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
            $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_D3D -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
@@ -247,11 +256,14 @@ dsp:
 #CapsPlug:
 #        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_D3D -c -o$(OUT)\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
 
-AviFile.obj:
+AviFile:
         $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_D3D -c -o$(OUT)\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
 
 
 !else
+
+3rdparty:	div68kCycleAccurate dsp 6301 AviFile ArchiveAccessSSE filt
+
 ArchiveAccessSSE:
 #        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
            $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_DD -c -o$(OUT)\ArchiveAccessSSE.obj $(3RDPARTYROOT)\ArchiveAccess\ArchiveAccess\ArchiveAccessSSE.cpp $(CFLAGS) 
@@ -267,9 +279,10 @@ dsp:
 #CapsPlug:
 #        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_DD -c -o$(OUT)\CapsPlug.obj $(3RDPARTYROOT)\caps\CapsPlug.cpp
 
-AviFile.obj:
+AviFile:
         $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -DSSE_LE -DSSE_DD -c -o$(OUT)\AviFile.obj $(3RDPARTYROOT)\avi\AviFile.cpp
-
 
 !endif
 
+filt:
+        $(CPP) $(CPPFLAGS) -DWIN32 -DSTEVEN_SEAGAL -c -o$(OUT)\filt.obj $(3RDPARTYROOT)\dsp\FIR-filter-class\filt.cpp

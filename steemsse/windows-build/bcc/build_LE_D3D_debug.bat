@@ -16,13 +16,13 @@ rem call build_bcc_asm.bat
 echo -----------------------------------------------
 echo Building 3rd party code using Borland C/C++ 5.5
 echo -----------------------------------------------
-"%BCCPATH%make.exe" -fmake_LE.txt -DFORCE_DEBUG_BUILD 3rdparty -DSTEVEN_SEAGAL
+"%BCCPATH%make.exe" -fmake_LE.txt -DFORCE_DEBUG_BUILD 3rdparty -DSTEVEN_SEAGAL -DSSE_D3D
 rem pause
 echo ---------------------------------------------------
 echo Building Steem SSE (Boiler) using Borland C/C++ 5.5
 echo ---------------------------------------------------
 
-"%BCCPATH%make.exe" -fmake_LE.txt -DFORCE_DEBUG_BUILD -DBCC_BUILD -DSTEVEN_SEAGAL
+"%BCCPATH%make.exe" -fmake_LE.txt -DFORCE_DEBUG_BUILD -DBCC_BUILD -DSTEVEN_SEAGAL -DSSE_D3D
 
 rem "%BCCPATH%make.exe" -fmakefile.txt -DFORCE_DEBUG_BUILD -DBCC_BUILD link  
 
