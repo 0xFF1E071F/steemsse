@@ -743,9 +743,12 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 */
   if(ST_TYPE==STE && OPTION_MICROWIRE && dma_sound_mixer!=1)
   {
+#if !defined(SSE_BASIC_ST)
     if(dma_sound_mixer==2)
       source>>=3;
-    else if(!dma_sound_mixer)
+    else 
+#endif
+      if(!dma_sound_mixer)
       source=0;
   }
 #endif

@@ -42,7 +42,11 @@ EXT const bool floppy_instant_sector_access INIT(false);
 EXT bool floppy_instant_sector_access INIT(true);
 #endif
 
+#if defined(SSE_FDC_NOFF)
+const EXT bool floppy_access_ff INIT(0);
+#else
 EXT bool floppy_access_ff INIT(0);
+#endif
 #if !defined(SSE_OSD_DRIVE_LED3)
 EXT DWORD disk_light_off_time INIT(0);
 #endif

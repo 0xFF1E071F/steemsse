@@ -16,7 +16,12 @@ and (for some reason) command-line options.
 #define INIT(s) =s
 
 EXT int DoSaveScreenShot INIT(0);
+#if defined(SSE_VID_AUTO_RESIZE)
+const EXT bool ResChangeResize INIT(true);
+EXT bool CanUse_400 INIT(0);
+#else
 EXT bool ResChangeResize INIT(true),CanUse_400 INIT(0);
+#endif
 EXT bool bAppActive INIT(true),bAppMinimized INIT(0);
 EXT DWORD DisableDiskLightAfter INIT(3000);
 EXT LANGID KeyboardLangID INIT(0);
@@ -168,13 +173,21 @@ int BootPasti=BOOT_PASTI_DEFAULT;
 bool PauseWhenInactive=0,BootTOSImage=0;
 bool bAOT=0,bAppMaximized=0;
 #ifndef ONEGAME
+#if defined(SSE_GUI_SHOW_TIPS)
+bool AutoLoadSnapShot=true;
+const bool ShowTips=true;
+#else
 bool AutoLoadSnapShot=true,ShowTips=true;
+#endif
 #else
 bool AutoLoadSnapShot=0,ShowTips=0;
 #endif
 bool AllowLPT=true,AllowCOM=true;
+#if defined(SSE_NO_HIGH_PRIORITY)
+const bool HighPriority=0;
+#else
 bool HighPriority=0;
-
+#endif
 int BootInMode=BOOT_MODE_DEFAULT;
 
 bool NoINI;
@@ -312,7 +325,11 @@ const POINT WinSizeBorder[4][5]={ {{320+BORDER_SIDE*2,200+(BORDER_TOP+BORDER_BOT
                                    };
 #endif
 
+#if defined(SSE_GUI_393)
+int WinSizeForRes[4]={1,1,0,0}; // first run: double size (finally)
+#else
 int WinSizeForRes[4]={0,0,0,0}; // SS: for resolutions 0,1,2 & 3("crazy")
+#endif
 
 RECT rcPreFS;
 

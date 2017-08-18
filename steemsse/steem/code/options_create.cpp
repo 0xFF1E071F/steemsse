@@ -77,9 +77,15 @@ void TOptionBox::CreateMachinePage()
   SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
+#if defined(SSE_STF_HW_OVERSCAN)
   ToolAddWindow(ToolTip,Win,
     T("The STE was more elaborated than the older STF but some programs are \
 compatible only with the STF - see the manual for other options"));
+#else //LE
+  ToolAddWindow(ToolTip,Win,
+    T("The STE was more elaborated than the older STF but some programs are \
+compatible only with the STF"));
+#endif
 #else
   ToolAddWindow(ToolTip,Win,
     T("Some programs will run only with STF or STE. Changing ST model will preselect a TOS for next cold reset."));
@@ -279,7 +285,7 @@ compatible only with the STF - see the manual for other options"));
                               T("Please note that instead of pressing Alt-Gr or Control to access characters on the right-hand side of a key, you have to press Alt or Alt+Shift (this is how it was done on an ST)."));
   y+=40;
 
-
+#if !defined(SSE_NO_CARTRIDGE)
   CreateWindow("Button",T("Cartridge"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,80,Handle,(HMENU)8093,HInstance,NULL);
   y+=20;
@@ -310,6 +316,7 @@ compatible only with the STF - see the manual for other options"));
                   page_l+10+(page_w-20)/2+5,y,(page_w-20)/2-5,23,Handle,(HMENU)8502,HInstance,NULL);
 #endif
   y+=40;
+#endif//#if !defined(SSE_NO_CARTRIDGE)
 
   WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
@@ -538,7 +545,7 @@ void TOptionBox::CreateGeneralPage()
   long Wid;
 
   int y=10;
-
+#if !defined(SSE_NO_RUN_SPEED)
   CreateWindow("Static","",WS_CHILD | SS_CENTER,page_l,y,page_w,20,Handle,(HMENU)1040,HInstance,NULL);
   y+=20;
 
@@ -552,7 +559,7 @@ void TOptionBox::CreateGeneralPage()
 
   SendMessage(Handle,WM_HSCROLL,0,LPARAM(Win));
   y+=35;
-
+#endif
   CreateWindow("Static",T("Slow motion speed")+": "+(slow_motion_speed/10)+"%",WS_CHILD | SS_CENTER,
                           page_l,y,page_w,20,Handle,(HMENU)1000,HInstance,NULL);
   y+=20;
@@ -579,20 +586,21 @@ void TOptionBox::CreateGeneralPage()
 
   SendMessage(Handle,WM_HSCROLL,0,LPARAM(Win));
   y+=35;
-
+#if !defined(SSE_GUI_SHOW_TIPS)
   Wid=GetCheckBoxSize(Font,T("Show pop-up hints")).Width;
   Win=CreateWindow("Button",T("Show pop-up hints"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)400,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,ShowTips,0);
   y+=30;
-
+#endif
+#if !defined(SSE_NO_HIGH_PRIORITY)
   Wid=GetCheckBoxSize(Font,T("Make Steem high priority")).Width;
   Win=CreateWindow("Button",T("Make Steem high priority"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)1030,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,HighPriority,0);
   ToolAddWindow(ToolTip,Win,T("When this option is ticked Steem will get first use of the CPU ahead of other applications, this means Steem will still run smoothly even if you start doing something else at the same time, but everything else will run slower."));
   y+=30;
-
+#endif
   Wid=GetCheckBoxSize(Font,T("Pause emulation when inactive")).Width;
   Win=CreateWindow("Button",T("Pause emulation when inactive"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
@@ -608,12 +616,14 @@ void TOptionBox::CreateGeneralPage()
   ToolAddWindow(ToolTip,Win,T("When this option is ticked Steem will disable the Alt-Tab, Alt-Esc and Ctrl-Esc key combinations when it is running, this allows the ST to receive those keys. This option doesn't work in fullscreen mode."));
   y+=30;
 
+#if !defined(SSE_FDC_NOFF)
   Wid=GetCheckBoxSize(Font,T("Automatic fast forward on disk access")).Width;
   Win=CreateWindow("Button",T("Automatic fast forward on disk access"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)900,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,floppy_access_ff,0);
   y+=30;
+#endif
 
   Wid=GetCheckBoxSize(Font,T("Start emulation on mouse click")).Width;
   Win=CreateWindow("Button",T("Start emulation on mouse click"),
@@ -1286,15 +1296,17 @@ void TOptionBox::CreateDisplayPage()
 #endif
 
 #if defined(SSE_VID_ST_MONITOR_393)
+#if (defined(SSE_VID_VSYNC_WINDOW) && defined(SSE_VID_GUI_392)) || defined(SSE_VID_3BUFFER_WIN)
   y-=LineHeight;
-
+#endif
   Wid=GetCheckBoxSize(Font,T("ST Aspect Ratio")).Width;
   Win=CreateWindow("Button",T("ST Aspect Ratio"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           x,y,Wid,25,Handle,(HMENU)1042,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
-  ToolAddWindow(ToolTip,Win,T("Tries to emulate aspect ratio of your typical monitor."));
-
+  //ToolAddWindow(ToolTip,Win,T("Tries to emulate aspect ratio of your typical monitor."));
+  ToolAddWindow(ToolTip,Win,
+    T("Reproduces the familiar vertical distortion on standard colour screens"));
 
   x+=Wid+5;
 
@@ -1303,6 +1315,7 @@ void TOptionBox::CreateDisplayPage()
   Win=CreateWindow("Button",T("Scanlines"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     x,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_SCANLINES,0);
+ ToolAddWindow(ToolTip,Win,T("Reproduces scanlines of colour screens"));
 
   y+=LineHeight;
 
@@ -1318,6 +1331,7 @@ void TOptionBox::CreateDisplayPage()
   y+=LineHeight;
 #endif
 
+  
 #if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
   Offset=10;
   y+=10;
@@ -1341,20 +1355,31 @@ void TOptionBox::CreateDisplayPage()
   y+=10;
 #endif
 
-#if defined(SSE_BUILD)
+#if defined(SSE_BUILD) && !defined(SSE_VID_BLOCK_WINDOW_SIZE) \
+  && !defined(SSE_VID_LOCK_ASPET_RATIO) //LE
+  y+=30;
+  CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
+                  page_l,y-25,page_w,30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
+#elif defined(SSE_BUILD)
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y-25,page_w,20+30+30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
 #else
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,20+30+30+30+30+2,Handle,(HMENU)99,HInstance,NULL);
 #endif
-  y+=20;
 
+#if !defined(SSE_VID_BLOCK_WINDOW_SIZE) && !defined(SSE_VID_LOCK_ASPET_RATIO) //LE
+#else
+  y+=20;
+#endif
+#if !defined(SSE_VID_AUTO_RESIZE)
   Wid=GetCheckBoxSize(Font,T("Automatic resize on resolution change")).Width;
   Win=CreateWindow("Button",T("Automatic resize on resolution change"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l+10,y,Wid,23,Handle,(HMENU)300,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,ResChangeResize,0);
   y+=30;
+#endif
+  
 #if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
   int
 #endif

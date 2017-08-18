@@ -835,7 +835,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),128000000),8000000);
 #endif
     prepare_cpu_boosted_event_plans();
+#if !defined(SSE_GUI_SHOW_TIPS)
     ShowTips=(bool)pCSF->GetInt("Options","ShowToolTips",ShowTips);
+#endif
     TOSBrowseDir=pCSF->GetStr("Machine","ROM_Add_Dir",RunDir);
     Str LastCartFol=pCSF->GetStr("Machine","Cart_Dir","");
     if (LastCartFol.NotEmpty()){
@@ -910,11 +912,17 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SEC(PSEC_GENERAL){
     WIN_ONLY( AllowTaskSwitch=(bool)pCSF->GetInt("Options","AllowTaskSwitch",AllowTaskSwitch); )
     PauseWhenInactive=(bool)pCSF->GetInt("Options","PauseWhenInactive",PauseWhenInactive);
+#if !defined(SSE_FDC_NOFF)
     floppy_access_ff=(bool)pCSF->GetInt("Options","DiskAccessFF",floppy_access_ff);
+#endif
     slow_motion_speed=pCSF->GetInt("Options","SlowMotionSpeed",slow_motion_speed);
     fast_forward_max_speed=pCSF->GetInt("Options","MaxFastForward",fast_forward_max_speed);
+#if !defined(SSE_NO_HIGH_PRIORITY)
     HighPriority=pCSF->GetInt("Options","HighPriority",HighPriority);
+#endif
+#if !defined(SSE_NO_RUN_SPEED)
     run_speed_ticks_per_second=pCSF->GetInt("Options","RunSpeed",run_speed_ticks_per_second);
+#endif
     StartEmuOnClick=pCSF->GetInt("Options","StartOnClick",StartEmuOnClick);
   }
 
@@ -1111,12 +1119,16 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     OPTION_FAKE_FULLSCREEN=(bool)pCSF->GetInt("Display",
       "FakeFullScreen",OPTION_FAKE_FULLSCREEN);
 #endif
+#if !defined(SSE_VID_AUTO_RESIZE)
     ResChangeResize=(bool)pCSF->GetInt("Display","ResChangeResize",ResChangeResize);
+#endif
 #if !defined(SSE_VID_D3D)
     draw_fs_fx=pCSF->GetInt("Options","InterlaceMode",draw_fs_fx);
     if (draw_fs_fx==DFSFX_BLUR) draw_fs_fx=DFSFX_NONE;
 #endif
+#if !defined(SSE_VID_AUTO_RESIZE)
     UNIX_ONLY( ResChangeResize=true; )
+#endif
     WinSizeForRes[0]=pCSF->GetInt("Display","WinSizeLowRes",WinSizeForRes[0]);
     WinSizeForRes[1]=pCSF->GetInt("Display","WinSizeMedRes",WinSizeForRes[1]);
     WinSizeForRes[2]=pCSF->GetInt("Display","WinSizeHighRes",WinSizeForRes[2]);
