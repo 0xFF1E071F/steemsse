@@ -1106,12 +1106,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,PauseWhenInactive,0);
           }
           break;
+#if !defined(SSE_FDC_NOFF)
         case 900:
           if (HIWORD(wPar)==BN_CLICKED){
             floppy_access_ff=!floppy_access_ff;
             SendMessage(HWND(lPar),BM_SETCHECK,floppy_access_ff,0);
           }
           break;
+#endif
         case 901:
           if (HIWORD(wPar)==BN_CLICKED){
             StartEmuOnClick=!StartEmuOnClick;
@@ -1408,12 +1410,14 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif
+#if !defined(SSE_VID_AUTO_RESIZE)
         case 300:
           if (HIWORD(wPar)==BN_CLICKED){
             ResChangeResize=!ResChangeResize;
             SendMessage(HWND(lPar),BM_SETCHECK,ResChangeResize,0);
           }
           break;
+#endif
         case 302:case 304:case 306:   //SS Window Size Low Medium High
           if (HIWORD(wPar)==CBN_SELENDOK){
             int Res=(LOWORD(wPar)-302)/2;
@@ -1436,6 +1440,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
+#if !defined(SSE_GUI_SHOW_TIPS)
         case 400:
           if (HIWORD(wPar)==BN_CLICKED){
             ShowTips=!ShowTips;
@@ -1443,6 +1448,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(ToolTip,TTM_ACTIVATE,ShowTips,0);
           }
           break;
+#endif
         case 1022:
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
@@ -1616,6 +1622,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           }
           break;
 #endif//#if !defined(SSE_VID_D3D_NO_FREEIMAGE)
+#if !defined(SSE_NO_HIGH_PRIORITY)
         case 1030:
           if (HIWORD(wPar)==BN_CLICKED){
             HighPriority=!HighPriority;
@@ -1625,7 +1632,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             }
           }
           break;
-
+#endif
         case 3001:
           if (HIWORD(wPar)==CBN_SELENDOK){
             int CurSel=SendDlgItemMessage(Win,3001,CB_GETCURSEL,0,0);
@@ -2224,6 +2231,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             CheckResetIcon();
           }
           break;
+
+#if !defined(SSE_NO_CARTRIDGE)
         case 8501: // Choose cart
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
@@ -2337,6 +2346,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           OptionBox.MachineUpdateIfVisible();
           break;
 #endif
+#endif//#if !defined(SSE_NO_CARTRIDGE)
 
         case 8601: // Cold reset
           if (HIWORD(wPar)==BN_CLICKED) 
@@ -2982,6 +2992,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           SendDlgItemMessage(Win,1010,WM_SETTEXT,0,LPARAM(Text.Text));
           break;
         }
+#if !defined(SSE_NO_RUN_SPEED)
         case 1041:
         {
           run_speed_ticks_per_second=100000 / (50 + SendDlgItemMessage(Win,1041,TBM_GETPOS,0,0)*5);
@@ -2989,6 +3000,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             LPARAM((T("Run speed")+": "+(100000/run_speed_ticks_per_second)+"%").Text));
           break;
         }
+#endif
         case 7100:
 
 #if defined(SSE_SOUND_VOL_LOGARITHMIC) // more intuitive setting

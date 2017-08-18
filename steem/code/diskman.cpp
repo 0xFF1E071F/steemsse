@@ -3109,7 +3109,11 @@ LRESULT __stdcall TDiskManager::Drive_Icon_WndProc(HWND Win,UINT Mess,WPARAM wPa
 #endif
       InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | 
         (int)(( (SSEOption.SingleSideDriveMap)&(This->MenuTarget+1)) ? 
+#if defined(SSE_GUI_393) // maybe people don't know what a SF354 is
+        MF_CHECKED:0),1048+This->MenuTarget,T("Single side drive - caution!"));
+#else
          MF_CHECKED:0),1048+This->MenuTarget,T("SF354 (single side - caution!)"));
+#endif
 #endif
 
 #if defined(SSE_DRIVE_FREEBOOT)

@@ -168,6 +168,11 @@ Beta: not SSE_PRIVATE_BUILD
 // NOT SO BIG SWITCHES //
 /////////////////////////
 
+#if defined(SSE_LE)
+#define SSE_BASIC_ST // no HW hacks
+#define SSE_NO_CARTRIDGE
+#endif
+
 #if defined(SSE_FLOPPY)
 #define SSE_DISK       // Disk images
 #if defined(WIN32) && !defined(SSE_X64)
@@ -253,7 +258,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//blt
 
 
-#if defined(SSE_CARTRIDGE)
+#if defined(SSE_CARTRIDGE) &&!defined(SSE_NO_CARTRIDGE)
 
 #define SSE_CARTRIDGE_64KB_OK
 #define SSE_CARTRIDGE_DIAGNOSTIC
@@ -360,9 +365,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DONGLE_CRICKET
 #define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
 #define SSE_DONGLE_LEADERBOARD
+#if !defined(SSE_NO_CARTRIDGE)
 #define SSE_DONGLE_MULTIFACE
 #define SSE_DONGLE_MUSIC_MASTER
 #define SSE_DONGLE_URC
+#endif
 
 #endif//dongle
 
@@ -372,8 +379,10 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DRIVE_OBJECT
 #if defined(SSE_DRIVE_OBJECT)
 #define SSE_DRIVE_CREATE_ST_DISK_FIX // from Petari
-#define SSE_DRIVE_SINGLE_SIDE
 
+#if !defined(SSE_BASIC_ST)
+#define SSE_DRIVE_SINGLE_SIDE
+#endif
 
 #define SSE_DRIVE_SWITCH_OFF_MOTOR //hack
 #define SSE_DRIVE_EMPTY_VERIFY_TIME_OUT2 //motor led still on
@@ -687,7 +696,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif
 
-#if defined(SSE_MMU_392) //&& !defined(SSE_LE) //why not LE?
+#if defined(SSE_MMU_392) && !defined(SSE_BASIC_ST)
 #define SSE_MMU_MONSTER_ALT_RAM // HW hack for ST
 #endif
 
@@ -841,7 +850,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STF_PADDLES
 #define SSE_STF_PAL
 #define SSE_STF_VIDEO_IOR // default value $FF
+#if !defined(SSE_LE)
 #define SSE_STF_MEGASTF // blitter in STF (could be useful?) + 4MB!
+#endif
 #define SSE_STF_MATCH_TOS_390 // to keep autoselect T104 for HD
 
 #endif//stf
@@ -1066,7 +1077,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_VID_ST_ASPECT_RATIO)
 #define SSE_VID_ST_ASPECT_RATIO_WIN
 #endif
+#if !defined(SSE_LE)
 #define SSE_VID_VSYNC_WINDOW // yeah!
+#endif
 #endif//WIN32
 
 #endif//video
@@ -1826,6 +1839,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_NO_ICONCHOICE
 #define SSE_HACKS_NO_OPTION // of course!
 #define SSE_VAR_NO_EMU_DETECT
+#define SSE_FDC_NOFF
+#undef SSE_VID_BLOCK_WINDOW_SIZE
+#undef SSE_VID_LOCK_ASPET_RATIO
+#define SSE_VID_AUTO_RESIZE
+#define SSE_GUI_SHOW_TIPS
+#define SSE_NO_RUN_SPEED
+#define SSE_NO_HIGH_PRIORITY
 
 #endif//LE
 
@@ -1837,8 +1857,11 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_BOILER_393
+#if !defined(SSE_BASIC_ST)
 #define SSE_DRIVE_FREEBOOT //393
+#endif
 #define SSE_GLUE_393
+#define SSE_GUI_393
 #define SSE_IKBD_6301_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
@@ -1846,7 +1869,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_MICROWIRE_MIXMODE_393
 #undef SSE_SOUND_MICROWIRE_MIXMODE
 #undef  SSE_SOUND_MICROWIRE_MIXMODE2
+#if !defined(SSE_BASIC_ST)
 #define SSE_STF_HW_OVERSCAN //393 - considered as STF models
+#endif
 #define SSE_VAR_393
 #define SSE_VAR_STEEMINTRO_393 // finally update this
 #define SSE_VAR_UPDATE_LINK 
@@ -1877,6 +1902,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_MAMELIKE_ANTIALIAS
 #undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
 #endif
+
 
 #endif//beta
 

@@ -53,7 +53,6 @@ WORD tested_pc_hz[2][3]={{0,0,0},{0,0,0}};
 
 EXT RECT draw_blit_source_rect;
 
-
 WIN_ONLY( EXT int draw_win_mode[2]; ) // Inited by draw_fs_blit_mode
 
 EXTC BYTE FullScreen INIT(0);

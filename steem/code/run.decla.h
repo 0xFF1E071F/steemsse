@@ -25,7 +25,11 @@ EXT int runstate;
 EXT int fast_forward INIT(0),fast_forward_max_speed INIT(0);
 EXT bool fast_forward_stuck_down INIT(0);
 EXT int slow_motion INIT(0),slow_motion_speed INIT(100);
+#if defined(SSE_NO_RUN_SPEED)
+const EXT int run_speed_ticks_per_second;
+#else
 EXT int run_speed_ticks_per_second INIT(1000);
+#endif
 EXT bool disable_speed_limiting INIT(0);
 LOG_ONLY( EXT int run_start_time; )
 UNIX_ONLY( EXT bool RunWhenStop INIT(0); )

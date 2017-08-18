@@ -962,7 +962,9 @@ void OGLoadData(ConfigStoreFile *pCSF)
   OGUnlimitedAmmo=pCSF->GetInt("Cheats","UnlimitedAmmo",OGUnlimitedAmmo);
   OGEasyMode=pCSF->GetInt("Cheats","EasyMode",OGEasyMode);
   int RunSpeedPercent=pCSF->GetInt("Cheats","RunSpeed",0);
+#if !defined(SSE_NO_RUN_SPEED) // we're in "onegame" anyway...
   if (RunSpeedPercent) run_speed_ticks_per_second=100000/RunSpeedPercent;
+#endif
 }
 //---------------------------------------------------------------------------
 void OGHandleQuit()

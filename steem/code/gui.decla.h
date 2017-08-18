@@ -82,7 +82,12 @@ EXT void GUIEmudetectCreateDisk(Str,int,int,int);
 EXT void PasteIntoSTAction(int);
 
 EXT int DoSaveScreenShot INIT(0);
+#if defined(SSE_VID_AUTO_RESIZE)
+const EXT bool ResChangeResize INIT(true);
+EXT bool CanUse_400 INIT(0);
+#else
 EXT bool ResChangeResize INIT(true),CanUse_400 INIT(0);
+#endif
 EXT bool bAppActive INIT(true),bAppMinimized INIT(0);
 EXT DWORD DisableDiskLightAfter INIT(3000);
 
@@ -569,13 +574,21 @@ EXT int BootPasti;
 EXT bool PauseWhenInactive,BootTOSImage;
 EXT bool bAOT,bAppMaximized;
 #ifndef ONEGAME
+#if defined(SSE_GUI_SHOW_TIPS)
+EXT bool AutoLoadSnapShot;
+const EXT bool ShowTips;
+#else
 EXT bool AutoLoadSnapShot,ShowTips;
+#endif
 #else
 EXT bool AutoLoadSnapShot,ShowTips;
 #endif
 EXT bool AllowLPT,AllowCOM;
+#if defined(SSE_NO_HIGH_PRIORITY)
+const EXT bool HighPriority;
+#else
 EXT bool HighPriority;
-
+#endif
 #define BOOT_MODE_DEFAULT 0
 #define BOOT_MODE_FULLSCREEN 1
 #define BOOT_MODE_WINDOW 2
