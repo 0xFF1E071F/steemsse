@@ -1353,7 +1353,8 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if defined(SSE_HARDDISK) && defined(SSE_DMA) && defined(SSE_WD1772_EMU)
+#if defined(SSE_HARDDISK) && defined(SSE_DMA) && defined(SSE_WD1772_EMU)\
+  && !defined(SSE_LE)
 
 #define SSE_ACSI //3.8.0 new feature
 
@@ -1846,6 +1847,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_SHOW_TIPS
 #define SSE_NO_RUN_SPEED
 #define SSE_NO_HIGH_PRIORITY
+#define SSE_GUI_TOS_NOSORTCHOICE
+#define SSE_GUI_NO_MIDIOPTION
+#define SSE_GUI_RECORDINPUT_C1 // fewer options
 
 #endif//LE
 
@@ -1865,6 +1869,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_IKBD_6301_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
+#define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393 // black screen
 #define SSE_SOUND_OPTION_DISABLE_DSP // retake deleted code... 
 #define SSE_SOUND_MICROWIRE_MIXMODE_393
 #undef SSE_SOUND_MICROWIRE_MIXMODE
@@ -1886,6 +1891,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
 #define SSE_GLUE_393C // not necessary, to test!
 #define SSE_GLUE_393D // state of VSync line
+#endif
+
+#if defined(SSE_GUI_393)
+#define SSE_GUI_COLOUR_CTRL_RESET
+#define SSE_GUI_OPTIONPAGE_ORDER
 #endif
 
 #if defined(SSE_IKBD_6301_393)

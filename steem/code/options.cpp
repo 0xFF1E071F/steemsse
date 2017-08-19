@@ -847,11 +847,54 @@ void TOptionBox::Show()
                         0,0,100,OPTIONS_HEIGHT,Handle,(HMENU)60000,Inst,NULL);
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
 
+
+#if defined(SSE_GUI_OPTIONPAGE_ORDER)
+  AddPageLabel(T("Startup"),6);  
+  AddPageLabel(T("General"),0);
+  AddPageLabel(T("Machine"),9);
+  AddPageLabel("TOS",10);
+  AddPageLabel(T("Display"),1);  
+#if defined(SSE_VID_GAMMA)
+  AddPageLabel(T("Colour Control"),2);
+#else
+  AddPageLabel(T("Brightness")+"/"+T("Contrast"),2);
+#endif
+  AddPageLabel(T("On Screen Display"),15);
+  AddPageLabel(T("Fullscreen Mode"),3);
+  AddPageLabel(T("Sound"),5);
+#if !defined(SSE_GUI_NO_MIDIOPTION)
+  AddPageLabel(T("MIDI"),4);
+#endif
+#if !defined(SSE_GUI_NO_PROFILES)
+  AddPageLabel(T("Profiles"),11);
+#endif
+  AddPageLabel(T("Ports"),12);
+  AddPageLabel(T("File Associations"),8);
+#if !defined(SSE_GUI_NO_ICONCHOICE)
+  AddPageLabel(T("Icons"),14);
+#endif
+#ifndef SSE_VAR_NO_UPDATE
+  AddPageLabel(T("Auto Update"),7);
+#endif
+#if !defined(SSE_GUI_NO_MACROS)
+#if defined(SSE_IKBD_6301_MACRO)
+  AddPageLabel(T("Record Input"),13);
+#else
+  AddPageLabel(T("Macros"),13);
+#endif
+#endif
+#if defined(SSE_GUI_OPTION_PAGE)
+  AddPageLabel("SSE",16);
+#endif
+
+#else
   // Emulation options
   AddPageLabel(T("Machine"),9);
   AddPageLabel("TOS",10);
   AddPageLabel(T("Ports"),12);
+#if !defined(SSE_GUI_NO_MIDIOPTION)
   AddPageLabel(T("MIDI"),4);
+#endif
 #if !defined(SSE_GUI_NO_MACROS)
 #if defined(SSE_IKBD_6301_MACRO)
   AddPageLabel(T("Record Input"),13);
@@ -885,7 +928,7 @@ void TOptionBox::Show()
 #if defined(SSE_GUI_OPTION_PAGE)
   AddPageLabel("SSE",16);
 #endif
-
+#endif//#if defined(SSE_GUI_OPTIONPAGE_ORDER)
   page_l=min(2+TreeGetMaxItemWidth(PageTree)+5+2+10,630-(page_w+10));
   SetWindowPos(Handle,NULL,0,0,3+page_l+page_w+10+3,OPTIONS_HEIGHT+6+GetSystemMetrics(SM_CYCAPTION),SWP_NOZORDER | SWP_NOMOVE);
   SetWindowPos(PageTree,NULL,0,0,page_l-10,OPTIONS_HEIGHT,SWP_NOZORDER | SWP_NOMOVE);
@@ -1466,6 +1509,20 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,Disp.ScreenShotMinSize,0);
           }
           break;
+
+#if defined(SSE_GUI_COLOUR_CTRL_RESET)
+/*  Reset colour controls. 
+    We set the sliders to centre and send a message for each.
+    TBM_SETPOSNOTIFY would do it in one line but it's only for Windows 7 and up.
+*/
+        case 1025:
+          for(int i=0;i<5;i++) {
+              HWND handle=GetDlgItem(This->Handle,2000+1+i*2);
+              SendMessage(handle,TBM_SETPOS,1,128);
+              SendMessage(This->Handle,WM_HSCROLL,0,(LPARAM)handle);
+          }
+          break;
+#endif
 
 #if defined(SSE_HACKS) && !defined(SSE_HACKS_NO_OPTION) // Option Hacks
         case 1027:
@@ -2580,6 +2637,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             macro_end(MACRO_ENDPLAY);
           }
           break;
+#if !defined(SSE_GUI_RECORDINPUT_C1)
         case 10016:case 10017:case 10014:
         {
           MACROFILEOPTIONS MFO;
@@ -2600,7 +2658,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           macro_file_options(MACRO_FILE_SET,This->MacroSel,&MFO);
           break;
         }
-#endif
+#endif//#if !defined(SSE_GUI_RECORDINPUT_C1)
+#endif//#if !defined(SSE_GUI_NO_MACROS)
 #if !defined(SSE_GUI_NO_PROFILES)
         case 11001:
         case 11012:
@@ -3048,9 +3107,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         }
 #endif
 
-
-
-
         case 6001:
           MIDI_out_volume=(WORD)SendMessage(HWND(lPar),TBM_GETPOS,0,0);
           if (runstate==RUNSTATE_RUNNING){
@@ -3066,6 +3122,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
       }
       break;
     }
+
     case WM_DRAWITEM:
       if (wPar==8300){
         GET_THIS;

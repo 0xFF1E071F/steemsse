@@ -87,7 +87,20 @@
 //#if defined(SSE_GUI_OPTION_PAGE)
 
 #if defined(SSE_GUI_OPTION_PAGE) //// argh! need enum. possible?
-#ifdef SSE_ACSI_ICON //depends on WIN32!
+
+#if defined(SSE_LE) //temp...
+
+#define RC_ICO_HARDDRIVES_ACSI 74
+#define RC_ICO_OPS_SSE 75
+#define RC_ICO_OPS_C1 76
+#define RC_ICO_OPS_C2 77
+#define RC_ICO_CFG 78
+#define RC_ICO_OPS_HACKS 79
+#define RC_NUM_ICONS 80
+
+
+
+#elif defined(SSE_ACSI_ICON) //depends on WIN32!
 #ifdef SSE_GUI_CONFIG_FILE
 #define RC_ICO_HARDDRIVES_ACSI 74
 #define RC_ICO_OPS_SSE 75
@@ -119,7 +132,7 @@
 #define RC_ICO_OPS_C1 75
 #define RC_ICO_CFG 76
 #define RC_NUM_ICONS 77
-#elif defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301)
+#elif defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301) //&& !defined(SSE_LE)
 #define RC_ICO_OPS_SSE 74
 #define RC_ICO_OPS_C1 75
 #define RC_ICO_OPS_C2 76

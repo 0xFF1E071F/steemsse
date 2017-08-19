@@ -6,9 +6,15 @@
 #define EXT extern
 #define INIT(s)
 
+#if defined(SSE_GUI_RECORDINPUT_C1)
+#define MACRO_DEFAULT_ADD_MOUSE 1
+#define MACRO_DEFAULT_ALLOW_VBLS 0 // 'As Recorded'
+#define MACRO_DEFAULT_MAX_MOUSE 127 //'V.Fast'
+#else
 #define MACRO_DEFAULT_ADD_MOUSE 1
 #define MACRO_DEFAULT_ALLOW_VBLS 1
 #define MACRO_DEFAULT_MAX_MOUSE 15
+#endif
 
 EXT void macro_advance(int DEFVAL(0));
 EXT void macro_end(int);
