@@ -2385,7 +2385,12 @@ void TGlue::SetShiftMode(BYTE NewRes) {
   freq_change_this_scanline=true; // all switches are interesting
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
   if(shifter_last_draw_line==400 && !(m_ShiftMode&2) && screen_res<2)
+  {
     shifter_last_draw_line>>=1; // simplistic?
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393)
+    draw_line_off=true; // Steem's original flag for black line
+#endif
+  }
 #endif
 
   AdaptScanlineValues(CyclesIn);

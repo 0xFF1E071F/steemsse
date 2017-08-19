@@ -25,7 +25,9 @@ void TOptionBox::CreatePage(int n)
     case 13:CreateMacrosPage();break;
 #endif
     case 12:CreatePortsPage();break;
+#if !defined(SSE_GUI_NO_MIDIOPTION)
     case 4:CreateMIDIPage();break;
+#endif
     case 0:CreateGeneralPage();break;
     case 5:CreateSoundPage();break;
     case 1:CreateDisplayPage();break;
@@ -482,6 +484,7 @@ void TOptionBox::CreateTOSPage()
   int y=10,Wid;
   HWND Win;
 
+#if !defined(SSE_GUI_TOS_NOSORTCHOICE)
   Wid=GetTextSize(Font,T("Sort by")).Width;
   CreateWindow("Static",T("Sort by"),WS_CHILD,page_l,y+4,Wid,25,
                   Handle,HMENU(8310),HInstance,NULL);
@@ -501,8 +504,13 @@ void TOptionBox::CreateTOSPage()
     eslTOS_Descend=0;
   }
   y+=30;
-
+#endif //#if !defined(SSE_GUI_TOS_NOSORTCHOICE)
+#ifdef SSE_GUI_393
+  WIDTHHEIGHT wh=GetTextSize(Font,T("TOS changes don't take effect until the next cold reset of the ST. \
+Be advised that STF and STE need different TOS. e.g. STF: 1.02 STE: 1.62"));
+#else
   WIDTHHEIGHT wh=GetTextSize(Font,T("TOS changes don't take effect until the next cold reset of the ST"));
+#endif
   if (wh.Width>=page_w) wh.Height=(wh.Height+1)*2;
 
   int TOSBoxHeight=(OPTIONS_HEIGHT-20)-(10+30+30+wh.Height+5+23+10);
@@ -519,9 +527,14 @@ void TOptionBox::CreateTOSPage()
   CreateWindow("Button",T("Remove"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
                   page_l+page_w/2+5,y,page_w/2-5,23,Handle,(HMENU)8302,HInstance,NULL);
   y+=30;
-
+#ifdef SSE_GUI_393
+  CreateWindow("Static",T("TOS changes don't take effect until the next cold reset of the ST. \
+Be advised that STF and STE need different TOS."),
+        WS_CHILD,page_l,y,page_w,40,Handle,HMENU(8600),HInstance,NULL);
+#else
   CreateWindow("Static",T("TOS changes don't take effect until the next cold reset of the ST"),
         WS_CHILD,page_l,y,page_w,40,Handle,HMENU(8600),HInstance,NULL);
+#endif
   y+=wh.Height+5;
 
   CreateWindow("Button",T("Perform cold reset now"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
@@ -1192,6 +1205,11 @@ void TOptionBox::CreateBrightnessPage()
     SendMessage(Win,TBM_SETPAGESIZE,0,10);
     SendMessage(Win,TBM_SETTIC,0,128);
   }
+#endif
+
+#if defined(SSE_GUI_COLOUR_CTRL_RESET)
+  CreateWindow("Button",T("Reset"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                          page_l,y+20,50,20,Handle,(HMENU)1025,HInstance,NULL);
 #endif
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,2001);
@@ -2948,7 +2966,7 @@ void TOptionBox::CreateMacrosPage()
   CreateWindow("Steem Flat PicButton",Str(RC_ICO_PLAY_BIG),WS_CHILD | WS_TABSTOP,
                 x,y,25,25,Handle,(HMENU)10012,HInstance,NULL);
   x+=30;
-
+#if !defined(SSE_GUI_RECORDINPUT_C1)
   Wid=get_text_width(T("Mouse speed"));
   CreateWindow("Static",T("Mouse speed"),WS_CHILD,x,y+4,Wid,23,Handle,(HMENU)10013,HInstance,NULL);
   x+=Wid+5;
@@ -2979,6 +2997,7 @@ void TOptionBox::CreateMacrosPage()
 #else
   CBSelectItemWithData(Win,1);
 #endif
+#endif//#if !defined(SSE_GUI_RECORDINPUT_C1)
   DTree.SelectItemByPath(MacroSel);
 
   if (Focus==NULL) Focus=GetDlgItem(Handle,10000);

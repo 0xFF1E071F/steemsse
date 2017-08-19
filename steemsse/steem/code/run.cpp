@@ -1648,7 +1648,12 @@ void event_vbl_interrupt() //SS misleading name?
   }
 #if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
   if((Glue.m_ShiftMode&2)&&screen_res<2)
+  {
     shifter_last_draw_line*=2; //400 fetching lines
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393)
+    memset(PCpal,0,sizeof(long)*16); // all colours black
+#endif
+  }
 #endif
 
 #if !defined(SSE_MMU_RELOAD_SDP_380)
