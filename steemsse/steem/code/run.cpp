@@ -1924,7 +1924,7 @@ is asserted.
     //TRACE_OSD("%d %d",Glue.VCount,scan_y); //0 -23
 #if defined(SSE_GLUE_393C)
     Glue.de_start_line=34;
-    Glue.de_end_line=434;
+    Glue.de_end_line=434-1;
 #endif
   }
   else if (Glue.m_SyncMode&2) // 50hz
@@ -1932,7 +1932,7 @@ is asserted.
     Glue.nLines=313;
 #if defined(SSE_GLUE_393C)
     Glue.de_start_line=63;
-    Glue.de_end_line=263;
+    Glue.de_end_line=263-1;
 #endif
   }
   else // 60hz
@@ -1940,9 +1940,21 @@ is asserted.
     Glue.nLines=263;
 #if defined(SSE_GLUE_393C)
     Glue.de_start_line=34;
-    Glue.de_end_line=234;
+    Glue.de_end_line=234-1;
 #endif
   }
+  scan_y=-scanlines_above_screen[shifter_freq_idx];//coherent: Hackabonds
+
+#if defined(SSE_GLUE_393C)
+/*  shifter_freq_idx==2 only if screen is monochrome
+    Removing that long standing hack is necessary for this mod else
+    LEGACY/socks won't work anymore.
+*/
+  //if(nLines==501) //conservative, will miss the first vbl
+  if(Glue.m_ShiftMode&2) // risky
+    scan_y=-scanlines_above_screen[2];
+#endif
+
 #else
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
@@ -1951,7 +1963,7 @@ is asserted.
     Glue.VCount=313;
   else // 60hz
     Glue.VCount=263;
-#endif
+#endif //#if defined(SSE_GLUE_393B)
 }
 
 #endif
