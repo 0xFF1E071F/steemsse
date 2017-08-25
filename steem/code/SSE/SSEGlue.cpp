@@ -2616,8 +2616,8 @@ void TGlue::Vbl() {
     }
     else
     {
-      start=-50;
-      shifter_last_draw_line=451;
+      start=-30;//-50;
+      shifter_last_draw_line=471;//451;
     }
     scan_y=start;
     shifter_first_draw_line=start+1;

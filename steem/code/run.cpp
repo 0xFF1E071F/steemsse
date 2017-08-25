@@ -1234,11 +1234,7 @@ void event_vbl_interrupt() //SS misleading name?
   if (extended_monitor==0)
 #endif
   { // Make sure whole screen is drawn (in 60Hz and 70Hz there aren't enough lines)
-#if defined(SSE_VID_HIRES_BORDER_FIX)
-    while (scan_y<draw_last_possible_line){
-#else
     while (scan_y<draw_last_scanline_for_border){
-#endif
 #if defined(SSE_SHIFTER)
       if(!bad_drawing) 
         Shifter.DrawScanlineToEnd();
