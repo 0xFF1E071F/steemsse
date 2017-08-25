@@ -1648,7 +1648,7 @@ void TGlue::CheckVerticalOverscan() {
         ? 226 : 247;
 #if defined(SSE_GLUE_393C)
       de_end_line=(CurrentScanline.Tricks&TRICK_BOTTOM_OVERSCAN_60HZ)
-        ? 258 : 308; // stopped at VBLANK
+        ? 258+1 : 308+1; // stopped at VBLANK
 #endif
 
     }
@@ -1828,7 +1828,11 @@ void TGlue::IncScanline() {
   else if(FetchingLine() //TODO seems sketchy!
     || scan_y==-29 && (PreviousScanline.Tricks&TRICK_TOP_OVERSCAN)
     || !scan_y && !PreviousScanline.Bytes)
+  {
+    //ASSERT(de_v_on);
+   // if(!de_v_on && !debug1) FrameEvents.Report(),debug1=true;
     CurrentScanline.Bytes=(screen_res==2)?80:160;
+  }
 #endif
   else
   {
@@ -2593,16 +2597,6 @@ LOOP
 void TGlue::Vbl() {
   cpu_timer_at_start_of_hbl=time_of_next_event;
   scan_y=-scanlines_above_screen[shifter_freq_idx];
-
-#if defined(SSE_GLUE_393C)
-/*  shifter_freq_idx==2 only if screen is monochrome
-    Removing that long standing hack is necessary for this mod else
-    LEGACY/socks won't work anymore.
-*/
-  //if(nLines==501) //conservative, will miss the first vbl
-  if(m_ShiftMode&2) // risky
-    scan_y=-scanlines_above_screen[2];
-#endif
 
 #if defined(SSE_STF_HW_OVERSCAN)
   if(SSEConfig.OverscanOn && (ST_TYPE==STF_LACESCAN||ST_TYPE==STF_AUTOSWITCH))
