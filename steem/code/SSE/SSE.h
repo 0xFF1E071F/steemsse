@@ -1941,6 +1941,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
 #define SSE_VID_D3D_393 // update m_DisplayFormat
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
+#define SSE_VID_BPP_CHOICE_393
 #define SSE_VS2008_WARNING_393
 #define SSE_WD1772_393 // wrong status after interrupt command
 #define SSE_WD1772_393B // other fixes based on Suska (test)

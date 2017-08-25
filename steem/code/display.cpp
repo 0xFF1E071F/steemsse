@@ -191,6 +191,9 @@ SteemDisplay::SteemDisplay()
   Method=DISPMETHOD_NONE;
   UseMethods[0]=DISPMETHOD_NONE;
   nUseMethod=0;
+#if defined(SSE_VID_BPP_CHOICE_393)
+  bpp_at_fullscreen=0;
+#endif
 }
 //---------------------------------------------------------------------------
 SteemDisplay::~SteemDisplay() { Release(); }
@@ -1634,6 +1637,13 @@ void SteemDisplay::ChangeToFullScreen()
       SetWindowLong(DiskMan.Handle,GWL_STYLE,(GetWindowLong(DiskMan.Handle,GWL_STYLE) & ~WS_MAXIMIZE) & ~WS_MINIMIZEBOX);
     }
 
+#if defined(SSE_VID_BPP_CHOICE_393)
+    // record bpp
+    HDC hdc = GetDC(NULL);
+    bpp_at_fullscreen=GetDeviceCaps(hdc, BITSPIXEL)/8;
+    ReleaseDC(StemWin, hdc);
+#endif
+
     FullScreen=true;
 
     DirectoryTree::PopupParent=StemWin;
@@ -3045,11 +3055,10 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
   {
     d3dpp.BackBufferFormat=m_DisplayFormat;
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
-#if defined(SSE_BUGFIX_393)
-    HDC hdc = GetDC(StemWin);
-    ASSERT(hdc);
-    BytesPerPixel=GetDeviceCaps(hdc, BITSPIXEL)/8; // correct? there was a dc leak anyway
-    ReleaseDC(StemWin, hdc);
+#if defined(SSE_VID_BPP_CHOICE_393)
+    if(bpp_at_fullscreen)
+      BytesPerPixel=bpp_at_fullscreen;
+    bpp_at_fullscreen=0;
 #else
     BytesPerPixel=GetDeviceCaps(GetDC(StemWin), BITSPIXEL)/8;
 #endif
@@ -3270,12 +3279,13 @@ HRESULT SteemDisplay::D3DInit()
   // Create the D3D object - computer needs DirectX9
   if ((pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == NULL) 
   {
-    TRACE_LOG("D3D9 Init Fail!\n");
+    TRACE_INIT("D3D9 Init Fail!\n");
     return E_FAIL; 
   }
 
   // do it once, keeping result
 #if defined(SSE_VID_D3D_2SCREENS)
+
   m_Adapter=D3DADAPTER_DEFAULT;
   D3DCheckCurrentMonitorConfig(); // could Steem be started on second monitor?
 
@@ -3293,29 +3303,30 @@ HRESULT SteemDisplay::D3DInit()
       REPORT_D3D_ERR("check_device_type2",d3derr);
       m_DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
       d3derr=check_device_type(m_DeviceType,m_DisplayFormat);
-      TRACE_LOG("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
+      TRACE_INIT("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
     }
   }
   ASSERT(!d3derr);
   D3DCAPS9 caps;
   d3derr=pD3D->GetDeviceCaps(m_Adapter,m_DeviceType,&caps);
-  TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
+  TRACE_INIT("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
   if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
-    TRACE_LOG("T&L\n");
+    TRACE_INIT("T&L\n");
     m_vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
     if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
-      TRACE_LOG("Pure device\n");
+      TRACE_INIT("Pure device\n");
       m_vtx_proc |= D3DCREATE_PUREDEVICE;
     }
   } else {
-    TRACE_LOG("Software vertex\n");
+    TRACE_INIT("Software vertex\n");
     m_vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
   }
   if (DrawToVidMem==0) 
     m_vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
-  TRACE_LOG("vtx_proc = $%X\n",m_vtx_proc);
+  TRACE_INIT("vtx_proc = $%X\n",m_vtx_proc);
 
-#else
+#else // BCC D3D
+
   UINT Adapter=D3DADAPTER_DEFAULT;
   // Get the current desktop display info
   D3DDISPLAYMODE d3ddm;
@@ -3323,7 +3334,8 @@ HRESULT SteemDisplay::D3DInit()
   HDC hdc = GetDC(StemWin);
   WORD bitsperpixel= GetDeviceCaps(hdc, BITSPIXEL); // another D3D shortcoming
   ReleaseDC(StemWin, hdc);
-  TRACE_LOG("Screen %dx%d %dhz format %d %dbit err %d\n",d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
+
+  TRACE_INIT("Screen %dx%d %dhz format %d %dbit err %d\n",d3ddm.Width,d3ddm.Height,d3ddm.RefreshRate,d3ddm.Format,bitsperpixel,d3derr);
   // Probe capacities of video card, starting with desktop mode, HW
   // http://en.wikibooks.org/wiki/DirectX/9.0/Direct3D/Initialization
   m_DisplayFormat=d3ddm.Format; //should never change
@@ -3342,29 +3354,29 @@ HRESULT SteemDisplay::D3DInit()
       REPORT_D3D_ERR("check_device_type2",d3derr);
       D3DDEVTYPE DeviceType=D3DDEVTYPE_REF; // try software processing (slow)
       d3derr=check_device_type(DeviceType,checkDisplayFormat);
-      TRACE_LOG("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
+      TRACE_INIT("D3D: poor hardware detected, software rendering ERR %d\n",d3derr);
     }
   }
   ASSERT(!d3derr);
   D3DCAPS9 caps;
   d3derr=pD3D->GetDeviceCaps(Adapter,m_DeviceType,&caps);
-  TRACE_LOG("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
+  TRACE_INIT("DevCaps $%X HW quality %X err %d\n",caps.DevCaps,caps.DevCaps&(D3DDEVCAPS_HWTRANSFORMANDLIGHT|D3DDEVCAPS_PUREDEVICE),d3derr);
   if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT ) {
-    TRACE_LOG("T&L\n");
+    TRACE_INIT("T&L\n");
     m_vtx_proc = D3DCREATE_HARDWARE_VERTEXPROCESSING;
     if( caps.DevCaps & D3DDEVCAPS_PUREDEVICE ) {
-      TRACE_LOG("Pure device\n");
+      TRACE_INIT("Pure device\n");
       m_vtx_proc |= D3DCREATE_PUREDEVICE;
     }
   } else {
-    TRACE_LOG("Software vertex\n");
+    TRACE_INIT("Software vertex\n");
     m_vtx_proc = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
   }
 #if defined(SSE_VID_D3D) // not sure it makes much sense but...
   if (DrawToVidMem==0) 
     m_vtx_proc|=D3DDEVCAPS_EXECUTESYSTEMMEMORY|D3DDEVCAPS_TEXTURESYSTEMMEMORY;
 #endif
-  TRACE_LOG("vtx_proc = $%X\n",m_vtx_proc);
+  TRACE_INIT("vtx_proc = $%X\n",m_vtx_proc);
   BytesPerPixel= bitsperpixel/8; // Steem can do 8bit, 16bit, 32bit
 #endif
 
@@ -3382,11 +3394,11 @@ HRESULT SteemDisplay::D3DInit()
   nD3Dmodes=pD3D->GetAdapterModeCount(Adapter,checkDisplayFormat);
   if(nD3Dmodes)
     SSEConfig.VideoCard8bit=true;
-  TRACE_LOG("Formats 8bit %d 16bit %d 32bit %d\n",
+  TRACE_INIT("Formats 8bit %d 16bit %d 32bit %d\n",
     SSEConfig.VideoCard8bit,SSEConfig.VideoCard16bit,SSEConfig.VideoCard32bit);
 #endif
 
-  TRACE_LOG("D3D9 Init OK\n");
+  TRACE_INIT("D3D9 Init OK\n");
   return S_OK;
 }
 
