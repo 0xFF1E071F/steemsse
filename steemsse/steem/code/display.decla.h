@@ -234,7 +234,9 @@ public: //temp
   bool RunOnChangeToWindow;
   bool ScreenShotUseFullName,ScreenShotAlwaysAddNum;
   bool DoAsyncBlit;
-
+#if defined(SSE_VID_BPP_CHOICE_393)
+  BYTE bpp_at_fullscreen;
+#endif
 
   //FUNCTIONS
 private:
