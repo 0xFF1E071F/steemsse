@@ -511,12 +511,12 @@ enum logsection_enum_tag {
 #else
 #if defined(VC_BUILD) // OK for Unix?
 #define TRACE_INIT(x) // no code left?
+#else
+#define TRACE_INIT // some code left to the compiler
+#endif
 #if defined(SSE_BUGFIX_MORE_RLZ_TRACES)
 #undef TRACE_INIT
 #define TRACE_INIT TRACE
-#endif
-#else
-#define TRACE_INIT // some code left to the compiler
 #endif
 #endif
 

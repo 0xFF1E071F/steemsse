@@ -250,7 +250,7 @@ void THD6301::Init() { // called in 'main'
     {
       HD6301_OK=false;
       hd6301_destroy(); 
-#if defined(SSE_IKBD_6301_NOT_OPTIONAL)
+#if defined(SSE_IKBD_6301_NOT_OPTIONAL) || defined(SSE_VAR_REQUIRE_FILES)
       throw romfile.Text;
 #endif
     } 

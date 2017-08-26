@@ -321,7 +321,7 @@ int main(int argc,char *argv[])
     Alert(exc_string,"ERROR",MB_ICONEXCLAMATION); // alert box before trace
     TRACE("%s\n",exc_string);
     SetClipboardText(exc_string);
-    PerformCleanShutdown();
+    //PerformCleanShutdown(); //liable to hang at save snapshot...
     return EXIT_SUCCESS;
 #endif
   }catch(...){
@@ -678,7 +678,14 @@ bool Initialise()
 #endif
     }
   }
+#if defined(SSE_VAR_REQUIRE_FILES3)
+#ifdef _WIN64
+#error pasti in x64 build
 #endif
+  else
+    throw PASTI_DLL;
+#endif
+#endif //USE_PASTI
 
   DiskMan.InitGetContents();
 
@@ -926,6 +933,9 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
 #endif
   WIN_ONLY( ARCHIVEACCESS_OK=LoadArchiveAccessDll(ARCHIVEACCESS_DLL); )
   WIN_ONLY( TRACE_LOG("%s ok:%d\n",ARCHIVEACCESS_DLL,ARCHIVEACCESS_OK); )
+#if defined(SSE_VAR_REQUIRE_FILES2)
+  WIN_ONLY( if(!ARCHIVEACCESS_OK) throw ARCHIVEACCESS_DLL;)
+#endif
 #endif
 #if defined(SSE_GUI_NOTIFY1)
 #if defined(SSE_VAR_ARCHIVEACCESS3)
@@ -953,7 +963,7 @@ __pfnDliFailureHook = MyLoadFailureHook; // from the internet! [doesn't work?]
   WIN_ONLY( LoadUnrarDLL(); )
 #endif
 #if defined(SSE_DISK_CAPS)
-#if defined(SSE_GUI_NOTIFY1)
+#if defined(SSE_GUI_NOTIFY1) && !defined(SSE_BUGFIX_393) // argh! twice + T()
   SetNotifyInitText(T(SSE_DISK_CAPS_PLUGIN_FILE));
 #endif
   Caps.Init();

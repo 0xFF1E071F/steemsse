@@ -3,6 +3,23 @@
 #define SSEDECLA_H
 
 #include "SSE.h"
+
+#if defined(ADVANCED_BEGIN)||defined(NOT_ADVANCED_BEGIN)||defined( ADVANCED_ELSE)|| defined(ADVANCED_END) 
+#error ADVANCED_ error!
+#endif
+#if defined(SSE_VAR_ADVANCED) 
+// macros to avoid indenting all code and facilitate search
+#define ADVANCED_BEGIN if(OPTION_ADVANCED) {
+#define NOT_ADVANCED_BEGIN if(!OPTION_ADVANCED) {
+#define ADVANCED_ELSE  }else{
+#define ADVANCED_END   } 
+#else
+#define ADVANCED_BEGIN if(1){
+#define NOT_ADVANCED_BEGIN if(0){
+#define ADVANCED_ELSE  }else{
+#define ADVANCED_END   }
+#endif
+
 #if defined(SSE_BUILD)
 
 ///////////////
@@ -221,6 +238,7 @@ extern BYTE *stem_version_text[SSE_VERSION_TXT_LEN];
 #define WINDOW_TITLE stem_window_title
 #endif
 
+
 ///////////
 // VIDEO //
 ///////////
@@ -320,6 +338,6 @@ extern TOsdControl OsdControl;
 #endif
 #endif
 
-#endif//SSEDECLA_H
+#endif//SSE_BUILD
 
 #endif//ss

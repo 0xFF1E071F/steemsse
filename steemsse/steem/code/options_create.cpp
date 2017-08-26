@@ -48,6 +48,7 @@ void TOptionBox::CreatePage(int n)
 #if defined(SSE_GUI_OPTION_PAGE)
     case 16:CreateSSEPage();break;
 #endif
+
   }
 }
 //---------------------------------------------------------------------------
@@ -67,6 +68,7 @@ void TOptionBox::CreateMachinePage()
 
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STE]));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF]));
+  ADVANCED_BEGIN
 #if defined(SSE_STF_MEGASTF)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[MEGASTF]));
 #endif
@@ -76,6 +78,7 @@ void TOptionBox::CreateMachinePage()
 #if defined(SSE_STF_AUTOSWITCH)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF_AUTOSWITCH]));
 #endif
+  ADVANCED_END
   SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
   Wid+=73;//by hand...
 #if defined(SSE_GUI_390)
@@ -94,6 +97,7 @@ compatible only with the STF"));
 #endif
 #endif
 
+ADVANCED_BEGIN
 #if defined(SSE_GUI_OPTIONS_WU) && defined(SSE_MMU_WU)
   long Offset=Wid+40-20;
 #if defined(SSE_STF_HW_OVERSCAN) //make shorter...
@@ -121,13 +125,12 @@ compatible only with the STF"));
     T("Check Hints for cases"));
 #else
   ToolAddWindow(ToolTip,Win,
-    T("Advanced - Some rare demos will display correctly only in one of those states."));
+    T("Some rare demos will display correctly only in one of those states."));
 #endif
-  y+=30;
-#elif defined(SSE_STF) && defined(SSE_GUI_OPTIONS_STF)
-  y+=30;
 #endif
-
+ADVANCED_END
+  y+=30;
+ADVANCED_BEGIN
 #if !defined(SSE_GUI_NO_CPU_SPEED)
   Wid=get_text_width(T("ST CPU speed"));
   CreateWindow("Static",T("ST CPU speed"),WS_CHILD,page_l,y+4,Wid,23,Handle,(HMENU)403,HInstance,NULL);
@@ -205,6 +208,9 @@ compatible only with the STF"));
   }
   y+=30;
 #endif
+
+ADVANCED_END
+
   Wid=GetTextSize(Font,T("Memory size")).Width;
   CreateWindow("Static",T("Memory size"),WS_CHILD,page_l,y+4,Wid,20,Handle,HMENU(8090),HInstance,NULL);
 
@@ -212,15 +218,21 @@ compatible only with the STF"));
                           page_l+5+Wid,y,page_w-(5+Wid),200,Handle,(HMENU)8100,HInstance,NULL);
 
 #if defined(SSE_MMU_256K)
+ADVANCED_BEGIN
   CBAddString(Win,"256Kb",MAKELONG(MEMCONF_128,MEMCONF_128));
+ADVANCED_END
 #endif
+
   CBAddString(Win,"512Kb",MAKELONG(MEMCONF_512,MEMCONF_0));
   CBAddString(Win,"1 MB",MAKELONG(MEMCONF_512,MEMCONF_512));
   CBAddString(Win,"2 MB",MAKELONG(MEMCONF_2MB,MEMCONF_0));
 #if defined(SSE_MMU_2560K)
+ADVANCED_BEGIN
   CBAddString(Win,"2.5 MB",MAKELONG(MEMCONF_512,MEMCONF_2MB));
+ADVANCED_END
 #endif
   CBAddString(Win,"4 MB",MAKELONG(MEMCONF_2MB,MEMCONF_2MB));
+ADVANCED_BEGIN
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
   CBAddString(Win,"12 MB (MonSTer alt-RAM)",MAKELONG(MEMCONF_6MB,MEMCONF_6MB));
 #endif
@@ -231,7 +243,7 @@ compatible only with the STF"));
   CBAddString(Win,"14 MB",MAKELONG(MEMCONF_7MB,MEMCONF_7MB));
 #endif
 #endif
-
+ADVANCED_END
   y+=30;
 
   Wid=GetTextSize(Font,T("Monitor")).Width;
@@ -245,10 +257,13 @@ compatible only with the STF"));
 #endif
   CBAddString(Win,T("Colour")+" ("+T("Low/Med Resolution")+")");
   CBAddString(Win,T("Monochrome")+" ("+T("High Resolution")+")");
+
 #ifndef NO_CRAZY_MONITOR
+ADVANCED_BEGIN
   for (int n=0;n<EXTMON_RESOLUTIONS;n++){
     CBAddString(Win,T("Extended Monitor At")+" "+extmon_res[n][0]+"x"+extmon_res[n][1]+"x"+extmon_res[n][2]);
   }
+ADVANCED_END
 #endif
   y+=30;
 
@@ -288,6 +303,7 @@ compatible only with the STF"));
   y+=40;
 
 #if !defined(SSE_NO_CARTRIDGE)
+ADVANCED_BEGIN
   CreateWindow("Button",T("Cartridge"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,80,Handle,(HMENU)8093,HInstance,NULL);
   y+=20;
@@ -318,6 +334,7 @@ compatible only with the STF"));
                   page_l+10+(page_w-20)/2+5,y,(page_w-20)/2-5,23,Handle,(HMENU)8502,HInstance,NULL);
 #endif
   y+=40;
+ADVANCED_END
 #endif//#if !defined(SSE_NO_CARTRIDGE)
 
   WIDTHHEIGHT wh=GetTextSize(Font,T("Memory and monitor changes don't take effect until the next cold reset of the ST"));
@@ -342,6 +359,15 @@ void TOptionBox::MachineUpdateIfVisible()
   TOSRefreshBox("");
 
   if (Handle==NULL) return;
+
+#if defined(SSE_VID_ST_MONITOR_393)
+  if(GetDlgItem(Handle,1042)!=NULL) // display options are visible
+  {
+    DestroyCurrentPage();
+    CreatePage(Page);
+  }
+#endif
+
   if (GetDlgItem(Handle,8100)==NULL) return;
 
 #if defined(SSE_GUI_OPTIONS_STF)
@@ -350,9 +376,11 @@ void TOptionBox::MachineUpdateIfVisible()
     SendMessage(Win,CB_SETCURSEL,min((int)ST_TYPE,N_ST_MODELS-1),0);
 #endif
 #if defined(SSE_GUI_OPTIONS_WU)
+ADVANCED_BEGIN
   Win=GetDlgItem(Handle,212); //WU
   if(Win!=NULL) 
     SendMessage(Win,CB_SETCURSEL,OPTION_WS,0);
+ADVANCED_END
 #endif
 
 
@@ -485,6 +513,7 @@ void TOptionBox::CreateTOSPage()
   HWND Win;
 
 #if !defined(SSE_GUI_TOS_NOSORTCHOICE)
+ADVANCED_BEGIN
   Wid=GetTextSize(Font,T("Sort by")).Width;
   CreateWindow("Static",T("Sort by"),WS_CHILD,page_l,y+4,Wid,25,
                   Handle,HMENU(8310),HInstance,NULL);
@@ -504,6 +533,7 @@ void TOptionBox::CreateTOSPage()
     eslTOS_Descend=0;
   }
   y+=30;
+ADVANCED_END
 #endif //#if !defined(SSE_GUI_TOS_NOSORTCHOICE)
 #ifdef SSE_GUI_393
   WIDTHHEIGHT wh=GetTextSize(Font,T("TOS changes don't take effect until the next cold reset of the ST. \
@@ -559,6 +589,7 @@ void TOptionBox::CreateGeneralPage()
 
   int y=10;
 #if !defined(SSE_NO_RUN_SPEED)
+ADVANCED_BEGIN
   CreateWindow("Static","",WS_CHILD | SS_CENTER,page_l,y,page_w,20,Handle,(HMENU)1040,HInstance,NULL);
   y+=20;
 
@@ -572,6 +603,7 @@ void TOptionBox::CreateGeneralPage()
 
   SendMessage(Handle,WM_HSCROLL,0,LPARAM(Win));
   y+=35;
+ADVANCED_END
 #endif
   CreateWindow("Static",T("Slow motion speed")+": "+(slow_motion_speed/10)+"%",WS_CHILD | SS_CENTER,
                           page_l,y,page_w,20,Handle,(HMENU)1000,HInstance,NULL);
@@ -607,12 +639,14 @@ void TOptionBox::CreateGeneralPage()
   y+=30;
 #endif
 #if !defined(SSE_NO_HIGH_PRIORITY)
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Make Steem high priority")).Width;
   Win=CreateWindow("Button",T("Make Steem high priority"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)1030,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,HighPriority,0);
   ToolAddWindow(ToolTip,Win,T("When this option is ticked Steem will get first use of the CPU ahead of other applications, this means Steem will still run smoothly even if you start doing something else at the same time, but everything else will run slower."));
   y+=30;
+ADVANCED_END
 #endif
   Wid=GetCheckBoxSize(Font,T("Pause emulation when inactive")).Width;
   Win=CreateWindow("Button",T("Pause emulation when inactive"),
@@ -630,12 +664,14 @@ void TOptionBox::CreateGeneralPage()
   y+=30;
 
 #if !defined(SSE_FDC_NOFF)
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Automatic fast forward on disk access")).Width;
   Win=CreateWindow("Button",T("Automatic fast forward on disk access"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)900,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,floppy_access_ff,0);
   y+=30;
+ADVANCED_END
 #endif
 
   Wid=GetCheckBoxSize(Font,T("Start emulation on mouse click")).Width;
@@ -661,7 +697,7 @@ void TOptionBox::CreatePortsPage()
 #endif
   int GroupMiddle=20+30+(GroupHeight-20-30)/2;
 #if defined(SSE_DONGLE_PORT)
-  for (int p=0;p<4;p++){
+  for (int p=0;p<(OPTION_ADVANCED?4:3);p++){
     if(p==3)
       GroupHeight-=45;
 #else
@@ -703,6 +739,7 @@ void TOptionBox::CreatePortsPage()
 #if defined(SSE_DONGLE_PORT)
     if(p==3)
     {
+ADVANCED_BEGIN
 #if defined(SSE_DONGLE_LEADERBOARD)
       CBAddString(Win,T("10th Frame dongle"),TDongle::TENTHFRAME);
 #endif
@@ -734,6 +771,7 @@ void TOptionBox::CreatePortsPage()
 #if defined(SSE_DONGLE_URC)
       CBAddString(Win,T("Ultimate Ripper Cartridge switch"),TDongle::URC);
 #endif
+ADVANCED_END
     }
     else
     {
@@ -1238,12 +1276,18 @@ void TOptionBox::CreateDisplayPage()
                           x+5+Wid,y,Wid+50,200,Handle,(HMENU)207,HInstance,NULL);
   SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Off"));
   SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Normal"));
-  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Large"));
-  SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Max"));
+  if(screen_res<2) //doesn't work on startup...
+  {
+    SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Large"));
+    SendMessage(BorderOption,CB_ADDSTRING,0,(LPARAM)CStrT("Max"));
+  }
+
   EnableBorderOptions(true);
 #if !defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
+
   x=page_l+150;
   int w=get_text_width(T("Frameskip"));
+ADVANCED_BEGIN
   CreateWindow("Static",T("Frameskip"),WS_CHILD,
                     x,y+4,w,20,Handle,(HMENU)200,HInstance,NULL);
   x+=w+5;
@@ -1256,6 +1300,7 @@ void TOptionBox::CreateDisplayPage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Draw 1/4"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Auto"));
   SendMessage(Win,CB_SETCURSEL,min(frameskip-1,4),0);
+ADVANCED_END
 #endif
   y+=LineHeight;
   x=page_l;
@@ -1292,17 +1337,20 @@ void TOptionBox::CreateDisplayPage()
 #endif//SSE
 
 #if defined(SSE_VID_VSYNC_WINDOW) && defined(SSE_VID_GUI_392)
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("VSync")).Width;
   Win=CreateWindow("Button",T("VSync"), mask,
                x,y,Wid,25,Handle,(HMENU)1033,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_WIN_VSYNC,0);
   ToolAddWindow(ToolTip,Win,T("For the window. This can change emulation speed"));
   x+=Wid+5;
+ADVANCED_END
   y+=LineHeight;
 #endif
 
 #if defined(SSE_VID_3BUFFER_WIN) // DirectDraw-only
   y-=LineHeight;
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
   Win=CreateWindow("Button",T("Triple Buffering"),mask,
     x,y,Wid,25,Handle,(HMENU)1034,HInstance,NULL);
@@ -1310,6 +1358,7 @@ void TOptionBox::CreateDisplayPage()
   ToolAddWindow(ToolTip,Win,
     T("For the window. Only useful on older systems, otherwise it interferes with Windows."));
   x+=Wid+5;
+ADVANCED_END
   y+=LineHeight;
 #endif
 
@@ -1317,9 +1366,11 @@ void TOptionBox::CreateDisplayPage()
 #if (defined(SSE_VID_VSYNC_WINDOW) && defined(SSE_VID_GUI_392)) || defined(SSE_VID_3BUFFER_WIN)
   y-=LineHeight;
 #endif
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  if(screen_res==2)
+    mask|=WS_DISABLED;
   Wid=GetCheckBoxSize(Font,T("ST Aspect Ratio")).Width;
-  Win=CreateWindow("Button",T("ST Aspect Ratio"),
-                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+  Win=CreateWindow("Button",T("ST Aspect Ratio"),mask,
                           x,y,Wid,25,Handle,(HMENU)1042,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
   //ToolAddWindow(ToolTip,Win,T("Tries to emulate aspect ratio of your typical monitor."));
@@ -1330,12 +1381,28 @@ void TOptionBox::CreateDisplayPage()
 
   //  The new option covers both former draw mode and interpolated
   Wid=GetCheckBoxSize(Font,T("Scanlines")).Width;
-  Win=CreateWindow("Button",T("Scanlines"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+  Win=CreateWindow("Button",T("Scanlines"),mask,
     x,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_SCANLINES,0);
  ToolAddWindow(ToolTip,Win,T("Reproduces scanlines of colour screens"));
 
+#if defined(SSE_GUI_CRISP_IN_DISPLAY)
+NOT_ADVANCED_BEGIN
+  x+=Wid+5;
+  Wid=GetCheckBoxSize(Font,T("Crisp")).Width;
+  Win=CreateWindow("Button",T("Crisp"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+    x,y,Wid,25,Handle,(HMENU)7324,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_D3D_CRISP,0);
+  ToolAddWindow(ToolTip,Win,T("Toggles blurry/crisp rendering (also for\
+ fullscreen), but it also depends on the video card, some render the same"));
+ADVANCED_END
+#endif
+
+
   y+=LineHeight;
+
+
+
 
 #elif defined(SSE_VID_SCANLINES_INTERPOLATED) // + PAL aspect ratio in some modes
   y-=LineHeight;
@@ -1353,14 +1420,17 @@ void TOptionBox::CreateDisplayPage()
 #if defined(SSE_VID_BLOCK_WINDOW_SIZE) // absolute placement TODO?
   Offset=10;
   y+=10;
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Lock window size")).Width;
   ASSERT(Wid>0);
   Win=CreateWindow("Button",T("Lock window size"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)7317,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_BLOCK_RESIZE,0);
+ADVANCED_END
 #endif
 
 #if defined(SSE_VID_LOCK_ASPET_RATIO)
+ADVANCED_BEGIN
   Offset+=Wid+10;
   Wid=GetCheckBoxSize(Font,T("Lock aspect ratio")).Width;
   ASSERT(Wid>0);
@@ -1370,8 +1440,11 @@ void TOptionBox::CreateDisplayPage()
   Win=CreateWindow("Button",T("Lock aspect ratio"),mask,
                           page_l+Offset,y,Wid,23,Handle,(HMENU)7318,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_LOCK_ASPECT_RATIO,0);
+ADVANCED_END
   y+=10;
 #endif
+
+ADVANCED_BEGIN
 
 #if defined(SSE_BUILD) && !defined(SSE_VID_BLOCK_WINDOW_SIZE) \
   && !defined(SSE_VID_LOCK_ASPET_RATIO) //LE
@@ -1379,8 +1452,13 @@ void TOptionBox::CreateDisplayPage()
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y-25,page_w,30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
 #elif defined(SSE_BUILD)
+ADVANCED_BEGIN
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y-25,page_w,20+30+30+30+30+2+25,Handle,(HMENU)99,HInstance,NULL);
+ADVANCED_ELSE
+  CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
+                  page_l,y-25,page_w,20+30+30+10+2+25,Handle,(HMENU)99,HInstance,NULL);
+ADVANCED_END
 #else
   CreateWindow("Button",T("Window Size"),WS_CHILD | BS_GROUPBOX,
                   page_l,y,page_w,20+30+30+30+30+2,Handle,(HMENU)99,HInstance,NULL);
@@ -1391,11 +1469,15 @@ void TOptionBox::CreateDisplayPage()
   y+=20;
 #endif
 #if !defined(SSE_VID_AUTO_RESIZE)
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Automatic resize on resolution change")).Width;
   Win=CreateWindow("Button",T("Automatic resize on resolution change"),WS_CHILD  | WS_TABSTOP | BS_CHECKBOX,
                           page_l+10,y,Wid,23,Handle,(HMENU)300,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,ResChangeResize,0);
   y+=30;
+ADVANCED_ELSE
+  y-=20;
+ADVANCED_END
 #endif
   
 #if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
@@ -1457,6 +1539,10 @@ void TOptionBox::CreateDisplayPage()
   y+=30;
 
   y+=10;
+
+ADVANCED_END
+
+#if !defined(SSE_GUI_NO2SCREENSHOT_SETTINGS) // useful only in DD build
 
   EasyStringList format_sl;
   Disp.ScreenShotGetFormats(&format_sl);
@@ -1524,6 +1610,7 @@ void TOptionBox::CreateDisplayPage()
   SendMessage(Win,BM_SETCHECK,Disp.ScreenShotMinSize,0);
   ToolAddWindow(ToolTip,Win,T("This option, when checked, ensures all screenshots will be taken at the smallest size possible for the resolution.")+" "+
                             T("WARNING: Some video cards may cause the screenshots to look terrible in certain drawing modes."));
+#endif //#if !defined(SSE_GUI_NO2SCREENSHOT_SETTINGS)
 
   UpdateWindowSizeAndBorder();
 
@@ -1695,6 +1782,9 @@ void TOptionBox::CreateFullscreenPage()
   long Wid=0;
 
 #if defined(SSE_VID_D3D_LIST_MODES)
+
+ADVANCED_BEGIN
+
 /*  We do some D3D here, listing all modes only when necessary to save memory.
     Or we could have another function in display, but then code bloat...
 */
@@ -1748,9 +1838,16 @@ void TOptionBox::CreateFullscreenPage()
   y+=LineHeight;
   Wid+=w;
 
+ADVANCED_END
+
 #endif//#if defined(SSE_VID_D3D_LIST_MODES)
   
-#if defined(SSE_GUI_D3D_CRISP_OPTION)
+#if defined(SSE_GUI_D3D_CRISP_OPTION) //can't say code is getting cleaner
+#if defined(SSE_GUI_CRISP_IN_DISPLAY)
+ADVANCED_BEGIN
+#else
+  {
+#endif
   Wid=GetCheckBoxSize(Font,T("Crisp Rendering")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
   Win=CreateWindow("Button",T("Crisp Rendering"),mask,
@@ -1758,6 +1855,7 @@ void TOptionBox::CreateFullscreenPage()
   SendMessage(Win,BM_SETCHECK,OPTION_D3D_CRISP,0);
   ToolAddWindow(ToolTip,Win,T("You like those big pixels? That's the option for you"));
   y+=LineHeight;
+ADVANCED_END
 #endif
 
 #endif//#if defined(SSE_VID_D3D)
@@ -1838,6 +1936,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
 #endif
 
 #if defined(SSE_VID_BPP_CHOICE) && !defined(SSE_VID_BPP_NO_CHOICE)
+  ADVANCED_BEGIN
   w=get_text_width(T("Bits per pixel"));
   int offset=190;
   CreateWindow("Static",T("Bits per pixel"),WS_CHILD ,
@@ -1852,6 +1951,7 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   if(SSEConfig.VideoCard32bit)
     SendMessage(Win,CB_ADDSTRING,nconfig++,(LPARAM)CStrT("32"));
   SendMessage(Win,CB_SETCURSEL,min((int)display_option_fs_bpp,nconfig-1),0);
+  ADVANCED_END
 #endif
 
 #if defined(SSE_VID_D3D)
@@ -1935,6 +2035,8 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
 #endif
 #endif//#if !defined(SSE_VID_D3D)
 
+ADVANCED_BEGIN
+
 #if defined(SSE_VID_GUI_392) // DD + D3D
   w=GetCheckBoxSize(Font,T("VSync")).Width;
 #if defined(SSE_VID_DD) && !defined(SSE_LE) //in a group rectangle
@@ -1981,6 +2083,8 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   ToolAddWindow(ToolTip,Win,T("This 'fake' fullscreen mode bypasses most everything else on this page!"));
   SendMessage(Win,BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
 #endif
+
+ADVANCED_END
 
 #if !defined(SSE_VID_D3D) && !defined(SSE_VID_DD_SIMPLIFY_VSYNC)
   y+=30;
@@ -2303,7 +2407,6 @@ void TOptionBox::CreateSoundPage()
   y+=LineHeight;
 #endif//#if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
 
-
   DWORD DisableIfMute=DWORD(((sound_mode==SOUND_MODE_MUTE) || UseSound==0) ? WS_DISABLED:0);
   DWORD DisableIfNoSound=DWORD((UseSound==0) ? WS_DISABLED:0);
 #if !(defined(SSE_VS2008_WARNING_382) && defined(SOUND_DISABLE_INTERNAL_SPEAKER))
@@ -2337,8 +2440,9 @@ void TOptionBox::CreateSoundPage()
 #endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
   y+=LineHeight;
-#if defined(SSE_GUI_OPTIONS_SAMPLED_YM) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
 
+#if defined(SSE_GUI_OPTIONS_SAMPLED_YM) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Sampled YM-2149")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
@@ -2351,9 +2455,11 @@ void TOptionBox::CreateSoundPage()
   ToolAddWindow(ToolTip,Win,
     T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"));
   y+=LineHeight;
+ADVANCED_END
 #endif
 
 #if defined(SSE_GUI_OPTIONS_MICROWIRE)
+ADVANCED_BEGIN
   Offset+=Wid+HorizontalSeparation*2;
 #if defined(SSE_GUI_OPTIONS_SAMPLED_YM)
   y-=LineHeight; // maybe it will be optimised away!
@@ -2374,6 +2480,7 @@ void TOptionBox::CreateSoundPage()
     //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
     T("Microwire (for STE sound), incomplete emulation"));
   y+=LineHeight;
+ADVANCED_END
 #endif
 
 #if defined(SSE_GUI_OPTIONS_KEYBOARD_CLICK) && !defined(SSE_SOUND_CAN_CHANGE_DRIVER)
@@ -2517,20 +2624,26 @@ void TOptionBox::CreateSoundPage()
                     page_l+15+Wid,y,page_w-10-(15+Wid),200,Handle,(HMENU)7061,HInstance,NULL);
 #endif
 #if !defined(SSE_SOUND_NO_8BIT)
+ADVANCED_BEGIN // way to make it sound bad!
   CBAddString(Win,T("8-Bit Mono"),MAKEWORD(8,1));
   CBAddString(Win,T("8-Bit Stereo"),MAKEWORD(8,2));
+ADVANCED_END
 #endif
   CBAddString(Win,T("16-Bit Mono"),MAKEWORD(16,1));
   CBAddString(Win,T("16-Bit Stereo"),MAKEWORD(16,2));
 #if defined(SSE_SOUND_NO_8BIT)
   SendMessage(Win,CB_SETCURSEL,(sound_num_channels-1),0);
 #else  
+ADVANCED_BEGIN
   SendMessage(Win,CB_SETCURSEL,(sound_num_bits-8)/4 + (sound_num_channels-1),0);
+ADVANCED_ELSE
+  SendMessage(Win,CB_SETCURSEL,(sound_num_channels-1),0);
+ADVANCED_END
 #endif
   y+=30;
 
 #if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
-
+ADVANCED_BEGIN
 #if defined(SSE_SOUND_RECOMMEND_OPTIONS)
   Wid=GetCheckBoxSize(Font,T("Write to primary buffer (not recommended)")).Width;
   Win=CreateWindow("Button",T("Write to primary buffer (not recommended)"),WS_CHILD | WS_TABSTOP |
@@ -2568,7 +2681,7 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Milliseconds"));
   SendMessage(Win,CB_SETCURSEL,sound_time_method,0);
   y+=30;
-
+ADVANCED_END
 #endif//#if !defined(SSE_SOUND_ENFORCE_RECOM_OPT)
 
   Wid=GetTextSize(Font,T("Delay")).Width;
@@ -2619,6 +2732,9 @@ void TOptionBox::CreateSoundPage()
   y+=LineHeight;
 #endif  
 
+NOT_ADVANCED_BEGIN
+  y+=30;
+ADVANCED_END
 
   CreateWindow("Button",T("Record"),WS_CHILD | BS_GROUPBOX | DisableIfMute,
                   page_l,y,page_w,80,Handle,(HMENU)7200,HInstance,NULL);
@@ -2691,11 +2807,17 @@ void TOptionBox::CreateStartupPage()
 
   int y=10,Wid;
   HWND Win;
-
+//ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Restore previous state")).Width;
   Win=CreateWindow("Button",T("Restore previous state"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3303,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,AutoLoadSnapShot,0);
+#ifdef SSE_GUI_393
+  ToolAddWindow(ToolTip,Win,
+    T("When this is checked, Steem saves the state when leaving and loads it\
+ when starting. Without a hiccup."));
+
+#endif
   y+=30;
 
   Wid=get_text_width(T("Filename"));
@@ -2710,7 +2832,7 @@ void TOptionBox::CreateStartupPage()
   SendMessage(Win,EM_SETSEL,Len,Len);
   SendMessage(Win,EM_SCROLLCARET,0,0);
   y+=30;
-
+//ADVANCED_END
 
   Wid=GetCheckBoxSize(Font,T("Start in fullscreen mode")).Width;
   Win=CreateWindow("Button",T("Start in fullscreen mode"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
@@ -2718,6 +2840,7 @@ void TOptionBox::CreateStartupPage()
   SendMessage(Win,BM_SETCHECK,GetCSFInt("Options","StartFullscreen",0,INIFile),0);
   y+=30;
 
+ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Draw direct to video memory")).Width;
   Win=CreateWindow("Button",T("Draw direct to video memory"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
                           page_l,y,Wid,23,Handle,(HMENU)3304,HInstance,NULL);
@@ -2754,12 +2877,14 @@ void TOptionBox::CreateStartupPage()
 #endif
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
   Wid=GetCheckBoxSize(Font,T("Disable DSP")).Width;
-  Win=CreateWindow("Button",T("Disable DSP"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX | int(NoDD ? WS_DISABLED:0),
+  Win=CreateWindow("Button",T("Disable DSP"),WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX,
                           page_l,y,Wid,23,Handle,(HMENU)3306,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,DSP_DISABLED,0);
   ToolAddWindow(ToolTip,Win,T("If you have some odd crashes, checking this may help. DSP code uses the math coprocessor and exceptions are almost impossible to catch"));
   y+=30;
 #endif
+ADVANCED_END
+
 #if !defined(SSE_SOUND_CAN_CHANGE_DRIVER) // moved to Sound
   Wid=get_text_width(T("Sound driver"));
   CreateWindow("Static",T("Sound driver"),WS_CHILD,
@@ -2967,6 +3092,7 @@ void TOptionBox::CreateMacrosPage()
                 x,y,25,25,Handle,(HMENU)10012,HInstance,NULL);
   x+=30;
 #if !defined(SSE_GUI_RECORDINPUT_C1)
+ADVANCED_BEGIN
   Wid=get_text_width(T("Mouse speed"));
   CreateWindow("Static",T("Mouse speed"),WS_CHILD,x,y+4,Wid,23,Handle,(HMENU)10013,HInstance,NULL);
   x+=Wid+5;
@@ -2997,6 +3123,7 @@ void TOptionBox::CreateMacrosPage()
 #else
   CBSelectItemWithData(Win,1);
 #endif
+  ADVANCED_END
 #endif//#if !defined(SSE_GUI_RECORDINPUT_C1)
   DTree.SelectItemByPath(MacroSel);
 
@@ -3165,9 +3292,22 @@ void TOptionBox::CreateSSEPage() {
 #else
   ASSERT(!SSEOption.TestingNewFeatures);
 #endif
-
   y+=LineHeight+10;
   Wid=0;
+
+#if defined(SSE_VAR_ADVANCED)
+  Wid=GetCheckBoxSize(Font,T("Advanced Settings")).Width;
+  Win=CreateWindow("Button",T("Advanced Settings"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)1038,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_ADVANCED,0);
+  ToolAddWindow(ToolTip,Win,T("For those who know what they're doing and don't report fake bugs!"));
+
+  Win=CreateWindow("Button",T("Reset Advanced Settings"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+                          page_l+Wid+20,y,130,23,Handle,(HMENU)1039,HInstance,NULL);
+  ToolAddWindow(ToolTip,Win,T("Restore all advanced settings to the 'non-advanced' default")); 
+  y+=LineHeight;
+#endif
+
 
 #if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
   Wid=GetCheckBoxSize(Font,T("Status info")).Width;
@@ -3186,6 +3326,19 @@ void TOptionBox::CreateSSEPage() {
   Offset+=Wid+HorizontalSeparation;
 #endif
 
+
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION) && defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
+  Wid=GetCheckBoxSize(Font,T("Disk name in status bar")).Width;
+  Win=CreateWindow("Button",T("Disk name in status bar"),WS_CHILD | WS_TABSTOP |
+    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7309,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_STATUS_BAR_GAME_NAME,0);
+  ToolAddWindow(ToolTip,Win,T("Toggles disk name of A: / disk image types of A: and B:"));
+  Offset=Wid+HorizontalSeparation;
+#endif
+
+
+ADVANCED_BEGIN
+
 #if defined(SSE_HACKS) && !defined(SSE_HACKS_NO_OPTION)
   Wid=GetCheckBoxSize(Font,T("Hacks")).Width;
   Win=CreateWindow("Button",T("Hacks"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
@@ -3203,35 +3356,18 @@ void TOptionBox::CreateSSEPage() {
   //SendMessage(Win,BM_SETCHECK,!STEALTH_MODE,0);
   SendMessage(Win,BM_SETCHECK,OPTION_EMU_DETECT,0);
   ToolAddWindow(ToolTip,Win,T("Enable easy detection of Steem by ST programs."));
-  y+=LineHeight;
 #endif  
 
+ADVANCED_END
 
   Offset=0;
   y+=LineHeight;
 
-
 #if defined(SSE_VID_VSYNC_WINDOW) || defined(SSE_VID_3BUFFER)
-/*
-The following table summarizes the most recent operating system version numbers.
- Operating system	Version number
-Windows 8.1	6.3*
-Windows Server 2012 R2	6.3*
-Windows 8	6.2
-Windows Server 2012	6.2
-Windows 7	6.1
-Windows Server 2008 R2	6.1
-Windows Server 2008	6.0
-Windows Vista	6.0
-Windows Server 2003 R2	5.2
-Windows Server 2003	5.2
-Windows XP 64-Bit Edition	5.2
-Windows XP	5.1
-Windows 2000	5.0
-*/
-  y-=LineHeight;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
 #endif
+
+ADVANCED_BEGIN
 
 #if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
   Wid=GetCheckBoxSize(Font,T("C1: 6850/6301/E-Clock")).Width;
@@ -3280,6 +3416,8 @@ Windows 2000	5.0
 
   Offset=0;
 
+ADVANCED_END
+
 #if defined(SSE_GUI_MOUSE_CAPTURE_OPTION)  
   Wid=GetCheckBoxSize(Font,T("Capture mouse")).Width;
   Win=CreateWindow("Button",T("Capture mouse"),
@@ -3291,6 +3429,7 @@ Windows 2000	5.0
 #endif
 
 #if defined(SSE_GUI_MOUSE_VM_FRIENDLY)
+ADVANCED_BEGIN
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("VM-friendly mouse")).Width;
@@ -3300,8 +3439,9 @@ Windows 2000	5.0
   SendMessage(Win,BM_SETCHECK,SSEOption.VMMouse,0);
   ToolAddWindow(ToolTip,Win,T("Alternative mouse handling - cursor not bound"));
   y+=LineHeight;
+  ADVANCED_END
 #endif
-  
+
   Offset=0;
   y+=LineHeight;
 
@@ -3318,6 +3458,8 @@ Windows 2000	5.0
   y+=LineHeight;
 #endif
 
+ADVANCED_BEGIN
+
 #if defined(SSE_CPU_MFP_RATIO_OPTION) // user can fine tune CPU clock
   Wid=GetCheckBoxSize(Font,T("Fine tune CPU clock")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -3325,7 +3467,7 @@ Windows 2000	5.0
     page_l+Offset,y,Wid,25,Handle,(HMENU)7322,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_CPU_CLOCK,0);
   ToolAddWindow(ToolTip,Win,
-    T("Advanced. This parameter changes the CPU/MFP clock ratio"));
+    T("This parameter changes the CPU/MFP clock ratio"));
 
   CreateWindow("Static","",WS_CHILD | SS_CENTER,page_l+115,y+5,100,20,Handle,(HMENU)7321,HInstance,NULL);
   y+=20;
@@ -3345,8 +3487,9 @@ Windows 2000	5.0
   SendMessage(Win,TBM_SETPAGESIZE,0,1);
   SendMessage(Handle,WM_HSCROLL,0,LPARAM(Win));
   y+=30;
-
 #endif
+
+ADVANCED_END
 
   if(y<300)//?
     y=300;
@@ -3413,8 +3556,7 @@ void TOptionBox::SSEUpdateIfVisible() {
   InvalidateRect(Handle,NULL,true);
 
 }
-#endif
+#endif //#if defined(SSE_GUI_OPTIONS_REFRESH)
 
-#endif
-
+#endif #if defined(SSE_GUI_OPTION_PAGE)
 

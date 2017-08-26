@@ -62,7 +62,10 @@ int TCaps::Init() {
     CAPSInit();
   }
   catch(...) {
-    TRACE_LOG("CapsImg.DLL can't be loaded\n");
+    TRACE_LOG("%s can't be loaded\n",SSE_DISK_CAPS_PLUGIN_FILE);
+#if defined(SSE_VAR_REQUIRE_FILES3)
+    throw SSE_DISK_CAPS_PLUGIN_FILE;
+#endif
     return 0;
   }
   VERIFY( !CAPSGetVersionInfo((void*)&versioninfo,0) );

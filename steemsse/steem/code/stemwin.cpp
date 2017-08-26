@@ -1304,7 +1304,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (FlagIdx>=0){ 
              ASSERT(FlagIdx<14); 
 #if defined(SSE_GUI_OPTIONS_WU)
-            BitBlt(myHdc,left+((OPTION_WS)?58:51),4,RC_FLAG_WIDTH,
+            BitBlt(myHdc,left+((OPTION_WS&&OPTION_ADVANCED)?58:51),4,RC_FLAG_WIDTH,
               RC_FLAG_HEIGHT,TempDC,FlagIdx*RC_FLAG_WIDTH,0,SRCCOPY);
 #else
             BitBlt(myHdc,left+((OPTION_WS)?58-6:51-6),4,RC_FLAG_WIDTH,

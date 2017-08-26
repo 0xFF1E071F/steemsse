@@ -7,6 +7,10 @@ DESCRIPTION: Functions to reset the emulator to a startup state.
 #if defined(SSE_COMPILER_INCLUDED_CPP)
 #pragma message("Included for compilation: reset.cpp")
 #endif
+#if defined(SSE_VID_ST_MONITOR_393)
+#include "options.decla.h"
+extern TOptionBox OptionBox;
+#endif
 
 /*
 Atari ST Boot Up Operation
@@ -479,7 +483,8 @@ void reset_peripherals(bool Cold)
   YM2149.Reset();
 #endif
 #if defined(SSE_MMU_WU_LE)
-  if(Cold) 
+
+  if(Cold &&!OPTION_ADVANCED)  
   {
     // choose a wake-state - It will appear in TRACE, not the status bar
     int rnd=rand();
@@ -494,7 +499,13 @@ void reset_peripherals(bool Cold)
     ASSERT(OPTION_WS>0 && OPTION_WS<5);
     Glue.Update();
     //TRACE("option WS %d WS %d\n",OPTION_WS,MMU.WS[OPTION_WS]); 
+
+#if defined(SSE_VID_ST_MONITOR_393)
+    OptionBox.MachineUpdateIfVisible();
+#endif    
+
   }
+
 #endif
 
 }

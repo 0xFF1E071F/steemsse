@@ -95,7 +95,7 @@ bool TYM2149::LoadFixedVolTable() {
   {
     TRACE_LOG("No file %s\n",filename.Text);
     FreeFixedVolTable();
-#if defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+#if defined(SSE_YM2149_TABLE_NOT_OPTIONAL) || defined(SSE_VAR_REQUIRE_FILES)
     throw filename.Text;
 #else
     OPTION_SAMPLED_YM=0;

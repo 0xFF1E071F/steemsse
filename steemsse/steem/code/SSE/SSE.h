@@ -170,7 +170,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_LE)
 #define SSE_BASIC_ST // no HW hacks
-#define SSE_NO_CARTRIDGE
+//#define SSE_NO_CARTRIDGE // but there is BAT
 #endif
 
 #if defined(SSE_FLOPPY)
@@ -266,9 +266,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CARTRIDGE_NO_EXTRA_BYTES_OK
 #define SSE_CARTRIDGE_BAT //fun!
 #define SSE_CARTRIDGE_BAT2
-#define SSE_CARTRIDGE_FREEZE
 #define SSE_CARTRIDGE_REPLAY16
+#if !defined(SSE_LE)
+#define SSE_CARTRIDGE_FREEZE
 #define SSE_CARTRIDGE_TRANSPARENT //check for bugs
+#endif
 
 #endif//cartridge
 
@@ -1878,10 +1880,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_STF_HW_OVERSCAN //393 - considered as STF models
 #endif
 #define SSE_VAR_393
+
+#if !defined(SSE_LE) && defined(SSE_VID_D3D)
+#define SSE_VAR_ADVANCED // requested switch, we place it in SSE page
+#endif
+
 #define SSE_VAR_STEEMINTRO_393 // finally update this
 #define SSE_VAR_UPDATE_LINK 
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
-#define SSE_VID_HIRES_BORDER_BLACK // border is black
 #define SSE_VID_ST_MONITOR_393 // 2 options again
 #define SSE_YM2149_MAMELIKE_393
 #define SSE_YM2149_RECORD // record to YM file
@@ -1889,13 +1895,16 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload
 #define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
-#define SSE_GLUE_393C // not necessary, to test!
+#define SSE_GLUE_393C // not necessary, to test! 
 #define SSE_GLUE_393D // state of VSync line
 #endif
 
 #if defined(SSE_GUI_393)
 #define SSE_GUI_COLOUR_CTRL_RESET
-#define SSE_GUI_OPTIONPAGE_ORDER
+#ifdef SSE_VID_D3D
+#define SSE_GUI_NO2SCREENSHOT_SETTINGS
+#define SSE_GUI_CRISP_IN_DISPLAY
+#endif
 #endif
 
 #if defined(SSE_IKBD_6301_393)
@@ -1906,6 +1915,17 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_STF_HW_OVERSCAN)
 #define SSE_STF_AUTOSWITCH
 #define SSE_STF_LACESCAN
+#endif
+
+#if defined(SSE_VAR_ADVANCED)
+#define SSE_GUI_STATUS_BAR_NOT_OPTIONAL
+#define SSE_MMU_WU_LE
+#define SSE_VAR_MAIN_LOOP4
+#define SSE_VAR_REQUIRE_FILES // HD6301V1ST.img, ym2149_fixed_vol.bin
+#define SSE_VAR_REQUIRE_FILES2 // unzipd32.dll, ArchiveAccess.dll
+#define SSE_VAR_REQUIRE_FILES2A // unrar.dll now included
+#define SSE_VAR_REQUIRE_FILES3 // pasti.dll, CAPSImg.dll
+#define SSE_VAR_REQUIRE_FILES4 // HFE_boot.bin
 #endif
 
 #if defined(SSE_YM2149_MAMELIKE_393)
@@ -1940,8 +1960,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
 //#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
 #define SSE_VID_D3D_393 // update m_DisplayFormat
+#if defined(SSE_VID_D3D_2SCREENS)
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
+#endif
 #define SSE_VID_BPP_CHOICE_393
+#define SSE_VID_HIRES_BORDER_BLACK // border is black - also assembly correction
 #define SSE_VS2008_WARNING_393
 #define SSE_WD1772_393 // wrong status after interrupt command
 #define SSE_WD1772_393B // other fixes based on Suska (test)

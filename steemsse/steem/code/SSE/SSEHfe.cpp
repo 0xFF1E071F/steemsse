@@ -72,6 +72,10 @@ bool TImageHFE::Create(char *path) {
       fclose(fp);
       Close(); 
     }
+#if defined(SSE_VAR_REQUIRE_FILES4)
+    else 
+      throw DISK_HFE_BOOT_FILENAME;
+#endif
   }
   TRACE_LOG("HFE create %s %s\n",path,ok?"OK":"failed");  
   return ok;

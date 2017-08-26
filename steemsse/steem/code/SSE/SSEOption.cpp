@@ -1,11 +1,29 @@
 #include "SSE.h"
 #if defined(SSE_BUILD)
 #include "../pch.h"
+
+#if defined(SSE_VAR_ADVANCED)
+#include <easystr.h>
+#define Str EasyStr
+#include <conditions.h>
+#include <display.decla.h>
+#include <fdc.decla.h>
+#include <gui.decla.h>
+#include <loadsave.decla.h>
+#include <options.decla.h> 
+#include <stports.decla.h>
+#include <psg.decla.h>
+extern TOptionBox OptionBox;
+#endif
+
 #include <emulator.decla.h>
-#include "SSEOption.h"
+
+#include "SSEOption.h" 
 #include "SSEDebug.h"
 #include "SSEInterrupt.h"
 #include "SSEVideo.h"
+
+
 
 TOption SSEOption; // singleton
 
@@ -52,6 +70,72 @@ void TOption::Init() {
   FakeFullScreen=1; // safer than 32x200!
   KeyboardClick=1;
 }
+
+
+#if defined(SSE_VAR_ADVANCED)
+/*  Restore advanced settings.
+    All when player pressed the 'Reset Advanced Settings' button.
+    Not all when player unchecked the 'Advanced Settings' option.
+*/
+
+void TOption::Restore(bool all) {
+  Chipset1=TRUE; // need file
+  Chipset2=true;
+
+  run_speed_ticks_per_second=1000;
+  floppy_access_ff=false;
+
+  FinetuneCPUclock=false;
+  SSEConfig.OverscanOn=false;
+  if(STModel>STF)
+    STModel=STF;
+  SSEConfig.SwitchSTType(ST_TYPE); // updates cpu/mfp ratio
+  n_cpu_cycles_per_second=CpuNormalHz;
+  FakeFullScreen=true;
+  extended_monitor=0;
+  // display size
+  WinSizeForRes[0]=1; // double low
+  WinSizeForRes[1]=1; // double height med
+  WinSizeForRes[2]=0; // normal high
+#if defined(SSE_GUI_CRISP_IN_DISPLAY)
+  draw_win_mode[0]=draw_win_mode[1]=Direct3DCrisp; 
+#else
+  draw_win_mode[0]=draw_win_mode[1]=1;
+#endif
+  StemWinResize();
+#if USE_PASTI
+  pasti_active=false;
+#endif
+  // sound: C2 is checked too (MAME-like = default)
+  SampledYM=true; // need file
+  Microwire=true;
+  sound_freq=44100;
+  sound_write_primary=false;
+  sound_time_method=1; //def?
+  OptionBox.ChangeSoundFormat(16,2); // needs lots of declarations but proper
+  
+  if(all) // player pressed 'Reset Advanced Settings'
+  {
+    VMMouse=false;
+    floppy_instant_sector_access=false;
+    EmuDetect=false;
+    Hacks=true;
+    Str NewCart="";
+    LoadSnapShotChangeCart(NewCart); // remove cartridge
+    DONGLE_ID=0;
+    HighPriority=false;
+    //AutoLoadSnapShot=false;
+    Disp.DrawToVidMem=true;
+    Disp.BlitHideMouse=false;
+    WriteCSFStr("Options","NoDirectDraw","0",INIFile);
+    WriteCSFStr("Options","NoDirectSound","0",INIFile);
+    NoDsp=false;
+  }
+}
+
+#endif
+
+
 
 TConfig SSEConfig;
 
@@ -174,8 +258,8 @@ int TConfig::SwitchSTType(int new_type) {
     else
 #endif
     {
-    CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLOCK;
-    CpuNormalHz=CPU_STE_PAL; 
+      CpuMfpRatio=(double)CPU_STE_PAL/(double)MFP_CLOCK;
+      CpuNormalHz=CPU_STE_PAL; 
     }
 #endif
 

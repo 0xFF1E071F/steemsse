@@ -91,7 +91,11 @@ int TM68000::SyncEClock(int dispatcher) {
   switch(cycles) {
   case 0:
     wait_states=8;
-#if defined(SSE_INT_HBL_E_CLOCK_HACK_382) 
+#if defined(TEST01)
+    if(MMU.WU[OPTION_WS]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
+      && OPTION_HACKS)
+     wait_states-=2;// hack Closure, 3615GEN4, as STF WU1
+#elif defined(SSE_INT_HBL_E_CLOCK_HACK_382) 
     if(MMU.WS[OPTION_WS]==1 && ST_TYPE==STF && dispatcher==ECLOCK_HBL 
       && OPTION_HACKS)
      wait_states-=2;// hack Closure, 3615GEN4, as STF WS1

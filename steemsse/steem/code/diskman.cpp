@@ -1527,16 +1527,21 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(num_connected_floppies==1 ? MF_CHECKED:0),2012,T("Disconnect Drive B"));
 #endif
 #if !defined(SSE_FLOPPY_ALWAYS_ADAT)
+  // it's advanced but if changed sticks
+ADVANCED_BEGIN            
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(floppy_instant_sector_access==0 ? MF_CHECKED:0),2013,T("Accurate Disk Access Times (Slow)"));
+ADVANCED_END
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(FloppyArchiveIsReadWrite ? MF_CHECKED:0),2014,T("Read/Write Archives (Changes Lost On Eject)"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #if USE_PASTI
             if (hPasti){
 #if defined(SSE_DISK_PASTI_AUTO_SWITCH)
+ADVANCED_BEGIN
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
                 | int(pasti_active ? MF_CHECKED:0),2023,
                 T("Use Pasti for all floppies and ACSI"));
+ADVANCED_END
               InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING,2024,
                 T("Pasti Configuration"));
 #else
@@ -1550,6 +1555,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
 #endif
 
 #if defined(SSE_DISK_GHOST) && defined(SSE_GUI_DM_GHOST)
+ADVANCED_BEGIN
 #if defined(SSE_VAR_392) // more generic wording
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for protected disks"));
@@ -1561,12 +1567,15 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               (OPTION_GHOST_DISK?MF_CHECKED:0),2027,T("Enable ghost disks for CTR-IPF-SCP"));
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
+ADVANCED_END
 #endif
+
 #if defined(SSE_TOS_PRG_AUTORUN) && !defined(SSE_TOS_PRG_AUTORUN_NOT_OPTIONAL)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING |(int)
               (OPTION_PRG_SUPPORT?MF_CHECKED:0),2028,T("Run PRG and TOS files"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
+
 #if defined(SSE_ACSI_OPTION) && !defined(SSE_ACSI_ICON)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING 
               | (int)(SSEOption.Acsi?MF_CHECKED:0)
@@ -1574,6 +1583,7 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
               ,2029,T("ACSI hard disk images")); // with a s
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);
 #endif
+
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->AutoInsert2 ? MF_CHECKED:0),2016,T("Automatically Insert &Second Disk"));
 #if !defined(SSE_GUI_DM_REGROUP)
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(This->HideBroken ? MF_CHECKED:0),2002,T("Hide &Broken Shortcuts"));
