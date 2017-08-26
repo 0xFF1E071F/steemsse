@@ -115,7 +115,7 @@ void TMMU::UpdateVideoCounter(int CyclesIn) {
 #if defined(SSE_MMU_393) && defined(SSE_GLUE_393D)
   else if(Glue.vsync) 
   {
-    ASSERT(shifter_draw_pointer_at_start_of_line==xbios2);
+   // ASSERT(shifter_draw_pointer_at_start_of_line==xbios2); // on stop emu HW overscan
     vc=xbios2; // during VSYNC, VCOUNT=VBASE
   }
 #endif

@@ -848,46 +848,6 @@ void TOptionBox::Show()
   SendMessage(PageTree,TVM_SETIMAGELIST,TVSIL_NORMAL,(LPARAM)il);
 
 
-#if defined(SSE_GUI_OPTIONPAGE_ORDER)
-  AddPageLabel(T("Startup"),6);  
-  AddPageLabel(T("General"),0);
-  AddPageLabel(T("Machine"),9);
-  AddPageLabel("TOS",10);
-  AddPageLabel(T("Display"),1);  
-#if defined(SSE_VID_GAMMA)
-  AddPageLabel(T("Colour Control"),2);
-#else
-  AddPageLabel(T("Brightness")+"/"+T("Contrast"),2);
-#endif
-  AddPageLabel(T("On Screen Display"),15);
-  AddPageLabel(T("Fullscreen Mode"),3);
-  AddPageLabel(T("Sound"),5);
-#if !defined(SSE_GUI_NO_MIDIOPTION)
-  AddPageLabel(T("MIDI"),4);
-#endif
-#if !defined(SSE_GUI_NO_PROFILES)
-  AddPageLabel(T("Profiles"),11);
-#endif
-  AddPageLabel(T("Ports"),12);
-  AddPageLabel(T("File Associations"),8);
-#if !defined(SSE_GUI_NO_ICONCHOICE)
-  AddPageLabel(T("Icons"),14);
-#endif
-#ifndef SSE_VAR_NO_UPDATE
-  AddPageLabel(T("Auto Update"),7);
-#endif
-#if !defined(SSE_GUI_NO_MACROS)
-#if defined(SSE_IKBD_6301_MACRO)
-  AddPageLabel(T("Record Input"),13);
-#else
-  AddPageLabel(T("Macros"),13);
-#endif
-#endif
-#if defined(SSE_GUI_OPTION_PAGE)
-  AddPageLabel("SSE",16);
-#endif
-
-#else
   // Emulation options
   AddPageLabel(T("Machine"),9);
   AddPageLabel("TOS",10);
@@ -928,7 +888,7 @@ void TOptionBox::Show()
 #if defined(SSE_GUI_OPTION_PAGE)
   AddPageLabel("SSE",16);
 #endif
-#endif//#if defined(SSE_GUI_OPTIONPAGE_ORDER)
+
   page_l=min(2+TreeGetMaxItemWidth(PageTree)+5+2+10,630-(page_w+10));
   SetWindowPos(Handle,NULL,0,0,3+page_l+page_w+10+3,OPTIONS_HEIGHT+6+GetSystemMetrics(SM_CYCAPTION),SWP_NOZORDER | SWP_NOMOVE);
   SetWindowPos(PageTree,NULL,0,0,page_l-10,OPTIONS_HEIGHT,SWP_NOZORDER | SWP_NOMOVE);
@@ -1578,6 +1538,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             OPTION_ST_ASPECT_RATIO=!OPTION_ST_ASPECT_RATIO;
             TRACE_LOG("ST Aspect Ratio: %d\n",OPTION_ST_ASPECT_RATIO);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_ASPECT_RATIO,0);
+#if !defined(SSE_GUI_CRISP_IN_DISPLAY)
+NOT_ADVANCED_BEGIN 
+            // stretch mode for ST Aspect Ratio should look better
+            draw_win_mode[0]=draw_win_mode[1]=!OPTION_ST_ASPECT_RATIO; 
+ADVANCED_END
+#endif
             StemWinResize();
           }
           break;
@@ -1599,6 +1565,12 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
 #endif
 #if !defined(SSE_VID_ST_MONITOR_393)
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
+#endif
+#if !defined(SSE_GUI_CRISP_IN_DISPLAY)
+NOT_ADVANCED_BEGIN 
+            // stretch mode with scanlines = 'interpolated', by default
+            draw_win_mode[0]=draw_win_mode[1]=!OPTION_SCANLINES; 
+ADVANCED_END
 #endif
             StemWinResize();
           }
@@ -1660,6 +1632,29 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             Debug.StoppingTime=0;//reset
             TRACE_LOG("Option OsdTime: %d\n",SSEOption.OsdTime);
             SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.OsdTime,0);
+          }
+          break;
+#endif
+
+#if defined(SSE_VAR_ADVANCED)
+        case 1038: // toggle Advanced Settings
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            OPTION_ADVANCED=!OPTION_ADVANCED;
+            TRACE_LOG("Option Advanced Settings: %d\n",OPTION_ADVANCED);
+            if(!OPTION_ADVANCED)
+              SSEOption.Restore(); // enable C1, C2, etc.
+            This->DestroyCurrentPage();
+            This->CreatePage(This->Page);
+          }
+          break;
+
+        case 1039: // reset Advanced Settings - so it's player's choice
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            SSEOption.Restore(true);
+            This->DestroyCurrentPage();
+            This->CreatePage(This->Page);
           }
           break;
 #endif
@@ -2122,7 +2117,7 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
           break; 
 #endif
 
-#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
+#if defined(SSE_GUI_STATUS_BAR_DISK_NAME_OPTION) //&& !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
         case 7309: //  status bar game name
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_STATUS_BAR_GAME_NAME=!OPTION_STATUS_BAR_GAME_NAME;
@@ -2238,6 +2233,11 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 7324:
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_D3D_CRISP=!OPTION_D3D_CRISP;
+#if defined(SSE_GUI_CRISP_IN_DISPLAY) // also for window
+NOT_ADVANCED_BEGIN 
+            draw_win_mode[0]=draw_win_mode[1]=OPTION_D3D_CRISP; 
+ADVANCED_END
+#endif
             TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
 #if defined(SSE_VID_D3D_382)

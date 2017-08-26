@@ -30,7 +30,9 @@ EXT int sound_freq INIT(44100),sound_comline_freq INIT(0),sound_chosen_freq INIT
 #else
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 #endif
-#if defined(SSE_SOUND_NO_8BIT)
+#if defined(SSE_GUI_393)
+EXT BYTE sound_num_channels INIT(2),sound_num_bits INIT(16);
+#elif defined(SSE_SOUND_NO_8BIT)
 BYTE sound_num_channels INIT(2);
 const BYTE sound_num_bits INIT(16);
 #else

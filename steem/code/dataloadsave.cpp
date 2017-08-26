@@ -1010,6 +1010,11 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
 #endif
+#if defined(SSE_VAR_ADVANCED)
+    OPTION_ADVANCED=pCSF->GetInt("Main","AdvancedSettings",OPTION_ADVANCED); 
+    if(!OPTION_ADVANCED)
+      SSEOption.Restore();
+#endif
 #if defined(SSE_VID_DISABLE_AUTOBORDER_HIRES) // monochrome - must be manually inserted
     SSEOption.MonochromeDisableBorder=pCSF->GetInt("Main","MonochromeDisableBorder",0);
 #endif
@@ -1455,6 +1460,10 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 {
   SavePosition(FinalSave,pCSF);
+
+#if defined(SSE_VAR_ADVANCED)
+  pCSF->SetStr("Main","AdvancedSettings",EasyStr(OPTION_ADVANCED));
+#endif
 
   pCSF->SetStr("Options","CPUBoost",EasyStr(n_cpu_cycles_per_second));
 

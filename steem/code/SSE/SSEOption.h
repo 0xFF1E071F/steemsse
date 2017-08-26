@@ -72,10 +72,16 @@ struct TOption {
   unsigned int FullScreenDefaultHz:1;
   unsigned int TripleBufferFS:1;
   unsigned int FakeFullScreen:1;
+#if defined(SSE_VAR_ADVANCED)
+  unsigned int Advanced:1;
+#endif
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
+#if defined(SSE_VAR_ADVANCED)
+  void Restore(bool all=false);
+#endif
 #endif
 };
 
@@ -139,13 +145,13 @@ extern struct TOption SSEOption;
 #endif
 
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
+
 #if defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
 #define OPTION_STATUS_BAR (true)
-#define OPTION_STATUS_BAR_GAME_NAME (false)
 #else
 #define OPTION_STATUS_BAR (SSEOption.StatusBar)
-#define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 #endif
+#define OPTION_STATUS_BAR_GAME_NAME (SSEOption.StatusBarGameName)
 
 #define OPTION_WIN_VSYNC (SSEOption.WinVSync)
 #define OPTION_3BUFFER (SSEOption.TripleBufferWin) //temp for old build
@@ -203,6 +209,17 @@ extern struct TOption SSEOption;
 #define RENDER_SIGNED_SAMPLES (sound_num_bits==16)
 #endif
 #endif
+
+#if defined(SSE_VAR_ADVANCED)
+#define OPTION_ADVANCED (SSEOption.Advanced)
+#elif defined(SSE_LE)
+#define OPTION_ADVANCED (false)
+#else
+#define OPTION_ADVANCED (true)
+#endif
+
+
+
 
 struct TConfig {
 

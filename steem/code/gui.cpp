@@ -177,7 +177,11 @@ bool bAOT=0,bAppMaximized=0;
 bool AutoLoadSnapShot=true;
 const bool ShowTips=true;
 #else
+#ifdef SSE_GUI_393
+bool AutoLoadSnapShot=false,ShowTips=true; // autoload is convenient but crash-prone
+#else
 bool AutoLoadSnapShot=true,ShowTips=true;
+#endif
 #endif
 #else
 bool AutoLoadSnapShot=0,ShowTips=0;
@@ -476,9 +480,13 @@ void GUIRefreshStatusBar() {
         sb_st_model[5],
         sb_tos[5],sb_ram[7];
 #if defined(SSE_MMU_WU) && defined(SSE_GUI_OPTIONS_WU)
+ADVANCED_BEGIN
       sprintf(sb_st_model,"%s%d",(ST_TYPE)? "STF":"STE",MMU.WS[OPTION_WS]);
       if(!OPTION_WS)
         sb_st_model[3]='\0';
+ADVANCED_ELSE
+      sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
+ADVANCED_END
 #else
       sprintf(sb_st_model,"%s",(ST_TYPE)? "STF":"STE");
 #endif

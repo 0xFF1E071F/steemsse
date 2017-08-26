@@ -2,6 +2,9 @@
 #ifndef OPTIONS_DECLA_H
 #define OPTIONS_DECLA_H
 
+#include <scrollingcontrolswin.h>
+#include <stemdialogs.decla.h>
+
 #define EXT extern
 #define INIT(s)
 
@@ -172,6 +175,7 @@ public:
 #if defined(SSE_GUI_OPTION_PAGE)
   void CreateSSEPage();
 #endif
+
 
 #ifdef WIN32
   void CreateFullscreenPage(),CreateMIDIPage();

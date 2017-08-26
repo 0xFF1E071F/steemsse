@@ -57,6 +57,13 @@ void LoadUnzipDLL()
 #endif
 
   }//hunzip
+#if defined(SSE_VAR_REQUIRE_FILES3)
+#ifdef _WIN64
+#error shouldn't need UNZIP_DLL 
+#endif
+  else
+    throw UNZIP_DLL;
+#endif
 }
 #endif
 #endif //defined(WIN32)
@@ -93,6 +100,9 @@ void LoadUnrarDLL() {
   }
   catch(...) {
     UNRAR_OK=0;
+#if defined(SSE_VAR_REQUIRE_FILES2A)
+    throw UNRAR_DLL;
+#endif
   }
   if (UNRAR_OK)
   {
