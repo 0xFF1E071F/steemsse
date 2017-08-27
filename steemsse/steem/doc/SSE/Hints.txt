@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.9.2
+v3.9.3
 
 
 General Hints
@@ -126,8 +126,10 @@ Games
 - Pang: Borders on
 - Platoon STX: STF T100US (DI)
 - Realm of the Trolls: create STW disk
+- Rogue: T100
 - R-Type: STF
 - Rugby Coach dongle: C1
+- Sabotage: ADAT
 - Seven Gates of Jambala: C2 
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
@@ -241,6 +243,7 @@ Demos
 - Ventura: mouse to rotate menu
 - Ventura/Board and Spheres: STF, WU2
 - XMas 2004: #
+- Yanartas: STE
 
 
 - Menu disks

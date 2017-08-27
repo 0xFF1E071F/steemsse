@@ -62,10 +62,13 @@ void TOptionBox::CreateMachinePage()
   Wid=get_text_width(T("ST model"));
   CreateWindow("Static",T("ST model"),WS_CHILD,
     page_l,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
-
+#if defined(SSE_GUI_393)
   Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
     page_l+5+Wid,y,80+20,200,Handle,(HMENU)211,HInstance,NULL);
-
+#else
+  Win=CreateWindow("Combobox","",WS_CHILD  | WS_TABSTOP | CBS_DROPDOWNLIST,
+    page_l+5+Wid,y,80,200,Handle,(HMENU)211,HInstance,NULL);
+#endif
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STE]));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT(st_model_name[STF]));
   ADVANCED_BEGIN
@@ -100,8 +103,8 @@ compatible only with the STF"));
 ADVANCED_BEGIN
 #if defined(SSE_GUI_OPTIONS_WU) && defined(SSE_MMU_WU)
   long Offset=Wid+40-20;
-#if defined(SSE_STF_HW_OVERSCAN) //make shorter...
-  Offset+=20;
+#if defined(SSE_GUI_393) //make shorter...
+  Offset+=26;
   Wid=get_text_width(T("Wake-up"));
   CreateWindow("Static",T("Wake-up"),WS_CHILD,
     page_l+Offset,y+4,Wid,21,Handle,(HMENU)209,HInstance,NULL);
@@ -3295,7 +3298,7 @@ void TOptionBox::CreateSSEPage() {
   y+=LineHeight+10;
   Wid=0;
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
   Wid=GetCheckBoxSize(Font,T("Advanced Settings")).Width;
   Win=CreateWindow("Button",T("Advanced Settings"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l,y,Wid,25,Handle,(HMENU)1038,HInstance,NULL);

@@ -72,7 +72,7 @@ http://sourceforge.net/projects/archiveaccess/
 -CAPSImg.dll 
 http://www.kryoflux.com/
 
--D3DX9_43.dll
+-D3DX9_43.dll (D3D)
 http://www.microsoft.com/en-us/download/details.aspx?id=8109
 
 About D3D9, it's normal that you must complete your installation, it's
@@ -83,7 +83,7 @@ before asking for help, not that we don't want to help you, but google
 -Drive image
 http://atari.8bitchip.info/drimus.php 
 
--FreeImage.dll
+-FreeImage.dll (DD)
 http://freeimage.sourceforge.net/download.html
 If it's not up-to-date, it will not work well with recent versions of
 Steem SSE.
@@ -118,16 +118,14 @@ download:
 -ym2149_fixed_vol.bin (the P.S.G. soundchip table by ljbk)
 
 They should be copied into Steem's folder.
-If some of those files aren't present, Steem will still work, but some
-features will not work.
 
 
 Getting started
 ________________
 
-To use Steem, you need a copy of the Atari ROM, called "TOS", and image disk
-files. When you first launch Steem, you may point to where they are,
-and you can change that later.
+To use Steem, you need a copy of an Atari ROM, called "TOS", and image disk
+files. When you first launch Steem, you must point to one, and you can change
+that later.
 One important point is to match ST model and TOS (see further),
 for example STF - TOS 1.02, STE - TOS 1.62.
 
@@ -226,20 +224,22 @@ did it by mistake.
 Use the right mouse button to choose your options and the left one to record
 a screenshot.
 
-The D3D build of Steem can natively save a screenshot as a BMP, JPG, PNG or
+The D3D builds of Steem can natively save a screenshot as a BMP, JPG, PNG or
 NEO file.
-The DD build of Steem can natively save in BMP or NEO format, but with
+The DD builds of Steem can natively save in BMP or NEO format, but with
 the freeimage.dll plugin, more formats and options are available.
 
 PNG is the recommended format because it is both small and lossless. 
 Notice that JPG is a lossy format, only appropriate for a very colourful
 screen.
-NEO is the format used by Neochrome on the ST.
+NEO is the format used by Neochrome on the ST. It is only appropriate when
+there is no overscan.
 
 It is also possible to save multiple screenshots in a row using a shortcut.
 
 Alternatively, you can copy the full window into the paperclip using the 
 usual Alt-PrtScr combination.
+
 
 'Paste'
 -------
@@ -248,7 +248,6 @@ This button allows you to quickly and easily paste text from Windows into the
 ST. Just click on the button and Steem will type in the text at incredible 
 speed. Some programs may struggle with the top speed, to slow it down right 
 click on the button and choose a longer delay. 
-Important note: it will not work with option C1.
 
 
 'Configuration files'
@@ -311,7 +310,6 @@ only used one button.
 There's also a mouse speed dial.
 
 
-
 'Disk manager'
 --------------
 
@@ -324,8 +322,7 @@ ________
 Steem is a very complete emulator and there are really many options,
 spread between several pages or tabs.
 All are explained here, tab by tab.
-
-      
+     
  
 Machine
 --------   
@@ -343,19 +340,17 @@ You can change this option during emulation but at your risk (ST crash
 possible).
 The Mega ST4 is like a STF with a blitter. When you choose it, Steem supposes
 you want the monochrome screen and GEMDOS hard disk emulation.
-The STF Overscan option emulates a STF equipped with the LaceScan auto-switch
-circuit active. The picture is bigger but you need appropriate drivers.
 
 The emulator will try to match a default compatible TOS when you change the
 option: 1.02 for STF, 1.04 for Mega ST4, 1.62 for STE.
 It will also allocate 1MB of RAM for the STF and 4MB for the STE and the 
 Mega ST4.
 You can change that at will.
-     
+
   
--Wake-up state
-   
-Advanced. This is a very technical point, related to latency between some 
+-Wake-up (advanced)
+
+This is a very technical point, related to latency between some 
 electronic chips. It is rarely relevant. 
 Normally you'll use this option only if the display of some demo isn't 
 correct without (see Hints). 
@@ -397,7 +392,7 @@ Demo Closure by SYNC should work as STF (WS1-4) and STE (WS1).
 Needless to say, Steem SSE is leading the way for this issue.
 
 
--ST CPU speed
+-ST CPU speed (advanced)
 
 This option can boost the speed of the emulated ST, to improve those 
 painfully slow games that were released. 
@@ -459,7 +454,7 @@ keyboard directly. If you can't get the keyboard to work properly then the
 only option is to manually remap the keys using shortcuts (see below).
 
 
--Cartridge
+-Cartridge (advanced)
 
 Steem can emulate ROM cartridges using cartridge images, here you can choose 
 to insert one. For details how to make a cartridge image see the "cart image 
@@ -543,7 +538,8 @@ Ports
 ------   
    
 This page configures the emulated ST's link to outside hardware. There is a 
-section for each port on the ST, MIDI, parallel and serial. To set up a port 
+section for each port on the ST, MIDI, parallel and serial, as well as a 
+section for dongles (Special adapters). To set up a port 
 select one of the options from the box next to "Connect To". When you do the 
 section will fill up with options related to the connection you chose.
  
@@ -589,7 +585,7 @@ received by the port, what use that is I really don't know!
 Some (simple) dongles are emulated. You can select one in the Ports page.
 For joystick port dongles, option C1 is required.
 This option also covers some other adapters:
--Pro Sound Designer: used by Wings of Death and Lethal Xcess.
+-Pro Sound Designer: soundcard used by Wings of Death and Lethal Xcess.
 -Switches for Ultimate Ripper Cartridge and Multiface ST.
      
   
@@ -645,8 +641,8 @@ to start. See the shortcuts section for details of how to assign this action
 to a key/combination of keys.
 
   
-Macros (incompatible with option C1!)
---------------------------------------
+Record Input
+--------------
    
 This is a handy feature that will allow you to record sequences of input in 
 to the ST and play them back later. At the top there is a display of your 
@@ -687,12 +683,12 @@ This option allows you to configure how long Steem will wait between input
 changes, as some programs won't accept lots of very quick inputs. If speed 
 isn't an issue then you can always set this to "As Recorded", then playing 
 the macro will replay the recorded events at the speed you recorded them at.
-     
+
   
 General
 --------   
    
--Run speed
+-Run speed (advanced)
 
 Sometimes you will find a game/program that isn't significantly affected by 
 changing CPU speed, it is still too slow. In that case you can use this 
@@ -782,27 +778,28 @@ TV or a monitor. Coaxial is the original Steem filter.
 sound , not all sound emulation (so Steem's and Hatari's are still different).
 
 
--Sampled YM-2149
+-Sampled YM-2149 (advanced)
 
 This option changes the tables used for emulation of the YM-2149 soundchip.
 When it's checked, Steem uses a big table made up by ljbk based on 
-measurements on an actual STF (you need the provided ym2149_fixed_vol.bin
-file).
+measurements on an actual STF (the provided ym2149_fixed_vol.bin file must
+be in Steem's directory).
 Thanks to this accuracy of PSG emulation is much improved.
 It is also louder and many tunes now sound distorted, but that's like on
 a ST. If you uncheck the option we fall back on Steem 3.2's softer sound.
 "STF samples" are kind of noisy anyway, but they are on real hardware too.
 There currently are 2 limitations:
 1) The table only has values for fixed volumes, that were coded on 4bit.
-Enveloped sound was coded on 5bit, so other values are interpolated on the fly.
+Enveloped sound was coded on 5bit, so other values are interpolated on the 
+fly. The envelope is in fact rarely used.
 2) The sound of the PSG is reported to be different, relatively softer on the
 STE, but we only have one table, for STF.
 
   
--Microwire
+-Microwire (advanced)
    
 Unfortunately, emulation of the ultra-cheap Microwire tone controller is
-still rather primitive. 
+still rather primitive. To avoid clicks, volume changes are slowed down.
 
 
 -Keyboard click
@@ -820,9 +817,9 @@ If your soundcard isn't able to deliver one of the higher rates, Steem will
 settle for the maximum available.
 It makes a difference in some cases where the emulated PSG vibrates faster 
 than 22Khz. It does happen, as the max frequency is 125Khz! It can cause 
-horrible aliasing.
-Note that 56Khz is precisely 56066 (the maximum, and rare) rate for STE sound,
-25Khz is precisely 25033 and 22Khz is 22050.
+horrible aliasing. However, Steem includes an anti-aliasing filter.
+Note that 56Khz is precisely 56066 (the maximum, and rarely used) rate for
+STE sound, 25Khz is precisely 25033 and 22Khz is 22050.
 The next option is format. We highly recommend 16bit stereo.
 Then there is Write to primary buffer, some sound cards seem to perform 
 very badly with Steem's standard output, try checking this if it doesn't 
@@ -849,14 +846,6 @@ output by clicking on choose.
 Display
 --------   
 
--Multiple screens (D3D)
-
-It is not an option but if you have multiple screens, you may choose which one
-to use by dragging Steem's window. 
-Fullscreen will also work on that screen. 
-When it starts, Steem assumes you're on the first screen.
-   
-
 -Borders
 
 Here you can choose whether you want to see the ST borders, and which size.
@@ -869,7 +858,9 @@ Steem SSE offers no less than 3 modes:
 
  384 x 270      normal, original Steem
  413 x 275      max overscan (window only, in fullscreen it will be 416)
- 416 x 281      max plasma
+ 416 x 283      max plasma (50hz)
+
+(low resolution; it is 768 x 270, 826 x 275, 832 x 283 for medium)
 
 Why various sizes, while other emulators only offer one? 
 There are many reasons:
@@ -882,10 +873,11 @@ were especially trouble during development.
   as Steem in 384x270 mode.
 - Normal size may be merciful when the program displays trash in the
   border, typically because the programmer couldn't see it.
+- Only the normal border makes sense for monochrome emulation.
 - Most programs, including games, don't use the border at all.
    
 
--Frameskip
+-Frameskip (advanced)
 
 This is a very useful option for slower processors. Drawing the screen takes 
 quite a bit of PC CPU time so skipping frames is a very effective way to 
@@ -893,7 +885,7 @@ speed things up to the same speed as a real STE. Auto frameskip makes Steem
 skip up to 8 frames dependant on how fast it is running. 
 
   
--VSync
+-VSync (advanced)
   
 This version of 'vertical synchronisation' also works in windowed mode. 
 Your monitor needs a compatible refresh rate, or emulation speed is adjusted.
@@ -904,30 +896,34 @@ Unfortunately, most ST programs run at 50hz, while most LCD screens use 60hz.
 This is exactly the same problem in fullscreen mode.
 
 
--ST Monitor
+-ST Aspect Ratio
 
-This option combines a "stretch mode", scanlines, and if your other display
-options allow it, a more vertical, ST-like aspect ratio.
-It's a bit of a hack, can be buggy in some cases.
+The typical ST screen's picture was vertically stretched.
 
-   
--Triple Buffering (DirectDraw build)
+
+-Scanlines
+
+Option 'Scanlines' makes Steem skip every other line; this is quicker than 
+"No Stretch" but looks pretty ugly to some people. 
+To others, it may be part of the emulation.
+
+
+-Triple Buffering (DirectDraw build) (advanced)
    
 This may be useful to eliminate "tearing" or "ghosting", at the price 
-of higher CPU use in windowed mode as well as in fullscreen mode (stretch 
-mode only though).
+of higher CPU use in windowed mode.
 Compositing, a feature introduced in Windows Vista and enforced (can't 
 disable) in  Windows 8, could interfere with this.
 Compositing does its own Triple Buffering, without CPU use penalty.
 
 
--Lock window size
+-Lock window size (advanced)
 
 When it's checked you can't change the size of the window by dragging the
 borders so that you won't be able to sabotage Steem's nice display. 
 
 
--Lock aspect ratio
+-Lock aspect ratio (advanced)
 
 With this you may drag all you want, but the window should keep more or less
 the same proportions (to spare code, it's not perfect).
@@ -935,25 +931,20 @@ If it isn't checked, you're free to change the aspect ratio of the emulated
 screen (also see SSE option 'PAL Aspect Ratio').
 
 
--Window size
+-Window size (advanced)
 
 These options allow you to configure exactly the size of Steem's window in 
 the various ST resolutions. First is the option of whether Steem should 
 automatically resize its window when the ST resolution changes or when 
 borders turn on or off. Below that you can set the sizes that Steem should 
-use. With some sizes you have the choice between "Stretch", "No Stretch" and 
-"Scanlines".
+use. With some sizes you have the choice between "Stretch" and "No Stretch".
+
 "Stretch" makes Steem use the video card to convert the image from the ST 
 output size to the size of the window. This is generally the quickest option, 
 though most video cards will blur ("alpha blit") the stretched image, an
 effect which some people don't like. 
 "No Stretch" will make Steem draw the ST screen larger in order to avoid
 stretching. 
-"Scanlines" makes Steem skip every other line; this is quicker than "No 
-Stretch" but looks pretty ugly to some people. 
-
-If you want scanlines and a blurry display, use option 'Interpolated 
-Scanlines' on the SSE page instead.
 
 WARNING: On some prehistoric video cards making the window size bigger than 
 the real size (the first option) will slow down emulation considerably.
@@ -972,7 +963,7 @@ As well as all that there's an "Always On Top" option that keeps the main
 Steem window above all others.
 
 
--Screenshots
+-Screenshots (DD)
 
 These options configure where screenshots are saved. 
 
@@ -1051,7 +1042,7 @@ are taking screenshots.
   
 Fullscreen Mode
 ----------------   
-  
+
 -Fullscreen GUI  
   
 To enter fullscreen mode, click on the 'maximize' window control.
@@ -1067,7 +1058,7 @@ Blame Microsoft and video card driver coder for all bugs.
 You may assign shortcuts to enter, exit, toggle fullscreen mode.
 
 
--Synchronisation
+-Synchronisation (advanced)
 
 When the PC and ST are displaying a different number of frames per second you 
 can get jerkiness and wobbling that didn't appear on a real ST. Using these 
@@ -1078,10 +1069,20 @@ double the ST one. The ST used 50Hz (PAL), 60Hz (NTSC) and 72Hz (Mono).
 Hardware (video cards and monitors) that displays at 50Hz is now rare.
 
 
+-Triple Buffering (advanced)
+
+One more buffer is used in video rendering.
+It doesn't seem to make a great difference.
+It depends on the video card abilities, it could fail on some systems. 
+
+
 -The other options depend on the build.
 
 
 --Direct3D builds
+
+If you have multiple screens, you may choose which one to use by
+dragging Steem's window before hitting the 'maximize' button. 
 
 ---Mode
 
@@ -1098,12 +1099,6 @@ with a perfect aspect ratio (no distortion, whatever the hardware).
 You get neat but blocky pixels. Many people like it.
 Don't use this in high resolution.
 
----Triple Buffering
-
-One more buffer is used in video rendering.
-It doesn't seem to make a great difference.
-It depends on the video card abilities, it could fail on some systems. 
-
 ---Use desktop refresh rate
 
 This will bypass the hz setting in Mode, using the current desktop refresh 
@@ -1117,6 +1112,7 @@ This 'fake' fullscreen mode bypasses most other settings.
 You lose the benefits of true fullscreen, such as triple buffering and
 better performance (Steem isn't as demanding as a 3D game so no worry),
 but it may be more compatible with a variety of computers.
+It is the mode used by default.
 
 
 --DirectDraw builds
@@ -1342,25 +1338,24 @@ If this option isn't checked, Steem will display the type of image in
 each drive instead (ST, MSA...).
 
      
--Hacks
+-Hacks (advanced)
    
 This option covers two kinds of things:
 - Convenience hacks, like accelerating STE booting.
-- Emulation hacks, when emulation of some feature isn't perfect yet we want
-the programs to run. Since we don't understand everything in the feature,
-those hacks could break something, hence the option.
+- Emulation hacks, when emulation isn't perfect yet we want the programs to
+run. 
 It is recommended to disable 'Hacks' only if you meet problems (and please
 report).
 
   
--Emu detect
+-Emu detect (advanced)
    
 Steem includes a facility to interact with ST programs that want to know
 what kind of emulator is there. If you uncheck the option, this facility
 is disabled.
 
 
--C1: 6850/6301/E-Clock
+-C1: 6850/6301/E-Clock (advanced)
    
 Using code by Arne Riiber and doc by Stephane Catala - Belzebub / ST 
 Connexion, Steem features low-level emulation of the HD6301 "intelligent
@@ -1384,19 +1379,18 @@ In turn, the E-Clock also affects the timing of VBL and HBL interrupts.
 So you see, changing this option has many consequences.
 
 Why an option then? Emulation is more processor-intensive, you may prefer the
-PC mouse feel to the ST's, input recording and paste text into ST don't work 
-with this option and all those modifications could very well break
+PC mouse feel to the ST's, and all those modifications could very well break
 programs.
 If the option isn't checked, Steem falls back on the same emulation as 
 Steem 3.2 for all those chips.
      
 
--C2: 68901/YM2149
+-C2: 68901/YM2149 (advanced)
 
 This activates some MFP (aka MC68901, an important chip on the ST) emulation
-improvements that are seldom needed and are more processor-intensive,
-and a bit risky, such as IACK and writing latencies, IRQ latency, (especially)
-spurious interrupt, cycle-precise timers...
+improvements that are seldom needed and a bit risky, such as IACK and writing
+latencies, IRQ latency, (especially) spurious interrupt, cycle-precise 
+timers...
 C2 also activates an alternative, lower level YM2149 emulation inspired by 
 MAME (thx Couriersud).
 
@@ -1412,7 +1406,7 @@ change it. When it's unchecked, Steem will capture the mouse only when
 you click in the window.
 
 
--VM-friendly mouse
+-VM-friendly mouse (advanced)
 
 This option helps when Steem is run in a virtual machine (works with 
 VirtualBox).
@@ -1421,10 +1415,10 @@ window frame.
 Some people actually prefer this way, even without a virtual machine.
 
 
--Fine tune CPU clock
+-Fine tune CPU clock (advanced)
 
-Advanced. You may set the CPU clock in relation to the MFP's. Contrary to
-other Steem speed options, this changes the CPU/MFP clock ratio.
+You may set the CPU clock in relation to the MFP's. Contrary to other Steem
+speed options, this changes the CPU/MFP clock ratio.
 It's an interesting and quite "dangerous" variable in emulation.
 It may help some programs working, and will certainly break other programs.
 When unchecked, default values are used.
@@ -1484,16 +1478,17 @@ STW and HFE disk images include clock bits as well as data, encoded into MFM
 words.
 Those STW and HFE images are more than twice larger than ST images but allow
 to emulate the WD1772 disk controller at a lower level and so handle special
-formats.
+disk formats.
 Because they're formatted inside the emulated ST, there's no sides/tracks/
-sectors options. You get a raw disk full of random data, lucky you!
+sectors options. You get a raw disk full of random data, lucky you! It's up to
+you to format the disk exactly as you would on a ST.
 STW is the simplest such format. If you open a disk image in a hex editor,
 you will find address marks coded as '$4489', a familiar number for some 
 people.
 HFE is optimised for the HxC floppy emulator hardware. It's quite handy if
 you own such device.
-Important: if you plan to write on such disk images, better put the drive
-in accurate disk access times mode.
+Important: if you plan to write on STW or HFE disk images, better put the
+drive in accurate disk access times mode.
 
 Besides those ST, STW and HFE disk images Steem may create itself, it is also
 able to handle:
@@ -1513,7 +1508,7 @@ whether they work or not is also up to this plugin. Make sure you have the
 last version.
 
 About SCP images, Steem typically only uses the first 2 revolutions and also 
-works with only 1 rev, provided the image is good. 
+works with only 1 rev, provided the image is good or doctored. 
 It is very hard to get a perfect 1 rev copy, because common floppy drives 
 are not accurate enough to perfectly replicate data around the index pulse.
 Steem SSE directly handles those bit-level images, there's no plugin, so any 
@@ -1650,7 +1645,7 @@ To the right of the set-home button is a the disk manager options button, it
 brings up a menu with the following choices:
 
 
--Accurate Disk Access Times (Slow)
+-Accurate Disk Access Times (Slow) (advanced)
 
 Floppy disk drives are slow, horribly tediously slow, so by default Steem 
 does away with the waits and emulates disk access at impossibly high speed. 
@@ -1661,14 +1656,13 @@ all the time or you will surely go insane!
 Though the 'Drive sound' and 'Drive track info' options may make this ordeal
 more bearable, as you can see and hear what the drive is doing, you don't get
 the feeling the emulator is stuck. It's emulated the way it was.
-Note that all 'SSE' floppy drive emulation improvements for ST, MSA and DIM
-images are enabled only when this option is selected.
-Please don't report floppy drive emulation bugs if this option wasn't even
-checked.
-The option doesn't operate with CTR, IPF and SCP images, but it does with HFE
-and STW images. Some disks won't load without accurate timings.
+The option doesn't operate with CTR, IPF and SCP images, but it does with ST, 
+MSA, DIM, HFE and STW images. Some disks won't load without accurate timings.
 Speed for STX images is set in 'Pasti configuration'.
 The option also works on ACSI hard drives (but not GEMDOS).
+The option is considered as "advanced" because unchecking it may break
+programs. But if you uncheck it, it will stick even if you disable Advanced
+Settings later.
 
 
 -Read/Write Archives (Changes Lost On Eject)
@@ -1693,7 +1687,7 @@ the STX floppy disk format in Steem.
 This format allows emulation of original (protected) floppy disks of yore. 
 Try to use the last version of the plugin.
 
---Use Pasti for all floppies and ACSI
+--Use Pasti for all floppies and ACSI (advanced)
 
 This will use Pasti to run ST and MSA images, as well as allow Pasti to
 handle ACSI disk images. 
@@ -1706,7 +1700,7 @@ It is recommended to set all 'speed' options to 'slow' for precise emulation,
 which is what you should expect of STX images.
 
 
--Enable ghost disks for protected disks
+-Enable ghost disks for protected disks (advanced)
 
 Check this option to harmlessly save hiscore with CTR/IPF/STX/SCP disk images.
 STG files are automatically created when the game tries to save data on

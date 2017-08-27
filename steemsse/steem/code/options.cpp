@@ -1636,7 +1636,7 @@ ADVANCED_END
           break;
 #endif
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
         case 1038: // toggle Advanced Settings
           if(HIWORD(wPar)==BN_CLICKED)
           {

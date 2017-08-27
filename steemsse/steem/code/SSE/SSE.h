@@ -1,4 +1,4 @@
-// for v3.9.3
+// for v3.9.3 / 4.00
 #pragma once // VC guard
 #ifndef SSE_H // BCC guard
 #define SSE_H
@@ -42,6 +42,11 @@ Rebuild so that dates are correct
 Beta: not SSE_PRIVATE_BUILD
 */
 
+
+////////////////
+// ALL BUILDS //
+////////////////
+
 #if defined(VC_BUILD) // so that v3.2+ compiles in Visual C++ (no SSE switch)
 #define COMPILER_VC6 // Visual Studio 6
 #if _MSC_VER >= 1500
@@ -50,13 +55,25 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define NO_RAR_SUPPORT // don't use rarlib (SSE build supports unrar.dll)
 
+
+
+
+////////////////
+// SSE BUILDS //
+////////////////
+
 #if defined(STEVEN_SEAGAL) 
+
+#define SSE_VERSION 393
+//#define SSE_VERSION 400
 
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
+#if SSE_VERSION>393
 #define SSE_BETA //title, OSD, plus some testing - new features
 #define SSE_BETA_BUGFIX // beta for just bugfixes
+#endif
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
 //#define SSE_PRIVATE_BUILD // my "beta" option
@@ -1859,16 +1876,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_FRAME_REPORT_392
 #endif
 
-#if defined(SSE_BETA) //next version
+#if SSE_VERSION>=393 //&& defined(SSE_BETA) //next version
 
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_BOILER_393
-#if !defined(SSE_BASIC_ST)
-#define SSE_DRIVE_FREEBOOT //393
-#endif
 #define SSE_GLUE_393
 #define SSE_GUI_393
 #define SSE_IKBD_6301_393
+#define SSE_INT_HBL_E_CLOCK_HACK_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393 // black screen
@@ -1876,21 +1891,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_MICROWIRE_MIXMODE_393
 #undef SSE_SOUND_MICROWIRE_MIXMODE
 #undef  SSE_SOUND_MICROWIRE_MIXMODE2
-#if !defined(SSE_BASIC_ST)
-#define SSE_STF_HW_OVERSCAN //393 - considered as STF models
-#endif
 #define SSE_VAR_393
-
-#if !defined(SSE_LE) && defined(SSE_VID_D3D)
-#define SSE_VAR_ADVANCED // requested switch, we place it in SSE page
-#endif
-
 #define SSE_VAR_STEEMINTRO_393 // finally update this
 #define SSE_VAR_UPDATE_LINK 
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
-#define SSE_VID_ST_MONITOR_393 // 2 options again
+#define SSE_VID_ST_MONITOR_393 // 2 options again 
 #define SSE_YM2149_MAMELIKE_393
-#define SSE_YM2149_RECORD // record to YM file
 
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload
@@ -1903,7 +1909,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_COLOUR_CTRL_RESET
 #ifdef SSE_VID_D3D
 #define SSE_GUI_NO2SCREENSHOT_SETTINGS
-#define SSE_GUI_CRISP_IN_DISPLAY
 #endif
 #endif
 
@@ -1912,12 +1917,25 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_IKBD_6301_PASTE // more like switching C1 off for a while ;)
 #endif
 
-#if defined(SSE_STF_HW_OVERSCAN)
-#define SSE_STF_AUTOSWITCH
-#define SSE_STF_LACESCAN
+#if defined(SSE_YM2149_MAMELIKE_393)
+#define SSE_YM2149_MAMELIKE_ANTIALIAS
+#undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
 #endif
 
-#if defined(SSE_VAR_ADVANCED)
+#endif//beta
+
+
+#if SSE_VERSION>=400 && defined(SSE_BETA) //later version
+
+#define SSE_DRIVE_FREEBOOT //400
+#if !defined(SSE_LE) && defined(SSE_VID_D3D)
+#define SSE_GUI_ADVANCED // requested switch, we place it in SSE page
+#endif
+#define SSE_STF_HW_OVERSCAN // 400, considered as STF models
+#define SSE_YM2149_RECORD // record to YM file
+
+#if defined(SSE_GUI_ADVANCED)
+#define SSE_GUI_CRISP_IN_DISPLAY
 #define SSE_GUI_STATUS_BAR_NOT_OPTIONAL
 #define SSE_MMU_WU_LE
 #define SSE_VAR_MAIN_LOOP4
@@ -1928,13 +1946,13 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_REQUIRE_FILES4 // HFE_boot.bin
 #endif
 
-#if defined(SSE_YM2149_MAMELIKE_393)
-#define SSE_YM2149_MAMELIKE_ANTIALIAS
-#undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
+#if defined(SSE_STF_HW_OVERSCAN)
+#define SSE_STF_AUTOSWITCH
+#define SSE_STF_LACESCAN
 #endif
 
-
 #endif//beta
+
 
 #ifdef SSE_BETA // long term, tests
 //#define SSE_CPU_RESTORE_ABUS
@@ -1949,7 +1967,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define TEST_STEEM_INTRO
 #endif
 
-#if defined(SSE_BETA_BUGFIX)
+#if SSE_VERSION>=393 //&& defined(SSE_BETA_BUGFIX)
 
 //#define SSE_BUGFIX_MORE_RLZ_TRACES // for interactive debugging with unfortunate player
 
