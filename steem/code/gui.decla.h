@@ -571,7 +571,11 @@ EXT Str BootDisk[2];
 #define BOOT_PASTI_OFF 2
 
 EXT int BootPasti;
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+EXT bool PauseWhenInactive,MuteWhenInactive,BootTOSImage;
+#else
 EXT bool PauseWhenInactive,BootTOSImage;
+#endif
 EXT bool bAOT,bAppMaximized;
 #ifndef ONEGAME
 #if defined(SSE_GUI_SHOW_TIPS)

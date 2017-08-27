@@ -170,7 +170,11 @@ EasyStr LastCfgFile;
 Str BootDisk[2];
 
 int BootPasti=BOOT_PASTI_DEFAULT;
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+bool PauseWhenInactive=0,MuteWhenInactive=0,BootTOSImage=0;
+#else
 bool PauseWhenInactive=0,BootTOSImage=0;
+#endif
 bool bAOT=0,bAppMaximized=0;
 #ifndef ONEGAME
 #if defined(SSE_GUI_SHOW_TIPS)

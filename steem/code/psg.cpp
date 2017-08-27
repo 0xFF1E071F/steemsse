@@ -858,6 +858,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         val=VOLTAGE_FP(0); 
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+      else if (MuteWhenInactive&&bAppActive==false) 
+        val=0;
+#endif
       *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
       (*(BYTE**)Out_P)++;
       // stereo: do the same for right channel
@@ -892,6 +896,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           val=VOLTAGE_FP(0); 
         else if (val>VOLTAGE_FP(255))
           val=VOLTAGE_FP(255); 
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+        else if (MuteWhenInactive&&bAppActive==false) 
+          val=0;
+#endif
         *(BYTE*)*(BYTE**)Out_P=(BYTE)((val&0x00FF00)>>8);
         (* (BYTE**)Out_P )++;
       }//right channel 
@@ -972,6 +980,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       else if (val>VOLTAGE_FP(255))
         val=VOLTAGE_FP(255); 
 #endif
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+      else if (MuteWhenInactive&&bAppActive==false) 
+        val=0;
+#endif
 #if defined(SSE_SOUND_16BIT_CENTRED)
       *(WORD*)*(WORD**)Out_P=((WORD)val);
 #else
@@ -1028,6 +1040,10 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
           val=VOLTAGE_FP(0); 
         else if (val>VOLTAGE_FP(255))
           val=VOLTAGE_FP(255); 
+#endif
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+        else if (MuteWhenInactive&&bAppActive==false) 
+          val=0;
 #endif
 #if defined(SSE_SOUND_16BIT_CENTRED)
         *(WORD*)*(WORD**)Out_P=((WORD)val);
@@ -1409,6 +1425,7 @@ HRESULT Sound_VBL()
   }
 
   if (sound_mode==SOUND_MODE_MUTE) return DS_OK;
+
   if (UseSound==0) return DSERR_GENERIC;  // Not initialised
   if (SoundActive()==0) return DS_OK;        // Not started
 
