@@ -1109,6 +1109,16 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             SendMessage(HWND(lPar),BM_SETCHECK,PauseWhenInactive,0);
           }
           break;
+
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+        case 801:
+          if (HIWORD(wPar)==BN_CLICKED){
+            MuteWhenInactive=!MuteWhenInactive;
+            SendMessage(HWND(lPar),BM_SETCHECK,MuteWhenInactive,0);
+          }
+          break;
+#endif
+
 #if !defined(SSE_FDC_NOFF)
         case 900:
           if (HIWORD(wPar)==BN_CLICKED){

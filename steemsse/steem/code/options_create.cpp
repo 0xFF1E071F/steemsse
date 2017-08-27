@@ -658,6 +658,15 @@ ADVANCED_END
   SendMessage(Win,BM_SETCHECK,PauseWhenInactive,0);
   y+=30;
 
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+  Wid=GetCheckBoxSize(Font,T("Mute emulation when inactive")).Width;
+  Win=CreateWindow("Button",T("Mute emulation when inactive"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l,y,Wid,25,Handle,(HMENU)801,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,MuteWhenInactive,0);
+  y+=30;
+#endif
+
   Wid=GetCheckBoxSize(Font,T("Disable system keys when running")).Width;
   Win=CreateWindow("Button",T("Disable system keys when running"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,

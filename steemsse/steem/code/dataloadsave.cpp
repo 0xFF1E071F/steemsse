@@ -912,6 +912,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
   SEC(PSEC_GENERAL){
     WIN_ONLY( AllowTaskSwitch=(bool)pCSF->GetInt("Options","AllowTaskSwitch",AllowTaskSwitch); )
     PauseWhenInactive=(bool)pCSF->GetInt("Options","PauseWhenInactive",PauseWhenInactive);
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+    MuteWhenInactive=(bool)pCSF->GetInt("Options","MuteWhenInactive",PauseWhenInactive);
+#endif
 #if !defined(SSE_FDC_NOFF)
     floppy_access_ff=(bool)pCSF->GetInt("Options","DiskAccessFF",floppy_access_ff);
 #endif
@@ -1469,6 +1472,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
   WIN_ONLY( pCSF->SetStr("Options","AllowTaskSwitch",LPSTR(AllowTaskSwitch ? "1":"0")); )
   pCSF->SetStr("Options","PauseWhenInactive",LPSTR(PauseWhenInactive ? "1":"0"));
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+  pCSF->SetStr("Options","MuteWhenInactive",LPSTR(MuteWhenInactive ? "1":"0"));
+#endif
+
   pCSF->SetInt("Options","DiskAccessFF",floppy_access_ff);
 
   pCSF->SetStr("Options","AutoLoadSnapShot",LPSTR(AutoLoadSnapShot ? "1":"0"));
