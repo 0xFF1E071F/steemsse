@@ -1986,7 +1986,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_HIRES_BORDER_BLACK // border is black - also assembly correction
 #define SSE_VS2008_WARNING_393
 #define SSE_WD1772_393 // wrong status after interrupt command
-#define SSE_WD1772_393B // other fixes based on Suska (test)
+//#define SSE_WD1772_393B // other fixes based on Suska (test) //MFD  Rogue :)
 #define SSE_WD1772_393C //timeout (use?)
 #define SSE_JOYSTICK_NO_MM //circle around unsolved bug
 
