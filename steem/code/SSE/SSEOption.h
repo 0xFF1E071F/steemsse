@@ -72,14 +72,14 @@ struct TOption {
   unsigned int FullScreenDefaultHz:1;
   unsigned int TripleBufferFS:1;
   unsigned int FakeFullScreen:1;
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
   unsigned int Advanced:1;
 #endif
 
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
   void Restore(bool all=false);
 #endif
 #endif
@@ -210,7 +210,7 @@ extern struct TOption SSEOption;
 #endif
 #endif
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
 #define OPTION_ADVANCED (SSEOption.Advanced)
 #elif defined(SSE_LE)
 #define OPTION_ADVANCED (false)

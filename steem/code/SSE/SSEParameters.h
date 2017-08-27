@@ -486,13 +486,6 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #endif
 
 
-/////////////
-// VERSION //
-/////////////
-
-#define SSE_VERSION 393 // normally will be 400
-
-
 ///////////
 // VIDEO //
 ///////////

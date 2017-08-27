@@ -7,7 +7,7 @@
 #if defined(ADVANCED_BEGIN)||defined(NOT_ADVANCED_BEGIN)||defined( ADVANCED_ELSE)|| defined(ADVANCED_END) 
 #error ADVANCED_ error!
 #endif
-#if defined(SSE_VAR_ADVANCED) 
+#if defined(SSE_GUI_ADVANCED) 
 // macros to avoid indenting all code and facilitate search
 #define ADVANCED_BEGIN if(OPTION_ADVANCED) {
 #define NOT_ADVANCED_BEGIN if(!OPTION_ADVANCED) {

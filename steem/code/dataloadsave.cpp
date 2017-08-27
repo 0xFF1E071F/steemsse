@@ -1010,7 +1010,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_STF_MATCH_TOS3)
     Tos.DefaultCountry=pCSF->GetInt("Main","TosDefaultCountry",7); // 7=UK
 #endif
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
     OPTION_ADVANCED=pCSF->GetInt("Main","AdvancedSettings",OPTION_ADVANCED); 
     if(!OPTION_ADVANCED)
       SSEOption.Restore();
@@ -1461,7 +1461,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 {
   SavePosition(FinalSave,pCSF);
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
   pCSF->SetStr("Main","AdvancedSettings",EasyStr(OPTION_ADVANCED));
 #endif
 

@@ -2,7 +2,7 @@
 #if defined(SSE_BUILD)
 #include "../pch.h"
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
 #include <easystr.h>
 #define Str EasyStr
 #include <conditions.h>
@@ -72,7 +72,7 @@ void TOption::Init() {
 }
 
 
-#if defined(SSE_VAR_ADVANCED)
+#if defined(SSE_GUI_ADVANCED)
 /*  Restore advanced settings.
     All when player pressed the 'Reset Advanced Settings' button.
     Not all when player unchecked the 'Advanced Settings' option.
