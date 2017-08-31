@@ -39,10 +39,10 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 
-#if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
+#if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP) && !defined(SSE_BUGFIX_393)
 EXT const BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_BUGFIX_393) // breaks Slow Motion
 EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
 #else
@@ -1611,8 +1611,13 @@ void event_vbl_interrupt() //SS misleading name?
     speed_limit_wait_till=timer+(fast_forward_max_speed/shifter_freq);
   }
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: speed_limit_wait_till is ")+(speed_limit_wait_till-run_start_time));
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME) //let's eliminate that junk...
+
   // The MFP clock aligns with the CPU clock every 8000 CPU cycles
+#if defined(SSE_X64_393)
+  while (abs(int(ABSOLUTE_CPU_TIME-cpu_time_of_first_mfp_tick))>160000){
+    cpu_time_of_first_mfp_tick+=160000; 
+  }
+#else
   while (abs(ABSOLUTE_CPU_TIME-cpu_time_of_first_mfp_tick)>160000){
     cpu_time_of_first_mfp_tick+=160000; 
   }

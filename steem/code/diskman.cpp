@@ -1810,6 +1810,7 @@ That will toggle bit x.
         case 1052:
         case 1053:
           SSEOption.FreebootDriveMap^=(1<<(LOWORD(wPar)-1052));
+          YM2149.CheckFreeboot();
           break;
 #endif
 

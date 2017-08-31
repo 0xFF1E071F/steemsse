@@ -332,7 +332,7 @@ HRESULT InitSound()
   UseSound=1;
 
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
-  ASSERT(!YM2149.AntiAlias)
+  ASSERT(!YM2149.AntiAlias);
   if(!YM2149.AntiAlias
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
     && !DSP_DISABLED

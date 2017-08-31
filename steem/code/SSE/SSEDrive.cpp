@@ -495,6 +495,11 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
     We also play the (rattling!) SEEK noise.
 */
 
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+  if(MuteWhenInactive&&bAppActive==false) //annoying that we check at different places
+    return;
+#endif
+
   if(!(fdc_str&0x80))
   {
     if(Sound_Buffer[START])
@@ -522,7 +527,11 @@ void TSF314::Sound_CheckIrq() {
   {
     Sound_Buffer[SEEK]->Stop();
 #if defined(SSE_WD1772) 
-    if(WD1772.CommandType()==1 && TrackAtCommand!=Track() )
+    if(WD1772.CommandType()==1 && TrackAtCommand!=Track() 
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+      && !(MuteWhenInactive&&bAppActive==false) 
+#endif
+      )
     {
       DWORD dwStatus ;
       Sound_Buffer[STEP]->GetStatus(&dwStatus);
@@ -552,6 +561,9 @@ void TSF314::Sound_CheckMotor() {
     && ImageType.Manager!=MNGR_PRG
 #endif
     && floppy_current_drive()==YM2149.Drive() //3.6.4,must be selected
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+    && !(MuteWhenInactive&&bAppActive==false) 
+#endif
     );
   if(OPTION_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
@@ -635,6 +647,9 @@ void TSF314::Sound_Step() {
 #elif defined(SSE_TOS_PRG_AUTORUN_392) //normally only for drive A:
     || ImageType.Extension==EXT_PRG || ImageType.Extension==EXT_TOS
 #endif      
+#if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
+    || (MuteWhenInactive&&bAppActive==false) 
+#endif
   )
     return;
   Sound_Buffer[STEP]->SetCurrentPosition(0);

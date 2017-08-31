@@ -1077,18 +1077,6 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
               CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),
               CPU_MAX_HERTZ+1),8000000l);
 #endif
-#elif defined(SSE_CPU_4GHZ) //MFD
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),4096000000l),8000000l);
-#elif defined(SSE_CPU_3GHZ)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),3072000000l),8000000l);
-#elif defined(SSE_CPU_2GHZ)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),2048000000l),8000000l);
-#elif defined(SSE_CPU_1GHZ)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),1024000000l),8000000l);
-#elif defined(SSE_CPU_512MHZ)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),512000000l),8000000l);
-#elif defined(SSE_CPU_256MHZ)
-            n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),256000000l),8000000l);
 #else
             n_cpu_cycles_per_second=max(min(SendMessage(HWND(lPar),CB_GETITEMDATA,SendMessage(HWND(lPar),CB_GETCURSEL,0,0),0),128000000l),8000000l);
 #endif
@@ -2286,7 +2274,7 @@ ADVANCED_END
           if (HIWORD(wPar)==CBN_SELENDOK){
             This->NewMonitorSel=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
             if (This->NewMonitorSel==This->GetCurrentMonitorSel()) This->NewMonitorSel=-1;
-#ifdef SSE_VAR_393
+#ifdef SSE_GUI_393
             //TRACE("NewMonitorSel %d border %d\n",This->NewMonitorSel,border);
             else if(This->NewMonitorSel==1) // hires, limit border
             {

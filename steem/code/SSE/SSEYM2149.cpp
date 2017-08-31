@@ -17,6 +17,9 @@
 #include "SSEOption.h"
 #include "SSEInterrupt.h"
 
+#include <pasti/pasti.h> //SSE_DRIVE_FREEBOOT_PASTI
+#include "SSEFloppy.h" //SSE_DRIVE_FREEBOOT_PASTI
+
 
 TYM2149::TYM2149() { //v3.7.0
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
@@ -122,6 +125,35 @@ BYTE TYM2149::Drive(){
 BYTE TYM2149::PortA(){
   return psg_reg[PSGR_PORT_A];
 }
+
+#if defined(SSE_DRIVE_FREEBOOT)
+
+void TYM2149::CheckFreeboot() {
+  // this is used by CURRENT_SIDE hence the MFM manager
+  if(SSEOption.FreebootDriveMap&(SelectedDrive+1))
+    SelectedSide=1;
+#if defined(SSE_DRIVE_FREEBOOT_CAPS)
+  //not tested
+  if( SF314[SelectedDrive].ImageType.Manager==MNGR_CAPS
+    && SSEOption.FreebootDriveMap&(Caps.WD1772.drivenew+1))
+    Caps.SF314[Caps.WD1772.drivenew].newside=1;
+#endif
+#if USE_PASTI && defined(SSE_DRIVE_FREEBOOT_PASTI)
+  //tested on Xenon2 ST
+  if(hPasti && (pasti_active || SF314[SelectedDrive].ImageType.Extension==EXT_STX))
+  {
+    pastiPEEKINFO ppi;
+    pasti->Peek(&ppi);
+    BYTE porta=ppi.drvSelect;
+    if(SSEOption.FreebootDriveMap&(SelectedDrive+1))           
+      porta&=~BIT_0;
+    pasti->WritePorta(porta,ABSOLUTE_CPU_TIME);
+  }  
+#endif
+}
+
+#endif
+
 
 #if defined(SSE_YM2149_MAMELIKE)
 
@@ -236,8 +268,10 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
 /*  The following was inspired by MAME project, especially ay8910.cpp.
     thx Couriersud.
-    Notice the emulation is both simple and short. It's possible that
-    this system is more efficient than Steem's way (PREPARE, ADVANCE...).
+    Notice the emulation is both simple and short. But tests in VS2015 profiler
+    show that it uses more CPU than Steem's way (PREPARE, ADVANCE...), a good
+    deal of that is used by the antialiasing filter.
+    We take advantage of more powerful computers...
 */
 
   /* The 8910 has three outputs, each output is the mix of one of the three */
@@ -249,7 +283,14 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
   /* buffering loop */
 
-#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS2)
+/*  SSE_YM2149_MAMELIKE_ANTIALIAS2 tries to reduce CPU load but it surprisingly
+    changes the sound... for the better in Mortville Manor.
+    TODO
+*/
+  // override vbl: Steem may want to run longer
+  for(COUNTER_VAR i=0; ((AntiAlias&&!vbl)?(i<cycles_to_run):count);i+=8)
+#elif defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
   // override vbl: Steem may want to run longer
   for(COUNTER_VAR i=0; ((AntiAlias&&!vbl)?(i<cycles_to_run):count);i++)
 #else
@@ -257,13 +298,15 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 #endif
   {
 
-#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS) && !defined(SSE_YM2149_MAMELIKE_ANTIALIAS2)
     if(AntiAlias)
-      m_cycles++;
+      m_cycles++; // this means this part runs at 2mnhz
     else
 #endif
       m_cycles+=8;  //the driver is clocked with clock / 8  (250Khz)
-#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+#if defined(SSE_YM2149_MAMELIKE_ANTIALIAS2)
+    if(true) {
+#elif defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
     if(!AntiAlias||!(m_cycles%8)) {
 #endif
 
@@ -278,7 +321,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
        * channels.
        */
       m_count_noise = 0;
-      ASSERT(!(m_prescale_noise&0xfe));
+      //ASSERT(!(m_prescale_noise&0xfe));
       m_prescale_noise ^= 1;
 
       if (m_prescale_noise)
@@ -286,15 +329,15 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
         /* The Random Number Generator of the 8910 is a 17-bit shift */
         /* register. The input to the shift register is bit0 XOR bit3 */
         /* (bit0 is the output). This was verified on AY-3-8910 and YM2149 chips. */
-        ASSERT(m_rng);
+        //ASSERT(m_rng);
         m_rng ^= (((m_rng & 1) ^ ((m_rng >> 3) & 1)) << 17);
         m_rng >>= 1;
       }
     }
 
     /* update envelope */
-    ASSERT(m_env_step_mask==ENVELOPE_MASK);
-    ASSERT(!(m_holding&0xfe));
+    //ASSERT(m_env_step_mask==ENVELOPE_MASK);
+    //ASSERT(!(m_holding&0xfe));
 
     if (m_holding == 0)
     {
@@ -323,13 +366,13 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
             m_env_step &= m_env_step_mask;
           }
-          ASSERT(m_env_step>=0);
+          //ASSERT(m_env_step>=0);
         }
 
       }
     }
     m_env_volume = (m_env_step ^ m_attack);
-    ASSERT(m_env_volume>=0 && m_env_volume<32);
+    //ASSERT(m_env_volume>=0 && m_env_volume<32);
 
     //as in psg's AlterV
     BYTE index[3],interpolate[4];
@@ -344,7 +387,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       m_count[abc]++;
       if(m_count[abc]>=TONE_PERIOD(abc)) 
       {
-        ASSERT(!(m_output[abc]&0xfe));
+        //ASSERT(!(m_output[abc]&0xfe));
         m_output[abc] ^= 1;
         m_count[abc]=0;
       }
@@ -441,7 +484,7 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 #endif
       )
     {
-      ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
+      //ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
 #if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
       if(m_oversampling_count>1)
         *p/=m_oversampling_count;

@@ -816,18 +816,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_GUI_NO_CPU_SPEED)
 #elif defined(SSE_CPU_HISPEED_392)
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),CPU_MAX_HERTZ),(int)CpuNormalHz);
-#elif defined(SSE_CPU_4GHZ) //MFD
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),4096000000),(int)CpuNormalHz);
-#elif defined(SSE_CPU_3GHZ)
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),3072000000),(int)CpuNormalHz);
-#elif defined(SSE_CPU_2GHZ)
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),2048000000),(int)CpuNormalHz);
-#elif defined(SSE_CPU_1GHZ)
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),1024000000),(int)CpuNormalHz);
-#elif defined(SSE_CPU_512MHZ)
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),512000000),(int)CpuNormalHz);
-#elif defined(SSE_CPU_256MHZ)
-    n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),256000000),(int)CpuNormalHz);
 #else
     n_cpu_cycles_per_second=max(min(pCSF->GetInt("Options","CPUBoost",n_cpu_cycles_per_second),128000000),(int)CpuNormalHz);
 #endif
