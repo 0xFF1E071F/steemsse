@@ -126,7 +126,7 @@ int TFloppyImage::SetDisk(EasyStr File,EasyStr CompressedDiskName,BPBINFO *pDete
             if (Type==DISK_PASTI){
 #if defined(SSE_DISK)
               ASSERT(drive!=-1);
-              ASSERT(!OPTION_PASTI_JUST_STX||(!ST&&!MSA));
+//              ASSERT(!OPTION_PASTI_JUST_STX||(!ST&&!MSA));
               if(drive!=-1)
               {
                 TRACE_LOG("Disk in %c (%s) is managed by Pasti.dll\n",'A'+drive,fn.Text);

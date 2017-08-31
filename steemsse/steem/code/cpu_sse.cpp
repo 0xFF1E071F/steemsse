@@ -7990,7 +7990,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((signed short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8001,7 +8001,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8021,7 +8021,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8043,7 +8043,7 @@ void                              m68k_bit_shift_right_to_mem(){
     }
     *((unsigned short*)m68k_dest)>>=1;if(old_x)m68k_DEST_W|=MSB_W;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8058,7 +8058,7 @@ void                              m68k_bit_shift_right_to_mem(){
   abus=dest_addr; 
 #endif
   CPU_ABUS_ACCESS_WRITE; //nw
-#if defined(SSE_BUGFIX_393B1)
+#if defined(SSE_BUGFIX_393C)
   CHECK_IOW_W; //after we count timing :)
 #endif
 }
@@ -8094,7 +8094,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((signed short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8105,7 +8105,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8125,7 +8125,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8147,7 +8147,7 @@ void                              m68k_bit_shift_left_to_mem(){
     }
     *((unsigned short*)m68k_dest)<<=1;if(old_x)m68k_DEST_W|=1;
     SR_CHECK_Z_AND_N_W;
-#if !defined(SSE_BUGFIX_393B1)
+#if !defined(SSE_BUGFIX_393C)
     CHECK_IOW_W;
 #endif
     break;
@@ -8162,7 +8162,7 @@ void                              m68k_bit_shift_left_to_mem(){
   abus=dest_addr; 
 #endif
   CPU_ABUS_ACCESS_WRITE; //nw
-#if defined(SSE_BUGFIX_393B1)
+#if defined(SSE_BUGFIX_393C)
   CHECK_IOW_W;
 #endif
 }

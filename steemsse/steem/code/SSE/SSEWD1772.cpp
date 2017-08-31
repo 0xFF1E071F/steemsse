@@ -257,7 +257,7 @@ BYTE TWD1772::IORead(BYTE Line) {
     else
 #endif
     {
-#if !defined(SSE_WD1772_393)
+#if !defined(SSE_WD1772_393_) // seems wrong, breaks Super Hang-On
       // IP
       if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
@@ -279,7 +279,7 @@ BYTE TWD1772::IORead(BYTE Line) {
 #endif
       if(StatusType) // type I command status
       {
-#if defined(SSE_WD1772_393)
+#if defined(SSE_WD1772_393_)
         // IP
         if(floppy_track_index_pulse_active())
           STR|=FDC_STR_T1_INDEX_PULSE;
@@ -1483,11 +1483,7 @@ r1       r0            1772
       }
 #endif
       prg_phase=WD_TYPEI_HEAD_SETTLE; 
-#if defined(SSE_WD1772_393B)
-      update_time=time_of_next_event+ MsToCycles(30); 
-#else
       update_time=time_of_next_event+ MsToCycles(15);
-#endif
     }
     else
     {
@@ -2137,23 +2133,31 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     TODO check general structure, not sure it's ideal even if limited
     to STW
 */
+
+
+//tst
+   if( (STR&STR_BUSY) && (io_src_b&0xF0)!=0xD0 && fdc_spinning_up)
+   {
+     ASSERT(prg_phase==WD_TYPEI_SPINUP|| prg_phase==WD_TYPEII_SPINUP|| prg_phase==WD_TYPEIII_SPINUP);
+   }
+
+
+
   if(!(STR&STR_BUSY)
-#if defined(SSE_WD1772_393B)
-    && (io_src_b&0xF0)!=0xD0 && io_src_b!=0xFF
-#endif
-#if defined(SSE_WD1772_393B)
+#if defined(SSE_WD1772_393)
     || fdc_spinning_up // since we use it now... 
 #else
     || prg_phase==WD_TYPEI_SPINUP
     || prg_phase==WD_TYPEII_SPINUP
     || prg_phase==WD_TYPEIII_SPINUP
 #endif
-#if defined(SSE_WD1772_393B)
-    || (STR&STR_BUSY) && (io_src_b&0xF0)==0xD0)
-#else
     || (io_src_b&0xF0)==0xD0)
-#endif
   {
+    ASSERT(!(STR&STR_BUSY)||fdc_spinning_up||(io_src_b&0xF0)==0xD0);//ok
+
+
+
+
     agenda_delete(agenda_fdc_motor_flag_off); // and others?
     NewCommand(io_src_b); // one more function, more readable
   }

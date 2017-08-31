@@ -57,10 +57,12 @@ int mfp_timer_period_current_fraction[4];
 #endif
 bool mfp_timer_period_change[4]={0,0,0,0};
 bool mfp_interrupt_enabled[16];
-
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
+#if defined(SSE_TIMINGS_CPUTIMER64)
+COUNTER_VAR cpu_time_of_first_mfp_tick;
+#else
 int cpu_time_of_first_mfp_tick;
 #endif
+
 #undef EXT
 #undef INIT
 
@@ -415,41 +417,21 @@ TODO
 
           // Make manageable time (cpu_time_of_first_mfp_tick is updated every VBL)
 //          TRACE_LOG("timer %d: %d - cpu_time_of_first_mfp_tick %d = %d\n",timer,mfp_timer_timeout[timer],cpu_time_of_first_mfp_tick,mfp_timer_timeout[timer]-cpu_time_of_first_mfp_tick);
-#if defined(SSE_INT_MFP_TIMERS_BASETIME)
-/*  I don't know what I was thinking, but this should have no impact
-    whether we take one or the other variable. 
-    OTOH: could do without variable cpu_time_of_first_mfp_tick?
-*/
-          mfp_timer_timeout[timer]-=cpu_time_of_last_vbl;
-#else
           mfp_timer_timeout[timer]-=cpu_time_of_first_mfp_tick;
-#endif
          
           // Convert to MFP cycles
           mfp_timer_timeout[timer]*=MFP_CLK; //SS =2451
-#if defined(SSE_INT_MFP_TIMERS_RATIO1)
-          mfp_timer_timeout[timer]/=8021;
-#else
           mfp_timer_timeout[timer]/=8000;
-#endif
 
           // Take off number of cycles already counted
           mfp_timer_timeout[timer]-=prescale_count;
 
           // Convert back to CPU time
-#if defined(SSE_INT_MFP_TIMERS_RATIO1)
-          mfp_timer_timeout[timer]*=8021;
-#else
           mfp_timer_timeout[timer]*=8000;
-#endif
           mfp_timer_timeout[timer]/=MFP_CLK;
 
           // Make absolute time again
-#if defined(SSE_INT_MFP_TIMERS_BASETIME)
-          mfp_timer_timeout[timer]+=cpu_time_of_last_vbl;
-#else
           mfp_timer_timeout[timer]+=cpu_time_of_first_mfp_tick;
-#endif
 
 #if defined(SSE_INT_MFP_PRESCALE)
           } //if(!OPTION_C2)

@@ -219,9 +219,7 @@ bool mfp_set_pending(int,COUNTER_VAR);
 inline bool mfp_set_pending(int,COUNTER_VAR);
 #endif
 EXT COUNTER_VAR mfp_time_of_start_of_last_interrupt[16];
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
 EXT COUNTER_VAR cpu_time_of_first_mfp_tick;
-#endif
 #else
 EXT int mfp_timer_timeout[4];
 #if defined(SSE_INT_MFP_INLINE)
@@ -230,9 +228,7 @@ bool mfp_set_pending(int,int);
 inline bool mfp_set_pending(int,int);
 #endif
 EXT int mfp_time_of_start_of_last_interrupt[16];
-#if !defined(SSE_INT_MFP_TIMERS_BASETIME)
 EXT int cpu_time_of_first_mfp_tick;
-#endif
 #endif
 
 EXT bool mfp_timer_enabled[4];

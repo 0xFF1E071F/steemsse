@@ -64,8 +64,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(STEVEN_SEAGAL) 
 
-#define SSE_VERSION 393
-//#define SSE_VERSION 400
+//#define SSE_VERSION 393
+#define SSE_VERSION 400
 
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
@@ -652,8 +652,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_INT_MFP_CHECKTIMEOUT_ON_STOP
 #define SSE_INT_MFP_RATIO_PRECISION // for short timers
-#define SSE_INT_MFP_TIMERS_BASETIME//MFD
-#define SSE_INT_MFP_TIMERS_RATIO1 //unimportant//MFD
 #define SSE_INT_MFP_TIMERS_STARTING_DELAY
 //#define SSE_INT_MFP_TIMERS_RUN_IF_DISABLED //load!
 #if defined(SSE_INT_MFP_OBJECT)
@@ -1819,7 +1817,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if defined(SSE_LE)
+#if defined(SSE_LE) // forget it for now!
 
 #define SSE_VAR_MAIN_LOOP4
 #define SSE_IKBD_6301_NOT_OPTIONAL 
@@ -1892,16 +1890,16 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_SOUND_MICROWIRE_MIXMODE
 #undef  SSE_SOUND_MICROWIRE_MIXMODE2
 #define SSE_SOUND_MUTE_WHEN_INACTIVE // optional
-#define SSE_VAR_393
 #define SSE_VAR_STEEMINTRO_393 // finally update this
 #define SSE_VAR_UPDATE_LINK 
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_ST_MONITOR_393 // 2 options again 
+#define SSE_WD1772_393C //timeout (use?)
 #define SSE_YM2149_MAMELIKE_393
 
 #if defined(SSE_GLUE_393)
 #define SSE_GLUE_393A // param SDP reload
-#define SSE_GLUE_393B // VCount counts up (again :)), makes more sense for mono
+#define SSE_GLUE_393B // VCount counts up, makes more sense for mono
 #define SSE_GLUE_393C // not necessary, to test! 
 #define SSE_GLUE_393D // state of VSync line
 #endif
@@ -1920,6 +1918,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_YM2149_MAMELIKE_393)
 #define SSE_YM2149_MAMELIKE_ANTIALIAS
+#define SSE_YM2149_MAMELIKE_ANTIALIAS2 // try to optimize... 
 #undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
 #endif
 
@@ -1934,6 +1933,11 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 #define SSE_STF_HW_OVERSCAN // 400, considered as STF models
 #define SSE_YM2149_RECORD // record to YM file
+
+#if defined(SSE_DRIVE_FREEBOOT)
+#define SSE_DRIVE_FREEBOOT_CAPS
+#define SSE_DRIVE_FREEBOOT_PASTI
+#endif
 
 #if defined(SSE_GUI_ADVANCED)
 #define SSE_GUI_CRISP_IN_DISPLAY
@@ -1954,6 +1958,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #endif//beta
 
+#ifdef SSE_X64
+#define SSE_X64_393
+#endif
 
 #ifdef SSE_BETA // long term, tests
 //#define SSE_CPU_RESTORE_ABUS
@@ -1972,22 +1979,19 @@ Beta: not SSE_PRIVATE_BUILD
 
 //#define SSE_BUGFIX_MORE_RLZ_TRACES // for interactive debugging with unfortunate player
 
-#define SSE_BUGFIX_393
+#define SSE_BUGFIX_393 // various
 #define SSE_BUGFIX_393A //blitter don't wipe all ioaccess
 #define SSE_BUGFIX_393B //forgotten check io macro OR.W
-#define SSE_BUGFIX_393B1 //badly placed check io macros bitshift
+#define SSE_BUGFIX_393C //badly placed check io macros bitshift
 #define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
 //#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
-#define SSE_VID_D3D_393 // update m_DisplayFormat
 #if defined(SSE_VID_D3D_2SCREENS)
 #define SSE_VID_D3D_2SCREENS_393 // negative coordinates
 #endif
 #define SSE_VID_BPP_CHOICE_393
 #define SSE_VID_HIRES_BORDER_BLACK // border is black - also assembly correction
-#define SSE_VS2008_WARNING_393
-#define SSE_WD1772_393 // wrong status after interrupt command
-//#define SSE_WD1772_393B // other fixes based on Suska (test) //MFD  Rogue :)
-#define SSE_WD1772_393C //timeout (use?)
+#define SSE_VS2008_WARNING_393 //STE joystick was broken
+#define SSE_WD1772_393 // wrong status after force interrupt 
 #define SSE_JOYSTICK_NO_MM //circle around unsolved bug
 
 #endif//bugfix

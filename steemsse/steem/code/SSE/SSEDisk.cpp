@@ -73,7 +73,13 @@ WORD TDisk::BytesToID(BYTE &num) {
       num=(current_byte-byte_first_id)/record_length+1; // current
       if(((current_byte)%record_length)>byte_first_id) // only if past ID! (390)
         num++; //next
+#if defined(SSE_BUGFIX_393)
+      // fix regression v3.9.0: Wipe-Out ; it's a special case, 6 sectors/track
+      if(num>=n_sectors+1)
+        num=1; 
+#else
       if(num==n_sectors+1) num=1; //TODO smart way
+#endif
     }
 
     byte_target_id=byte_first_id+(num-1)*record_length;

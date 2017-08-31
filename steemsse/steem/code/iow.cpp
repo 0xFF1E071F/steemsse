@@ -1358,9 +1358,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
           }
 #if defined(SSE_DRIVE_FREEBOOT)
-          // this is used by CURRENT_SIDE hence the MFM manager
-          if(SSEOption.FreebootDriveMap&(DRIVE+1))
-            YM2149.SelectedSide=1;
+          YM2149.CheckFreeboot();
 #endif
         }else if (psg_reg_select==PSGR_PORT_B){
 #if defined(SSE_DONGLE_PROSOUND) && defined(SSE_CARTRIDGE_BAT)

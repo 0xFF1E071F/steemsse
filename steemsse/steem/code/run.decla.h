@@ -39,10 +39,10 @@ EXT DWORD speed_limit_wait_till;
 EXT int avg_frame_time_counter INIT(0);
 EXT DWORD auto_frameskip_target_time;
 #define AUTO_FRAMESKIP 8
-#if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP)
+#if defined(SSE_VID_ENFORCE_AUTOFRAMESKIP) && !defined(SSE_BUGFIX_393)
 EXT const BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
-#elif defined(SSE_VAR_RESIZE)
+#elif defined(SSE_VAR_RESIZE) && !defined(SSE_BUGFIX_393)
 EXT BYTE frameskip INIT(AUTO_FRAMESKIP);
 EXT BYTE frameskip_count INIT(1);
 #else

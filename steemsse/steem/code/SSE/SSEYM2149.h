@@ -57,6 +57,9 @@ struct TYM2149 {
 #if !defined(SSE_YM2149A)
   BYTE Side();
 #endif
+#if defined(SSE_DRIVE_FREEBOOT)
+  void CheckFreeboot();
+#endif
 #if defined(SSE_YM2149_DYNAMIC_TABLE)
   void FreeFixedVolTable();
   bool LoadFixedVolTable();
