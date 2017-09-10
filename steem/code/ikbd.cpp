@@ -345,7 +345,11 @@ void IKBD_VBL()
         if (disable_input_vbl_count<=30){
           mouse_move_since_last_interrupt_x+=(pt.x-window_mouse_centre_x);
           mouse_move_since_last_interrupt_y+=(pt.y-window_mouse_centre_y);
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+          if (mouse_speed!=10 && !OPTION_ST_MOUSE_SPEED){     
+#else
           if (mouse_speed!=10){
+#endif
             int x_if_0=0;
             if (mouse_move_since_last_interrupt_x<0) x_if_0=-1;
             if (mouse_move_since_last_interrupt_x>0) x_if_0=1;
@@ -1677,7 +1681,17 @@ void keyboard_buffer_write_string(int s1,...)
 void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 {
   dbg_log(EasyStr("Mouse moves ")+x+","+y);
-  
+
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+  if(OPTION_ST_MOUSE_SPEED)
+  {
+    int limit=mouse_speed+5; //middle=10
+    x=max(-limit,min(limit,x));
+    y=max(-limit,min(limit,y));
+  }
+#endif
+
+
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
   {

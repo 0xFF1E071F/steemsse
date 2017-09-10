@@ -72,6 +72,9 @@ struct TOption {
   unsigned int FullScreenDefaultHz:1;
   unsigned int TripleBufferFS:1;
   unsigned int FakeFullScreen:1;
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+  unsigned int STMouseSpeed:1;
+#endif
 #if defined(SSE_GUI_ADVANCED)
   unsigned int Advanced:1;
 #endif
@@ -208,6 +211,10 @@ extern struct TOption SSEOption;
 #else
 #define RENDER_SIGNED_SAMPLES (sound_num_bits==16)
 #endif
+#endif
+
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+#define OPTION_ST_MOUSE_SPEED (SSEOption.STMouseSpeed)
 #endif
 
 #if defined(SSE_GUI_ADVANCED)

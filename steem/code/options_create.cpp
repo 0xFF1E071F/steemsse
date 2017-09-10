@@ -659,8 +659,8 @@ ADVANCED_END
   y+=30;
 
 #if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
-  Wid=GetCheckBoxSize(Font,T("Mute emulation when inactive")).Width;
-  Win=CreateWindow("Button",T("Mute emulation when inactive"),
+  Wid=GetCheckBoxSize(Font,T("Mute sound when inactive")).Width;
+  Win=CreateWindow("Button",T("Mute sound when inactive"),
                           WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                           page_l,y,Wid,25,Handle,(HMENU)801,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,MuteWhenInactive,0);
@@ -3451,7 +3451,19 @@ ADVANCED_BEGIN
   SendMessage(Win,BM_SETCHECK,SSEOption.VMMouse,0);
   ToolAddWindow(ToolTip,Win,T("Alternative mouse handling - cursor not bound"));
   y+=LineHeight;
-  ADVANCED_END
+ADVANCED_END
+#endif
+
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+  y-=LineHeight;
+  Offset+=Wid+HorizontalSeparation;
+  Wid=GetCheckBoxSize(Font,T("ST Mouse Speed")).Width;
+  Win=CreateWindow("Button",T("ST Mouse Speed"),
+                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
+                          page_l+Offset,y,Wid,25,Handle,(HMENU)1040,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_ST_MOUSE_SPEED,0);
+  ToolAddWindow(ToolTip,Win,T("Alternative way of managing mouse speed"));
+  y+=LineHeight;
 #endif
 
   Offset=0;
