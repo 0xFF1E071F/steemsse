@@ -1051,6 +1051,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_OSD_SHOW_TIME)
   SSEOption.OsdTime=pCSF->GetInt("Options","OsdTime",SSEOption.OsdTime);
 #endif
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+  OPTION_ST_MOUSE_SPEED=pCSF->GetInt("Options","STMouseSpeed",OPTION_ST_MOUSE_SPEED);
+#endif
 #if defined(SSE_BOILER_SSE_PERSISTENT)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
     OPTION_TRACE_FILE=pCSF->GetInt("Debug","UseTraceFile",OPTION_TRACE_FILE);
@@ -1586,6 +1589,10 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_OSD_SHOW_TIME)
   pCSF->SetStr("Options","OsdTime",EasyStr(SSEOption.OsdTime));
 #endif
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+  pCSF->SetStr("Options","STMouseSpeed",EasyStr(OPTION_ST_MOUSE_SPEED));
+#endif
+
 //boiler
 #if defined(SSE_BOILER_SSE_PERSISTENT)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)

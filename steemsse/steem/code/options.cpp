@@ -1627,6 +1627,17 @@ ADVANCED_END
           break;
 #endif
 
+#if defined(SSE_IKBD_MOUSE_ST_SPEED)
+        case 1040:
+          if(HIWORD(wPar)==BN_CLICKED)
+          {
+            OPTION_ST_MOUSE_SPEED=!OPTION_ST_MOUSE_SPEED;
+            TRACE_LOG("ST Mouse Speed: %d\n",OPTION_ST_MOUSE_SPEED);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_MOUSE_SPEED,0);
+          }
+          break;
+#endif
+
 #if defined(SSE_OSD_SHOW_TIME)
         case 1036:
           if(HIWORD(wPar)==BN_CLICKED)
