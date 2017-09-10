@@ -1986,6 +1986,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_393A //blitter don't wipe all ioaccess
 #define SSE_BUGFIX_393B //forgotten check io macro OR.W
 #define SSE_BUGFIX_393C //badly placed check io macros bitshift
+#define SSE_BUGFIX_393D //profiles (long-standing)
 #define SSE_BLT_BUS_ARBITRATION_393A // blitter start check should be pre read, post write
 //#define SSE_GUI_FONT_FIX // not DEFAULT_GUI_FONT if possible //problem was different apparently...
 #if defined(SSE_VID_D3D_2SCREENS)

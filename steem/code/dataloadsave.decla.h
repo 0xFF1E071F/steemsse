@@ -41,6 +41,10 @@ void SaveAllDialogData(bool,Str,ConfigStoreFile* = NULL);
 #define PSEC_PCJOY 17
 #define PSEC_OSD 18
 
+#ifdef SSE_BUGFIX_393D
+#define PSEC_NSECT 19
+#endif
+
 #pragma pack(push, STRUCTURE_ALIGNMENT)//391
 
 typedef struct{

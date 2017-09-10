@@ -577,12 +577,18 @@ void TOptionBox::TOSRefreshBox(EasyStr Sel) //SS Sel is "" in options_create
 void TOptionBox::LoadProfile(char *File)
 {
   GoodConfigStoreFile CSF(File);
-
+#ifdef SSE_BUGFIX_393D // memory overshoot
+  int nSects=PSEC_NSECT;
+#else
   int nSects=0;
   while (ProfileSection[nSects].Name) nSects++;
-
+#endif
   bool *DisableSections=new bool[nSects];
   for (int i=0;i<nSects;i++){
+    //ASSERT(ProfileSection[i].ID>=0 && ProfileSection[i].ID<nSects);
+#ifdef SSE_BUGFIX_393D //quick fix, maybe it's better to avoid a gap?
+    if(ProfileSection[i].ID>=0 && ProfileSection[i].ID<nSects)
+#endif
     DisableSections[ProfileSection[i].ID]=(CSF.GetInt("ProfileSections",
                     ProfileSection[i].Name,LVI_SI_CHECKED)==LVI_SI_UNCHECKED);
   }
@@ -1564,7 +1570,7 @@ ADVANCED_END
 #if !defined(SSE_VID_ST_MONITOR_393)
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
 #endif
-#if !defined(SSE_GUI_CRISP_IN_DISPLAY)
+#if !defined(SSE_GUI_CRISP_IN_DISPLAY) && SSE_VERSION>=393
 NOT_ADVANCED_BEGIN 
             // stretch mode with scanlines = 'interpolated', by default
             draw_win_mode[0]=draw_win_mode[1]=!OPTION_SCANLINES; 
