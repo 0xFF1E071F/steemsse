@@ -1235,6 +1235,8 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
   TRACE_LOG("%c: IP #%d (%s) (%s) CR %X TR %d SR %d DR %d STR %X ACT %d\n",
     'A'+id,IndexCounter,wd_phase_name[prg_phase],image_triggered?"triggered":"event",
     CR,TR,SR,DR,STR,ACT);
+//  TRACE_LOG("AMD %d dsrcnt %d fmt %d a1 %d DR %X DSR %X\n",
+//    Amd.Enabled,Amd.dsrcnt,n_format_bytes,Amd.nA1,DR,DSR);//tmp
   }
 #endif
 
@@ -1328,7 +1330,9 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
   }//if
   else
   {
+#ifndef SSE_BUGFIX_393 // silly bug messes Gunship SCP TR2, at least there was a ?
     n_format_bytes=0; //?
+#endif
     if(!image_triggered)
       OnUpdate(); // to trigger Read() or Write() if needed: Delirious 3
   }
@@ -1525,32 +1529,44 @@ r1       r0            1772
       Amd.nA1=3;
       CrcLogic.Reset(); 
       Amd.Enabled=false; // read IDs OK
+      //TRACE_LOG("Phase %d AM at %d\n",prg_phase,Disk[DRIVE].current_byte);
     }
     else
 #endif
+
+#ifdef SSE_WD1772_393B //oops part 1
+    if(Amd.Enabled && (DSR==0xA1 && !(Mfm.clock&BIT_5)
+#if defined(SSE_WD1772_BIT_LEVEL) 
+      || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
+#endif
+      ))
+#else
     if(DSR==0xA1 && !(Mfm.clock&BIT_5) // special $A1
 #if defined(SSE_WD1772_BIT_LEVEL) 
       || (Amd.aminfo&CAPSFDC_AI_DSRMA1)
 #endif
       )
+#endif
     {
+      ASSERT(Amd.Enabled);
       Amd.nA1++;
       CrcLogic.Reset(); // only special $A1 resets the CRC logic
 #if defined(SSE_WD1772_BIT_LEVEL)
       Amd.amisigmask=CAPSFDC_AI_DSRREADY;
 #endif
+//      TRACE_LOG("Phase %d A1 at %d\n",prg_phase,Disk[DRIVE].current_byte);
     }
+    // note: it is strictly 3 A1 syncs
     else if( (DSR&0xFF)>=0xFC && Amd.nA1==3) // CAPS: $FC->$FF
     {
-      TRACE_LOG("%X found at %d\n",DSR,SF314[DRIVE].BytePosition());
+      TRACE_LOG("%X found at %d\n",DSR,Disk[DRIVE].current_byte);
       n_format_bytes=0;//reset
       prg_phase++; // in type I or type II or III
       Amd.Enabled=false; // read IDs OK
     }
     else if(Amd.nA1)
-      Amd.Reset();
-
-#if defined(SSE_DISK_SCP)
+      Amd.Reset(); //?
+#if defined(SSE_DISK_SCP) && !defined(SSE_WD1772_393B) // Oops part 2: some SCP dumps of Gunship
     // we're reading nothing vital:
     // switch back to rev1 if we're on rev2
     else if(IMAGE_SCP && ImageSCP[DRIVE].rev)
@@ -1688,7 +1704,7 @@ r1       r0            1772
     }
     else if(n_format_bytes==44) //timed out
     {
-      TRACE_LOG("DAM time out %d in\n",n_format_bytes);
+      TRACE_LOG("DAM time out %d in at %d\n",n_format_bytes,Disk[DRIVE].current_byte);
       n_format_bytes=0;
       prg_phase=WD_TYPEII_FIND_ID;
       Amd.Enable();

@@ -64,15 +64,18 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(STEVEN_SEAGAL) 
 
-//#define SSE_VERSION 393
-#define SSE_VERSION 400
+#define SSE_VERSION 393
+//#define SSE_VERSION 400
 
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
+#if SSE_VERSION>=393
+#define SSE_BETA_BUGFIX // beta for just bugfixes
+#endif
+
 #if SSE_VERSION>393
 #define SSE_BETA //title, OSD, plus some testing - new features
-#define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -1992,7 +1995,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VID_HIRES_BORDER_BLACK // border is black - also assembly correction
 #define SSE_VS2008_WARNING_393 //STE joystick was broken
 #define SSE_WD1772_393 // wrong status after force interrupt 
+#define SSE_WD1772_393B  // AMD must be enabled to see A1 + if enabled, don't rev down
 #define SSE_JOYSTICK_NO_MM //circle around unsolved bug
+#undef SSE_VID_D3D_FS_392D1
 
 #endif//bugfix
 
