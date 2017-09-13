@@ -25,6 +25,12 @@ struct THD6301 {
  }custom_program_tag;
 
   //DATA 
+
+#if defined(SSE_IKBD_6301_393_REF)
+  // less computing, more data
+  COUNTER_VAR ChipCycles,MouseNextTickX,MouseNextTickY;
+  int MouseCyclesPerTickX, MouseCyclesPerTickY;
+#endif
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
 #if defined(SSE_DEBUG) 
@@ -46,7 +52,7 @@ struct THD6301 {
   BYTE Parameter[6]; // max 6
   BYTE CustomProgram;
 #endif
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
   char LineRxFreeTime; // cycles in (0-63)
   char LineTxFreeTime; // cycles in (0-63)
 #endif
@@ -55,7 +61,9 @@ struct THD6301 {
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
+#if !defined(SSE_ACIA_393)
   void ReceiveByte(BYTE data);
+#endif
   void ResetChip(int Cold);
   void ResetProgram();
   void Init();

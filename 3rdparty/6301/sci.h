@@ -8,21 +8,27 @@
 # define P_(s) ()
 #endif
 
-
-/* ../../src/68xx/h6301/sci.c */
-
+#if !defined(SSE_IKBD_6301_393_REF)
 extern int	rxinterrupts;	/* Number of outstanding rx interrupts */
 extern int	txinterrupts;	/* Number of outstanding tx interrupts */
+#endif
 
 /*
  * serial_int - check for serial interrupt
  *
  * Return nonzero if interrupt generated, zero if no interrupt
  */
+
+#if defined(SSE_IKBD_6301_393_REF) 
+// using the status register and not those confusing variables anymore
+#define serial_int()\
+	(((ireg_getb (TRCSR) & RDRF) && (ireg_getb (TRCSR) & RIE))\
+	 || ((ireg_getb (TRCSR) & TDRE) && (ireg_getb (TRCSR) & TIE)))
+#else
 #define serial_int()\
 	((rxinterrupts && (ireg_getb (TRCSR) & RIE))\
 	 || (txinterrupts && (ireg_getb (TRCSR) & TIE)))
-
+#endif
 extern int sci_in P_((u_char *s, int nbytes));
 extern int sci_print P_((void));
 extern int trcsr_getb P_((u_int offs));

@@ -268,32 +268,33 @@ void THD6301::Init() { // called in 'main'
 
 }
 
+#if !defined(SSE_ACIA_393) //we use Acia.TransmitTDR()
 
 void THD6301::ReceiveByte(BYTE data) {
 /*  Transfer byte to 6301.
     Call of this function initiates transfer. The function sets up an
-    agenda or an event about 20 scanlines later.
-    This function is used for true and fake 6301 emu.
+    an event about 20 scanlines later.
 */
   TRACE_LOG("%d %d %d ACIA TDRS %X\n",TIMING_INFO,data);
+  ASSERT(OPTION_C1);
   ACIA_IKBD.ByteWaitingTx=false;
   ASSERT(ACIA_IKBD.TDR==data);
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR=data;
-  ASSERT(!ACIA_IKBD.LineTxBusy||ACT-ACIA_IKBD.last_tx_write_time<ACIA_TDR_COPY_DELAY);
   ACIA_IKBD.LineTxBusy=true;
 #if defined(SSE_ACIA_EVENT)
+
   if(OPTION_C1)
     time_of_event_acia=ACIA_IKBD.time_of_event_outgoing=ACT+ACIA_TO_HD6301_IN_CYCLES;
   else
 #endif
     agenda_add(agenda_ikbd_process,HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL,data);
-
 #if defined(SSE_ACIA) && !defined(SSE_ACIA_EVENT)
   ACIA_IKBD.TDRS=ACIA_IKBD.TDR; // shift register
   ACIA_IKBD.LineTxBusy=true;
 #endif
 }
 
+#endif//!393
 
 void THD6301::ResetChip(int Cold) {
   TRACE_LOG("6301 Reset chip %d\n",Cold);
@@ -305,7 +306,13 @@ void THD6301::ResetChip(int Cold) {
 #if defined(SSE_IKBD_6301)
   if(HD6301_OK && OPTION_C1)
   {
+#if defined(SSE_IKBD_6301_393_REF)
+    if(HD6301.Crashed)
+      mousek=0; // :)
+    HD6301.Crashed=(BYTE)mousek; // for fun, but our emu is limited to monochip
+#else    
     HD6301.Crashed=false;
+#endif    
     hd6301_reset(Cold);
   }
 #endif
@@ -326,14 +333,20 @@ void THD6301::ResetProgram() { // debug only
 
 #if defined(SSE_IKBD_6301_VBL)
 
-void THD6301::Vbl() {
+void THD6301::Vbl() { // this is called in run.cpp right after IKBD_VBL()
   hd6301_vbl_cycles=0;
 
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
   click_x=click_y=0;
   // the following avoids the mouse going backward at high speed
-  const int max_pix_h=(screen_res)?30:40;
+#if defined(SSE_IKBD_6301_393_REF)  
+  const int basis=IKBD_6301_MOUSE_VBL_MAX_TICKS; // 30 for all res
+  const int max_pix_h=basis;
+  const int max_pix_v=basis;
+#else
+  const int max_pix_h=(screen_res)?30:40; 
   const int max_pix_v=(screen_res==2)?30:40;
+#endif  
   if(MouseVblDeltaX>max_pix_h)
     MouseVblDeltaX=max_pix_h;
   else if(MouseVblDeltaX<-max_pix_h)
@@ -347,12 +360,23 @@ void THD6301::Vbl() {
       TRACE_LOG("F%d 6301 mouse move %d,%d\n",FRAME,MouseVblDeltaX,MouseVblDeltaY);
 #endif
 #endif//SSE_IKBD_6301_MOUSE_ADJUST_SPEED
+
+#if defined(SSE_IKBD_6301_393_REF)
+  // do some computing only once per frame
+  COUNTER_VAR cycles_per_frame=HD6301_CLOCK/shifter_freq_at_start_of_vbl;
+  MouseCyclesPerTickX=(MouseVblDeltaX)?(cycles_per_frame/abs(MouseVblDeltaX)):0;
+  MouseCyclesPerTickY=(MouseVblDeltaY)?(cycles_per_frame/abs(MouseVblDeltaY)):0;
+  MouseNextTickX=MouseNextTickY=ChipCycles; // at once if it moves
+#ifdef SSE_DEBUG
+  if(MouseVblDeltaX||MouseVblDeltaX)
+    TRACE_LOG("ticks x %d y %d\n", MouseCyclesPerTickX,MouseCyclesPerTickY);
+#endif
+#endif
+
 }
 
 #endif//SSE_IKBD_6301_VBL
 
 #undef LOGSECTION
-
-
 
 #endif//SSE_IKBD_6301

@@ -40,23 +40,42 @@ The ACIA master clock is 500kHz.
 
 */
 
+#if !defined(SSE_ACIA_393)
 #define HD6301_TO_ACIA_IN_CYCLES (acia[0].TransmissionTime())
 #define ACIA_TO_HD6301_IN_CYCLES (acia[0].TransmissionTime())
-//TODO:
-#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12)) //is a mod??
-
-
-
-#if defined(SSE_ACIA_TDR_COPY_DELAY)
-//#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
-#define ACIA_TDR_COPY_DELAY (200) // Hades Nebula vs. Nightdawn (???)
 #endif
 
+#if !defined(SSE_ACIA_393)
+// in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
+#if defined(SSE_IKBD_6301_373)
+#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
+  (((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR) \
+  /scanline_time_in_cpu_cycles_at_start_of_vbl)-1)
+#else// those were useless calculations while the result was available as a variable
+#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
+((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/\
+(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ: \
+(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
+SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
+#endif
+
+#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12)) //is a mod??
+#endif
+
+#if defined(SSE_ACIA_TDR_COPY_DELAY) && !defined(SSE_ACIA_393)
+//#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
+#define ACIA_TDR_COPY_DELAY (200)  // Hades Nebula vs. Nightdawn
+#endif
+
+#ifndef SSE_ACIA_393
 #define ACIA_MIDI_OUT_CYCLES (acia[1].TransmissionTime())
 #define ACIA_MIDI_IN_CYCLES (acia[1].TransmissionTime())
+#endif
 
 #else //!ACIA
+#if !defined(SSE_ACIA_393)
 #define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
+#endif
 #endif//ACIA
 
 
@@ -292,33 +311,11 @@ enum {
 #define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
 #endif
 
-
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
-#define HD6301_CLOCK (1000000) //used in 6301/ireg.c
+#define HD6301_CLOCK (1000000) //used in 6301/ireg.c for mouse speed
+#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40)
 
-
-// in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
-#if defined(SSE_IKBD_6301_373)
-#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
-  (((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR) \
-  /scanline_time_in_cpu_cycles_at_start_of_vbl)-1)
-#else// those were useless calculations while the result was available as a variable
-#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
-((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/\
-(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ: \
-(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
-SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
-#endif
-
-#define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
-(HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ \
-(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
-(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
-SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
-
-#ifdef SSE_DEBUG
-#define HD6301_MAX_DIS_INSTR 2000 
-#endif
+#if !defined(SSE_ACIA_393)
 
 #if defined(SSE_ACIA_EVENT)
 // hack for Froggies TODO
@@ -328,6 +325,18 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
 #else
 #define HD6301_CYCLES_TO_SEND_BYTE (1350)
 #define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
+#endif
+
+
+#define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
+(HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ \
+(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
+(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
+SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
+#endif
+
+#ifdef SSE_DEBUG
+#define HD6301_MAX_DIS_INSTR 2000 
 #endif
 
 

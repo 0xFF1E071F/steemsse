@@ -600,7 +600,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
 #define SSE_IKBD_6301_RUN_IRQ_TO_END // hack around Sim6xxx's working
 #define SSE_IKBD_6301_SET_TDRE
-#define SSE_IKBD_6301_TIMER_FIX // not sure there was a problem
+#define SSE_IKBD_6301_TIMER_FIX // not sure there was a problem //MFD
 #define SSE_IKBD_6301_MOUSE_MASK // Jumping Jackson auto
 #define SSE_IKBD_6301_VBL
 #define SSE_IKBD_6301_MOUSE_ADJUST_SPEED
@@ -1651,9 +1651,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DEBUG_IKBD_6301_TRACE_SCI_RX
 #define SSE_DEBUG_IKBD_6301_TRACE_SCI_TX
 //#define SSE_DEBUG_IKBD_6301_TRACE_KEYS
-//#define SSE_DEBUG_IKBD_6301_TRACE_INT_TIMER
-//#define SSE_DEBUG_IKBD_6301_TRACE_INT_SCI
-//#define SSE_DEBUG_IKBD_6301_TRACE_STATUS
 //#define SSE_DEBUG_IKBD_6301_TRACE_WRITES
 #endif
 #endif//6301
@@ -1879,12 +1876,13 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if SSE_VERSION>=393 //&& defined(SSE_BETA) //next version
 
+#define SSE_ACIA_393 // refactor-debug ACIA
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_BOILER_393
 #define SSE_GLUE_393
 #define SSE_GUI_393
 #define SSE_IKBD_6301_393
-#define SSE_IKBD_MOUSE_ST_SPEED
+//#define SSE_IKBD_MOUSE_ST_SPEED //forget it, result is too bad
 #define SSE_INT_HBL_E_CLOCK_HACK_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
@@ -1918,6 +1916,14 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_IKBD_6301_393)
 #define SSE_IKBD_6301_MACRO // no reason it shouldn't work with C1
 #define SSE_IKBD_6301_PASTE // more like switching C1 off for a while ;)
+#define SSE_IKBD_6301_393_REF // refactor-debug 6301 (long overdue)
+#endif
+
+#if defined(SSE_IKBD_6301_393_REF)
+// remove previous hacks
+#undef SSE_IKBD_6301_ADJUST_CYCLES
+#undef SSE_IKBD_6301_RUN_IRQ_TO_END
+#undef SSE_IKBD_6301_SET_TDRE
 #endif
 
 #if defined(SSE_YM2149_MAMELIKE_393)

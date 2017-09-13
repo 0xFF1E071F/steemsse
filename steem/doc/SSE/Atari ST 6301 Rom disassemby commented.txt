@@ -240,9 +240,9 @@ f1a7	91 9b		cmpa 9b
 f1a9	27 05		beq  05 (F1B0)
 f1ab	97 9c		staa 9c
 f1ad	7c 00 9d	inc 009d
-f1b0	96 07		ldaa 07
-f1b2	91 07		cmpa 07
-f1b4	26 fa		bne  fa (F1B0)
+f1b0	96 07		ldaa 07              read mouse/joystick
+f1b2	91 07		cmpa 07              read again to see change
+f1b4	26 fa		bne  fa (F1B0)       loop while it is changing
 f1b6	39		rts
 
 f1b7	86 01		ldaa #01

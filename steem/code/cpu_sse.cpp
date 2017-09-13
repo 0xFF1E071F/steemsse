@@ -483,6 +483,9 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState!=TM68000::HALTED
     &&M68000.ProcessingState!=TM68000::INTEL_CRASH
+#if defined(SSE_IKBD_6301_393_REF)
+    &&M68000.ProcessingState!=TM68000::HD6301_CRASH
+#endif
     &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE )
     M68000.ProcessingState=TM68000::NORMAL;
 #endif

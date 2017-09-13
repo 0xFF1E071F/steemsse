@@ -154,9 +154,89 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           ACIA_Reset(acia_num,0);
         }
         else
-          ACIA_SetControl(acia_num,io_src_b); // TOS: 95 for MIDI, 96 for IKBD
+          ACIA_SetControl(acia_num,io_src_b); // TOS: $95 for MIDI, $96 for IKBD
         break;
 
+#if defined(SSE_ACIA_393)
+/*  Rewrite because it's wrong to clear TDRE and raise IRQ at once.
+    In compensation we had a too short 'delay to TDRE' setting, because in Hades
+    Nebula, the IRQ is used, but if the ACIA routine sees no TDRE and no RDRF, 
+    it legitimately hangs: we were unwittingly just making sure it was set at
+    this time (hack).
+*/
+      case 0xfffc02:  // Keyboard ACIA Data
+      case 0xfffc06:  // MIDI ACIA Data
+        acia_num=((addr&0xf)-2)>>2;
+        ASSERT(acia_num==0 || acia_num==1);
+        acia[acia_num].TDR=io_src_b;
+        TRACE_LOG("ACIA %d PC %X TDR %X\n",acia_num,old_pc,io_src_b);
+        if(OPTION_C1 && !bPastingText)
+        {
+          acia[acia_num].SR&=~BIT_1; // clear TDRE bit
+          ACIA_CHECK_IRQ(acia_num); // writing on TDR clears the TX IRQ
+
+          // line was free
+          if(!acia[acia_num].LineTxBusy)
+          {
+            // delay before transmission starts
+            // "within 1-bit time of the trailing edge of the Write command"
+            int copy2tdr_delay=16*((acia[acia_num].CR&1)?16:64);
+            ASSERT(copy2tdr_delay==1024||copy2tdr_delay==256); // IKBD - MIDI
+            acia[acia_num].time_of_event_outgoing=ACT+copy2tdr_delay;
+            if(acia[acia_num].time_of_event_outgoing-time_of_event_acia<=0)
+              time_of_event_acia=acia[acia_num].time_of_event_outgoing;
+            acia[acia_num].LineTxBusy=2; // indicates we're waiting for TDR->TDRS
+          }
+          break;
+        }//option C1
+        {
+          bool TXEmptyAgenda=(agenda_get_queue_pos(acia_num==NUM_ACIA_IKBD?
+            agenda_acia_tx_delay_IKBD:agenda_acia_tx_delay_MIDI)>=0);
+          if (TXEmptyAgenda==0){
+            if (acia[acia_num].tx_irq_enabled){
+              acia[acia_num].irq=false;
+              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
+            }
+            agenda_add(acia_num==NUM_ACIA_IKBD?agenda_acia_tx_delay_IKBD
+              :agenda_acia_tx_delay_MIDI,
+              ACIAClockToHBLS(acia[acia_num].clock_divide),0);
+          }
+          acia[acia_num].tx_flag=true; //flag for transmitting
+
+          //Steem 3.2, not C1, different paths for IKBD and MIDI:
+          if(acia_num==NUM_ACIA_IKBD)
+          {
+            // If send new byte before last one has finished being sent
+#if defined(SSE_TIMINGS_CPUTIMER64)
+            if (abs((int)(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time))
+              <ACIA_CYCLES_NEEDED_TO_START_TX){
+#else
+            if (abs(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time)
+              <ACIA_CYCLES_NEEDED_TO_START_TX){
+#endif
+                // replace old byte with new one
+                int n=agenda_get_queue_pos(agenda_ikbd_process);
+                if (n>=0){
+                  log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
+                    HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
+                  agenda[n].param=io_src_b;
+                }
+            }else{
+              // there is a delay before the data gets to the IKBD
+              acia[acia_num].last_tx_write_time=ABSOLUTE_CPU_TIME;
+              agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
+            }
+          }
+          else
+          {
+            ASSERT(acia_num==NUM_ACIA_MIDI);
+            MIDIPort.OutputByte(io_src_b);
+          }
+          break;
+        }
+
+
+#else
       case 0xfffc02:  // Keyboard ACIA Data
       case 0xfffc06:  // MIDI ACIA Data
         acia_num=((addr&0xf)-2)>>2;
@@ -202,7 +282,9 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
             else
             {
               acia[acia_num].TDRS=acia[acia_num].TDR;
+#if defined(SSE_ACIA_EVENT)
               acia[acia_num].time_of_event_outgoing=ACT+ACIA_MIDI_OUT_CYCLES;
+#endif
               acia[acia_num].LineTxBusy=true;
             }
             acia[acia_num].SR|=BIT_1; // TDRE free (see ior: can be "cancelled")
@@ -277,6 +359,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           }
           break;
         }
+#endif
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed

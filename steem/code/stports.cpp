@@ -64,9 +64,15 @@ void agenda_midi_replace(int)
       if(MIDIPort.AreBytesToCome()) 
 #if defined(SSE_ACIA_EVENT)
       {
+#if defined(SSE_ACIA_393)
+        ACIA_MIDI.time_of_event_incoming=time_of_next_event+ACIA_MIDI.TransmissionTime();
+        if(ACIA_MIDI.time_of_event_incoming-time_of_event_acia<=0)
+          time_of_event_acia=ACIA_MIDI.time_of_event_incoming;  
+#else
         time_of_event_acia=ACIA_MIDI.time_of_event_incoming
           =time_of_next_event+ACIA_MIDI_IN_CYCLES;
         ACIA_MIDI.LineRxBusy=true;
+#endif
       }
 #else
         agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
@@ -105,8 +111,14 @@ void MidiInBufNotEmpty()
   {
     ASSERT(!ACIA_MIDI.LineRxBusy);//or we got a problem
     ACIA_MIDI.LineRxBusy=true;
+#if defined(SSE_ACIA_393)
+    ACIA_MIDI.time_of_event_incoming=ACT + ACIA_MIDI.TransmissionTime();
+    if(ACIA_MIDI.time_of_event_incoming-time_of_event_acia<=0)
+      time_of_event_acia=ACIA_MIDI.time_of_event_incoming;
+#else
     time_of_event_acia=ACIA_MIDI.time_of_event_incoming
       =ACT + ACIA_MIDI_IN_CYCLES;
+#endif
     ASSERT(!MIDIPort.AreBytesToCome()); //! byte not added in buffer yet!
   }
   else

@@ -16,7 +16,9 @@ struct cpu {
 		unsigned min:16;
 		unsigned max:16;
 	} stack;
-#if defined(SSE_TIMINGS_CPUTIMER64)
+#if defined(SSE_IKBD_6301_393_REF)
+  COUNTER_VAR ncycles; // can wrap
+#elif defined(SSE_TIMINGS_CPUTIMER64)
   unsigned COUNTER_VAR ncycles;
 #else
 	unsigned ncycles;
