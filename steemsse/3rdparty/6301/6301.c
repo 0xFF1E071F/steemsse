@@ -30,7 +30,9 @@ extern unsigned char  stick[8]; // joysticks
 BYTE ST_Key_Down[128];
 int mousek;
 // our variables that Steem must see
+#if !defined(SSE_IKBD_6301_393_REF)
 int hd6301_completed_transmission_to_MC6850; // for sync
+#endif
 #if defined(SSE_ACIA_EVENT)
 int cycles_run=0; 
 #endif
@@ -38,15 +40,16 @@ int cycles_run=0;
 // additional variables for our module
 
 unsigned char rec_byte;
+
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
 #define NOT_EXECUTING_INT 0
 #define EXECUTING_INT 1
 #define FINISHED_EXECUTING_INT -1
 char ExecutingInt=NOT_EXECUTING_INT;
 #endif
-
+#if !defined(SSE_IKBD_6301_393_REF)
 int Crashed6301=0;
-
+#endif
 #if defined(SSE_IKBD_6301_MOUSE_MASK3)
 unsigned int mouse_x_counter;
 unsigned int mouse_y_counter;
@@ -54,6 +57,14 @@ unsigned int mouse_y_counter;
 
 #if defined(SSE_IKBD_6301_VBL)
 int hd6301_vbl_cycles;
+#endif
+
+#if defined(SSE_IKBD_6301_393_REF)
+COUNTER_VAR time_of_tdr_to_tdrs=0;
+#endif
+
+#if defined(SSE_IKBD_6301_393_REF)
+COUNTER_VAR current_m68_cycle=0; // will lag or be forward
 #endif
 
 // Debug facilities
@@ -69,7 +80,7 @@ int hd6301_vbl_cycles;
                    _asm{int 0x03}}}
 #endif
 #else 
-#if !defined(NDEBUG)
+#if !defined(NDEBUG) ||(defined(VC_BUILD) && defined(DEBUG_BUILD))
 #define ASSERT(x) {if(!(x)) TRACE("Assert failed: %s\n",#x);} //just a trace
 #else
 #define ASSERT(x) // release
@@ -150,9 +161,14 @@ hd6301_reset(int Cold) {
   cpu_reset();
   if(Cold)
     memset (ram, 0, 256);
+#if !defined(SSE_IKBD_6301_393_REF)
   hd6301_completed_transmission_to_MC6850=0;
   Crashed6301=0; // note no cold condition?
+#endif
   iram[TRCSR]=0x20;
+#if defined(SSE_IKBD_6301_393_REF)
+  mem_putw (OCR, 0xFFFF);
+#endif
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
   ExecutingInt=NOT_EXECUTING_INT;
 #endif
@@ -166,9 +182,15 @@ hd6301_reset(int Cold) {
 #if !defined(SSE_IKBD_6301_373)
   cpu_start(); // since we don't use the command.c file
 #endif
+#if defined(SSE_IKBD_6301_393_REF)
+  current_m68_cycle=0;
+#endif
 }
 
-#ifdef SSE_VS2008_WARNING_382
+#if defined(SSE_IKBD_6301_393_REF)
+hd6301_run_cycles(COUNTER_VAR to_m68_cycle) {
+  COUNTER_VAR cycles_to_run=(to_m68_cycle-current_m68_cycle)/HD6301_CYCLE_DIVISOR;
+#elif defined(SSE_VS2008_WARNING_382)
 hd6301_run_cycles(int cycles_to_run) {
 #else
 hd6301_run_cycles(u_int cycles_to_run) {
@@ -189,6 +211,13 @@ hd6301_run_cycles(u_int cycles_to_run) {
 #else
   int starting_cycles=cpu.ncycles;
 #endif
+#if defined(SSE_IKBD_6301_393_REF)
+  if(cycles_to_run<-256 || cycles_to_run>255)
+  {
+    current_m68_cycle=to_m68_cycle; //safety
+    return 0;
+  }
+#endif
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {
@@ -197,12 +226,11 @@ hd6301_run_cycles(u_int cycles_to_run) {
   }
   if((iram[TRCSR]&1) && !ACIA_IKBD.LineTxBusy)
   {
-//    TRACE("6301 waking up (PC %X cycles %d ACT %d)\n",reg_getpc(),cpu.ncycles,act);
     TRACE("6301 waking up (PC %X cycles %d)\n",reg_getpc(),cpu.ncycles);
     iram[TRCSR]&=~1; // ha! that's for Barbarian (& Obliterator, Froggies)
   }
   pc=reg_getpc();
-  if(!(pc>=0xF000 && pc<=0xFFFF || pc>=0x80 && pc<=0xFF))
+  if(OPTION_HACKS && !(pc>=0xF000 && pc<=0xFFFF || pc>=0x80 && pc<=0xFF))
   {
     TRACE("PC out of range, resetting chip\n"); 
     reset(); // hack
@@ -235,17 +263,20 @@ hd6301_run_cycles(u_int cycles_to_run) {
 
   }
 #endif
-
+#if defined(SSE_IKBD_6301_393_REF)
+  while(!HD6301.Crashed && (cycles_run<cycles_to_run 
+#else
   while(!Crashed6301 && (cycles_run<cycles_to_run 
+#endif
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     || ExecutingInt==EXECUTING_INT 
 #endif
-#ifdef SSE_ACIA_EVENT
+#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
     || HD6301.LineRxFreeTime || HD6301.LineTxFreeTime
 #endif
   ))
   {
-#ifdef SSE_ACIA_EVENT
+#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
     if(HD6301.LineTxFreeTime && cycles_run>=HD6301.LineTxFreeTime)
     {
       TRACE("6301 sending $%X %d cycles in\n",ACIA_IKBD.RDRS,cycles_run);
@@ -280,19 +311,25 @@ hd6301_run_cycles(u_int cycles_to_run) {
     ExecutingInt=NOT_EXECUTING_INT;
   }
 #endif
-//  ASSERT( !reg_getiflag () );
+  
 #if defined(SSE_IKBD_6301_ADJUST_CYCLES)
   cycles_to_give_back+=cycles_run-cycles_to_run;
 #endif
 #if defined(SSE_IKBD_6301_VBL)
   hd6301_vbl_cycles+=cycles_run;
 #endif
- // return (Crashed6301) ? 0 : cycles_run; 
+#if defined(SSE_IKBD_6301_393_REF)
+  HD6301.ChipCycles=cpu.ncycles; // HD6301 object doesn't know cpu.ncycles
+  current_m68_cycle+=cycles_run*HD6301_CYCLE_DIVISOR;
+#endif
 #if defined(SSE_ACIA_EVENT)
   cycles_run=0;
 #endif
+#if defined(SSE_IKBD_6301_393_REF)
+  return cycles_run;
+#else
   return (Crashed6301) ? -1 : cycles_run; //v3.7.3
-
+#endif
 }
 
 
@@ -360,6 +397,11 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
   else
     memmove(&iram,i,sizeof(iram));
   i+=sizeof(iram);
+
+#if defined(SSE_IKBD_6301_393_REF)
+  if(!one_if_save)
+    current_m68_cycle=0;
+#endif
 
   return i-buffer;
 }

@@ -479,6 +479,7 @@ void intercept_xbios()
 
 #undef LOGSECTION
 //---------------------------------------------------------------------------
+#define LOGSECTION LOGSECTION_ACIA //SS
 int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
 {
   int HBLs=1;
@@ -513,6 +514,7 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
 
 void ACIA_Reset(int nACIA,bool Cold)
 {
+  TRACE_LOG("ACIA %d Reset (cold %d)\n",nACIA,Cold);
   acia[nACIA].tx_flag=0;
   if (nACIA==NUM_ACIA_IKBD) agenda_delete(agenda_acia_tx_delay_IKBD);
   if (nACIA==NUM_ACIA_MIDI) agenda_delete(agenda_acia_tx_delay_MIDI);
@@ -529,16 +531,24 @@ void ACIA_Reset(int nACIA,bool Cold)
 #if defined(SSE_ACIA)
   if(OPTION_C1)
   {
+#if !defined(SSE_ACIA_393)
+/*  "Master Reset clears the status register (except for external conditions
+    on CTS, DCD) and initializes both the receiver and the transmitter."
+*/
     if(Cold) 
     {
+#endif
       acia[nACIA].SR=2;
       acia[nACIA].CR=0x80; //?
       acia[nACIA].RDRS=0;
       acia[nACIA].TDRS=0;
       acia[nACIA].LineRxBusy=0;
+#if !defined(SSE_ACIA_393)
       acia[nACIA].ByteWaitingRx=0;
       acia[nACIA].ByteWaitingTx=0;
+#endif
       acia[nACIA].LineTxBusy=0;
+#if !defined(SSE_ACIA_393)
     }
     else
     {
@@ -550,6 +560,7 @@ void ACIA_Reset(int nACIA,bool Cold)
       acia[nACIA].RDR=0;//?
       acia[nACIA].TDR=0;
     }
+#endif
   }
 #endif
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
@@ -571,12 +582,16 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 #if defined(SSE_ACIA)
   if(OPTION_C1)
   {
+#if defined(SSE_ACIA_393)  
+    ACIA_CHECK_IRQ(nACIA);
+#else
     if((acia[nACIA].IrqForTx()) && !acia[nACIA].ByteWaitingTx)
       acia[nACIA].SR|=BIT_7; 
     else
       acia[nACIA].SR&=~BIT_7; 
     mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
       || (ACIA_MIDI.SR&BIT_7)));
+#endif
     return;
   }
 #endif
@@ -617,6 +632,26 @@ void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
   }
 }
 
+#if defined(SSE_ACIA_393)
+/*  The byte in TDR is moved into TDRS and transmission begins.
+    TDRE is set, and IRQ is asserted if appropriate.
+*/
+
+void ACIA_STRUCT::TransmitTDR() {
+  TDRS=TDR; // there could be timing difference for TDRS and TDRE... 
+  SR|=BIT_1; // TDRE free
+  if(CheckIrq())
+    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
+  LineTxBusy=true;
+  time_of_event_outgoing=time_of_next_event+TransmissionTime();
+  if(time_of_event_outgoing-time_of_event_acia<=0)
+    time_of_event_acia=time_of_event_outgoing;
+}
+
+#endif
+
+#if !defined(SSE_ACIA_393) // now shorter & inlined
+
 int ACIA_STRUCT::TransmissionTime() { 
 /*  
 Compute cycles according to bits 0-1 of CR
@@ -634,6 +669,9 @@ MIDI transmission is 4 times faster than IKBD
   return cycles;
 }
 
+#endif
+
+#undef LOGSECTION
 #endif
 
 //---------------------------------------------------------------------------  Agenda

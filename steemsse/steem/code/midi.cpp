@@ -210,6 +210,7 @@ void TMIDIOut::SendByte(BYTE Val)
     }
   }
   if (SendBuffer){
+    TRACE_LOG("MIDI %6x\n",MessBuf[0] | (MessBuf[1] << 8) | (MessBuf[2] << 16));
     switch (MessBufLen){
       case 1:
         midiOutShortMsg(Handle,MessBuf[0]);

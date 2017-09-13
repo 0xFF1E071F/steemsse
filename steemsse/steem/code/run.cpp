@@ -158,7 +158,11 @@ void run()
 {
   //TODO don't restart if blit error, init DX should change state
 #if defined(SSE_CPU_HALT)
-  if(M68000.ProcessingState==TM68000::HALTED)
+  if(M68000.ProcessingState==TM68000::HALTED
+#if defined(SSE_IKBD_6301_393_REF)
+    || HD6301.Crashed
+#endif
+    )
     return; // cancel "run" until reset
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
   else if(M68000.ProcessingState==TM68000::BLIT_ERROR
@@ -730,6 +734,7 @@ void event_hbl()   //just HBL, don't draw yet
     int n6301cycles;
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
     ASSERT(n6301cycles);
+#error TODO 
 #if defined(SSE_ACIA_EVENT)
     if(hd6301_run_cycles(n6301cycles)==-1)
 #else
@@ -762,10 +767,24 @@ void event_scanline_sub() {
   CHECK_AGENDA;
 #undef LOGSECTION
 #if defined(SSE_IKBD_6301)
-  // we run some 6301 cycles at the end of each scanline (x312)
-  if(OPTION_C1 && !HD6301.Crashed)
+  if(OPTION_C1
+#if !defined(SSE_IKBD_6301_393_REF)
+    && !HD6301.Crashed
+#endif
+    )
   {
     ASSERT(HD6301_OK);
+#if defined(SSE_IKBD_6301_393_REF)
+    hd6301_run_cycles(ACT);
+    if(HD6301.Crashed)
+    {
+      TRACE("6301 CRASH\n");
+#if defined(SSE_GUI_STATUS_BAR_392)
+      GUIRefreshStatusBar();
+#endif
+      runstate=RUNSTATE_STOPPING;
+    }
+#else
     int n6301cycles;
 #if defined(SSE_GLUE)
     ASSERT(Glue.CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
@@ -782,6 +801,7 @@ void event_scanline_sub() {
       GUIRefreshStatusBar();
 #endif
     }
+#endif
   }
 #endif
 
@@ -822,6 +842,7 @@ void event_scanline()
     int n6301cycles;
     n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
     ASSERT(n6301cycles);
+#error TODO 
     if(hd6301_run_cycles(n6301cycles)==-1)
     {
 #define LOGSECTION LOGSECTION_IKBD
@@ -2009,10 +2030,57 @@ void event_driveB_ip() {
 #if defined(SSE_ACIA_EVENT)
 //  ACIA events to handle IO with both 6301 and MIDI
 
+#if defined(SSE_ACIA_393) 
+
+COUNTER_VAR time_of_event_acia;
+
+void event_acia() {
+  time_of_event_acia=time_of_next_event+n_cpu_cycles_per_second; // put into future
+  if(OPTION_C1)
+  {
+    // find ACIA event to run
+    // start transmission
+    if(ACIA_IKBD.LineTxBusy==2 && time_of_next_event==ACIA_IKBD.time_of_event_outgoing)
+      ACIA_IKBD.TransmitTDR();
+    else if(ACIA_MIDI.LineTxBusy==2 && time_of_next_event==ACIA_MIDI.time_of_event_outgoing)
+      ACIA_MIDI.TransmitTDR();
+    // IKBD
+    else if(ACIA_IKBD.LineRxBusy==1 && time_of_next_event==ACIA_IKBD.time_of_event_incoming)
+      agenda_keyboard_replace(0); // from IKBD
+    else if(ACIA_IKBD.LineTxBusy && time_of_next_event==ACIA_IKBD.time_of_event_outgoing)
+      agenda_ikbd_process(ACIA_IKBD.TDRS); // to IKBD
+    // MIDI
+    else if(ACIA_MIDI.LineRxBusy && time_of_next_event==ACIA_MIDI.time_of_event_incoming)
+      agenda_midi_replace(0); // from MIDI
+    else if(ACIA_MIDI.LineTxBusy && time_of_next_event==ACIA_MIDI.time_of_event_outgoing)
+    { // to MIDI, do the job here
+      ACIA_MIDI.LineTxBusy=false; 
+      MIDIPort.OutputByte(ACIA_MIDI.TDRS);
+      // send next MIDI note if any
+      if(!(ACIA_MIDI.SR&BIT_1))
+        ACIA_MIDI.TransmitTDR();
+    }
+    // schedule next ACIA event if any (if not, it's still in the future)
+    // it's not very smart by I see no better way for now
+    if(ACIA_IKBD.LineRxBusy==1 && ACIA_IKBD.time_of_event_incoming-time_of_event_acia<0)
+      time_of_event_acia=ACIA_IKBD.time_of_event_incoming;
+    if(ACIA_IKBD.LineTxBusy && ACIA_IKBD.time_of_event_outgoing-time_of_event_acia<0)
+      time_of_event_acia=ACIA_IKBD.time_of_event_outgoing;
+    if(ACIA_MIDI.LineRxBusy && ACIA_MIDI.time_of_event_incoming-time_of_event_acia<0)
+      time_of_event_acia=ACIA_MIDI.time_of_event_incoming;
+    if(ACIA_MIDI.LineTxBusy && ACIA_MIDI.time_of_event_outgoing-time_of_event_acia<0)
+      time_of_event_acia=ACIA_MIDI.time_of_event_outgoing;
+  }
+}
+
+
+#else
+
 COUNTER_VAR time_of_event_acia=0;
 
 void event_acia() {
   time_of_event_acia=time_of_next_event+n_cpu_cycles_per_second; 
+
   if(OPTION_C1)
   {
     // IKBD
@@ -2044,6 +2112,8 @@ void event_acia() {
     }
   }
 }
+
+#endif //#if defined(SSE_ACIA_393) 
 
 #endif//acia
 

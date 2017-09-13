@@ -176,7 +176,11 @@ Some words of explanation are given for each icon.
 ------
 
 You start/stop emulation by using the play button or function key F12.
-If you right click on 'Play', you advance frame by frame.
+
+If you right click on 'Play', you advance in slow motion. The speed can
+be set in Options/General.
+The minimal speed is handy to check how many VBLs those bad games need
+to draw the screen.
 
 When emulation starts, the mouse cursor is grabbed by Steem. You may
 change this (tricky) behaviour in the SSE options. 
@@ -189,6 +193,8 @@ is freed. You may assign other shortcuts to control Steem.
 --------------
 
 Use this to skip boring intros but don't expect accurate emulation.
+Right clicking on this also activates the 'lightsearch' (check if there is 
+some picture hidden by colour definitions).
 
 
 'Reset'
@@ -729,6 +735,9 @@ When this option is checked Steem will pause emulation when you switch to
 another program. Steem uses a lot of PC CPU time when running which slows all 
 other programs down, if you are switching between programs regularly you may 
 want to use this option.
+
+
+-Mute sound when inactive
 
 
 -Disable system keys when running
@@ -1314,21 +1323,22 @@ Instead of all this info, the status bar may contain only...
 In some conditions, the ST processor could 'halt', that is stop operating.
 It means the program it was running crashed, and it's not possible to
 recover from this situation. 
-This may be an emulation bug or not.
+This may be an emulation bug or not (bad disk image, buggy ST program, etc.)
 The ST must be reset. On the ST you would press the reset button 
 (left click on the icon), or in very bad cases, switch off
-and on to erase the memory (right click on the icon).
+and, after a while, on to erase the memory (right click on the icon - in 
+Steem we crash joyously: you mustn't wait).
 
  BLIT ERROR
 
-Better restart Steem.
+Serious problem with video rendering. Better leave at once and restart Steem.
 Maybe check your display options. As a recourse if it persists, you could
 try the DirectDraw build.
 
  HD6301 CRASHED
 
 There was some serious problem with the keyboard controller emulation.
-Resetting the ST may be appropriate.
+Resetting the ST is necessary.
 
 
 -Disk name

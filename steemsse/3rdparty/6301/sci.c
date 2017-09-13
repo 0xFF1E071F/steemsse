@@ -29,10 +29,11 @@ $0013    | B | TDR   | Transmit Data Register                         | W0
  * Pseudo-received data buffer used by rdr_getb() routines
  */
 static u_char recvbuf[BUFSIZE];
+#if !defined(SSE_IKBD_6301_393_REF)
 static int  rxindex      = 0; /* Index of first byte in recvbuf */
        int  rxinterrupts = 0; /* Number of outstanding rx interrupts */
        int  txinterrupts = 0; /* Number of outstanding tx interrupts */
-
+#endif
 /*
  * sci_in - input to SCI
  *
@@ -56,8 +57,11 @@ int nbytes;
   ASSERT(trcsr&RE);
   ASSERT(!(trcsr&RDRF));
   //ASSERT(!(trcsr&WU));
+  if(trcsr&WU) // bug?
+    TRACE("6301 in standby mode\n");
 #endif
-#if defined(SSE_IKBD_6301_380)
+#if defined(SSE_IKBD_6301_393_REF)
+#elif defined(SSE_IKBD_6301_380)
   ASSERT(rxinterrupts < BUFSIZE);
   recvbuf[rxinterrupts++] = *s;
 #else
@@ -69,23 +73,32 @@ int nbytes;
   rec_byte=*s;
   //TRACE("6301 SCI in #%d $%x (TRCSR %X)\n",rxinterrupts,rec_byte,trcsr);
 #endif
-#ifdef SSE_DEBUG
-  if(trcsr&WU) // bug?
-    TRACE("6301 in standby mode\n");
-#endif
+
+  // detect OVR condition, set flag at once (unlike ACIA)
+#if defined(SSE_IKBD_6301_393_REF)
+  if(iram[TRCSR]&RDRF)
+#else
   if(rxinterrupts>1)  
+#endif
   {
-    TRACE("6301 OVR rx %d RDR %X RDRS %X SR %X->%X\n",rxinterrupts,recvbuf[rxinterrupts-2],recvbuf[rxinterrupts-1],iram[TRCSR],iram[TRCSR]|ORFE);
+    TRACE("6301 OVR RDR %X RDRS %X SR %X->%X\n",HD6301.rdr,HD6301.rdrs,iram[TRCSR],iram[TRCSR]|ORFE);
     iram[TRCSR]|=ORFE; // hardware sets overrun bit
-    //recvbuf[0]=recvbuf[rxinterrupts-1]; // replace 
+#if !defined(SSE_IKBD_6301_393_REF)
     rxinterrupts=1; // there can be only one byte to read
+#endif
   }
 #if defined(SSE_IKBD_6301_380) 
   else
   {
     HD6301.rdr=*s;
-    TRACE("6301 RDR %X (PC %X)\n",HD6301.rdr,reg_getpc());
+#if defined(SSE_IKBD_6301_393_REF)
+    ireg_putb (RDR, HD6301.rdr);
+#endif
+    TRACE("6301 RDR %X\n",HD6301.rdr);
   }
+#endif
+#if defined(SSE_IKBD_6301_393_REF)
+  iram[TRCSR]|=RDRF; // set RDRF
 #endif
   return 0;//warning
 }
@@ -118,10 +131,10 @@ This register controls the communications.
 
 The read-only bits are set and cleared by the hardware.
 
-Normally bit 5 is read-only, but the ROM tries to set it (writing $2A,$3A,$3E)
+Bit 5 is read-only, but the ROM tries to set it (writing $2A,$3A,$3E)
 
 The following 2 functions trcsr_getb and trcsr_putb are used when the program
-reads or writes the status/control register $11.
+reads or writes the status/control register $11 (often).
 
 */
 
@@ -149,6 +162,7 @@ trcsr_getb (offs)
 
   rv=ireg_getb (TRCSR);
 
+#if !defined(SSE_IKBD_6301_393_REF) // now it's up-to-date
 /*  ST
     Update RDRF (Receive Data Register Full), as it was
     Update TDRE (Transmit Data Register Empty), not always 1
@@ -164,9 +178,6 @@ trcsr_getb (offs)
     rv|=TDRE; // "TDR is empty"
   else
     rv&=~TDRE; // "TDR is full"
-
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_STATUS)
-  TRACE("6301 PC %X read TRCSR %X txi%d wb%d cycles %d\n",reg_getpc(),rv,txinterrupts,ACIA_IKBD.ByteWaitingRx,cycles_run); //tmp
 #endif
 
   return rv;
@@ -195,6 +206,7 @@ trcsr_putb (offs, value)
     Cobra Compil 1: if we don't, "keyboard panic" 
     Defulloir
     Pothole 2
+393 undef: yes it compensated a bug
 */
   value&=0x3F;
   if(value&TDRE/*0x20*/) 
@@ -205,9 +217,13 @@ trcsr_putb (offs, value)
       txinterrupts = 1; // this will force a check
     }
   }
-#else // here, bit 5 of TRCSR can't be set by software
+#else // here, bits 5-7 of TRCSR can't be set by software
   value&=0x1F;  
 #endif
+#if defined(SSE_IKBD_6301_393_REF)
+  value|=(iram[0x11]&0xE0); // add RO bits 5-7
+#endif
+
   //TRACE("6301 PC %X program writes TRCSR %X->%X\n",reg_getpc(),ireg_getb(TRCSR),value);
   ireg_putb (TRCSR, value);
 #if 0 // ST: We do nothing of the sort, of course
@@ -240,8 +256,16 @@ rdr_getb (offs)
      * If recvbuf is not empty, eat a byte from it
      * into RDR
      */
+#if defined(SSE_IKBD_6301_393_REF)
+    if(iram[TRCSR]&RDRF) 
+    {
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_RX)
+      TRACE("6301 (PC %X) reads RDR %X\n",reg_getpc(),HD6301.rdr);
+#endif
+      iram[TRCSR]&=~RDRF;
+    }
+#else
     if (rxinterrupts) {
-
       rec_byte=recvbuf[rxindex];
 #if defined(SSE_IKBD_6301_380) && defined(SSE_DEBUG)
       ASSERT(rec_byte==HD6301.rdr);
@@ -249,10 +273,8 @@ rdr_getb (offs)
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_RX)
       //TRACE("6301 SCI read RX $%x (#%d)\n",rec_byte,rxindex);
       TRACE("6301 PC %X read RDR %X\n",reg_getpc(),rec_byte);
- #endif
-
+#endif
       ireg_putb (RDR, recvbuf[rxindex++]);
-
       rxinterrupts--;
     }
     /*
@@ -261,12 +283,12 @@ rdr_getb (offs)
      */
     if (rxinterrupts == 0)
       rxindex = 0;
-
+#endif
     //  ST
-    if(iram[TRCSR]&ORFE)
+    if(iram[TRCSR]&ORFE) 
     {
       TRACE("6301 clear OVR\n");
-      iram[TRCSR]&=~ORFE; // clear overrun bit
+      iram[TRCSR]&=~ORFE; // clear overrun bit - we don't check if read TRCSR first
     }
   }
   return ireg_getb (RDR);
@@ -308,16 +330,24 @@ tdr_putb (offs, value)
   TRACE("6301 TDR %X\n",HD6301.tdr);
 #endif
 #endif
+#if defined(SSE_IKBD_6301_393_REF)
+  iram[TRCSR]&=~TDRE;
+  // starting a transmission
+  if(!ACIA_IKBD.LineRxBusy)
+  {
+    // Implement a one bit delay before TDR->TDRS like in the ACIA.
+    // Fixes pointer in Froggies (finally a legit fix).
+    int cycles_for_one_bit=128; // normally depends on RMCR, we use the ST value
+    time_of_tdr_to_tdrs=cpu.ncycles+cycles_for_one_bit;
+    ACIA_IKBD.LineRxBusy=2;
+  }
+#else
   if(ACIA_IKBD.LineRxBusy)
   {
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
-    TRACE("6301 %X waits in TDR\n",value);
-#endif
     ASSERT( !ACIA_IKBD.ByteWaitingRx ); // if it happened, it's just replaced
     ACIA_IKBD.ByteWaitingRx=1;
   }
   else
-
   {
     HD6301.tdrs=value;
 #if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
@@ -331,6 +361,8 @@ tdr_putb (offs, value)
 #endif
     txinterrupts=1;
   }
+#endif
+
   return 0;//warning
 }
 

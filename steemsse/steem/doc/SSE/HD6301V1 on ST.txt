@@ -1,8 +1,9 @@
 This file contains specific info that is necessary to implement a 6301 keyboard
-chip (IKBD) emulation in an Atari ST emulation, specifically Steem.
+chip (IKBD) emulation in an Atari ST emulation, specifically Steem, using the
+3rd party 6301 emulation that is part of the Sim6xx project by Arne Riiber.
 It is mainly based on the official doc for the MC6500 and the HD6301 by
 Motorola and Hitachi, the indispensable doc by Stephane Catala - Belzebub 
-/ ST Connexion, STMagazine No 53 - 55, and on the translation by Tobe, 
+/ ST Connexion, STMagazine No 53 - 55, and on its translation by Tobe, 
 with some minor (gasp) corrections and additions by Steven Seagal.
 ===============================================================================
 
@@ -22,6 +23,8 @@ NEOchrome
 Sentinel
 Snork/Defulloir
 Transbeauce 2 (Menu)
+Warp
+
 
 Internal Registers
 ===================
@@ -32,8 +35,6 @@ set ($FF). The DDR registers are write-only. Themselves determine which bits
 of DR registers are read-only and which are write-only. If the bit is set in
 the DDR, then the corresponding bit in DR is read-only (input).
 In Sim6xx, they're identified with iram[].
-It's very possible that the documentation be inaccurate WRT R/W possibilities
-of registers or bits.
 
 
 
@@ -42,12 +43,12 @@ of registers or bits.
 ------------------------------------------------------------------------------
 $0000    | B | DDR1  | Direction Data Register 1                      | WO
 $0001    | B | DDR2  | Direction Data Register 2                      | WO
-$0002    | B | DR1   | Data Register 1                                | RW
-$0003    | B | DR2   | Data Register 2                                | RW
+$0002    | B | DR1   | Data Register 1 (P1)                           | RW
+$0003    | B | DR2   | Data Register 2 (P2)                           | RW
 $0004    | B | DDR3  | Direction Data Register 3                      | WO
 $0005    | B | DDR4  | Direction Data Register 4                      | WO
-$0006    | B | DR3   | Data Register 3                                | RW
-$0007    | B | DR4   | Data Register 4                                | RW
+$0006    | B | DR3   | Data Register 3 (P3)                           | RW
+$0007    | B | DR4   | Data Register 4 (P4)                           | RW
 ------------------------------------------------------------------------------
   * 16bit Timer
 ------------------------------------------------------------------------------
@@ -71,14 +72,30 @@ $0014    | B | RCR   | RAM Control Register                           | RW
 ------------------------------------------------------------------------------
 
 
-TRCSR ($11)
+TCSR ($8)      Timer Control/Status Register
+---------
+
+-Bit 0 	OLVL	0x01	(RW) Output Level (when DDR20=1): FRC matched OCR 
+-Bit 1	IEDG	0x02	(RW) Input Edge (when DDR20=0):
+			   0=negative 1=positive for P20 trigging FRC->ICR 
+-Bit 2	ETOI	0x04	(RW) Enable Timer Overflow Interrupt	
+-Bit 3	EOCI	0x08	(RW) Enable Output Compare Interrupt	
+-Bit 4	EICI	0x10	(RW) Enable Input Capture Interrupt	
+-Bit 5	TOF	0x20	(RO) Timer OverFlow ($FFFF->0) occured	
+-Bit 6	OCF	0x40	(RO) Output Compare Flag: FRC matched OCR	
+-Bit 7	ICF	0x80	(RO) Input Capture Flag: FRC->ICR		
+
+On the ST, Input Capture is not connected, and Output Level does nothing. (?)
+
+
+TRCSR ($11)    Transmit/Receive Control & Status Register
 -----------
 
-This register controls the communications.
+This register controls the serial communication.
 In Sim6xx, there are defines for each bit (WU, etc.).
 -Bit 0 (RW) : Wake Up (WU 0x01)
   ! WU set means "stand-by", not "awake".
-  It is set by software and cleared by hardware (though it's RW).
+  It is set by software and cleared by hardware.
   When the chip is in stand-by mode, a series of ten '1' bits will awake it.
   It seems that a working but not transmitting serial line does just that.
   Cases: Froggies leaving menu, Barbarian (hack in Steem gets more 
@@ -88,14 +105,9 @@ In Sim6xx, there are defines for each bit (WU, etc.).
 -Bit 3 (RW) : Receive Enable (RE 0x08)
   This bit is never cleared by the ROM in the ST.
 -Bit 4 (RW) : Receive Interrupt Enable (RIE 0x10)
--Bit 5 (RO?) : Transmit Data Register Empty (TDRE 0x20)
+-Bit 5 (RO) : Transmit Data Register Empty (TDRE 0x20)
   This bit is set when a byte has been sent, and is cleared by when TRCSR is 
   read then TDR is written, according to doc. 
-  According to Hitachi doc, bit 5 (TDRE) is read-only, but the ROM wants to set
-  it (writing $3A, $3E). This would trigger an interrupt as soon as they're 
-  enabled ($3E would force an interrupt, in the ROM several conditions are 
-  then checked).
-  It may explain how some program operate (Cobra Compil 1).
 -Bit 6 (RO) : Overrun or Framing Error (ORFE 0x40)
   Set when a byte is received if the previous byte was not read, cleared when 
   TRCSR then RDR are read.
@@ -105,27 +117,44 @@ In Sim6xx, there are defines for each bit (WU, etc.).
   This must be emulated because it does happen with some programs. 
   Fascinatingly, if you fail to emulate this Barbarian will be stuck, but for
   a totally different reason as in fake emulation ("Psygnosys hack").
--Bit 7 (RO?) : Receive Data Register Full (RDRF 0x80)
+-Bit 7 (RO) : Receive Data Register Full (RDRF 0x80)
   Set when a byte was received, cleared when TRSCR then RDR are read
 
 The read-only bits are set and cleared by the hardware (or the emulation).
-It seems the ROM tries to clear bit 7:
+It seems the ST ROM tries to clear bit 7:
 f990	71 ef 11	aim ef11			;TRCSR clear bit7 RDRF
 fcfe	71 ef 11	aim ef11
 
 
+RMCR ($10)
+-----------
+
+bit 0 SS0 select
+bit 1 SS1 select
+bit 2 CC0 clock control/format select
+bit 3 CC1 clock control/format select
+
+RMCR is initiated with $5 (0101) on the ST:
+Internal clock, divisor 128, port 2 bit 2 not used
 
 
-Speed, timings
+Mode
+=====
+Mode is selected by wiring pins P20, P21 and P22.
+Those are latched into the control bits PC0, PC1 and PC2 or Port 2,
+that is bits 5, 6 and 7 of DR2 ($0003).
+Monochip (mode 7) on the ST.
+
+
+Speed, timings 
 ===============
-The 6301 runs at 1Mhz, the M68000 at 8Mhz. The most practical way to integrate
-both emulations is to run 1/8 CPU cycles every scanline.
-64 for a 50hz line (512 cycles)
 
-A problem of 6301 emulation is that the ST program didn't have a "ready" 
-message.
-By sending commands too fast, you could mess it up, likewise in emulation if
-your timings are off.
+The 6301 is a 1mhz chip. It includes a divide-by-4 circuit, so a 4mhz crystal
+is used for the 'internal clock' (as opposed to 'clocked by an input port').
+The transmission speed between ACIA and 6301 is 7812.5, using 10 bits/byte.
+
+Each bit takes 128 cycles ~1mhz to be transmitted, one byte (10bit frame), 1280
+cycles (*8 for the values in m68k~8mhz cycles: 1024 and 10240).
 
 
 Double-buffering
@@ -134,11 +163,28 @@ Double-buffering
 According to their doc, both the ACIA and the 6301 use double-buffering, which 
 allows to have one value in the shift register (value being transmitted/
 received) and another value in the I/O register.
-A concrete implication is that you can write the first two bytes in a very 
-short time, and of course read a byte while another is being shifted.
-Another is that if you write two bytes in quick succession, the second will
-replace the first only if the shift register is busy.
+You can read or write a byte while another is being shifted, it makes sense.
 
+
+Case: Froggies
+When the CPU sends '1', IKBD sends 1 byte.
+When the CPU sends '4', IKBD sends 4 bytes.
+2 bytes are ignored due to ACIA OVR, the program reads the 2 remaining bytes.
+The program uses the ACIA interrupt to get those last 2 bytes.
+
+The 'Frogies' menu is extremely sensitive to ACIA and 6301 timings.
+
+To get the right timing, we must emulate double-buffering with a 1-bit delay 
+before the first byte in TDR is transferred into TDRS, for 6301 as well as for 
+ACIA emulation.
+
+
+Overrun
+========
+
+According to the doc, overrun is marked in SR as soon as a byte is received
+and the previous byte wasn't read. It's different from ACIA, where the overrun
+is marked only when RDR is read, but there's no reason to believe it's wrong.
 
 
 DR registers in input mode
@@ -240,7 +286,7 @@ f347	33 39 44 0d 29 1a 1b 27 34 3a 62 0e 53 52  39D.)..'4:b.SR
 f355	2b 1c 28 35 61 48 47 4b 50 4d 6d 70 63 64  +.(5aHGKPMmpcd
 f363	67 68 6a 6b 6e 71 65 66 69 4a 6c 4e 6f 72  ghjknqefiJlNor
 
-Steem SSE uses the rom to spare some memory.
+Steem SSE can use the rom to spare some memory.
 
 
 Mouse & Joysticks buttons
@@ -280,7 +326,6 @@ of a 0011 bit sequence in the hardware, two bits going to the
 registry when read. To emulate this, we rotate a $CCCCCCCC sequence and
 send the last bits to register bits 0-1 for horizontal movement, 2-3
 for vertical movement. 
-It seems that at rest, '00' are sent.
 
 We rotate the sequence left for mouse moving to the left or up, right for 
 right or down.
@@ -292,16 +337,17 @@ This explains the oddity of 'Jumping Jackson Auto239'.
 The DISABLE MOUSE command causes a last reading of the mouse (jump to RESUME
 in the rom), which is sent by the 6301 to the CPU as a joystick event, 
 because '0' means movement for the joystick.
-[Note: maybe, this is an interpretation]
-Without emulating that, the game switches to a buggy black screen.
 
-Note:
+[Note: maybe, this is an interpretation
+Without emulating that, the game switches to a buggy black screen.]
+
+
+Mouse speed indications
+
 mouse 400 pixels = 5 rotations
 wheel : 20 ticks
 4 sensors
-
 4x20x5=400: vertical pixels of mono
-
 
 
 On the ST, moving the mouse when joystick moves were expected would trigger
@@ -312,8 +358,19 @@ ROM
 ====
 
 A disassembly of the ROM is provided in this directory.
-Since v3.6, there's also a commented listing, and a RAM map.
-A 6301 browser in the boiler gives the RAM too.
+Since v3.6, there's also an imperfectly commented listing, and a RAM map.
+A 6301 browser in Steem Debug shows the RAM too.
+An option dumps the RAM and a disassembly (useful for custom programs) in 
+TRACE.txt.
+
+
+Custom Programs
+================
+
+On the ST, only a handful of programs reprogram the 6301:
+Dragonnels Menu
+Froggies over the Fence Menu
+Transbeauce 2 Menu
 
 
 
@@ -506,4 +563,31 @@ A 6301 browser in the boiler gives the RAM too.
 |OIM |   |   |72 |   |   |   |..**0.| M=M|x                            (=OR) |
 |TIM |   |   |7B |   |   |   |..**0.| x&M                              (=BIT)|
 +----+---+---+---+---+---+---+------+----------------------------------------+
+
+
+Interrupts
+===========
+
+Interrupt vectors
+
+SCIVECTOR	0xFFF0	Serial 
+TOFVECTOR	0xFFF2	Timer Overflow	
+OCFVECTOR	0xFFF4	Timer Output Capture	
+ICFVECTOR	0xFFF6	Timer Input Capture	
+IRQVECTOR	0xFFF8	IRQ1 (ISI3)		
+SWIVECTOR	0xFFFA	Software Interrupt	
+NMIVECTOR	0xFFFC	NMI	
+RESVECTOR	0xFFFE	RESET
+
+The ST IKBD ROM manages 3 interrupts: serial, timer and reset.
+Timer has higher priority than serial.
+
+fff0	fe e2  ..		;SCI vector (serial)
+fff2	f0 00  ..
+fff4	fd 9d  ..		;OCF vector (timer)
+fff6	f0 00  ..
+fff8	f0 00  ..
+fffa	f0 00  ..
+fffc	f0 00  ..
+fffe	f0 00  ..
 

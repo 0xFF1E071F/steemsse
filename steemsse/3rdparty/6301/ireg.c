@@ -253,7 +253,7 @@ static dr2_getb (offs)
   //ASSERT(ddr2==1); // strong
 #endif
   //ASSERT(offs==P2);
-  value=0xFF;
+  value=0xFF; // note bits 5-7=111 in monochip mode, bits 3-4=serial lines
   if(mousek) // clear the correct bit (see above)
   {
     value=(mousek*2)%6;
@@ -330,14 +330,46 @@ static dr4_getb (offs)
     If we test for DR2 bit 0 set, ok for desktop but it breaks Froggies.
 */
 
+#if 0 && defined(SSE_IKBD_6301_393_REF) //tmp to check frequency
   if(!(ddr4&0xF) && (ddr2&1) 
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
-
+    TRACE("6301 (PC %X) reads mouse on cycle %d, %d after last read\n",
+      reg_getpc(),cpu.ncycles,cpu.ncycles-debug1);
+    debug1=cpu.ncycles;
+  }
+#endif
 #if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-#if defined(SSE_BUGFIX_392) // protect vs corrupt snapshot
+  if(!(ddr4&0xF) && (ddr2&1) 
+    && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
+  {
+#if defined(SSE_IKBD_6301_393_REF)
+  // need to update mouse at each read, because the ROM checks for stability
+  while(HD6301.MouseCyclesPerTickX && cpu.ncycles>=HD6301.MouseNextTickX
+    &&HD6301.click_x<abs(HD6301.MouseVblDeltaX))
+  {
+    if(HD6301.MouseVblDeltaX<0) // left
+      mouse_x_counter=_rotl(mouse_x_counter,1);
+    else  // right
+      mouse_x_counter=_rotr(mouse_x_counter,1);
+    HD6301.click_x++;
+    HD6301.MouseNextTickX+=HD6301.MouseCyclesPerTickX;
+    //TRACE("mouse tick x %d on %d, next on %d\n",HD6301.click_x,cpu.ncycles,HD6301.MouseNextTickX);
+  }
+  while(HD6301.MouseCyclesPerTickY && cpu.ncycles>=HD6301.MouseNextTickY
+    &&HD6301.click_y<abs(HD6301.MouseVblDeltaY))
+  {
+    if(HD6301.MouseVblDeltaY<0) // up
+      mouse_y_counter=_rotl(mouse_y_counter,1);
+    else  // down
+      mouse_y_counter=_rotr(mouse_y_counter,1);
+    HD6301.click_y++;
+    HD6301.MouseNextTickY+=HD6301.MouseCyclesPerTickY;
+    //TRACE("mouse tick y %d on %d, next on %d\n",HD6301.click_y,cpu.ncycles,HD6301.MouseNextTickY);
+  }
+#elif defined(SSE_BUGFIX_392) // protect vs corrupt snapshot
     int cycles_per_frame=0;
-    if(shifter_freq)
+    if(shifter_freq)    
       cycles_per_frame=HD6301_CLOCK/shifter_freq;   
     if(HD6301.MouseVblDeltaX) // horizontal
     { 
@@ -377,7 +409,7 @@ static dr4_getb (offs)
     int cycles_per_frame;
     ASSERT(shifter_freq);
     ASSERT(shifter_freq==50||shifter_freq==60||shifter_freq==72);
-    cycles_per_frame=HD6301_CLOCK/shifter_freq;   
+    cycles_per_frame=HD6301_CLOCK/shifter_freq;
     if(HD6301.MouseVblDeltaX) // horizontal
     { 
       int clicks=abs(HD6301.MouseVblDeltaX);
@@ -408,12 +440,11 @@ static dr4_getb (offs)
         HD6301.click_y++;
       }
     }   
+    //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);    
 #endif
-    //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);
-
-#endif
-
   }
+#endif //#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+
 
 /*  Joystick movements
     Movement is signalled by cleared bits.

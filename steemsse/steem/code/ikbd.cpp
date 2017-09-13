@@ -117,7 +117,7 @@ const int ikbd_clock_max_val[6]={99,12,0,23,59,59};
 
 IKBD_STRUCT ikbd;
 
-#if (defined(SSE_ACIA)) 
+#if defined(SSE_ACIA) 
 ACIA_STRUCT acia[2];
 #endif
 
@@ -582,19 +582,25 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #endif
 
 #if defined(SSE_IKBD_6301)
-  if(OPTION_C1  && !HD6301.Crashed)
+  if(OPTION_C1)
   {
+#if !defined(SSE_ACIA_393) // only happens if and when TDR->TDRS
     ACIA_IKBD.SR|=BIT_1; // TDRE
     if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
     {
       ACIA_IKBD.SR|=BIT_7; 
       mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ
     }
+#endif
 #if defined(SSE_IKBD_6301_380) 
     ASSERT(ACIA_IKBD.TDRS==src);
     HD6301.rdrs=ACIA_IKBD.TDRS;
 #endif
-#if defined(SSE_ACIA_EVENT)
+
+#if defined(SSE_IKBD_6301_393_REF) 
+    hd6301_run_cycles(ACT); // run up to IO time
+    hd6301_receive_byte(src);
+#elif defined(SSE_ACIA_EVENT)
     int cycles=LINECYCLES;
     ASSERT(cycles>=0);
     HD6301.LineRxFreeTime=cycles/8;
@@ -604,13 +610,15 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
       hd6301_receive_byte(src);
     }
 #endif
-
-    //  If there's a byte in TDR waiting to be shifted, do it now.
-///    ASSERT(ACIA_IKBD.LineTxBusy); //TODO on resume
     ACIA_IKBD.LineTxBusy=false;
+    // If there's a byte in TDR waiting to be shifted, do it now.
+#if defined(SSE_ACIA_393)
+    if(!(ACIA_IKBD.SR&BIT_1))
+      ACIA_IKBD.TransmitTDR();
+#else
     if(ACIA_IKBD.ByteWaitingTx) 
       HD6301.ReceiveByte(ACIA_IKBD.TDR);
-
+#endif
 #if !defined(SSE_ACIA_EVENT)
     //TRACE_LOG("6301 RDRS->RDR %X\n",src);
     hd6301_receive_byte(src);// send byte to 6301 emu
@@ -1450,22 +1458,25 @@ void agenda_keyboard_replace(int) {
   if(OPTION_C1) 
 #endif
   {
-#if defined(SSE_BUGFIX_392)
+#if defined(SSE_BUGFIX_392) && !defined(SSE_IKBD_6301_393_REF)
     ASSERT( ACIA_IKBD.LineRxBusy );
     ACIA_IKBD.LineRxBusy=false;
 #endif
     if (keyboard_buffer_length){ 
       keyboard_buffer_length--;
       ASSERT( keyboard_buffer_length>=0 );
-#if defined(SSE_IKBD_6301_380) 
+#if defined(SSE_IKBD_6301_380) && !defined(SSE_IKBD_6301_393_REF)
       ACIA_IKBD.RDRS=HD6301.tdrs;
 #endif
       ASSERT( keyboard_buffer_length<2 );
-#if !defined(SSE_BUGFIX_392)
+#if !defined(SSE_BUGFIX_392) && !defined(SSE_IKBD_6301_393_REF)
       ASSERT( ACIA_IKBD.LineRxBusy );
       ACIA_IKBD.LineRxBusy=false;
 #endif
-#ifdef SSE_ACIA_EVENT
+#if defined(SSE_IKBD_6301_393_REF)
+      hd6301_run_cycles(ACT); // run up to IO time
+      ACIA_IKBD.RDRS=HD6301.tdrs;
+#elif defined(SSE_ACIA_EVENT)
       int cycles=LINECYCLES;
       ASSERT(cycles>=0);
       HD6301.LineTxFreeTime=cycles/8;
@@ -1501,8 +1512,10 @@ void agenda_keyboard_replace(int) {
         TRACE_LOG("%d %d %d ACIA RDR %X\n",TIMING_INFO,ACIA_IKBD.RDR);
         ACIA_IKBD.SR|=BIT_0; // set RDR full
       }
-
       // Check if we must activate IRQ (overrun or normal)
+#if defined(SSE_ACIA_393)
+      ACIA_CHECK_IRQ(NUM_ACIA_IKBD);
+#else
       if(ACIA_IKBD.CR&BIT_7)
       {
         dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
@@ -1511,9 +1524,15 @@ void agenda_keyboard_replace(int) {
         mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
       }
 
+#endif
     }//if (keyboard_buffer_length)
+#if defined(SSE_IKBD_6301_393_REF)
+    ACIA_IKBD.LineRxBusy=false;
+#endif
 
     // More to process?
+    ASSERT(!keyboard_buffer_length); 
+#if !defined(SSE_ACIA_393) // never (?)
     if(keyboard_buffer_length) 
     {
 #if defined(SSE_ACIA_EVENT)
@@ -1535,6 +1554,7 @@ void agenda_keyboard_replace(int) {
 #endif
       ACIA_IKBD.LineRxBusy=true;
     }
+#endif //#if !defined(SSE_ACIA_393)
 #if !defined(SSE_GUI_NO_MACROS)
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
@@ -1631,9 +1651,17 @@ void keyboard_buffer_write(BYTE src) {
       {
         ASSERT(OPTION_C1);
         TRACE_LOG("IKBD TDRS %X\n",src);
+#if defined(SSE_ACIA_393)
+        ACIA_IKBD.time_of_event_incoming
+          =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
+          + ACIA_IKBD.TransmissionTime();
+        if(ACIA_IKBD.time_of_event_incoming-time_of_event_acia<=0)
+          time_of_event_acia=ACIA_IKBD.time_of_event_incoming;        
+#else
         time_of_event_acia=ACIA_IKBD.time_of_event_incoming
           =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
           + ACIA_TO_HD6301_IN_CYCLES;
+#endif
       }
 #else
       agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
@@ -1690,7 +1718,6 @@ void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
     y=max(-limit,min(limit,y));
   }
 #endif
-
 
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
@@ -1807,9 +1834,11 @@ void ikbd_reset(bool Cold)
     if(HD6301_OK) 
     {
       TRACE_LOG("6301 reset ikbd.cpp part\n");
+#if !defined(SSE_IKBD_6301_393_REF)
       HD6301.Crashed=0;
+#endif
       ikbd.mouse_upside_down=false;
-#ifdef SSE_ACIA_EVENT
+#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
       HD6301.LineRxFreeTime=HD6301.LineTxFreeTime=0;
 #endif
       return;

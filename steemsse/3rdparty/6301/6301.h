@@ -30,9 +30,9 @@
 #include <SSE/SSEParameters.h>
 #ifdef WIN32
 #include <windows.h>
-#else
-#include <SSE/SSEDecla.h> // for BYTE
 #endif
+
+#include <SSE/SSEDecla.h>
 
 #include <stdio.h> // printf...
 #include <sys/types.h>
@@ -43,8 +43,9 @@
 extern BYTE ST_Key_Down[128];
 extern int mousek;
 // variables that Steem must see
+#if !defined(SSE_IKBD_6301_393_REF)
 extern int hd6301_completed_transmission_to_MC6850; // for sync
-
+#endif
 #if defined(SSE_ACIA_EVENT)
 extern int cycles_run; 
 #endif
@@ -53,7 +54,9 @@ extern int cycles_run;
 BYTE* hd6301_init();
 int hd6301_destroy(); // like a C++ destructor
 int hd6301_reset(int Cold); 
-#ifdef SSE_VS2008_WARNING_382
+#if defined(SSE_IKBD_6301_393_REF)
+int hd6301_run_cycles(COUNTER_VAR to_m68_cycle);
+#elif defined(SSE_VS2008_WARNING_382)
 int hd6301_run_cycles(int cycles); // emulate
 #else
 int hd6301_run_cycles(u_int cycles); // emulate
@@ -62,7 +65,7 @@ int hd6301_load_save(int one_if_save, unsigned char *buffer); // for snaphot
 int hd6301_receive_byte(u_char byte_in); // just passing through
 
 #if defined(SSE_IKBD_6301_MOUSE_MASK3)
-#if defined(SSE_IKBD_6301_MOUSE_MASK)
+#if defined(SSE_IKBD_6301_MOUSE_MASK) // 20bit on real HW?
 #define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto but breaks International Tennis
 #else
 #define MOUSE_MASK 0x33333333 // series of 11001100... for rotation

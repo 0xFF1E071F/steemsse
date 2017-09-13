@@ -28,14 +28,7 @@ reset ()
   reg_setpc (mem_getw (RESVECTOR));
   reg_setiflag (1);
 #if defined(SSE_IKBD_6301_DISASSEMBLE_ROM) // disassemble ST's 6301 rom
-  {//scope
-  static int RomWasDisassembled=0;
-  if(!RomWasDisassembled) 
-  {
-    dump_rom();
-    RomWasDisassembled++;// only once
-  }
-  }
+  dump_rom();
 #endif
 }
 
@@ -55,6 +48,29 @@ instr_exec ()
   int interrupted = 0;    /* 1 = HW interrupt occured */
 
 #ifndef M6800
+
+#if defined(SSE_IKBD_6301_393_REF)
+
+  // byte has just been received by ACIA?
+  if(!ACIA_IKBD.LineRxBusy && !(iram[TRCSR]&TDRE))
+    ACIA_IKBD.LineRxBusy=3; // indicates it's time to send byte in TDR
+  // first byte of a series to be sent?
+  else if(ACIA_IKBD.LineRxBusy==2 && cpu.ncycles-time_of_tdr_to_tdrs>=0)
+    ACIA_IKBD.LineRxBusy=3; // indicates it's time to send byte in TDR
+
+  // send byte to ACIA now?
+  if(ACIA_IKBD.LineRxBusy==3)
+  {
+    HD6301.tdrs=HD6301.tdr; // move TDR to TDRS
+    iram[TRCSR]|=TDRE; // set TDRE
+#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
+    TRACE("6301 TDR->TDRS %X\n",HD6301.tdrs);
+#endif
+    keyboard_buffer_write(HD6301.tdrs); // call Steem's ikbd function
+    ASSERT(ACIA_IKBD.LineRxBusy==1);
+  }
+
+#else 
 
   if(hd6301_completed_transmission_to_MC6850)
   {
@@ -79,6 +95,8 @@ instr_exec ()
     }
   }
 
+#endif //#if defined(SSE_IKBD_6301_393_REF)
+
   if (!reg_getiflag () 
 #if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
     && ExecutingInt!=EXECUTING_INT
@@ -89,17 +107,13 @@ instr_exec ()
      * Check for interrupts in priority order
      */
     if ((ireg_getb (TCSR) & OCF) && (ireg_getb (TCSR) & EOCI)) {
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_INT_TIMER)
-      TRACE("ACT %d Timer interrupt\n",act);
-#endif
       int_addr (OCFVECTOR);
       interrupted = 1;
     } 
     else if (serial_int ()) {
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_INT_SCI)
-      TRACE("SCI interrupt TRCSR=%X RXi=%d TXi=%d\n",ireg_getb (TRCSR),rxinterrupts,txinterrupts);
+#if !defined(SSE_IKBD_6301_393_REF)
+      txinterrupts=0;
 #endif
-      txinterrupts=0; 
       int_addr (SCIVECTOR);
       interrupted = 1;
     }
@@ -128,7 +142,11 @@ instr_exec ()
     if( ! ( pc>=0x80 && pc<0xFFFF) ) // eg bad snapshot
     {
       TRACE("6301 emu is hopelessly crashed!\n");
+#if defined(SSE_IKBD_6301_393_REF)
+      HD6301.Crashed=1;
+#else
       Crashed6301=1;
+#endif
       return -1;
     }
 
@@ -161,7 +179,7 @@ instr_print (addr)
   ASSERT (opptr->op_value == op);
 
   if(pc==mem_getw(0xFFF0)) // SS
-    TRACE("\nSCI interrupt start (rx %d)\n",rxinterrupts);
+    TRACE("\nSCI interrupt start\n");
 
   if(pc==mem_getw(0xFFF4)) // SS
     TRACE("\nOCF interrupt start\n");

@@ -365,8 +365,20 @@ void event_driveB_ip();
 #endif
 
 #if defined(SSE_ACIA_EVENT)
+
 extern COUNTER_VAR time_of_event_acia;
 void event_acia();
+
+#if defined(SSE_ACIA_393) 
+  // as this is called very often, we make it simpler, just one check
+#define PREPARE_EVENT_CHECK_FOR_ACIA \
+  if(OPTION_C1 && time_of_next_event-time_of_event_acia>=0)\
+  {\
+    time_of_next_event=time_of_event_acia;\
+    screen_event_vector=event_acia;\
+  }\
+
+#else
 
 #define PREPARE_EVENT_CHECK_FOR_ACIA     \
   if(OPTION_C1) {\
@@ -389,6 +401,8 @@ void event_acia();
   screen_event_vector=event_acia;                    \
   } \
   }
+
+#endif//#if defined(SSE_ACIA_393)
 
 #endif//acia
 

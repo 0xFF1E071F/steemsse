@@ -21,7 +21,9 @@ a pain.
 ST model. After that, you may change memory size (especially 4MB is trouble
 with some programs).
 
-- Option C1 is highly recommended, except if you use macros.
+- Option C1 is highly recommended for better emulation but it does change
+  the mouse feel.
+  Option C2 should deliver better YM sound (check Sound/Sampled YM-2149 too).
 
 
 Emulation Hints
@@ -105,8 +107,9 @@ Games
 - Future Wars: No B
 - G.Nius: ADAT
 - Gunship: No B
+- Hades Nebula: if stuck at start, reboot
 - Hunchy 2010: not C1
-- Hyper Force: STF
+- Hyper Force: STF, press fire then space to start
 - International Tennis: not C1
 - Jupiter Masterdrive STX: DI
 - Leader Board dongle: C1
@@ -121,7 +124,7 @@ Games
 - Microprose Golf ST: ADAT
 - Multi Player Soccer Manager dongle: C1
 - Nightdawn: STF
-- Obsession: Borders on
+- Obsession: STE, Borders on
 - Pacmania STE: Borders on
 - Pang: Borders on
 - Platoon STX: STF T100US (DI)
@@ -131,6 +134,7 @@ Games
 - Rugby Coach dongle: C1
 - Sabotage: ADAT
 - Seven Gates of Jambala: C2 
+- Starglider: STF
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
 - Super Hang-On: DI, ADAT, C1, C2
@@ -143,7 +147,9 @@ Games
 - Vroom -RPL: ADAT
 - War Heli: ADAT
 - War Heli STX: DI
-- Warp STX: C1, DI, retry!
+- Warp STX: C1, DI
+- Wings of Death: control for 60hz
+- Wipe-Out-RPL: ADAT
 - X-Out: C1
 
 Dongle games: choose the appropriate adapter in the 'Ports' option page.
@@ -223,6 +229,7 @@ Demos
 - Spectrum Analyzer: STE
 - Sphere by Sunny: STE
 - ST-NICCC 2000 Final by Oxygene: ADAT
+- Strider-RPL: ADAT
 - Summer Delights: STE, 4MB
 - Sunny: STE
 - Suretrip II - Dopecode by Checkpoint: ADAT
@@ -261,6 +268,8 @@ available.
 - Automation 222: STF (WU2)
 - Automation 231/Rainbow Island: STF
 - Automation 239: DI, C1
+- Automation 250/Necron: DI
+- Automation 311/Mr Dig: STF
 - Automation 398: ADAT
 Many Automation CDs were redone for the STE, they're not mentioned here.
 - Awesome 04 STF: #
