@@ -360,9 +360,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_SET_PAL:
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
 #if defined(SSE_MMU_WU_PALETTE_STE)
+#if defined(SSE_SHIFTER_393) // difficult choice!!!
+    if((ST_TYPE==STF || MMU.WU[OPTION_WS]==2)) // dots in Overscan demos frequent on STE
+#else
     if(!(ST_TYPE==STE && MMU.WU[OPTION_WS]==2)) // it really is another WU, to check Spectrum 512 pics
 #endif
-      cycles_since_hbl++; // eg Overscan Demos #6, already in v3.2 TODO why?
+#endif
+      cycles_since_hbl++;
 #endif
     //60hz line with border, HSCROLL or not
 #if defined(SSE_GLUE_392E)
@@ -377,6 +381,17 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
 #endif
       cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
+#if defined(SSE_SHIFTER_UNSTABLE_393) // Closure-like pixel shift
+    else if(Glue.CurrentScanline.Tricks&TRICK_8BIT_SHIFT)
+    {
+      if(ST_TYPE==STE)
+        cycles_since_hbl-=8; // we're 8+ cycles forward...
+      else if(MMU.WS[OPTION_WS]==2)
+        cycles_since_hbl-=11; // not better...
+      else //STF WS1, 3, 4
+        cycles_since_hbl-=12; // argh!
+    }
+#endif
     break;
   case DISPATCHER_SET_SHIFT_MODE:
     RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE, Bees (...)
@@ -398,7 +413,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   if(pixels_in > BORDER_SIDE+320+BORDER_SIDE) 
     pixels_in=BORDER_SIDE+320+BORDER_SIDE; 
 
-  // this is the most hacky part of our trick for large border/no shift on left off...
+  // this is the most tricky part of our hack for large border/no shift on left off...
   int pixels_in0=pixels_in;
 #if defined(SSE_VID_BORDERS)
   if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border && pixels_in>0)
@@ -503,12 +518,15 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     the hscroll parameter of the assembly drawing routine (programmed by
     Steem authors, of course).
     hscroll>15 is handled further.
-    We use this routine for other shifts as well.
     TODO: be able to shift the line by an arbitrary #pixels left ot right
     (assembly)
 */
         if(Glue.CurrentScanline.Tricks
+#if defined(SSE_GLUE_393)
+          &(TRICK_4BIT_SCROLL))
+#else
           &(TRICK_4BIT_SCROLL|TRICK_LINE_PLUS_20|TRICK_UNSTABLE)) // as refactored in 380
+#endif
         {
           hscroll-=HblPixelShift;
           if(hscroll<0)
