@@ -51,7 +51,7 @@ DESCRIPTION: Sets up all conditions that affect the Steem binary.
 #endif
 
 // These should be left in for release (work in progress)
-#if defined(WIN32) && !defined(NO_PASTI) && !defined(SSE_X64)
+#if defined(WIN32) && !defined(NO_PASTI)
 #define USE_PASTI 1
 #else
 #define USE_PASTI 0

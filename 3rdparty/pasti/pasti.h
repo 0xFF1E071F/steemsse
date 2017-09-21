@@ -4,6 +4,15 @@
 //	external interface definitions
 //
 
+
+#ifdef SSE_X64
+//note by Steven Seagal: long replaced with LONG_PTR where appropriate
+//#pragma message("OK x64 pasti") 
+#endif
+
+
+
+
 #ifndef DllExport
 #define DllExport __declspec( dllimport )
 #endif
@@ -112,17 +121,29 @@ extern "C" {
 struct pastiFUNCS
 {
 	BOOL ( *Io) ( int mode, struct pastiIOINFO *);
+#ifdef SSE_X64
+  BOOL ( *WritePorta) ( unsigned data, LONG_PTR cycles);
+#else
 	BOOL ( *WritePorta) ( unsigned data, long cycles);
-
+#endif
 	BOOL ( *Config) ( struct pastiCONFIGINFO *);
 	BOOL ( *GetConfig) ( struct pastiCONFIGINFO *pInfo);
 	BOOL ( *HwReset) ( BOOL bPowerUp);
 	int ( *GetLastError) ( void);
-
+#ifdef SSE_X64
+	BOOL ( *ImgLoad) ( int drive, BOOL bWprot, BOOL bDelay, LONG_PTR cycles,
+		struct pastiDISKIMGINFO *);
+#else
 	BOOL ( *ImgLoad) ( int drive, BOOL bWprot, BOOL bDelay, long cycles,
 		struct pastiDISKIMGINFO *);
+#endif
+
 	BOOL ( *SaveImg) ( int drive, BOOL bAlways, struct pastiDISKIMGINFO *);
+#ifdef SSE_X64
+  BOOL ( *Eject) ( int drive, LONG_PTR cycles);
+#else
 	BOOL ( *Eject) ( int drive, long cycles);
+#endif
 	BOOL ( *GetBootSector) ( int drive, struct pastiBOOTSECTINFO *);
 	int ( *GetFileExtensions) ( char *buf, int bufSize, BOOL bAll);
 
@@ -248,10 +269,13 @@ struct pastiIOINFO
 	unsigned data;
 
 	long stPC;				// Only for debugging
+#ifdef SSE_X64
+	LONG_PTR cycles;			// Current ST main clock cycles counter
+	LONG_PTR updateCycles;		// Need update after these cycles
+#else
 	long cycles;			// Current ST main clock cycles counter
-
 	long updateCycles;		// Need update after these cycles
-
+#endif
 	BOOL intrqState;
 	BOOL haveXfer;
 	BOOL brkHit;
@@ -271,7 +295,11 @@ struct pastiSTATEINFO
 {
 	void *buffer;
 	unsigned long bufSize;
+#ifdef SSE_X64
+  LONG_PTR cycles;
+#else
 	unsigned long cycles;
+#endif
 };
 
 struct pastiBOOTSECTINFO
@@ -351,12 +379,23 @@ DllExport BOOL pastiHwReset( BOOL bPowerUp);
 DllExport int pastiGetLastError( void);
 
 DllExport BOOL pastiIo( int mode, struct pastiIOINFO *);
+#ifdef SSE_X64
+DllExport BOOL pastiWritePorta( unsigned data, LONG_PTR cycles);
+
+DllExport BOOL pastiImgLoad( int drive, BOOL bWprot, BOOL bDelay, LONG_PTR cycles,
+				struct pastiDISKIMGINFO *);
+#else
 DllExport BOOL pastiWritePorta( unsigned data, long cycles);
 
 DllExport BOOL pastiImgLoad( int drive, BOOL bWprot, BOOL bDelay, long cycles,
 				struct pastiDISKIMGINFO *);
+#endif
 DllExport BOOL pastiSaveImg( int drive, BOOL bAlways, pastiDISKIMGINFO *);
+#ifdef SSE_X64
+DllExport BOOL pastiEject( int drive, LONG_PTR cycles);
+#else
 DllExport BOOL pastiEject( int drive, long cycles);
+#endif
 DllExport int pastiGetFileExtensions( char *newExts, int bufSize, BOOL bAll);
 DllExport BOOL pastiGetBootSector( int drive, struct pastiBOOTSECTINFO *);
 

@@ -195,7 +195,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_FLOPPY)
 #define SSE_DISK       // Disk images
-#if defined(WIN32) && !defined(SSE_X64)
+#if defined(WIN32)
 #define SSE_DISK_PASTI // Improvements in Pasti support (STX disk images)
 #endif
 #define SSE_DRIVE      // SF314 floppy disk drives
