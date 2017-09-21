@@ -70,7 +70,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-#if SSE_VERSION>=393
+#if SSE_VERSION>393
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
@@ -1884,10 +1884,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_393
 #define SSE_IKBD_6301_393
 //#define SSE_IKBD_MOUSE_ST_SPEED //forget it, result is too bad
-#define SSE_INT_HBL_E_CLOCK_HACK_393
 #define SSE_JOYSTICK_PADDLES //393
 #define SSE_MMU_393
 #define SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393 // black screen
+#define SSE_SHIFTER_393
+#define SSE_SHIFTER_UNSTABLE_393 // restrict use of Preload
 #define SSE_SOUND_OPTION_DISABLE_DSP // retake deleted code... 
 #define SSE_SOUND_MICROWIRE_MIXMODE_393
 #undef SSE_SOUND_MICROWIRE_MIXMODE
