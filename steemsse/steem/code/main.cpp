@@ -679,9 +679,6 @@ bool Initialise()
     }
   }
 #if defined(SSE_VAR_REQUIRE_FILES3)
-#ifdef _WIN64
-#error pasti in x64 build
-#endif
   else
     throw PASTI_DLL;
 #endif
