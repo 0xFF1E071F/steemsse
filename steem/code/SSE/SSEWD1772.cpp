@@ -264,7 +264,7 @@ BYTE TWD1772::IORead(BYTE Line) {
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
 #endif
-#if defined(SSE_WD1772_393) // all command types
+#if defined(SSE_WD1772_393_) // all command types // that's wrong too! (Exile)
       // WP
       // disk has just been changed (30 VBL set at SetDisk())
       if(floppy_mediach[drive])
@@ -286,7 +286,7 @@ BYTE TWD1772::IORead(BYTE Line) {
         else
           STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
 #endif
-#if !defined(SSE_WD1772_393)
+#if !defined(SSE_WD1772_393_)
         // WP
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
@@ -310,7 +310,7 @@ BYTE TWD1772::IORead(BYTE Line) {
           STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
         else
           STR|=FDC_STR_T1_SPINUP_COMPLETE;
-#if defined(SSE_WD1772_393)
+#if defined(SSE_WD1772_393) //notice it impacts native fdc no adat too
         // TR0: compute (again) now TODO
         Lines.track0=(floppy_head_track[drive]==0); //update line...
         if(Lines.track0)
@@ -346,7 +346,11 @@ WD doc:
     So, with D8, for both read STR (here) and write CR, we would have:
     "clear IRQ if no condition", then "clear condition",
 */
-        if(!ADAT || InterruptCondition!=8)
+        if(
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          !ADAT || 
+#endif
+          InterruptCondition!=8)
           mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
         InterruptCondition=0;
       }
@@ -2150,15 +2154,6 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     to STW
 */
 
-
-//tst
-   if( (STR&STR_BUSY) && (io_src_b&0xF0)!=0xD0 && fdc_spinning_up)
-   {
-     ASSERT(prg_phase==WD_TYPEI_SPINUP|| prg_phase==WD_TYPEII_SPINUP|| prg_phase==WD_TYPEIII_SPINUP);
-   }
-
-
-
   if(!(STR&STR_BUSY)
 #if defined(SSE_WD1772_393)
     || fdc_spinning_up // since we use it now... 
@@ -2170,10 +2165,6 @@ void  TWD1772::WriteCR(BYTE io_src_b) {
     || (io_src_b&0xF0)==0xD0)
   {
     ASSERT(!(STR&STR_BUSY)||fdc_spinning_up||(io_src_b&0xF0)==0xD0);//ok
-
-
-
-
     agenda_delete(agenda_fdc_motor_flag_off); // and others?
     NewCommand(io_src_b); // one more function, more readable
   }
