@@ -1879,6 +1879,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_ACIA_393 // refactor-debug ACIA
 //#define SSE_BLT_RESTART_393 //wrong, see down_tln
 #define SSE_BOILER_393
+#define SSE_FDC_ACCURATE_BEHAVIOUR_FAST
 #define SSE_GLUE_393
 #define SSE_GUI_393
 #define SSE_IKBD_6301_393
@@ -2004,6 +2005,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VS2008_WARNING_393 //STE joystick was broken
 #define SSE_WD1772_393 // wrong status after force interrupt 
 #define SSE_WD1772_393B  // AMD must be enabled to see A1 + if enabled, don't rev down
+#define SSE_FDC_393A // execute fdc commands if no drive
+#define SSE_FDC_393B // RNF on IRQ, not before //correct?
+#define SSE_FDC_393C //! a consequence of SSE_WD1772_393 fix, impacts fdc no ADAT
 #define SSE_JOYSTICK_NO_MM //circle around unsolved bug
 #undef SSE_VID_D3D_FS_392D1
 

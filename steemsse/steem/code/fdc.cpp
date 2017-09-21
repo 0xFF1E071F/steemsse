@@ -259,10 +259,17 @@ bool floppy_track_index_pulse_active()
 void fdc_type1_check_verify()
 {
 #if defined(SSE_FDC_VERIFY_AGENDA)
-
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+  if(true)
+#else
   if(ADAT)
+#endif
   {
-    if(FDC_VERIFY)
+    if(FDC_VERIFY
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+      && ADAT
+#endif
+      )
     {
       WORD HBLsToNextID;
       BYTE NextIDNum;
@@ -316,16 +323,7 @@ void floppy_fdc_command(BYTE cm)
 {
   dbg_log(Str("FDC: ")+HEXSl(old_pc,6)+" - executing command $"+HEXSl(cm,2));
 
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)//TODO RECHECK
-/*  This was missing in Steem up to now but was in Hatari.
-    Commands are ignored if no drive is currently selected, except
-    for command Interrupt, which shouldn't need any drive.
-    Not sure it's the best emulation (controller would at least try?).
-    Fixes Japtro loader in the accurate way of v3.5.1 though.
-    This demo already worked before because SEEK and STEP were implemented 
-    another, less precise way (compensation).
-    TODO: some commands should work or start
-*/
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) && !defined(SSE_FDC_393A)
   if(ADAT && YM2149.Drive()==TYM2149::NO_VALID_DRIVE && (cm&0xF0)!=0xd0)
   {
     TRACE_LOG("CR %X no drive selected\n",cm);
@@ -346,9 +344,12 @@ void floppy_fdc_command(BYTE cm)
   This fixes Overdrive by Phalanx being stuck on Amiga disk.
   It wouldn't work on commands that start wihtout waiting (bit 3 'h' set), eg
   DSOS.
-  The ADAT condition is just to make sure we break nothing in normal mode.
 */
-    if( ADAT && fdc_spinning_up &&!(WD1772.CR&BIT_3) 
+    if(
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+      ADAT &&
+#endif
+      fdc_spinning_up &&!(WD1772.CR&BIT_3) 
       && WD1772.CommandType(cm)<4  && cm!=WD1772.CR)
       // we don't return, we will execute this command instead
       TRACE_LOG("CR %X->%X during spin-up\n",WD1772.CR,cm);
@@ -363,7 +364,11 @@ void floppy_fdc_command(BYTE cm)
 
 #if defined(SSE_FDC_FORCE_INTERRUPT)
   // see note in SSEWD1772.cpp, IORead()
-  if(!ADAT || WD1772.InterruptCondition!=8)
+  if(
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+    !ADAT || 
+#endif
+    WD1772.InterruptCondition!=8)
     mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,true); // Turn off IRQ output
   WD1772.InterruptCondition=0;
 #else 
@@ -387,7 +392,11 @@ void floppy_fdc_command(BYTE cm)
     (Noughts and Mad Crosses STE)
     But we need to start the motor if command interrupt (Froggies). 
 */
-  if(ADAT && (fdc_str&FDC_STR_BUSY) && WD1772.CommandType(cm)<4) 
+  if(
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+    ADAT && 
+#endif
+    (fdc_str&FDC_STR_BUSY) && WD1772.CommandType(cm)<4) 
     return;
 #endif
 
@@ -405,7 +414,9 @@ void floppy_fdc_command(BYTE cm)
     fdc_str=FDC_STR_BUSY | FDC_STR_MOTOR_ON;
     fdc_spinning_up=int(delay_exec ? 2:1);
 #if defined(SSE_DRIVE)
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
     if(ADAT)
+#endif
       SF314[DRIVE].State.motor=true;
     TRACE_LOG("Motor on drive %c\n",'A'+DRIVE);
 #endif
@@ -468,10 +479,6 @@ void fdc_execute()
 {
   // We need to do something here to make the command take more time
   // if the disk spinning up (fdc_spinning_up).
- 
-#if defined(SSE_DEBUG)&&defined(SSE_YM2149_OBJECT)&&defined(SSE_WD1772)
-  ASSERT( YM2149.Drive()!=TYM2149::NO_VALID_DRIVE || WD1772.CommandType()==4 ||!ADAT);
-#endif
 
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
@@ -609,10 +616,12 @@ and ends the command.
 #endif
           }else{
             if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
             if(!ADAT)
 #endif            
             floppy_head_track[floppyno]=0;
+#endif
           }
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
@@ -623,7 +632,11 @@ does not activate after 255 step pulses AND the V bit is set in the
 command word, the 177x sets the Seek Error bit in the status register
 and ends the command.
 */
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          if(true)
+#else
           if(ADAT)
+#endif
           {
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
@@ -676,12 +689,20 @@ cycles before the first stepping pulse.
       default: //step, step in, step out
       {
 #if defined(SSE_DRIVE_SOUND)
-        if(OPTION_DRIVE_SOUND)
+        if(OPTION_DRIVE_SOUND
+#if defined(SSE_FDC_393A)
+          && YM2149.Drive()!=TYM2149::NO_VALID_DRIVE
+#endif
+          )
           SF314[DRIVE].Sound_Step();
 #endif
         fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         char d=1; //step direction, default is inwards
-        if (floppy->Empty()){
+        if (floppy->Empty()
+#if defined(SSE_FDC_393A)
+          || YM2149.Drive()==TYM2149::NO_VALID_DRIVE //Japtro
+#endif          
+          ){
           if (FDC_VERIFY) fdc_str|=FDC_STR_SEEK_ERROR;
         }else{
           switch (fdc_cr & (BIT_7+BIT_6+BIT_5)){
@@ -801,7 +822,11 @@ CRC.
 
         if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM){
           TRACE_LOG("Drive empty or track %d overshoot\n",floppy_head_track[floppyno]);
+#if defined(SSE_FDC_393B)
+          fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
+#else
           fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;
+#endif
           floppy_irq_flag=FLOPPY_IRQ_ONESEC;  //end command after 1 second
           break;
         }
@@ -831,7 +856,8 @@ CRC.
           int nSects=floppy->GetIDFields(floppy_current_side(),floppy_head_track[floppyno],IDList);
           for (int n=0;n<nSects;n++){
             if (IDList[n].Track==fdc_tr 
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+#elif defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*  Side in ID field may have whatever value. The WD1772 chip doesn't control
     side. In the ST, it is done by the YM2149 PSG.
 */
@@ -885,7 +911,11 @@ CRC.
           }else{
             TRACE_LOG("SectorIdx %d nSects %d\n",SectorIdx,nSects);
             floppy_irq_flag=FLOPPY_IRQ_ONESEC;
+#if defined(SSE_FDC_393B)
+            fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
+#else
             fdc_str=FDC_STR_MOTOR_ON | FDC_STR_SEEK_ERROR | FDC_STR_BUSY;  //sector not found
+#endif
           }
 
         }
@@ -1099,17 +1129,31 @@ acknowledge Force Interrupt commands only between micro- instructions.
 #endif
         dbg_log(Str("FDC: ")+HEXSl(old_pc,6)+" - Force interrupt: t="+hbl_count);
 
+#if defined(SSE_FDC_393C)
+/*  On the common $90-$D0 sequence, the command is still active when it is 
+    interrupted, and STR isn't 'type I'. 
+*/
+        if(!(fdc_str&FDC_STR_BUSY))
+          floppy_type1_command_active=2; // PYM/BPOC doesn't like 'track0' 
+#else
         bool type23_active=(agenda_get_queue_pos(agenda_floppy_readwrite_sector)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_read_address)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_read_track)>=0 ||
                             agenda_get_queue_pos(agenda_floppy_write_track)>=0);
+#endif
         agenda_delete(agenda_floppy_seek);
         agenda_delete(agenda_floppy_readwrite_sector);
         agenda_delete(agenda_floppy_read_address);
         agenda_delete(agenda_floppy_read_track);
         agenda_delete(agenda_floppy_write_track);
 #if defined(SSE_FDC_ACCURATE)
-        if(ADAT)
+        if(
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          true
+#else
+          ADAT
+#endif
+          )
         {
 #if defined(SSE_FDC_VERIFY_AGENDA)
           agenda_delete(agenda_fdc_verify);
@@ -1144,7 +1188,11 @@ condition for interrupt is met the INTRQ line goes high signifying
   -> D4 (IRQ every index pulse) wasn't implemented yet in Steem. 
   Done in v3.5.3. Fixes Panzer rotation time returning null times.
 */          
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          if(true)
+#else
           if(ADAT)
+#endif
           {
             if(fdc_cr&b1000)
             {
@@ -1171,7 +1219,11 @@ condition for interrupt is met the INTRQ line goes high signifying
           floppy_irq_flag=0;
 #if defined(SSE_FDC_FORCE_INTERRUPT)
           WD1772.InterruptCondition=0;
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          if(true)
+#else
           if(ADAT)
+#endif
             agenda_add(agenda_fdc_motor_flag_off,FDC_HBLS_PER_ROTATION*9,0); //no IP ctr...
           else
 #endif
@@ -1185,11 +1237,13 @@ condition for interrupt is met the INTRQ line goes high signifying
           (first time terminates a command, if one is active; second time activates
           a type I status because no command was active).
         */
+#if !defined(SSE_FDC_393C) //see above
         if (type23_active){
           floppy_type1_command_active=0;
         }else{
           floppy_type1_command_active=2;
         }
+#endif
         break;
       }
     }
@@ -1272,9 +1326,9 @@ void agenda_fdc_motor_flag_off(int)
 #if defined(SSE_FDC_VERIFY_AGENDA)
 
 void agenda_fdc_verify(int) {
-
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
   ASSERT( ADAT );
-
+#endif
   if(floppy_type1_command_active && FDC_VERIFY)
   {
 //    TRACE_LOG("Verify\n");
@@ -1320,6 +1374,10 @@ void agenda_fdc_finished(int)
 #endif//snd
 
   dbg_log("FDC: Finished command, GPIP bit low.");
+#if defined(SSE_FDC_393B)
+  if(floppy_irq_flag==FLOPPY_IRQ_ONESEC)
+    fdc_str|=FDC_STR_SEEK_ERROR;
+#endif
   floppy_irq_flag=FLOPPY_IRQ_NOW;
   mfp_gpip_set_bit(MFP_GPIP_FDC_BIT,0); // Sets bit in GPIP low (and it stays low)
 
@@ -1344,7 +1402,11 @@ void agenda_fdc_finished(int)
     Motor keeps running.
     It's a way to measure rotation time (Panzer)
 */
-  if(ADAT && WD1772.InterruptCondition==4)
+  if(
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)    
+    ADAT && 
+#endif
+    WD1772.InterruptCondition==4)
   {
 //    TRACE_LOG("D4 prepare next IP at %d\n",hbl_count+FDC_HBLS_PER_ROTATION);
     agenda_add(agenda_fdc_finished,FDC_HBLS_PER_ROTATION,0);    
@@ -1357,7 +1419,11 @@ void agenda_fdc_finished(int)
     //  Set up agenda for next IP
     agenda_delete(agenda_fdc_motor_flag_off); //3.6.2
     WD1772.IndexCounter=0;
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+    DWORD delay=(ADAT)?(SF314[DRIVE].HblsNextIndex()):2;
+#else
     DWORD delay=SF314[DRIVE].HblsNextIndex();
+#endif
     agenda_add(agenda_fdc_motor_flag_off,delay,0);
   }
 #endif
@@ -1382,7 +1448,11 @@ issued."
   ->
   Seek works with DR and TR, not DR and disk track.
 */
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+  if(true)
+#else
   if(ADAT)
+#endif
   {
     if(fdc_tr==fdc_dr)
     {
@@ -1461,7 +1531,7 @@ void agenda_floppy_readwrite_sector(int Data)
   if (floppy_head_track[floppyno]<=FLOPPY_MAX_TRACK_NUM){
     FromFormat=floppy->TrackIsFormatted[floppy_current_side()][floppy_head_track[floppyno]];
   }
-#if defined(SSE_FDC_ACCURATE_TIMING)
+#if defined(SSE_FDC_ACCURATE_TIMING)//hbl drift?
   int Command=fdc_cr; //shouldn't change...
 #else
   int Command=HIWORD(Data);
@@ -1482,8 +1552,9 @@ void agenda_floppy_readwrite_sector(int Data)
   fdc_str=BYTE(FDC_STR_BUSY | FDC_STR_MOTOR_ON | WriteProtect);
   floppy_irq_flag=0;
   if (floppy_access_ff) floppy_access_ff_counter=FLOPPY_FF_VBL_COUNT;
-
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) && !defined(SSE_WD1772_393) // type II
+#if defined(SSE_WD1772_393) // type II
+  if(!ADAT)
+#elif defined(SSE_FDC_ACCURATE_BEHAVIOUR)
   if(ADAT)
     fdc_str|=FDC_STR_T1_SPINUP_COMPLETE; // no real use...
   else
@@ -1566,7 +1637,11 @@ instant_sector_access_loop:
             break;
           }
         }
-        if(dma_sector_count && (ADAT||DMA_ADDRESS_IS_VALID_W)) //game Sabotage
+        if(dma_sector_count 
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+          && (ADAT||DMA_ADDRESS_IS_VALID_W)
+#endif
+          ) //game Sabotage
           Dma.AddToFifo(Temp); // disk to RAM
 #else
         if (DMA_ADDRESS_IS_VALID_W && dma_sector_count){
@@ -1595,7 +1670,11 @@ instant_sector_access_loop:
       fdc_sr++;
       floppy_irq_flag=0;
 #if defined(SSE_FDC_ACCURATE)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+      if(true)
+#else
       if(ADAT)
+#endif
       {
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
         if(!fdc_sr)
@@ -1604,6 +1683,11 @@ instant_sector_access_loop:
         TRACE_LOG("SR->%d\n",fdc_sr);
 #if defined(SSE_FDC_ACCURATE_TIMING)
         // The controller must find next sector
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+        if(!ADAT)
+          agenda_add(agenda_floppy_readwrite_sector,1,MAKELONG(++Part,Command));
+        else
+#endif
         agenda_add(agenda_floppy_readwrite_sector,Disk[DRIVE].SectorGap(),
           MAKELONG(++Part,Command));
         return;
@@ -1710,7 +1794,9 @@ void agenda_floppy_read_address(int idx)
     that a comparison can be made by the user.
     This happens after eventual DMA transfer, so the value should be correct.
 */
+#if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
     if(ADAT)
+#endif
       WD1772.SR=IDList[idx].Track;
 #endif
     // TODO, timing?
@@ -1719,7 +1805,7 @@ void agenda_floppy_read_address(int idx)
     disk_light_off_time=timer+DisableDiskLightAfter;
 #endif
 
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR) //timing...
     if(!ADAT) 
 #endif
     {
