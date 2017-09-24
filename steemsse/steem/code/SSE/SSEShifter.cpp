@@ -381,17 +381,6 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
 #endif
       cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
-#if defined(SSE_SHIFTER_UNSTABLE_393) // Closure-like pixel shift
-    else if(Glue.CurrentScanline.Tricks&TRICK_8BIT_SHIFT)
-    {
-      if(ST_TYPE==STE)
-        cycles_since_hbl-=8; // we're 8+ cycles forward...
-      else if(MMU.WS[OPTION_WS]==2)
-        cycles_since_hbl-=11; // not better...
-      else //STF WS1, 3, 4
-        cycles_since_hbl-=12; // argh!
-    }
-#endif
     break;
   case DISPATCHER_SET_SHIFT_MODE:
     RoundCycles(cycles_since_hbl); // eg Drag/Happy Islands, Cool STE, Bees (...)

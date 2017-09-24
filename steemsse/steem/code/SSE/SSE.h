@@ -74,7 +74,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
-#if SSE_VERSION>393
+#if SSE_VERSION>=393
 #define SSE_BETA //title, OSD, plus some testing - new features
 #endif
 
@@ -1352,8 +1352,8 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_MMU_WU) && defined(SSE_SHIFTER_TRICKS)
 
-#define SSE_GLUE_TCB // Swedish New Year Demo/TCB
-#define SSE_SHIFTER_UNSTABLE // DoLB, Omega, Overdrive/Dragon, Beeshift
+#define SSE_GLUE_TCB // Swedish New Year Demo/TCB //MFD
+#define SSE_SHIFTER_UNSTABLE
 
 #endif
 
@@ -1906,6 +1906,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393B // VCount counts up, makes more sense for mono
 #define SSE_GLUE_393C // not necessary, to test! 
 #define SSE_GLUE_393D // state of VSync line
+#define SSE_GLUE_393E // shifts on left border removal don't "preload" the Shifter
 #endif
 
 #if defined(SSE_GUI_393)
