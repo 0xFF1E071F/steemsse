@@ -950,7 +950,6 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 #ifdef ONEGAME
   for (int n=1;n<RC_NUM_ICONS;n++) hGUIIcon[n]=NULL;
 #else
-  //ASSERT(RC_NUM_ICONS==80);
   HICON hOld[RC_NUM_ICONS],hOldSmall[RC_NUM_ICONS];
   for (int n=1;n<RC_NUM_ICONS;n++){
     hOld[n]=hGUIIcon[n];
@@ -970,7 +969,6 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
 
   Str File;
   for (int n=1;n<RC_NUM_ICONS;n++){
-//    ASSERT(n!=79);
     int size=RCGetSizeOfIcon(n);
     bool load16too=size & 1;
     size&=~1;
@@ -983,7 +981,6 @@ void LoadAllIcons(ConfigStoreFile *NOT_ONEGAME( pCSF ),bool NOT_ONEGAME( FirstCa
       if (UseDefault==0) File=pCSF->GetStr("Icons",Str("Icon")+n,"");
       if (File.NotEmpty()) hGUIIcon[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,size,size,LR_LOADFROMFILE);
       if (hGUIIcon[n]==NULL) hGUIIcon[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,size,size,0);
-     // TRACE("%d %d %d\n",n,size,hGUIIcon[n]);
       if (load16too){
         if (File.NotEmpty()) hGUIIconSmall[n]=(HICON)LoadImage(Inst,File,IMAGE_ICON,16,16,LR_LOADFROMFILE);
         if (hGUIIconSmall[n]==NULL) hGUIIconSmall[n]=(HICON)LoadImage(Inst,RCNUM(n),IMAGE_ICON,16,16,0);

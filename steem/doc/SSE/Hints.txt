@@ -81,6 +81,7 @@ Games
 
 - 4 Wheel Drive/Combo Racer STX: pasti 02j
 - 10th Frame dongle: C1
+- Airball: press space on control screen to start
 - Albedo STX: DI, pasti 02j
 - Altaïr: to use the missile, press any SHIFT key
 - Amberstar STX: WP
@@ -94,18 +95,15 @@ Games
 - Crash Garret: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
-- Demoniak -ELT: STF, C1, C2, ADAT
+- Demoniak -ELT: STF, C1, C2
 - Dragonflight: create STW disk
 - Dungeon Master SCP: DI
 - Dynabusters+: STE; F1: music F2: volume
-- ESWAT: ADAT
-- Exile: ADAT
 - Eye of Horus -MCA: T100
 - The Final Conflict: C1, C2
 - Flying Shark STX: STF
 - Foundation's Waste, some versions: No B
 - Future Wars: No B
-- G.Nius: ADAT
 - Gunship: No B
 - Hades Nebula: if stuck at start, reboot
 - Hunchy 2010: not C1
@@ -117,9 +115,7 @@ Games
 - Lethal Xcess: Borders on
 - Live & Let Die: STF
 - Logical-ELT: C2
-- The Lost Patrol: ADAT
 - Manchester United: C1
-- Mean Street: ADAT
 - Mercs STX: not T102
 - Microprose Golf ST: ADAT
 - Multi Player Soccer Manager dongle: C1
@@ -132,14 +128,14 @@ Games
 - Rogue: T100
 - R-Type: STF
 - Rugby Coach dongle: C1
-- Sabotage: ADAT
 - Seven Gates of Jambala: C2 
+- Spidertronic: French TOS
 - Starglider: STF
 - Star Trek STX: not T102
 - Sundog IPF: Ghost disk
-- Super Hang-On: DI, ADAT, C1, C2
 - The Sentinel (aka The Sentry): C1
 - Test Drive: RAM <4MB
+- Titan -MB: not T102
 - Trauma STX (DI): French TOS
 - Trex Warrior: C2
 - Ultimate Arena: STE
@@ -149,7 +145,7 @@ Games
 - War Heli STX: DI
 - Warp STX: C1, DI
 - Wings of Death: control for 60hz
-- Wipe-Out-RPL: ADAT
+- Wrath of The Demon -VMX: DI?
 - X-Out: C1
 
 Dongle games: choose the appropriate adapter in the 'Ports' option page.
@@ -160,7 +156,7 @@ Demos
 
 - 0913: STE French TOS
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD: STW or not ADAT or STW
+- 36.15 HMD: STF WU1, STW or not ADAT
 - 36.15 OVR: STF, CPU speed
 - Audio Artistic Demo: C2
 - Awakening of the Gods: press space twice for menu; not T102
@@ -177,12 +173,12 @@ Demos
 - Dangerous Fantaisy: STE
 - Death of the Clock Cycles: 1MB
 - Death of the Left Border STF, WS2
-- Delirious 3: STE, ADAT, numpad
+- Delirious 3: STE, numpad
 - Delirious 4: STE, ADAT; Tekila: #
 - Deep Lair on Fuzion 80: STE
 - Dragonnels: C1
 - Drone: STE, 4MB
-- E605: planet STE
+- E605: STE
 - European Demos: No B or insert both disks before starting
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
@@ -204,8 +200,8 @@ Demos
 - Oh No More Froggies: <4MB
 - Ooh Crikey Hidden screen: STF
 - Omega Full Overscan Screen: STF, WS2
-- Overdrive: C1, ADAT
-- Overdrive/Dragon: WU2
+- Overdrive: C1
+- Overdrive/Dragon: STF WU2
 - Overscan Demos STE: C2
 - Pacemaker: STE; Space: credits at once
 - Panic v1: STF, C2
@@ -229,13 +225,11 @@ Demos
 - Spectrum Analyzer: STE
 - Sphere by Sunny: STE
 - ST-NICCC 2000 Final by Oxygene: ADAT
-- Strider-RPL: ADAT
 - Summer Delights: STE, 4MB
 - Sunny: STE
 - Suretrip II - Dopecode by Checkpoint: ADAT
 - Swedish New Year Demo 1989: STF; TCB: WS2
 - SNYD2/Sync fullscreen: STF
-- Symic Demo: ADAT
 - Time Slices: STE, HI
 - Tragedy For U: STE, ADAT, No B
 - Transbeauce 2: C1; Naos: STE or STF WU1
@@ -244,7 +238,7 @@ Demos
 - Ultimate Demo by dynamic duo: <4MB
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
-- Union Demo: STF 1MB; for sound, no C2 or very high sampling rate
+- Union Demo: STF 1MB
 - The World is my Oyster screen #2: STF
 - World of Music -NPG: WS1 if STE
 - Ventura: mouse to rotate menu
@@ -261,7 +255,7 @@ available.
 
 - A-Ha/Mig 29: press space & wait
 - Automation 000/IK+: STF
-- Automation 001/The Sentinel: STF, C1, ADAT
+- Automation 001/The Sentinel: STF, C1
 - Automation 081/Star Wars: STF
 - Automation 120: <4MB
 - Automation 168: STF (WU2)
@@ -270,7 +264,6 @@ available.
 - Automation 239: DI, C1
 - Automation 250/Necron: DI
 - Automation 311/Mr Dig: STF
-- Automation 398: ADAT
 Many Automation CDs were redone for the STE, they're not mentioned here.
 - Awesome 04 STF: #
 - Awesome 17: DI

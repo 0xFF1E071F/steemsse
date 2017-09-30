@@ -3,7 +3,10 @@
 #define SSEACSI_H
 
 #include <conditions.h>
+
 #pragma pack(push, STRUCTURE_ALIGNMENT)
+
+#if defined(SSE_ACSI)
 
 struct TAcsiHdc {
 enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
@@ -47,5 +50,7 @@ enum {MAX_ACSI_DEVICES=4}; // could be 8 but we stop at 4
 
 extern BYTE acsi_dev;
 extern TAcsiHdc AcsiHdc[TAcsiHdc::MAX_ACSI_DEVICES]; // each object is <64 bytes
+
+#endif
 
 #endif//#ifndef SSEACSI_H

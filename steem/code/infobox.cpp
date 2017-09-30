@@ -123,7 +123,7 @@ const char *Credits[11]={
   "John Saxon, Harrison Page, Brian Thompson, Liam Neeson, Sean Bean, Dolph Lundgren, Donald Gibb, Mickey Rourke, Gary Busey,",
   "Jesse Ventura, Carl Weathers, Bill Duke, David Carradine, Bill Paxton, Jackie Chan, Harrison Ford, Viggo Mortensen,",
   "Sven-Ole Thorsen, Arnold Schwarzenegger, Vincent Klyn, Wesley Snipes, Vin Diesel, Alec Baldwin, Willem Dafoe,",
-  "Harry Dean Stanton, Lee Major, Christopher Walken and James Woods.",
+  "Harry Dean Stanton, Lee Major, Christopher Walken, David Soul, Paul Michael Glaser and James Woods.",
   "RIP Lee Van Cleef, Paul Walker.",
   NULL};
 #endif

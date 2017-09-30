@@ -1527,10 +1527,10 @@ LRESULT __stdcall TDiskManager::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lP
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(num_connected_floppies==1 ? MF_CHECKED:0),2012,T("Disconnect Drive B"));
 #endif
 #if !defined(SSE_FLOPPY_ALWAYS_ADAT)
-  // it's advanced but if changed sticks
-ADVANCED_BEGIN            
+  // not advanced because it should work most of the time
+//ADVANCED_BEGIN            
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(floppy_instant_sector_access==0 ? MF_CHECKED:0),2013,T("Accurate Disk Access Times (Slow)"));
-ADVANCED_END
+//ADVANCED_END
 #endif
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_STRING | int(FloppyArchiveIsReadWrite ? MF_CHECKED:0),2014,T("Read/Write Archives (Changes Lost On Eject)"));
             InsertMenu(Pop,0xffffffff,MF_BYPOSITION | MF_SEPARATOR,1999,NULL);

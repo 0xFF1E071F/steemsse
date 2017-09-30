@@ -1655,7 +1655,7 @@ To the right of the set-home button is a the disk manager options button, it
 brings up a menu with the following choices:
 
 
--Accurate Disk Access Times (Slow) (advanced)
+-Accurate Disk Access Times (Slow)
 
 Floppy disk drives are slow, horribly tediously slow, so by default Steem 
 does away with the waits and emulates disk access at impossibly high speed. 
@@ -1670,9 +1670,6 @@ The option doesn't operate with CTR, IPF and SCP images, but it does with ST,
 MSA, DIM, HFE and STW images. Some disks won't load without accurate timings.
 Speed for STX images is set in 'Pasti configuration'.
 The option also works on ACSI hard drives (but not GEMDOS).
-The option is considered as "advanced" because unchecking it may break
-programs. But if you uncheck it, it will stick even if you disable Advanced
-Settings later.
 
 
 -Read/Write Archives (Changes Lost On Eject)

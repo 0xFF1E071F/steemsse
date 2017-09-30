@@ -181,13 +181,11 @@ void IKBD_VBL()
   // ikbd_poll_scanline determines where on the screen the IKBD has polled the keyboard,
   // joystick and mouse. Steem always polls at the VBL but that can cause problems for
   // some programs, so we delay sending the notifications. 
-  // [SS now we poll once in the frame too for Corporation STE but it has its 
-  // own problems (HighResMode!) -> hacks]
 
   int max_line=scanlines_above_screen[shifter_freq_idx]+(MONO ? 400:200);
-  ikbd_joy_poll_line+=527;       // SS we keep these despite polling more
-  ikbd_joy_poll_line%=max_line;  // or Arctic Moves is broken, certainly
-  ikbd_key_poll_line+=793;       // many more
+  ikbd_joy_poll_line+=527;
+  ikbd_joy_poll_line%=max_line;
+  ikbd_key_poll_line+=793;
   ikbd_key_poll_line%=max_line;
   ikbd_mouse_poll_line+=379;
   ikbd_mouse_poll_line%=max_line;

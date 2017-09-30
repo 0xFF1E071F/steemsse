@@ -833,7 +833,10 @@ void TDma::UpdateRegs(bool trace_them) {
 #if USE_PASTI
 #if defined(SSE_DISK_PASTI_AUTO_SWITCH)
   if(hPasti && (pasti_active || SF314[DRIVE].ImageType.Extension==EXT_STX)
-    &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted))
+#if defined(SSE_DISK_GHOST)
+    &&!(OPTION_GHOST_DISK&&WD1772.Lines.CommandWasIntercepted)
+#endif
+    )
 #else
   if(hPasti && pasti_active)
 #endif

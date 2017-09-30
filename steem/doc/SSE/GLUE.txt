@@ -140,6 +140,10 @@ This implies that the number of scanlines in a frame is stable from the moment
 it is decided until the next frame.
 
 
+Reset
+======
+
+GLUE keeps running the video logic (DE,BLANK and SYNCs) on hardware reset.
 
 
 Signal descritpions
