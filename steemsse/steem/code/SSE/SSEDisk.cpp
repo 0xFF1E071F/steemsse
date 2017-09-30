@@ -34,8 +34,8 @@ TDisk::TDisk() {
   Init();
 }
 
+
 void TDisk::Init() {
-  //TrackBytes=DRIVE_BYTES_ROTATION; // 6256+14 default for ST/MSA/DIM
   TrackBytes=TRACK_BYTES;
 }
 
@@ -136,7 +136,6 @@ BYTE TDisk::nSectors() {
 
 
 BYTE TDisk::PostIndexGap() {
-
   switch( nSectors() )
   {
   case 9:

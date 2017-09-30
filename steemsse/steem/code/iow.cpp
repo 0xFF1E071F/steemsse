@@ -1378,12 +1378,6 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
             pasti->WritePorta(io_src_b,ABSOLUTE_CPU_TIME);
 #endif//pasti
-#if defined(SSE_DEBUG) && defined(SSE_FDC_ACCURATE)
-/* Symic Demo TODO right or wrong?
-*/
-          if(WD1772.IndexCounter && YM2149.Drive()==TYM2149::NO_VALID_DRIVE)
-            TRACE_FDC("drive deselect while IP counter %d\n",WD1772.IndexCounter);
-#endif
 #if defined(SSE_DISK_CAPS)
           if(Caps.Active) // like the above (we imitate!)
             Caps.WritePsgA(io_src_b);
@@ -1404,7 +1398,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
 #endif
 
-#if defined(SSE_YM2149C)
+#if defined(SSE_YM2149C) && defined(SSE_WD1772)
 /*  turn on/off motor in drives
     Fixes Delirious 3 STW and Realm of the Trolls STX init STW disc.
 */

@@ -1257,6 +1257,9 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #if defined(SSE_BLT_392) // restart timing
           INSTRUCTION_TIME(4); //BLIT03K, Down -TLN, TODO, it should be some latency
 #endif
+#ifdef SSE_BUGFIX_393
+          if(!Blit.HasBus) // stack overflow...
+#endif
           Blitter_Draw();
 #endif
 #else//!main loop

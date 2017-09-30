@@ -57,7 +57,7 @@ void LoadUnzipDLL()
 #endif
 
   }//hunzip
-#if defined(SSE_VAR_REQUIRE_FILES3)
+#if defined(SSE_VAR_REQUIRE_FILES2)
 #ifdef _WIN64
 #error shouldn't need UNZIP_DLL 
 #endif

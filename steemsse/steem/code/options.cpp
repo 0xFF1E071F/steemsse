@@ -1570,7 +1570,7 @@ ADVANCED_END
 #if !defined(SSE_VID_ST_MONITOR_393)
             OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
 #endif
-#if !defined(SSE_GUI_CRISP_IN_DISPLAY) && SSE_VERSION>=393
+#if !defined(SSE_GUI_CRISP_IN_DISPLAY) && defined(SSE_VID_ST_MONITOR_393)
 NOT_ADVANCED_BEGIN 
             // stretch mode with scanlines = 'interpolated', by default
             draw_win_mode[0]=draw_win_mode[1]=!OPTION_SCANLINES; 

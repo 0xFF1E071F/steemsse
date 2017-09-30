@@ -471,8 +471,13 @@ void osd_draw()
   // Green led for floppy disk read; red for write.
   {
     Dma.UpdateRegs();
+#ifdef WD1772
     bool FDCWriting=WD1772.WritingToDisk();
-    if(WD1772.STR&0x80 //) // motor on, simply
+#else
+    bool FDCWriting=false;
+#endif
+    //if(WD1772.STR&0x80 //) // motor on, simply
+    if(fdc_str&0x80 //) // motor on, simply //393
       && (psg_reg[PSGR_PORT_A]&6) != 6 //3.6.3
 #if defined(SSE_TOS_PRG_AUTORUN_392)
       && SF314[0].ImageType.Manager!=MNGR_PRG
@@ -519,7 +524,15 @@ void osd_draw()
 
         RECT cliprect={THE_LEFT,0,THE_RIGHT,y1}; //refactor...
         char tmp_buffer[BUFFER_LENGTH];
-
+#if defined(SSE_VAR_393)
+#ifdef SSE_DEBUG // add current command (CR)
+        sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
+          CURRENT_SIDE,floppy_head_track[DRIVE],fdc_sr);
+#else // not Debug
+        sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
+          CURRENT_SIDE,floppy_head_track[DRIVE],fdc_sr);
+#endif
+#else
 #ifdef SSE_DEBUG // add current command (CR)
         sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
           CURRENT_SIDE,floppy_head_track[DRIVE],
@@ -528,6 +541,7 @@ void osd_draw()
         sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
           CURRENT_SIDE,floppy_head_track[DRIVE],
           (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
+#endif
 #endif
         ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
         size_t drive_info_length=strlen(tmp_buffer);

@@ -86,7 +86,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     // impact (eg Forest WS2)
     // So starting and ending cycles are not affected as far as the
     // MMU is concerned. We revert SSE_GLUE_392A.
-
+//see note in Update() and MFD 392a
     //currently in HIRES
     if((m_ShiftMode&2)) 
     {
@@ -2460,6 +2460,10 @@ void TGlue::Update() {
 /*  Update GLU timings according to ST type and wakeup state. We do it when
     player changes options, not at each scanline in CheckSideOverscan().
     As you can see, demo Forest by ljbk (AF) helps us a lot here.
+
+    Important note: Adapting GLU timings is a big hack compensating the
+    lack of really emulating the different MMU/CPU slots according to
+    wakeup!
 */
 
   char WU_res_modifier=MMU.ResMod[ST_TYPE==STE?3:OPTION_WS]; //-2, 0, 2

@@ -1,4 +1,4 @@
-// for v3.9.3 / 4.00
+// for v3.9.3
 #pragma once // VC guard
 #ifndef SSE_H // BCC guard
 #define SSE_H
@@ -74,7 +74,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
-#if SSE_VERSION>=393
+#if SSE_VERSION>393
 #define SSE_BETA //title, OSD, plus some testing - new features
 #endif
 
@@ -1634,7 +1634,9 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//cpu
 
 #ifdef SSE_FLOPPY
+#ifdef SSE_WD1772
 #define SSE_DEBUG_FDC_TRACE_STATUS //spell out status register
+#endif
 #define SSE_DEBUG_IPF_TRACE_SECTORS // show sector info (IPF)
 #define SSE_DRIVE_COMPUTE_BOOT_CHECKSUM //TODO boiler control
 //#define SSE_DEBUG_FDC_TRACE_STR // trace read STR (careful)
@@ -1895,6 +1897,8 @@ Beta: not SSE_PRIVATE_BUILD
 #undef  SSE_SOUND_MICROWIRE_MIXMODE2
 #define SSE_SOUND_MUTE_WHEN_INACTIVE // optional
 #define SSE_VAR_STEEMINTRO_393 // finally update this
+#define SSE_VAR_393
+#define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE //was 'long term beta', why?
 #define SSE_VAR_UPDATE_LINK 
 #define SSE_VID_HIRES_BORDER_FIX //set screen higher: not beautiful but realistic and less hacky
 #define SSE_VID_ST_MONITOR_393 // 2 options again 
@@ -1934,11 +1938,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_MAMELIKE_ANTIALIAS2 // try to optimize... 
 #undef SSE_YM2149_MAMELIKE_AVG_SMP // poor man's filter
 #endif
-
+///#undef SSE_GUI_CONFIG_FILE//test
 #endif//beta
 
 
-#if SSE_VERSION>=400 && defined(SSE_BETA) //later version
+//#if SSE_VERSION>=400 && defined(SSE_BETA) //later version
+#if SSE_VERSION>=393 // 4.0 could be delayed
 
 #define SSE_DRIVE_FREEBOOT //400
 #if !defined(SSE_LE) && defined(SSE_VID_D3D)
@@ -1959,9 +1964,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_MAIN_LOOP4
 #define SSE_VAR_REQUIRE_FILES // HD6301V1ST.img, ym2149_fixed_vol.bin
 #define SSE_VAR_REQUIRE_FILES2 // unzipd32.dll, ArchiveAccess.dll
-#define SSE_VAR_REQUIRE_FILES2A // unrar.dll now included
-#define SSE_VAR_REQUIRE_FILES3 // pasti.dll, CAPSImg.dll
-#define SSE_VAR_REQUIRE_FILES4 // HFE_boot.bin
+//#define SSE_VAR_REQUIRE_FILES2A // unrar.dll
+//#define SSE_VAR_REQUIRE_FILES3 // pasti.dll, CAPSImg.dll //OS requirement?
+//#define SSE_VAR_REQUIRE_FILES4 // HFE_boot.bin
 #endif
 
 #if defined(SSE_STF_HW_OVERSCAN)
@@ -1984,7 +1989,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 #define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
-#define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE
 //#define TEST_STEEM_INTRO
 #endif
 

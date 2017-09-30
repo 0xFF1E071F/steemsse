@@ -573,7 +573,8 @@ void TSF314::Sound_CheckMotor() {
   if(motor_on && (fdc_str&1) 
     && !OPTION_DRIVE_SOUND_SEEK_SAMPLE 
     &&((ImageType.Manager==MNGR_PASTI||ImageType.Manager==MNGR_CAPS)||!ADAT)
-    && !(WD1772.CR&0xE0) && abs(TrackAtCommand-Track())>1) // restore, seek, not step
+//    && !(WD1772.CR&0xE0) && abs(TrackAtCommand-Track())>1) // restore, seek, not step
+    && !(fdc_cr&0xE0) && abs(TrackAtCommand-Track())>1) // restore, seek, not step//393
     Sound_Step();
 }
 

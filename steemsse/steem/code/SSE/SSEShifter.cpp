@@ -697,9 +697,6 @@ void TShifter::DrawBufferedScanlineToVideo() {
     if(draw_store_dest_ad+amount_drawn>draw_mem+Disp.VideoMemorySize)
     {
       TRACE_LOG("Video memory overflow\n");
-#ifdef SSE_BUGFIX_393
-      /////draw_end();
-#endif
       return;
     }
 #endif

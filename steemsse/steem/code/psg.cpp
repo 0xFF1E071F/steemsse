@@ -1477,11 +1477,14 @@ HRESULT Sound_VBL()
   if(OPTION_MAME_YM)
   {
 #if defined(SSE_YM2149_MAMELIKE3)
-    YM2149.psg_write_buffer(time_of_next_vbl_to_write,true);
+    
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
+    YM2149.psg_write_buffer(time_of_next_vbl_to_write,true);
 //    TRACE_OSD("%d",YM2149.frame_samples); // should be 882 @50hz
     YM2149.frame_samples=0;
     YM2149.time_at_vbl_start=YM2149.m_cycles;//YM2149.time_of_last_sample;
+#else
+    YM2149.psg_write_buffer(time_of_next_vbl_to_write);
 #endif
     // Fill extra buffer, but without advancing the YM emu
     for(int i=max(1,psg_buf_pointer[0]);i<psg_buf_pointer[0]+PSG_WRITE_EXTRA;i++)

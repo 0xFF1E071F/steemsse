@@ -305,7 +305,7 @@ void ChangeBorderSize(int size); // gui.cpp
 #endif
 
 
-#if SSE_VERSION>=393
+#if defined(SSE_VID_ST_MONITOR_393) // SSE_VERSION>=393
 #define SCANLINES_OK (SSEOption.Scanlines&&screen_res<2&&WinSizeForRes[screen_res])
 #define SCANLINES_INTERPOLATED (SCANLINES_OK&&draw_win_mode[screen_res]==DWM_STRETCH)
 #elif defined(SSE_VID_SCANLINES_INTERPOLATED_392B)

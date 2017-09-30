@@ -60,6 +60,7 @@
     the function further.
     This is an extremely important function for Atari ST emulation because a lot
     of programs (demos essentially) synchronise on the video counter.
+    There's no WS adjustment, see note in Glue.Update().
 */
 
 void TMMU::UpdateVideoCounter(int CyclesIn) {

@@ -149,13 +149,7 @@ int stemdos_get_boot_drive()
     ||SF314[0].ImageType.Extension==EXT_TOS)&& OPTION_PRG_SUPPORT)
     return AUTORUN_HD;
 #endif
-#if defined(SSE_DEBUG) && defined(SSE_FLOPPY)
-  int rv=int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
-  ASSERT(!(rv&&HardDiskMan.DisableHardDrives));
-  return rv;
-#else
   return int(stemdos_check_mount(stemdos_boot_drive) ? stemdos_boot_drive:0);
-#endif
 }
 //---------------------------------------------------------------------------
 bool stemdos_any_files_open()

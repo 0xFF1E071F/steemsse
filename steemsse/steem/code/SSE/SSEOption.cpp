@@ -22,7 +22,7 @@ extern TOptionBox OptionBox;
 #include "SSEDebug.h"
 #include "SSEInterrupt.h"
 #include "SSEVideo.h"
-
+#include "SSEFloppy.h" //for ym2149
 
 
 TOption SSEOption; // singleton
@@ -108,6 +108,7 @@ void TOption::Restore(bool all) {
 #endif
   // sound: C2 is checked too (MAME-like = default)
   SampledYM=true; // need file
+  YM2149.LoadFixedVolTable();
   Microwire=true;
   sound_freq=44100;
   sound_write_primary=false;
