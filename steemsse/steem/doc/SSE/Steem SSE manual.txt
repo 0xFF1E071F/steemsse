@@ -203,7 +203,7 @@ some picture hidden by colour definitions).
 A left click on the reset button emulates the reset button of the ST
 ("warm reset") - you know, the button that doesn't exist on the Amiga?
 Notice that many demos were programmed to react on warm reset (hidden screen
-and such).
+and such). 
 A right click emulates switching off, waiting as long as necessary for
 the RAM chips to clear, switching on again, except it's instant (don't think
 we'll get requests for precise delay).
@@ -322,13 +322,56 @@ There's also a mouse speed dial.
 The icon toggle Steem's disk manager (see below).
 
 
+Status info
+_____________
+
+On the icon bar, some useful information is also given so that you have an
+instant idea of the current configuration.
+
+Status info includes ST model, TOS version, RAM quantity and some
+icons for "slow disk drive", "hard disk drive", "chipset 1" (6301, etc.),
+"chipset 2" (MFP), when those are selected.
+
+See further for how to (de)activate all those options, some are advanced.
+
+In addition:
+ V       'Vertical Sync'
+ MHZ      CPU speed is indicated if higher than 8MHZ
+
+Instead of all this info, the status bar may contain only...
+
+ HALT
+
+In some conditions, the ST processor could 'halt', that is stop operating.
+It means the program it was running crashed, and it's not possible to
+recover from this situation. 
+This may be an emulation bug or not (bad disk image, buggy ST program, etc.)
+The ST must be reset. On the ST you would press the reset button 
+(left click on the icon), or in very bad cases, switch off
+and, after a while, on to erase the memory (right click on the icon - in 
+Steem we crash joyously: you mustn't wait).
+
+ BLIT ERROR
+
+Serious problem with video rendering. Better leave at once and restart Steem.
+Maybe check your display options. As a recourse if it persists, you could
+try the DirectDraw build.
+
+ HD6301 CRASHED
+
+There was some serious problem with the keyboard controller emulation.
+Resetting the ST is necessary.
+
+
 Options
 ________
 
 Steem is a very complete emulator and there are really many options,
 spread between several pages or tabs.
 All are explained here, tab by tab.
-     
+Advanced options can be changed only when the 'Advanced Settings' box has been
+checked on the SSE page.
+      
  
 Machine
 --------   
@@ -353,6 +396,11 @@ It will also allocate 1MB of RAM for the STF and 4MB for the STE and the
 Mega ST4.
 You can change that at will.
 
+Steem also emulates STF models equiped with a hardware overscan circuit, 
+either Lacescan or Autoswitch. You need appropriate drivers.
+
+http://ataristeven.exxoshost.co.uk/Steem_apps.htm#Overscan
+     
   
 -Wake-up (advanced)
 
@@ -850,6 +898,9 @@ These options allow you to record Steem's output to a wav file. Clicking on
 the red button begins recording, clicking on it again (or stopping emulation) 
 will end recording. You can choose the name and location of the wav file to 
 output by clicking on choose.
+
+Steem SSE can also save a YM file. This is usable by STSound and other utilities. 
+The file is uncompressed.
     
       
 Display
@@ -867,7 +918,7 @@ Steem SSE offers no less than 3 modes:
 
  384 x 270      normal, original Steem
  413 x 275      max overscan (window only, in fullscreen it will be 416)
- 416 x 283      max plasma (50hz)
+ 416 x 283      max plasma + LaceScan overscan (50hz)
 
 (low resolution; it is 768 x 270, 826 x 275, 832 x 283 for medium)
 
@@ -915,6 +966,13 @@ The typical ST screen's picture was vertically stretched.
 Option 'Scanlines' makes Steem skip every other line; this is quicker than 
 "No Stretch" but looks pretty ugly to some people. 
 To others, it may be part of the emulation.
+
+
+-Crisp
+This changes the drawing method in both windowed and fullscreen modes.
+If it's checked, the image, depending on your video card, will be blurry,
+which may look better in some circumstances.
+This option isn't available if Advanced Settings are enabled.
 
 
 -Triple Buffering (DirectDraw build) (advanced)
@@ -1093,6 +1151,8 @@ It depends on the video card abilities, it could fail on some systems.
 If you have multiple screens, you may choose which one to use by
 dragging Steem's window before hitting the 'maximize' button. 
 
+Some options are available if Advanced Settings are enabled.
+ 
 ---Mode
 
 This lists all D3D 32bit fullscreen "modes" that are available on
@@ -1301,44 +1361,14 @@ In Steem SSE, some options are grouped into a new page called "SSE".
 Hopefully you'll recognise the icon.
 
 
--Status info
+-Advanced Settings (D3D)
 
-This toggles visibility of the status info line in the tool bar.
-We call it the status bar.
-Status info includes ST model, TOS version, RAM quantity and some
-icons for "slow disk drive", "hard disk drive", "chipset 1" (6301, etc.),
-"chipset 2" (MFP), when those are selected.
-The icons for "Hacks" is the same as the one for patches, on the
-right.
-See further for how to activate all those options.
-
-In addition:
- V       'Vertical Sync'
- MHZ      CPU speed is indicated if higher than 8MHZ
-
-Instead of all this info, the status bar may contain only...
-
- HALT
-
-In some conditions, the ST processor could 'halt', that is stop operating.
-It means the program it was running crashed, and it's not possible to
-recover from this situation. 
-This may be an emulation bug or not (bad disk image, buggy ST program, etc.)
-The ST must be reset. On the ST you would press the reset button 
-(left click on the icon), or in very bad cases, switch off
-and, after a while, on to erase the memory (right click on the icon - in 
-Steem we crash joyously: you mustn't wait).
-
- BLIT ERROR
-
-Serious problem with video rendering. Better leave at once and restart Steem.
-Maybe check your display options. As a recourse if it persists, you could
-try the DirectDraw build.
-
- HD6301 CRASHED
-
-There was some serious problem with the keyboard controller emulation.
-Resetting the ST is necessary.
+Many settings are confusing for newbies and will be rarely used anyway.
+So they are hidden by default, and enabled by this option.
+When you uncheck the option, some advanced settings are reset to default
+values. Those settings aren't changed back when you enable Advanced Settings
+again.
+There's also a button to reset everything. 
 
 
 -Disk name
@@ -1570,6 +1600,7 @@ Stop the motor (if it's running you crazy)
 Change the 'SEEK' sound (if it's running you crazy).
 Turn your fine SF314 double sided drive into a miserable SF354 single sided
 drive (if you were unlucky back then and feel really nostalgic).
+Select the side of the disk as if you were using a 'freeboot' switch.
 
 
 -GEMDOS Hard Drives
