@@ -449,17 +449,10 @@ bool Initialise()
     
     // build stem_window_title
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
-#if defined(DEBUG_BUILD) && defined(SSE_LE) // it's not something we would release
-    strcpy((char*)stem_window_title,"Steem LE Debug ");
-    strcat((char*)stem_window_title,(char*)stem_version_text);
-    strcat((char*)stem_window_title,"B");
-#elif defined(DEBUG_BUILD)
+#if defined(DEBUG_BUILD)
     strcpy((char*)stem_window_title,"Steem Debug ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
     strcat((char*)stem_window_title,"B");
-#elif defined(SSE_LE)
-    strcpy((char*)stem_window_title,"Steem Beta LE ");
-    strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem Beta ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
@@ -468,9 +461,6 @@ bool Initialise()
 #if defined(DEBUG_BUILD)
     //strcpy((char*)stem_window_title,"Steem SSE Boiler ");
     strcpy((char*)stem_window_title,"Steem Boiler ");//like rlz notes//382
-    strcat((char*)stem_window_title,(char*)stem_version_text);
-#elif defined(SSE_LE)
-    strcpy((char*)stem_window_title,"Steem LE ");
     strcat((char*)stem_window_title,(char*)stem_version_text);
 #else
     strcpy((char*)stem_window_title,"Steem SSE ");

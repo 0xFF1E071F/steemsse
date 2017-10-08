@@ -352,7 +352,7 @@ write after it retakes the bus.
 */
 
 inline void InstructionTime(int t) {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
 /*  Only when the CPU doesn't access the main bus, it can run while the blitter
     is also running.
     INSTRUCTION_TIME is used to translate the 'n' timings in Yacht.
@@ -380,93 +380,27 @@ inline void InstructionTime(int t) {
     a blit either).
 */
 
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
-
+// bus access always 4 cycles 
 inline void InstructionTimeCpuBus() {
   cpu_cycles-=(4);
-#if !defined(SSE_BLT_392)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-#if defined(SSE_BLT_RESTART2)
-    if(Blit.Busy)
-      Blitter_Draw();
-    else
-#endif
-    Blitter_Start_Now(); 
-#endif
-#if defined(SSE_BLT_392)
   // this counts for both CPU and blitter, see note in blitter.cpp
   Blit.BusAccessCounter++;
-#endif
 }
 
 #define INSTRUCTION_TIME_BUS  InstructionTimeCpuBus()
 
-
 inline void InstructionTimeRamBus() { // RAM + Shifter
   cpu_cycles-=(4);
   cpu_cycles&=-4; // MMU adds wait states if necessary
-#if !defined(SSE_BLT_392)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-#if defined(SSE_BLT_RESTART2)
-    if(Blit.Busy)
-      Blitter_Draw();
-    else
-#endif
-    Blitter_Start_Now(); 
-#endif
-#if defined(SSE_BLT_392)
   Blit.BusAccessCounter++; 
-#endif
 }
 
 #define INSTRUCTION_TIME_ROUND  InstructionTimeRamBus()
 
 #else
 
-inline void InstructionTimeCpuBus(int t) {
-  cpu_cycles-=(t);
-#if !defined(SSE_BLT_392)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-#if defined(SSE_BLT_RESTART2)
-    if(Blit.Busy)
-      Blitter_Draw();
-    else
-#endif
-    Blitter_Start_Now(); 
-#endif
-#if defined(SSE_BLT_392)
-  ASSERT(t==4);
-  Blit.BusAccessCounter++;
-#endif
-}
-
-#define INSTRUCTION_TIME_BUS(t)  InstructionTimeCpuBus(t)
-
-inline void InstructionTimeRamBus(int t) { // RAM + Shifter
-  cpu_cycles-=(t);
-  cpu_cycles&=-4; // MMU adds wait states if necessary
-#if !defined(SSE_BLT_392)
-  if (ioaccess & IOACCESS_FLAG_DO_BLIT)
-#if defined(SSE_BLT_RESTART2)
-    if(Blit.Busy)
-      Blitter_Draw();
-    else
-#endif
-    Blitter_Start_Now(); 
-#endif
-#if defined(SSE_BLT_392)
-  Blit.BusAccessCounter++; 
-#endif
-}
-
-#define INSTRUCTION_TIME_ROUND(t)  InstructionTimeRamBus(t)
-
-#endif
-
-#else
-
 inline void InstructionTime(int t) {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   if(Blit.BlitCycles>t && t>0)
     Blit.BlitCycles-=(t);
   else
@@ -476,7 +410,7 @@ inline void InstructionTime(int t) {
 
 #define INSTRUCTION_TIME(t)  InstructionTime(t)
 
-#endif//391
+#endif
 
 #if defined(SSE_MMU_ROUNDING_BUS)
 
@@ -489,24 +423,16 @@ inline void ReadBusTimingL();
 #define CPU_ABUS_ACCESS_READ  ReadBusTiming()
 #define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
 #define BLT_ABUS_ACCESS_READ  ReadBusTiming()
-#if defined(SSE_BLT_BUS_ARBITRATION_393A)
-/*  Blitter start check should be pre read, post write.
-    Timing is counted right before the R/W, so we now check
-    for blitter start right at the end of the timing count but
-    only for reads (at least this way we won't forget macros - bugfix Giana STE).
-    Need different routines for PUSH and POP now.
-*/
 inline void PopTiming();
 inline void PopTimingL();
 inline void PushTiming();
 inline void PushTimingL();
+#if defined(SSE_BLT_BUS_ARBITRATION)
 #define CPU_ABUS_ACCESS_READ_POP PopTiming()
 #define CPU_ABUS_ACCESS_READ_POP_L PopTimingL()
 #define CPU_ABUS_ACCESS_WRITE_PUSH PushTiming()
 #define CPU_ABUS_ACCESS_WRITE_PUSH_L PushTimingL()
 #else
-inline void StackTiming();
-inline void StackTimingL();
 #define CPU_ABUS_ACCESS_READ_POP StackTiming()
 #define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
 #define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
@@ -625,26 +551,17 @@ But it controls the buffers and the RAM address bus.
     rounding up happens in ior/iow.
 */
 inline void FetchTiming() {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0; 
 #endif
 #if defined(SSE_CPU_392C)
   M68000.ThinkingCycles=0;
 #endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
   if(pc<himem) 
   {  INSTRUCTION_TIME_ROUND;}
   else
   {  INSTRUCTION_TIME_BUS;}
-#else
-  if(pc<himem) 
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-#endif
-#if defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
-#endif
 }
 
 inline void FetchTimingL() {
@@ -654,26 +571,17 @@ inline void FetchTimingL() {
 
 
 inline void ReadBusTiming() {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0;
 #endif
 #if defined(SSE_CPU_392C)
   M68000.ThinkingCycles=0;
 #endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND;}
   else
    { INSTRUCTION_TIME_BUS;}
-#else
-  if(abus<himem)
-   { INSTRUCTION_TIME_ROUND(4);}
-  else
-   { INSTRUCTION_TIME_BUS(4);}
-#endif
-#if defined(SSE_BLT_BUS_ARBITRATION_393A)
   CHECK_BLITTER_START
-#endif
 }
 
 
@@ -684,23 +592,16 @@ inline void ReadBusTimingL() {
 
 
 inline void WriteBusTiming() {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0;
 #endif
 #if defined(SSE_CPU_392C)
   M68000.ThinkingCycles=0;
 #endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND;}
   else
    { INSTRUCTION_TIME_BUS;}
-#else
-  if(abus<himem)
-   { INSTRUCTION_TIME_ROUND(4);}
-  else
-    {INSTRUCTION_TIME_BUS(4);}
-#endif
 }
 
 inline void WriteBusTimingL() {
@@ -708,26 +609,18 @@ inline void WriteBusTimingL() {
   WriteBusTiming();
 }
 
-#if defined(SSE_BLT_BUS_ARBITRATION_393A)
 
 inline void PushTiming() {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0;
 #endif
 #if defined(SSE_CPU_392C)
   M68000.ThinkingCycles=0;
 #endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND;}
   else
    { INSTRUCTION_TIME_BUS;}
-#else
-  if((MEM_ADDRESS)r[15]<himem)
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-#endif
 }
 
 inline void PushTimingL() {
@@ -736,23 +629,16 @@ inline void PushTimingL() {
 }
 
 inline void PopTiming() {
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0;
 #endif
 #if defined(SSE_CPU_392C)
   M68000.ThinkingCycles=0;
 #endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
   if(abus<himem)
    { INSTRUCTION_TIME_ROUND;}
   else
    { INSTRUCTION_TIME_BUS;}
-#else
-  if((MEM_ADDRESS)r[15]<himem)
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-#endif
   CHECK_BLITTER_START
 }
 
@@ -761,34 +647,6 @@ inline void PopTimingL() {
   PopTiming();
 }
 
-#else
-
-inline void StackTiming() {
-#if defined(SSE_BLT_390B)
-  Blit.BlitCycles=0;
-#endif
-#if defined(SSE_CPU_392C)
-  M68000.ThinkingCycles=0;
-#endif
-#if defined(SSE_CPU_392D) // bus access always 4 cycles
-  if(abus<himem)
-   { INSTRUCTION_TIME_ROUND;}
-  else
-   { INSTRUCTION_TIME_BUS;}
-#else
-  if((MEM_ADDRESS)r[15]<himem)
-  {  INSTRUCTION_TIME_ROUND(4);}
-  else
-  {  INSTRUCTION_TIME_BUS(4);}
-#endif
-}
-
-inline void StackTimingL() {
-  StackTiming();
-  StackTiming();
-}
-
-#endif
 
 #elif defined(SSE_MMU_ROUNDING_BUS)
 
@@ -802,7 +660,7 @@ inline void FetchTiming() {
   if(pc<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -814,7 +672,7 @@ inline void FetchTimingL() {
   if(pc<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -825,7 +683,7 @@ inline void ReadBusTiming() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
 /*  As we can see, this feature costs a lot in overhead, but that's the price
     of "correct" emulation.
 */
@@ -839,7 +697,7 @@ inline void ReadBusTimingL() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -850,7 +708,7 @@ inline void WriteBusTiming() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -861,7 +719,7 @@ inline void WriteBusTimingL() {
   if(abus<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -872,7 +730,7 @@ inline void StackTiming() {
   if((MEM_ADDRESS)r[15]<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -883,7 +741,7 @@ inline void StackTimingL() {
   if((MEM_ADDRESS)r[15]<himem)
   {
     cpu_cycles&=-4;
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
   }
@@ -1519,9 +1377,6 @@ inline void FetchWord(WORD &dest_word) {
     if(lpfetch MEM_GE lpfetch_bound) // MEM_GE : <=
       ::exception(BOMBS_BUS_ERROR,EA_FETCH,pc); // :: for gcc "ambiguous" ?
   }
-#if defined(SSE_BLT_392) && !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
 }
 
 
@@ -1561,9 +1416,6 @@ inline void PrefetchIrc() {
 #endif
     IRC=*lpfetch;
   prefetched_2=true;
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
 }
 
 #define PREFETCH_IRC PrefetchIrc();
@@ -2451,23 +2303,14 @@ inline void sr_check_z_n_l_for_r0()
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
 }
 
 inline void ReadW() {
   m68k_src_w=m68k_dpeek(abus);
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
 }
 
 inline void ReadL() {
   m68k_src_l=m68k_lpeek(abus);
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
 }
 
 #else

@@ -157,13 +157,6 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           ACIA_SetControl(acia_num,io_src_b); // TOS: $95 for MIDI, $96 for IKBD
         break;
 
-#if defined(SSE_ACIA_393)
-/*  Rewrite because it's wrong to clear TDRE and raise IRQ at once.
-    In compensation we had a too short 'delay to TDRE' setting, because in Hades
-    Nebula, the IRQ is used, but if the ACIA routine sees no TDRE and no RDRF, 
-    it legitimately hangs: we were unwittingly just making sure it was set at
-    this time (hack).
-*/
       case 0xfffc02:  // Keyboard ACIA Data
       case 0xfffc06:  // MIDI ACIA Data
         acia_num=((addr&0xf)-2)>>2;
@@ -235,131 +228,6 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           break;
         }
 
-
-#else
-      case 0xfffc02:  // Keyboard ACIA Data
-      case 0xfffc06:  // MIDI ACIA Data
-        acia_num=((addr&0xf)-2)>>2;
-        ASSERT(acia_num==0 || acia_num==1);
-        acia[acia_num].TDR=io_src_b; // no option test
-        TRACE_LOG("%d PC %X ACIA %d TDR %X\n",ACT,old_pc,acia_num,io_src_b);
-#if defined(SSE_IKBD_6301_PASTE)
-        if(OPTION_C1 && !bPastingText)
-#else
-        if(OPTION_C1)
-#endif
-        {
-/*  Effect of write on status register.
-    The 'Tx data register empty' (TDRE) bit is cleared: register isn't empty.
-    Writing on ACIA TDR clears the IRQ bit if IRQ for transmission
-    is enabled. Eg Hades Nebula
-*/
-          acia[acia_num].SR&=~BIT_1; // clear TDRE bit
-          if(acia[acia_num].IrqForTx())
-            acia[acia_num].SR&=~BIT_7; // clear IRQ bit
-          
-          //update in MFP (if needs be)
-          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-            !((ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)));
-
-/*  If the line is free, the byte in TDR is copied almost at once into the 
-    shifting register, and TDR is free again.
-    When TDR is free, status bit TDRE is set, and Steem's tx_flag is false!
-    (hard to follow)
-    If the ACIA is shifting and already has a byte in TDR, the byte in TDR
-    can be changed (High Fidelity Dreams).
-    We record the timing of 'tx' only if the line is free: Pandemonium Demos.
-    Grumbler by Electricity: key repeat in 6301 true emu mode
-*/
-          if(!acia[acia_num].LineTxBusy
-            || ACT-acia[acia_num].last_tx_write_time<ACIA_TDR_COPY_DELAY)
-          {
-            if(!acia[acia_num].LineTxBusy)
-              acia[acia_num].last_tx_write_time=ABSOLUTE_CPU_TIME;
-
-            if(acia_num==NUM_ACIA_IKBD)
-              HD6301.ReceiveByte(io_src_b);
-            else
-            {
-              acia[acia_num].TDRS=acia[acia_num].TDR;
-#if defined(SSE_ACIA_EVENT)
-              acia[acia_num].time_of_event_outgoing=ACT+ACIA_MIDI_OUT_CYCLES;
-#endif
-              acia[acia_num].LineTxBusy=true;
-            }
-            acia[acia_num].SR|=BIT_1; // TDRE free (see ior: can be "cancelled")
-
-            // rare case when IRQ is enabled for transmit
-            if(acia[acia_num].IrqForTx())
-            {
-              TRACE_LOG("ACIA %d TX IRQ\n",acia_num);            
-              acia[acia_num].SR|=BIT_7; 
-              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger
-            }
-          }
-          else
-          {
-#if defined(SSE_DEBUG)
-            ASSERT(acia[acia_num].LineTxBusy);
-            if(!acia[acia_num].ByteWaitingTx) // TDR was free 
-              TRACE_LOG("ACIA %d byte waiting $%X\n",acia_num,io_src_b);
-            else
-              TRACE_LOG("ACIA %d new byte waiting $%X (instead of $%X)\n",acia_num,io_src_b,ACIA_IKBD.TDR);
-#endif
-            if(ACT-acia[acia_num].last_tx_write_time<ACIA_TDR_COPY_DELAY)
-              acia[acia_num].TDRS=acia[acia_num].TDR; // replaces
-            else
-              acia[acia_num].ByteWaitingTx=true;
-          }
-
-          break;
-        }//option C1
-        {
-          bool TXEmptyAgenda=(agenda_get_queue_pos(acia_num==NUM_ACIA_IKBD?
-            agenda_acia_tx_delay_IKBD:agenda_acia_tx_delay_MIDI)>=0);
-          if (TXEmptyAgenda==0){
-            if (acia[acia_num].tx_irq_enabled){
-              acia[acia_num].irq=false;
-              mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
-            }
-            agenda_add(acia_num==NUM_ACIA_IKBD?agenda_acia_tx_delay_IKBD
-              :agenda_acia_tx_delay_MIDI,
-              ACIAClockToHBLS(acia[acia_num].clock_divide),0);
-          }
-          acia[acia_num].tx_flag=true; //flag for transmitting
-
-          //Steem 3.2, not C1, different paths for IKBD and MIDI:
-          if(acia_num==NUM_ACIA_IKBD)
-          {
-            // If send new byte before last one has finished being sent
-#if defined(SSE_TIMINGS_CPUTIMER64)
-            if (abs((int)(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time))
-              <ACIA_CYCLES_NEEDED_TO_START_TX){
-#else
-            if (abs(ABSOLUTE_CPU_TIME-acia[acia_num].last_tx_write_time)
-              <ACIA_CYCLES_NEEDED_TO_START_TX){
-#endif
-                // replace old byte with new one
-                int n=agenda_get_queue_pos(agenda_ikbd_process);
-                if (n>=0){
-                  log_to(LOGSECTION_IKBD,Str("IKBD: ")+HEXSl(old_pc,6)+" - Received new command before old one was sent, replacing "+
-                    HEXSl(agenda[n].param,2)+" with "+HEXSl(io_src_b,2));
-                  agenda[n].param=io_src_b;
-                }
-            }else{
-              // there is a delay before the data gets to the IKBD
-              acia[acia_num].last_tx_write_time=ABSOLUTE_CPU_TIME;
-              agenda_add(agenda_ikbd_process,IKBD_HBLS_FROM_COMMAND_WRITE_TO_PROCESS,io_src_b);
-            }
-          }
-          else
-          {
-            ASSERT(acia_num==NUM_ACIA_MIDI);
-            MIDIPort.OutputByte(io_src_b);
-          }
-          break;
-        }
-#endif
     //-------------------------- unrecognised -------------------------------------------------
       default:
         break;  //all writes allowed
@@ -551,7 +419,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
                   bool new_1_to_0_detector_input=((new_gpip & mask) ^ (new_aer & mask))==mask;
                   if (old_1_to_0_detector_input && new_1_to_0_detector_input==0){
                     // Transition the right way! Set pending (interrupts happen later)
-#if defined(SSE_INT_MFP_OBJECT) //used in that function
+#if defined(SSE_INT_MFP)
                     if(OPTION_C2) 
                       mfp_set_pending(irq,ACT); // update timing, Irq...
                     else
@@ -747,7 +615,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
       if(ST_TYPE!=STE)
       {
         TRACE_LOG("STF write %X to DMA %X\n",io_src_b,addr);
-       // crashing fixes PYM/ST-CNX, SoWatt, etc., which use this as test
+        // crashing fixes PYM/ST-CNX, SoWatt, etc., which use this as test
         exception(BOMBS_BUS_ERROR,EA_WRITE,addr); 
         break;
       }
@@ -1384,7 +1252,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
           SerialPort.SetDTR(io_src_b & BIT_4);
           SerialPort.SetRTS(io_src_b & BIT_3);
-#if defined(SSE_YM2149_DRIVE_392)
+#if defined(SSE_YM2149_DRIVE)
           YM2149.SelectedSide=((io_src_b&BIT_0)==0); //0:side 1, 1:side 0
           ASSERT(YM2149.SelectedSide==0||YM2149.SelectedSide==1);
 #endif
@@ -1393,9 +1261,6 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #if defined(SSE_YM2149_DRIVE)
             YM2149.SelectedDrive=floppy_current_drive();
             ASSERT(YM2149.SelectedDrive==0||YM2149.SelectedDrive==1);
-#if !defined(SSE_YM2149_DRIVE_392)
-            YM2149.SelectedSide=floppy_current_side();
-#endif
 #endif
 
 #if defined(SSE_YM2149C) && defined(SSE_WD1772)
@@ -1404,20 +1269,13 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 */
             SF314[0].Motor( YM2149.SelectedDrive==0 && (fdc_str&0x80));
             SF314[1].Motor( YM2149.SelectedDrive==1 && (fdc_str&0x80));
-#elif defined(SSE_YM2149B)
-            if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE)
-              SF314[YM2149.SelectedDrive].State.motor=!!(fdc_str&0x80);
 #endif
 
-
-#if !defined(SSE_DEBUG_TRACE_IDE) && defined(SSE_YM2149A)
-#if defined(SSE_YM2149_REPORT_DRIVE_CHANGE)||defined(SSE_BOILER_TRACE_CONTROL)
-#if defined(SSE_BOILER_TRACE_CONTROL) // controlled by boiler now (3.6.1)
+#if defined(SSE_YM2149A)&& defined(SSE_BOILER_TRACE_CONTROL)
             if(TRACE_MASK3 & TRACE_CONTROL_FDCPSG)
-#endif
               TRACE_FDC("PC %X PSG %X -> %c%d:\n",old_pc,io_src_b,'A'+YM2149.SelectedDrive,YM2149.SelectedSide);
 #endif
-#endif//#ifndef SSE_DEBUG_TRACE_IDE
+
 #ifdef ENABLE_LOGFILE
             if ((psg_reg[PSGR_PORT_A] & BIT_1)==0){ //drive 0
               log_to_section(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set current drive to A:");
@@ -1461,7 +1319,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
     }
     case 0xff8600:{  //--------------------------------------- DMA / FDC
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
       Dma.IOWrite(addr,io_src_b);
       break;
 #else // Steem 3.2
@@ -1642,7 +1500,7 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #if defined(SSE_MMU_ROUNDING_BUS)
         cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
         Blit.BlitCycles=0;
 #endif
         int n=(addr-0xff8240) >> 1; 
@@ -2384,7 +2242,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 #if defined(SSE_MMU_ROUNDING_BUS)
     cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
 
@@ -2393,7 +2251,7 @@ void ASMCALL io_write_w(MEM_ADDRESS addr,WORD io_src_w)
 
 #if defined(SSE_SHIFTER)
 
-#if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
+#if defined(SSE_BOILER_FRAME_REPORT)
   if(FRAME_REPORT_MASK1&FRAME_REPORT_MASK_PAL) 
   {
     if(Blit.HasBus)

@@ -29,18 +29,13 @@ void agenda_midi_replace(int)
 #define LOGSECTION LOGSECTION_MIDI
   if(OPTION_C1)
   {
-#if defined(SSE_ACIA_EVENT) && defined(SSE_BUGFIX_392)
     ACIA_MIDI.LineRxBusy=false;
-#endif
     if (MIDIPort.AreBytesToCome()){
       MIDIPort.NextByte();
       BYTE midi_in=MIDIPort.ReadByte();
       //TRACE_OSD("%d %X",midi_in,midi_in);
 #if defined(SSE_MIDI_TRACE_BYTES_IN)
       TRACE_LOG("Midi in %X\n",midi_in);
-#endif
-#if defined(SSE_ACIA_EVENT) && !defined(SSE_BUGFIX_392)
-      ASSERT(ACIA_MIDI.LineRxBusy);
 #endif
       if(ACIA_MIDI.SR&BIT_0) {
         // discard data and set overrun
@@ -62,21 +57,12 @@ void agenda_midi_replace(int)
       ACIA_MIDI.LineRxBusy=false;
 
       if(MIDIPort.AreBytesToCome()) 
-#if defined(SSE_ACIA_EVENT)
       {
-#if defined(SSE_ACIA_393)
-        ACIA_MIDI.time_of_event_incoming=time_of_next_event+ACIA_MIDI.TransmissionTime();
+        ACIA_MIDI.time_of_event_incoming
+          =time_of_next_event+ACIA_MIDI.TransmissionTime();
         if(ACIA_MIDI.time_of_event_incoming-time_of_event_acia<=0)
           time_of_event_acia=ACIA_MIDI.time_of_event_incoming;  
-#else
-        time_of_event_acia=ACIA_MIDI.time_of_event_incoming
-          =time_of_next_event+ACIA_MIDI_IN_CYCLES;
-        ACIA_MIDI.LineRxBusy=true;
-#endif
       }
-#else
-        agenda_add(agenda_midi_replace,ACIAClockToHBLS(ACIA_MIDI.clock_divide,true),0);
-#endif
     }
   }
   else
@@ -106,19 +92,14 @@ void agenda_midi_replace(int)
 void MidiInBufNotEmpty()
 {
 
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
   if(OPTION_C1)
   {
     ASSERT(!ACIA_MIDI.LineRxBusy);//or we got a problem
     ACIA_MIDI.LineRxBusy=true;
-#if defined(SSE_ACIA_393)
     ACIA_MIDI.time_of_event_incoming=ACT + ACIA_MIDI.TransmissionTime();
     if(ACIA_MIDI.time_of_event_incoming-time_of_event_acia<=0)
       time_of_event_acia=ACIA_MIDI.time_of_event_incoming;
-#else
-    time_of_event_acia=ACIA_MIDI.time_of_event_incoming
-      =ACT + ACIA_MIDI_IN_CYCLES;
-#endif
     ASSERT(!MIDIPort.AreBytesToCome()); //! byte not added in buffer yet!
   }
   else

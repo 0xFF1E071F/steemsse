@@ -27,18 +27,10 @@ extern "C" {  // necessary for VC6
 struct ACIA_STRUCT{ // removed _ ..
 
 #if defined(SSE_VAR_RESIZE) // problem is memory snapshots, structure: more complicated
-#if defined(SSE_TIMINGS_CPUTIMER64)
   COUNTER_VAR last_tx_write_time;
   COUNTER_VAR last_rx_read_time;
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
   COUNTER_VAR time_of_event_incoming, time_of_event_outgoing;
-#endif
-#else
-  int last_tx_write_time;
-  int last_rx_read_time;
-#if defined(SSE_ACIA_EVENT)
-  int time_of_event_incoming, time_of_event_outgoing;
-#endif
 #endif
   BYTE clock_divide;
   BYTE rx_irq_enabled;
@@ -62,16 +54,10 @@ struct ACIA_STRUCT{ // removed _ ..
   int last_rx_read_time;
 #endif
   BYTE LineRxBusy; // receiveing from 6301 or MIDI
-#if !defined(SSE_ACIA_393)
-  BYTE ByteWaitingRx; // Byte in 6301's or MIDI's TDR is waiting to be shifted
-#endif
 /*  When a byte is being shifted in the shift register and being transmitted,
     another byte may already be transmitted in the data register, it will wait
     there until the first transmission is over.
 */
-#if !defined(SSE_ACIA_393)
-  BYTE ByteWaitingTx;
-#endif
   BYTE LineTxBusy; // transmitting to 6301 or MIDI
 
 
@@ -86,7 +72,6 @@ struct ACIA_STRUCT{ // removed _ ..
   // FUNCTIONS
   inline bool IrqForTx() { return ((CR&BIT_5)&&!(CR&BIT_6)); }
   void BusJam(unsigned long addr);
-#if defined(SSE_ACIA_393)
   inline bool CheckIrq() {
     bool irq=IrqForTx() && (SR&BIT_1) // TX
       || (CR&BIT_7) && (SR&(BIT_0|BIT_5)); //RX/OVR
@@ -115,10 +100,6 @@ MIDI transmission is 4 times faster than IKBD
     int cycles=(CR&1)?10*16*16:10*16*64; //2560 for MIDI, 10240 for 6301
     return cycles;
   }
-#else
-  int TransmissionTime();
-#endif
-
 #endif
 
 #endif

@@ -2,7 +2,7 @@
 #ifndef SSEYM2149_H
 #define SSEYM2149_H
 
-#if defined(SSE_YM2149_OBJECT)
+#if defined(SSE_YM2149)
 
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
 #include "dsp/FIR-filter-class/filt.h" // 3rd party
@@ -41,9 +41,6 @@ struct TYM2149 {
   BYTE m_hold,m_alternate,m_attack,m_holding;
   BYTE m_prescale_noise;
   BYTE m_vol_enabled[NUM_CHANNELS];
-#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-  BYTE m_oversampling_count;
-#endif
 #endif
 #if defined(SSE_YM2149A)
   BYTE SelectedDrive; //0/1 (use Drive() to check validity)

@@ -255,23 +255,13 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
 
 #if !defined(SSE_DISK_392B)
     if (BootDisk[0].Empty() || FirstLoad==0){
-#if  defined(SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES)
-      if( (pCSF->GetStr("Disks","Disk_A_Name","")).NotEmpty() )
-#endif
       InsertDisk(0,pCSF->GetStr("Disks","Disk_A_Name",""),pCSF->GetStr("Disks","Disk_A_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_A_DiskInZip",""),true);
     }
     if (BootDisk[1].Empty() || FirstLoad==0){
-#if  defined(SSE_VAR_DONT_INSERT_NON_EXISTENT_IMAGES)
-      if( (pCSF->GetStr("Disks","Disk_B_Name","")).NotEmpty() )
-#endif
       InsertDisk(1,pCSF->GetStr("Disks","Disk_B_Name",""),pCSF->GetStr("Disks","Disk_B_Path",""),
                     0,0,pCSF->GetStr("Disks","Disk_B_DiskInZip",""),true);
     }
-#if defined(SSE_DRIVE) && !defined(SSE_VAR_OPT_391) // setdisk updates
-    SF314[0].UpdateAdat();
-    SF314[1].UpdateAdat();
-#endif
 #endif
   }
 
@@ -941,7 +931,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_SDL)
     USE_SDL=pCSF->GetInt("Options","UseSDL",USE_SDL);
 #endif
-#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
     OPTION_SAMPLED_YM=pCSF->GetInt("Sound","PsgMod",OPTION_SAMPLED_YM);
 #if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
     if(OPTION_SAMPLED_YM)
@@ -961,8 +951,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_VID_ST_MONITOR_393)
     OPTION_SCANLINES=pCSF->GetInt("Display","Scanlines",OPTION_SCANLINES);
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-    OPTION_INTERPOLATED_SCANLINES=pCSF->GetInt("Display","InterpolatedScanlines",OPTION_INTERPOLATED_SCANLINES);
 #endif
 #if defined(SSE_GUI_STATUS_BAR) && !defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
     OPTION_STATUS_BAR=pCSF->GetInt("Options","StatusBar",OPTION_STATUS_BAR);
@@ -1024,7 +1012,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_D3D_2SCREENS)
     Disp.oldD3DMode=pCSF->GetInt("Display","oldD3DMode",Disp.oldD3DMode);
 #endif
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D)
     Disp.D3DUpdateWH(Disp.D3DMode); // function returns if no pD3D
   //TRACE_LOG("Options D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
 #endif
@@ -1050,9 +1038,6 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #endif
 #if defined(SSE_OSD_SHOW_TIME)
   SSEOption.OsdTime=pCSF->GetInt("Options","OsdTime",SSEOption.OsdTime);
-#endif
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-  OPTION_ST_MOUSE_SPEED=pCSF->GetInt("Options","STMouseSpeed",OPTION_ST_MOUSE_SPEED);
 #endif
 #if defined(SSE_BOILER_SSE_PERSISTENT)
 #if !defined(SSE_BOILER_TRACE_NOT_OPTIONAL)
@@ -1277,7 +1262,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     WIN_ONLY( if (WinNT) sound_internal_speaker=0; )
 #endif
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
     OPTION_SOUND_RECORD_FORMAT=(BYTE)pCSF->GetInt("Sound","SoundRecordFormat",
       OPTION_SOUND_RECORD_FORMAT);
 #endif
@@ -1503,7 +1488,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_SDL)
   pCSF->SetStr("Options","UseSDL",EasyStr(USE_SDL));  
 #endif
-#if defined(SSE_YM2149_FIX_TABLES)
+#if defined(SSE_YM2149_FIXED_VOL_TABLE)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
 #endif
 #if defined(SSE_SOUND_MICROWIRE)
@@ -1518,8 +1503,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_ST_MONITOR_393)
   pCSF->SetStr("Display","Scanlines",EasyStr(OPTION_SCANLINES));  
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-  pCSF->SetStr("Display","InterpolatedScanlines",EasyStr(OPTION_INTERPOLATED_SCANLINES));  
 #endif
 #if defined(SSE_GUI_STATUS_BAR)
   pCSF->SetStr("Options","StatusBar",EasyStr(OPTION_STATUS_BAR));
@@ -1553,16 +1536,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_VID_D3D_LIST_MODES)
 #if defined(SSE_VID_D3D_2SCREENS)
-#if !defined(SSE_VID_D3D_2SCREENS_393) 
-  // 392: assume Steem will be started on primary display next time:  swap  
-  // 393: 3 screens current + can start on aux -> assume nothing
-  if(Disp.m_Adapter==1)
-  {
-    UINT buf=Disp.oldD3DMode;
-    Disp.oldD3DMode=Disp.D3DMode;
-    Disp.D3DMode=buf;
-  }
-#endif
   pCSF->SetStr("Display","oldD3DMode",EasyStr(Disp.oldD3DMode)); // still only for 2 (!)
 #endif
   pCSF->SetStr("Display","D3DMode",EasyStr(Disp.D3DMode));
@@ -1588,9 +1561,6 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #endif
 #if defined(SSE_OSD_SHOW_TIME)
   pCSF->SetStr("Options","OsdTime",EasyStr(SSEOption.OsdTime));
-#endif
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-  pCSF->SetStr("Options","STMouseSpeed",EasyStr(OPTION_ST_MOUSE_SPEED));
 #endif
 
 //boiler
@@ -1686,7 +1656,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
   pCSF->SetStr("Sound","InternalSpeaker",Str(sound_internal_speaker));
 #endif
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
   pCSF->SetStr("Sound","SoundRecordFormat",Str(OPTION_SOUND_RECORD_FORMAT));
 #endif
 

@@ -388,8 +388,7 @@ ADVANCED_END
 
 
 #if defined(SSE_MMU_393)
-
-  // now it's smart, and should work with different builds (w/wo 256KB, 2.5MB...)
+  // should work with different builds (w/wo 256KB, 2.5MB...)
   HWND cb_mem=GetDlgItem(Handle,8100);
   BYTE MemConf[2]={MEMCONF_512,MEMCONF_512};
   if(NewMemConf0==-1) // no new memory config selected
@@ -403,95 +402,6 @@ ADVANCED_END
   // by Steem authors - could be used more?
   int curs_index=CBFindItemWithData(cb_mem,dwMemConf); 
   SendMessage(cb_mem,CB_SETCURSEL,curs_index,0);
-
-#else
-
-#if (defined(SSE_MMU_256K) && defined(SSE_MMU_2560K)) \
-|| defined(SSE_MMU_MONSTER_ALT_RAM)
-
-  int memconf;
-  long mem_len2;
-
-  if (NewMemConf0<0)
-    mem_len2=mem_len;
-  else 
-  {
-    mem_len2=mmu_bank_length_from_config[NewMemConf0];
-    if(NewMemConf1>=0) 
-      mem_len2+=mmu_bank_length_from_config[NewMemConf1];
-  }
-  
-  switch(mem_len2)//Not smart at all, first we make it work.
-    {
-      case 256*1024:
-        memconf=0;
-        break;
-      case 512*1024:
-        memconf=1;
-        break;
-      case 1024*1024:
-        memconf=2;
-        break;
-      case 2048*1024:
-        memconf=3;
-        break;
-      case 2560*1024:
-        memconf=4;
-        break;
-      case 4096*1024:
-        memconf=5;
-        break;
-#if defined(SSE_MMU_MONSTER_ALT_RAM)
-      case 12*1024*1024:
-        memconf=6;
-        break;
-      case 14*1024*1024:
-        memconf=7;
-        break;
-#else
-      case 14*1024*1024:
-        memconf=6;
-        break;
-#endif
-      default: 
-        BRK( mem error! );
-        memconf=0;
-    }//sw
-
-#else
-
-  int memconf=4;
-  if (NewMemConf0<0){
-    if (mem_len<1024*1024){
-      memconf=0;
-    }else if (mem_len<2*1024*1024){
-      memconf=1;
-    }else if (mem_len<4*1024*1024){
-      memconf=2;
-    }else if (mem_len<14*1024*1024){
-      memconf=3;
-    }
-#if defined(SSE_MMU_256K)
-  if(mem_len>256*1024)
-    memconf++;
-#endif
-
-
-  }else{
-    if (NewMemConf0==MEMCONF_512) memconf=int((NewMemConf1==MEMCONF_512) ? 1:0); // 1Mb:512Kb
-    if (NewMemConf0==MEMCONF_2MB) memconf=int((NewMemConf1==MEMCONF_2MB) ? 3:2); // 4Mb:2Mb
-#if defined(SSE_MMU_256K)
-    if (NewMemConf0==MEMCONF_128) 
-      memconf=int((NewMemConf1==MEMCONF_128) ? 0:4); // 256K:?
-    else//if(mem_len>256*1024)
-      memconf++;
-#endif
-  }
-
-#endif
-
-  SendMessage(GetDlgItem(Handle,8100),CB_SETCURSEL,memconf,0);
-
 #endif
 
   int monitor_sel=NewMonitorSel;
@@ -1409,22 +1319,6 @@ NOT_ADVANCED_BEGIN
  fullscreen), but it also depends on the video card, some render the same"));
 ADVANCED_END
 #endif
-
-
-  y+=LineHeight;
-
-
-
-
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED) // + PAL aspect ratio in some modes
-  y-=LineHeight;
-  Wid=GetCheckBoxSize(Font,T("ST Monitor")).Width;
-  Win=CreateWindow("Button",T("ST Monitor"),
-                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          x,y,Wid,25,Handle,(HMENU)1032,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
-  //ToolAddWindow(ToolTip,Win,
-    //T("Tries to emulate aspect ratio and scanlines of your typical monitor."));
   y+=LineHeight;
 #endif
 
@@ -1788,6 +1682,13 @@ void TOptionBox::CreateFullscreenPage()
   int mask=WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX;
 #endif
 
+#if defined(SSE_BUGFIX_394) && defined(SSE_VID_D3D)
+  int disable=(OPTION_FAKE_FULLSCREEN)?WS_DISABLED:0;
+#else
+  int disable=false;
+#endif
+
+
 #if defined(SSE_VID_D3D)
 
   long Offset=0;
@@ -1835,8 +1736,14 @@ ADVANCED_BEGIN
   CreateWindow("Static",T("Mode"),WS_CHILD ,
                           page_l+Offset,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
   Wid=110; // manual...
+#ifdef SSE_BUGFIX_394
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST
+   | WS_VSCROLL | disable,page_l+5+w+Offset,y,Wid,200,Handle,(HMENU)7319,
+   HInstance,NULL);
+#else
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST | WS_VSCROLL,
                           page_l+5+w+Offset,y,Wid,200,Handle,(HMENU)7319,HInstance,NULL);
+#endif
   ToolAddWindow(ToolTip,Win,T("With Direct3D option you have the choice between all the 32bit modes your video card can handle."));
   D3DDISPLAYMODE Mode;
   for(UINT i=0;i<nD3Dmodes;i++)
@@ -1953,8 +1860,13 @@ T("Flip recommended. Only 'Max Resolution' will work with large borders"));
   int offset=190;
   CreateWindow("Static",T("Bits per pixel"),WS_CHILD ,
                           page_l+offset,y+4,w,23,Handle,(HMENU)205,HInstance,NULL);
+#ifdef SSE_BUGFIX_394
+  Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST | disable,
+                          page_l+5+w+offset,y,40,208,Handle,(HMENU)208,HInstance,NULL);
+#else
   Win=CreateWindow("Combobox","",WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST,
                           page_l+5+w+offset,y,40,208,Handle,(HMENU)208,HInstance,NULL);
+#endif
   int nconfig=0;
   if(SSEConfig.VideoCard8bit)
     SendMessage(Win,CB_ADDSTRING,nconfig++,(LPARAM)CStrT("8"));
@@ -2051,12 +1963,17 @@ ADVANCED_BEGIN
 
 #if defined(SSE_VID_GUI_392) // DD + D3D
   w=GetCheckBoxSize(Font,T("VSync")).Width;
-#if defined(SSE_VID_DD) && !defined(SSE_LE) //in a group rectangle
+#if defined(SSE_VID_DD) //in a group rectangle
   Win=CreateWindow("Button",T("VSync"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10,y,w,23,Handle,(HMENU)206,HInstance,NULL);
 #else
+#ifdef SSE_BUGFIX_394
+  Win=CreateWindow("Button",T("VSync"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX |disable,
+    page_l,y,w,23,Handle,(HMENU)206,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("VSync"),WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l,y,w,23,Handle,(HMENU)206,HInstance,NULL);
+#endif
 #endif
 #else // Steem 3.2
   w=GetCheckBoxSize(Font,T("Vsync to PC display")).Width;
@@ -2070,8 +1987,13 @@ ADVANCED_BEGIN
 
 #if defined(SSE_VID_3BUFFER_FS) // DD + D3D
   w=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
+#ifdef SSE_BUGFIX_394
+  Win=CreateWindow("Button",T("Triple Buffering"), WS_CHILD | WS_TABSTOP | BS_CHECKBOX |disable,
+               page_l+130,y,w,25,Handle,(HMENU)1037,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("Triple Buffering"), WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
                page_l+130,y,w,25,Handle,(HMENU)1037,HInstance,NULL);
+#endif
   SendMessage(Win,BM_SETCHECK,OPTION_3BUFFER_FS,0);
   ToolAddWindow(ToolTip,Win,T("Yes, we add a buffer :) You decide if it's better or not."));
 #endif
@@ -2079,9 +2001,15 @@ ADVANCED_BEGIN
 #if defined(SSE_VID_D3D_FS_DEFAULT_HZ)
   y+=LineHeight;
   w=GetCheckBoxSize(Font,T("Use Desktop Refresh Rate")).Width;
+#ifdef SSE_BUGFIX_394
+  Win=CreateWindow("Button",T("Use Desktop Refresh Rate"),
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX |disable,
+    page_l+10-10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
+#else
   Win=CreateWindow("Button",T("Use Desktop Refresh Rate"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l+10-10,y,w,23,Handle,(HMENU)209,HInstance,NULL);
+#endif
   ToolAddWindow(ToolTip,Win,T("This will bypass the hz setting in Mode, useful for some NVIDIA cards"));
   SendMessage(Win,BM_SETCHECK,OPTION_FULLSCREEN_DEFAULT_HZ,0);
 #endif
@@ -2092,7 +2020,11 @@ ADVANCED_BEGIN
   Win=CreateWindow("Button",T("Windowed Borderless Mode"),
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
     page_l,y,w,23,Handle,(HMENU)210,HInstance,NULL);
+#ifdef SSE_BUGFIX_394
+  ToolAddWindow(ToolTip,Win,T("Safer fullscreen mode, like a big window without frame"));
+#else
   ToolAddWindow(ToolTip,Win,T("This 'fake' fullscreen mode bypasses most everything else on this page!"));
+#endif
   SendMessage(Win,BM_SETCHECK,OPTION_FAKE_FULLSCREEN,0);
 #endif
 
@@ -2486,26 +2418,13 @@ ADVANCED_BEGIN
 
   Win=CreateWindow("Button",T("Microwire"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7302,HInstance,NULL);
-  //SendMessage(Win,BM_SETCHECK,OPTION_MICROWIRE,0);
   SendMessage(Win,BM_SETCHECK,SSEOption.Microwire,0);
   ToolAddWindow(ToolTip,Win,
-    //T("This enables primitive DSP (based on code by Maverick aka Fabio Bizzetti, thx dude!) to emulate a rarely used STE feature."));
     T("Microwire (for STE sound), incomplete emulation"));
   y+=LineHeight;
 ADVANCED_END
 #endif
 
-#if defined(SSE_GUI_OPTIONS_KEYBOARD_CLICK) && !defined(SSE_SOUND_CAN_CHANGE_DRIVER)
-#if defined(SSE_GUI_OPTIONS_MICROWIRE) 
-  y-=LineHeight; // maybe it will be optimised away!
-  Offset+=Wid+HorizontalSeparation;
-#endif
-  Wid=GetCheckBoxSize(Font,T("Keyboard click")).Width;
-  Win=CreateWindow("Button",T("Keyboard click"),WS_CHILD | WS_TABSTOP |
-    BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7301,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_KEYBOARD_CLICK,0);
-  y+=LineHeight;
-#endif  
 
 #if defined(SSE_GUI_OPTIONS_SOUND)
 #if defined(SSE_SOUND_CAN_CHANGE_DRIVER)
@@ -2766,7 +2685,7 @@ ADVANCED_END
                           page_l+page_w-10-70,y,70,23,Handle,(HMENU)7203,HInstance,NULL);
   y+=30;
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 /*  Add record to YM functionality using the same GUI elements as for WAV.
     We add a combobox to select format rather than radio buttons, this way
     we can add more formats.
@@ -2784,7 +2703,7 @@ ADVANCED_END
 #endif
 
   Wid=GetCheckBoxSize(Font,T("Warn before overwrite")).Width;
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
   Win=CreateWindow("Button",T("Warn before overwrite"),WS_CHILD | WS_TABSTOP |
                           BS_CHECKBOX | DisableIfMute,
                           Offset,y,Wid,25,Handle,(HMENU)7204,HInstance,NULL);
@@ -3454,18 +3373,6 @@ ADVANCED_BEGIN
 ADVANCED_END
 #endif
 
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-  y-=LineHeight;
-  Offset+=Wid+HorizontalSeparation;
-  Wid=GetCheckBoxSize(Font,T("ST Mouse Speed")).Width;
-  Win=CreateWindow("Button",T("ST Mouse Speed"),
-                          WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-                          page_l+Offset,y,Wid,25,Handle,(HMENU)1040,HInstance,NULL);
-  SendMessage(Win,BM_SETCHECK,OPTION_ST_MOUSE_SPEED,0);
-  ToolAddWindow(ToolTip,Win,T("Alternative way of managing mouse speed"));
-  y+=LineHeight;
-#endif
-
   Offset=0;
   y+=LineHeight;
 
@@ -3502,8 +3409,6 @@ ADVANCED_BEGIN
   SendMessage(Win,TBM_SETLINESIZE,0,1);
 #if defined(SSE_STF_MEGASTF_CLOCK)
   SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STF_MEGA));
-#else
-  SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STF_ALT));
 #endif
   SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STE_PAL)); //we know it should be the same...
   SendMessage(Win,TBM_SETTIC,0,ST_CYCLES_TO_CONTROL(CPU_STF_PAL));

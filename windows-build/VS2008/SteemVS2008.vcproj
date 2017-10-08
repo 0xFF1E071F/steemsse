@@ -704,7 +704,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(ProjectDir)directx&quot;"
-				DelayLoadDLLs="CAPSImg.dll;FreeImage.dll;unrar.dll"
+				DelayLoadDLLs="CAPSImg.dll;unrar.dll"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Steem.pdb"
 				SubSystem="2"
@@ -791,6 +791,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_VC80_UPGRADE=0x0600;STEVEN_SEAGAL"
 				Culture="1033"
 			/>
 			<Tool
@@ -50143,6 +50144,14 @@
 			<File
 				RelativePath="..\..\Steem\code\SSE\SSEAcsi.cpp"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ShowIncludes="false"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\Steem\code\SSE\SSEAcsi.h"

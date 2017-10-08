@@ -1,6 +1,6 @@
 #include "SSE.h"
 
-#if defined(SSE_YM2149_OBJECT)
+#if defined(SSE_YM2149)
 /*  In v3.5.1, object YM2149 was only used for drive management (drive, side).
     In v3.7.0, sound functions were introduced (sampled soundchip, more realistic).
     In v3.9.2, it harbours an alternative PSG emu based on MAME.
@@ -86,11 +86,6 @@ bool TYM2149::LoadFixedVolTable() {
     fclose(fp2);
 #endif
 #endif
-#if defined(SSE_SOUND_MOVE_ZERO)
-    // move the zero to make it match DMA's (tentative) //was bad idea
-    for(int i=0;i<16*16*16;i++)
-      p_fixed_vol_3voices[i]+=128;
-#endif
     SSEConfig.ym2149_fixed_vol=true;
     TRACE_LOG("PSG %s loaded %d words in ram %p\n",filename.Text,nwords,p_fixed_vol_3voices);
   }
@@ -172,9 +167,6 @@ void TYM2149::Reset() {
   // 32 steps for envelope in YM - we do it at reset for old snapshots
   m_env_step_mask=ENVELOPE_MASK; 
   m_hold=1; // Captain Blood
-#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-  m_oversampling_count=0;
-#endif
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
   time_at_vbl_start=0;
   time_of_last_sample=0;
@@ -215,10 +207,8 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     return; 
 #endif
 
-#if defined(SSE_YM2149_MAMELIKE_393)
   if(!psg_n_samples_this_vbl)
     return;
-#endif
 
   // compute #samples at our current sample rate
   DWORD t=(psg_time_of_last_vbl_for_writing+psg_buf_pointer[0]);
@@ -455,11 +445,6 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
       }
     }
 
-#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-    ASSERT(m_oversampling_count<0xff);
-    m_oversampling_count++;
-    *p+=vol;
-#else
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
 /*  Thanks to this kick-ass filter, we avoid horrible aliasing in all
     sample rates.
@@ -472,7 +457,6 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
     else
 #endif
       *p=vol;
-#endif
 
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
     }//if
@@ -484,13 +468,6 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 #endif
       )
     {
-      //ASSERT(p-psg_channels_buf<=PSG_CHANNEL_BUF_LENGTH);
-#if defined(SSE_YM2149_MAMELIKE_AVG_SMP)
-      if(m_oversampling_count>1)
-        *p/=m_oversampling_count;
-      m_oversampling_count=0;
-      //TRACE_OSD("%d",*p);
-#endif
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
       int copy=*p;
       *(++p)=copy; //same value, not zero
@@ -520,5 +497,5 @@ void TYM2149::psg_write_buffer(DWORD to_t) {
 
 #endif//mame-like
 
-#endif//SSE_YM2149_OBJECT
+#endif//SSE_YM2149
 

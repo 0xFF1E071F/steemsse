@@ -25,16 +25,16 @@
 #include "SSEFloppy.h"
 #include "SSEOption.h"
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
 TDma Dma; //singleton
 #endif
 #if defined(SSE_WD1772)
 TWD1772 WD1772; //singleton
 #endif
-#if defined(SSE_YM2149_OBJECT)
+#if defined(SSE_YM2149)
 TYM2149 YM2149; //singleton
 #endif
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 TSF314 SF314[2]; // cool!
 #endif
 #if defined(SSE_DISK)

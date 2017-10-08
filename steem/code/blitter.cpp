@@ -13,13 +13,12 @@ SS: The Mega ST also has a blitter. We emulate this.
 TBlitter Blit;
 #endif
 
-#if defined(SSE_BLT_390)
+#if defined(SSE_BLT_BUS_ARBITRATION)
 #define BLITTER_START_WAIT (4)
 #define BLITTER_END_WAIT (4)
-#define GRAB_BUS_TIMING (4)
 #else // Steem 3.2
-#define BLITTER_START_WAIT 8//8
-#define BLITTER_END_WAIT 0//0
+#define BLITTER_START_WAIT 8
+#define BLITTER_END_WAIT 0
 #endif
 
 #define LOGSECTION LOGSECTION_BLITTER
@@ -123,13 +122,7 @@ void Blitter_Start_Line()
 {
   if (Blit.YCounter<=0){ // Blit finished?
 
-#if defined(SSE_BLT_RESTART) && !defined(SSE_BLT_392)
-    if(!Blit.Hog && Blit.Restarted)
-      INSTRUCTION_TIME(4); 
-    Blit.Restarted=false;
-#endif
-
-#if defined(SSE_BLT_380) 
+#if defined(SSE_BLT_HOG_RESET) 
 //BLTBENCH.TOS, http://www.atari-forum.com/viewtopic.php?f=25&t=28424 (1st version)
     Blit.Hog=Blit.Busy=Blit.HasBus=false; 
 #else
@@ -138,18 +131,18 @@ void Blitter_Start_Line()
     dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter_Start_Line changing GPIP bit from "+
             bool(mfp_reg[MFPR_GPIP] & MFP_GPIP_BLITTER_BIT)+" to 0");
     mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,0);
-#if !defined(SSE_BLT_380)
+#if !defined(SSE_BLT_HOG_RESET)
     Blit.HasBus=false;
 #endif
 #if BLITTER_END_WAIT!=0 
-#if defined(SSE_BLT_380)
+#if defined(SSE_BLT_BUS_ARBITRATION)
     INSTRUCTION_TIME(BLITTER_END_WAIT);
 #else
     INSTRUCTION_TIME_ROUND(BLITTER_END_WAIT);
 #endif
 #endif
 
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
 /*  Record # blit cycles during which the CPU could work without
     accessing the bus. More like real emulation, but it has a cost.
 */
@@ -196,10 +189,10 @@ void Blitter_Start_Line()
 void ASMCALL Blitter_Start_Now()
 {
  
-#if defined(SSE_BLT_390B) && !defined(SSE_BLT_MAIN_LOOP)
+#if defined(SSE_BLT_CPU_RUNNING) && !defined(SSE_BLT_MAIN_LOOP)
   Blit.TimeAtBlit=ACT;
 #endif
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
   Blit.Request=0;
 #endif
 #if defined(SSE_BUGFIX_393A)
@@ -213,19 +206,8 @@ void ASMCALL Blitter_Start_Now()
   mfp_gpip_set_bit(MFP_GPIP_BLITTER_BIT,true);
   Blit.YCounter=Blit.YCount;
   /*Only want to start the line if not in the middle of one.*/
-  if (WORD(Blit.XCounter-Blit.XCount)==0) Blitter_Start_Line();
-
-#if defined(SSE_BOILER_BLIT_IN_HISTORY) && !defined(SSE_BLT_MAIN_LOOP)
-#if defined(SSE_BOILER_BLIT_IN_HISTORY2)
-#if defined(SSE_BOILER_HISTORY_TIMING)
-  pc_history_y[pc_history_idx]=scan_y;
-  pc_history_c[pc_history_idx]=LINECYCLES;
-#endif
-#endif
-  DEBUG_ONLY( pc_history[pc_history_idx++]=0x98764321; )
-  DEBUG_ONLY( if (pc_history_idx>=HISTORY_SIZE) pc_history_idx=0; )
-#endif
-
+  if (WORD(Blit.XCounter-Blit.XCount)==0) 
+    Blitter_Start_Line();
   Blitter_Draw();
 #if !defined(SSE_BLT_MAIN_LOOP)
   // DON'T check interrupts, we're in the middle of an instruction!
@@ -521,7 +503,7 @@ void Blitter_Blit_Word()
 
 void Blitter_Draw() {
   ioaccess&=~IOACCESS_FLAG_DO_BLIT;
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
   Blit.Request=0;
   MEM_ADDRESS abus_b4_blit=abus; // temp trick, normally it's in the CPU but we 
                                  // haven't this yet
@@ -535,15 +517,18 @@ void Blitter_Draw() {
     return;
   }
 
-#if defined(SSE_BLT_392) // TODO
-  int blit_bus_cycles=(Blit.Restarted
+#if defined(SSE_BLT_BUS_ARBITRATION) // TODO
+  int blit_bus_cycles=(
+#if defined(SSE_BLT_RESTART)    
+    Blit.Restarted
+#endif
 #if defined(SSE_CPU_392C)
     ||M68000.ThinkingCycles>=4
 #endif
     )?64:63;
 #endif
 
-#if defined(SSE_BLT_390B) 
+#if defined(SSE_BLT_CPU_RUNNING) 
   Blit.TimeAtBlit=ACT; // to record #blit cycles
 #endif
 
@@ -560,15 +545,7 @@ void Blitter_Draw() {
 #endif
   Blit.HasBus=true;
 
-#if !defined(SSE_BLT_392)
-  Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+252;
-#if defined(SSE_BLT_RESTART)
-  if(Blit.Restarted)
-    Blit.TimeToSwapBus+=4; 
-#endif
-#endif
-
-#if defined(SSE_BOILER_BLIT_IN_HISTORY3) 
+#if defined(SSE_BOILER_BLIT_IN_HISTORY) 
   // write the BLiT in history
   pc_history_y[pc_history_idx]=scan_y;
   pc_history_c[pc_history_idx]=LINECYCLES;
@@ -577,7 +554,7 @@ void Blitter_Draw() {
     pc_history_idx=0;
 #endif
 
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
   Blit.BusAccessCounter=0;
 #endif
 
@@ -594,7 +571,7 @@ void Blitter_Draw() {
       if(Blit.Busy)
       {
         // time to stop?
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
 /*  from Cyprian:
     In Blit mode the BLiTTER counts every memory access used by the CPU.
     And after 64th it takes the control over the bus if I remember correctly
@@ -615,9 +592,9 @@ void Blitter_Draw() {
           INSTRUCTION_TIME(BLITTER_END_WAIT); //arbitration
           ASSERT(Blit.HasBus);
           Blit.HasBus=false;
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
           Blit.Request=1; // blit not finished
-#ifdef SSE_BLT_390B
+#ifdef SSE_BLT_CPU_RUNNING
           Blit.BlitCycles=ACT-Blit.TimeAtBlit; 
 #endif
           Blit.BusAccessCounter=0; // now we'll count CPU accesses
@@ -644,7 +621,7 @@ void Blitter_Draw() {
       // DON'T check interrupts, we're in the middle of an instruction!
     }
   }
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
   abus=abus_b4_blit; // anarchic restart would cause crashes in TOS (internal bug)
 #endif
 
@@ -1199,7 +1176,7 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #endif//dbg
           if (Blit.YCount)
           {
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
             Blit.Request=1;
             Blit.TimeToSwapBus=ACT+BLITTER_LATCH_LATENCY; 
 #endif
@@ -1240,41 +1217,20 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter restarted - swapping bus to Blitter at "+ABSOLUTE_CPU_TIME);
 
 #if defined(SSE_BLT_MAIN_LOOP)
-#if defined(SSE_BLT_RESTART_393) // seems more logical, same way as for start
-          if(Blit.Request) // not during TAS (BLIT03K)
-          {
-            ASSERT(Blit.YCount);
-            Blit.Request++;
-            Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_LATCH_LATENCY;
-          }
-#elif defined(SSE_BLT_RESTART2)//no...
-          if (Blit.YCount)
-            ioaccess|=IOACCESS_FLAG_DO_BLIT;
-#else
 #if defined(SSE_BLT_RESTART)
           Blit.Restarted=true; // trick; changes #blit cycles and arbitration cycles
 #endif
-#if defined(SSE_BLT_392) // restart timing
-          INSTRUCTION_TIME(4); //BLIT03K, Down -TLN, TODO, it should be some latency
-#endif
-#ifdef SSE_BUGFIX_393
-          if(!Blit.HasBus) // stack overflow...
-#endif
-          Blitter_Draw();
-#endif
+          INSTRUCTION_TIME(4); //BLIT03K, Down -TLN, TODO, it should be some latency??
+          if(!Blit.HasBus) // avoid stack overflow...
+            Blitter_Draw();
 #else//!main loop
           Blit.HasBus=true;
 //          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+64; //SS this was commented out
-#if defined(SSE_BLT_BLIT_MODE_CYCLES)
-          INSTRUCTION_TIME(BLITTER_START_WAIT);
-          Blit.TimeToSwapBus=ABSOLUTE_CPU_TIME+BLITTER_BLIT_MODE_CYCLES;
-#else
           Blit.TimeToSwapBus+=64;
-#endif
 #endif//? main loop
         }else{ // Stop
           Blit.Busy=false;
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
           Blit.Request=0;
 #endif
           dbg_log(Str("BLITTER: ")+HEXSl(old_pc,6)+" - Blitter clear busy changing GPIP bit from "+
@@ -1319,7 +1275,7 @@ old_pc,TIMING_INFO,Val,Blit.Hop,Blit.Op,Blit.XCount,Blit.YCount,Blit.SrcAdr,Blit
 #endif
 }
 
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
 
 void Blitter_CheckRequest() {
   ASSERT(Blit.Request);

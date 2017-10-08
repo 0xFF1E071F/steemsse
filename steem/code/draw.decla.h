@@ -118,7 +118,7 @@ EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
 #endif
-#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR)
+#if !defined(SSE_VAR_RESIZE)
 ,stfm_borders INIT(0)
 #endif
 ;

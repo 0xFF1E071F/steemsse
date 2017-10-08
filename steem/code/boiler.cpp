@@ -2337,7 +2337,7 @@ void DWin_init()
     y+=30;
 #endif
 
-#if defined(SSE_BOILER_SHOW_PENDING) && defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_BOILER_SHOW_PENDING) && defined(SSE_INT_MFP)
     y-=30;
     x+=70;
     new mr_static("VBi ","",x,y,Par,

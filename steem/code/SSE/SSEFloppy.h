@@ -91,13 +91,13 @@ extern TImageHFE ImageHFE[2];
 #define IMAGE_HFE 0
 #endif
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
 extern TDma Dma;
 #endif
 #if defined(SSE_WD1772)
 extern TWD1772 WD1772;
 #endif
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 extern TSF314 SF314[2]; // 2 double-sided drives, wow!
 #endif
 #if defined(SSE_DISK)
@@ -106,8 +106,9 @@ extern TDisk Disk[2]; //
 
 /*  We created new structures for floppy disk emulation.
     To avoid double memory use, we define the old as new.
+    TODO: would have been simpler so?
 */
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
 extern TDma Dma;
 #define dma_sector_count Dma.Counter
 #define dma_address Dma.BaseAddress
@@ -127,7 +128,7 @@ extern TDma Dma;
 
 #endif//floppy
 
-#if defined(SSE_YM2149_OBJECT)
+#if defined(SSE_YM2149)
 extern TYM2149 YM2149;
 #endif
 

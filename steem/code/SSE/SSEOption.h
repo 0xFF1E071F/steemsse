@@ -18,7 +18,7 @@ struct TOption {
   BYTE STModel;
   BYTE DisplaySize;
   BYTE WakeUpState; 
-#if defined(__cplusplus) && defined(SSE_YM2149_RECORD)
+#if defined(__cplusplus) && defined(SSE_YM2149_RECORD_YM)
   BYTE SoundRecordFormat;
   enum {SoundFormatWav,SoundFormatYm};
 #endif
@@ -36,11 +36,7 @@ struct TOption {
   unsigned int NoDsp:1; // giving the ability to disable buggy DSP
   unsigned int OsdImageName:1;
   unsigned int PastiJustSTX:1;
-#if defined(SSE_VID_ST_MONITOR_393)
   unsigned int Scanlines:1; // = interpolated + normal
-#else
-  unsigned int Interpolate:1;
-#endif
   unsigned int StatusBar:1;
   unsigned int WinVSync:1;
   unsigned int TripleBufferWin:1;
@@ -72,9 +68,6 @@ struct TOption {
   unsigned int FullScreenDefaultHz:1;
   unsigned int TripleBufferFS:1;
   unsigned int FakeFullScreen:1;
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-  unsigned int STMouseSpeed:1;
-#endif
 #if defined(SSE_GUI_ADVANCED)
   unsigned int Advanced:1;
 #endif
@@ -137,18 +130,10 @@ extern struct TOption SSEOption;
 #define OPTION_WS (SSEOption.WakeUpState)
 #define USE_SDL (SSEOption.UseSDL)
 #define OPTION_DRIVE_INFO (SSEOption.OsdDriveInfo)
-//#define DSP_DISABLED (SSEOption.Dsp)
 #define OSD_IMAGE_NAME (SSEOption.OsdImageName)
 #define OPTION_PASTI_JUST_STX (SSEOption.PastiJustSTX)
-
-#if defined(SSE_VID_ST_MONITOR_393)
 #define OPTION_SCANLINES (SSEOption.Scanlines)
-#else
-#define OPTION_INTERPOLATED_SCANLINES (SSEOption.Interpolate)
-#endif
-
 #define OPTION_ST_ASPECT_RATIO (SSEOption.STAspectRatio)
-
 #if defined(SSE_GUI_STATUS_BAR_NOT_OPTIONAL)
 #define OPTION_STATUS_BAR (true)
 #else
@@ -171,7 +156,7 @@ extern struct TOption SSEOption;
 #define OPTION_SAMPLED_YM (SSEOption.SampledYM)
 #endif
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 #define OPTION_SOUND_RECORD_FORMAT (SSEOption.SoundRecordFormat)
 #endif
 
@@ -213,18 +198,11 @@ extern struct TOption SSEOption;
 #endif
 #endif
 
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-#define OPTION_ST_MOUSE_SPEED (SSEOption.STMouseSpeed)
-#endif
-
 #if defined(SSE_GUI_ADVANCED)
 #define OPTION_ADVANCED (SSEOption.Advanced)
-#elif defined(SSE_LE)
-#define OPTION_ADVANCED (false)
 #else
 #define OPTION_ADVANCED (true)
 #endif
-
 
 
 

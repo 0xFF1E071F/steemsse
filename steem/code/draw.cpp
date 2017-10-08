@@ -79,7 +79,7 @@ EXT char overscan INIT(0)
 #else
 EXT int overscan INIT(0)
 #endif
-#if !defined(SSE_SHIFTER_REMOVE_USELESS_VAR)
+#if !defined(SSE_VAR_RESIZE)
 ,stfm_borders INIT(0)
 #endif
 ;
@@ -289,13 +289,6 @@ void draw_begin()
 #if defined(SSE_VID_ST_MONITOR_393)
     if(SCANLINES_OK)
       draw_grille_black=4;
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-    if(SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
-    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
-#endif          
-      ) 
-      draw_grille_black=4;
 #endif
 
   if (draw_grille_black>0){
@@ -325,13 +318,6 @@ void draw_begin()
 #if defined(SSE_VID_ST_MONITOR_393)
     if(SCANLINES_OK) 
       using_grille=true;
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-    if(SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
-    || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE 
-#endif          
-      ) 
-      using_grille=true;
 #endif
     if (using_grille){
       int l=640;
@@ -340,7 +326,6 @@ void draw_begin()
       BYTE *d=draw_dest_ad+draw_line_length;
       int y=200;
 #if  defined(SSE_VID_BORDERS_BIGTOP)
-     // if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+ 30;
       if (Disp.BorderPossible()) y=200+BottomBorderSize+ BORDER_TOP;
 #else
       if (Disp.BorderPossible()) y=200+BORDER_BOTTOM+BORDER_TOP;
@@ -481,14 +466,8 @@ void draw_set_jumps_and_source()
   if (big_draw
 #if defined(SSE_VID_ST_MONITOR_393)
     || (SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D)
       ||FullScreen && SCANLINES_OK && draw_win_mode[screen_res]==DWM_NOSTRETCH
-#endif
-    )
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-    || (SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
-      ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
     )
 #endif
@@ -513,15 +492,8 @@ void draw_set_jumps_and_source()
 
 #if defined(SSE_VID_ST_MONITOR_393)
     if(SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D)
       ||FullScreen&&draw_win_mode[screen_res]==DWM_NOSTRETCH
-#endif
-      )
-      p=0;
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-    if(SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
-      ||FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
 #endif
       )
       p=0;

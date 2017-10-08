@@ -419,12 +419,9 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
       if (Joy[N_JOY_STE_A_0].Type==JOY_TYPE_JAGPAD){
         Ret|=HIWORD(ReadJagPad(N_JOY_STE_A_0));
       }else{
-#if defined(SSE_VS2008_WARNING_393) // I completely misunderstood the warning
+#if defined(SSE_VS2008_WARNING_393)
         Ret|=(int)(bool)(stick[N_JOY_STE_A_0] & BIT_7);
         Ret|=(bool)(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
-#elif defined(SSE_VS2008_WARNING_390) 
-        Ret|=(stick[N_JOY_STE_A_0] & BIT_7); // and made this incorrect (0x80 in stead of 1!)
-        Ret|=(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1; // and here
 #else
         Ret|=bool(stick[N_JOY_STE_A_0] & BIT_7);
         Ret|=bool(stick[N_JOY_STE_A_1] & BIT_7)*BIT_1;
@@ -436,9 +433,6 @@ BYTE JoyReadSTEAddress(MEM_ADDRESS addr,bool *pIllegal)
 #if defined(SSE_VS2008_WARNING_393)
         Ret|=bool(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
         Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;
-#elif defined(SSE_VS2008_WARNING_390) 
-        Ret|=(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2; // and here
-        Ret|=(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3; // and here
 #else
         Ret|=bool(stick[N_JOY_STE_B_0] & BIT_7)*BIT_2;
         Ret|=bool(stick[N_JOY_STE_B_1] & BIT_7)*BIT_3;

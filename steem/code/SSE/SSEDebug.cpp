@@ -386,9 +386,6 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #endif
     TRACE("Build: ");
-#if defined(SSE_LE)
-    TRACE("LE ");
-#endif
 #ifdef SSE_BETA
     TRACE("Beta ");
 #endif
@@ -445,7 +442,6 @@ void TDebug::TraceGeneralInfos(int when) {
 #if defined(SSE_DEBUG_START_STOP_INFO3)
     char stime[9];
     _strtime( stime );
-    //TRACE(">>> Start Emulation %s <<<\n",stime);
     TRACE("%s Run\n",stime);
 #else
     TRACE(">>> Start Emulation <<<\n");
@@ -465,7 +461,6 @@ void TDebug::TraceGeneralInfos(int when) {
 
 #if defined(SSE_HACKS)
     if(OPTION_HACKS)
-      //TRACE("\nHacks");
       TRACE("; #");
 #endif
 #if defined(SSE_IKBD_6301) && !defined(SSE_IKBD_6301_NOT_OPTIONAL)
@@ -478,11 +473,9 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #if defined(SSE_CPU_MFP_RATIO) && !defined(SSE_GUI_NO_CPU_SPEED)
     if(n_cpu_cycles_per_second>CpuNormalHz)
-      //TRACE("; Speed %d",n_cpu_cycles_per_second);
       TRACE("; ~%d",n_cpu_cycles_per_second);
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     if(OPTION_C2 && OPTION_CPU_CLOCK)
-      //TRACE("; Clock %d",CpuCustomHz);
       TRACE("; ~%d",CpuCustomHz); // not ambiguous, different order
 #endif
 #endif
@@ -495,7 +488,6 @@ void TDebug::TraceGeneralInfos(int when) {
       TRACE("; Dongle %d", STPort[3].Type);  
 #endif
     if(MONO)
-      //TRACE("Monochrome\n");  
       TRACE("; HI");  
 #if defined(SSE_VID_BORDERS_GUI_392)
     TRACE("; Border %d",border);
@@ -521,34 +513,27 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
     TRACE("\n");
     //disk
-    //TRACE("%d drives",num_connected_floppies);
     if(FloppyDrive[0].DiskInDrive())
-      //TRACE("; Disk A: %s",FloppyDrive[0].DiskName.c_str()); 
       TRACE("A: %s",FloppyDrive[0].DiskName.c_str()); 
     if(num_connected_floppies==2 && FloppyDrive[1].DiskInDrive())
-      //TRACE("; Disk B: %s",FloppyDrive[1].DiskName.c_str()); 
       TRACE("; B: %s",FloppyDrive[1].DiskName.c_str()); 
-#if defined(SSE_DRIVE_OBJECT) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
+#if defined(SSE_DRIVE) && !defined(SSE_FLOPPY_ALWAYS_ADAT)
     if(ADAT)
       TRACE("; ADAT");
 #endif
 #ifndef DISABLE_STEMDOS
     if(!HardDiskMan.DisableHardDrives && stemdos_current_drive) // check
-      //TRACE("; HD ON");
       TRACE("; HD");
 #endif
 #if defined(SSE_ACSI_OPTION)
     if(SSEOption.Acsi)
-      //TRACE("; ACSI ON");
       TRACE("; ACSI");
 #endif
 #if USE_PASTI
     if(pasti_active)
-      //TRACE("; Pasti active %s",OPTION_PASTI_JUST_STX?"STX only":"");
       TRACE("; Pasti");
 #endif
     TRACE("\n");
-//    TRACE(">>> Start Emulation <<<\n");
   }
   else
   {
@@ -559,27 +544,11 @@ void TDebug::TraceGeneralInfos(int when) {
 #if defined(SSE_DEBUG_START_STOP_INFO3)
     char stime[9];
     _strtime( stime );
-    //TRACE(">>> Stop Emulation %s <<<\n",stime);
     TRACE("%s Stop\n",stime);
 #else
     TRACE(">>> Stop Emulation <<<\n");
 #endif
 //    TRACE("debug var 0: %d 1: %d 2: %d 3: %d 4: %d 5: %d 6: %d 7: %d 8: %d 9: %d\n",debug0,debug1,debug2,debug3,debug4,debug5,debug6,debug7,debug8,debug9);
-//    TRACE("HblTiming %d\n",HblTiming);
-    // Vectors
-    //TRACE("HBL %X VBL %X\n",LPEEK(0x68),LPEEK(0x70));
-    //TRACE("Timers A %X B %X C %X D %X\n",LPEEK(0x134),LPEEK(0x120),LPEEK(0x114),LPEEK(0x110));
-    //TRACE("ACIA %X FDC %X\n",LPEEK(0x118),LPEEK(0x11C));
-    //TRACE("BUS %X ADDR %X ILLEG %X TRACE %X\n",LPEEK(0x8),LPEEK(0xC),LPEEK(0x10),LPEEK(0x24));
-    // Misc
-#if defined(SSE_SOUND_MICROWIRE___)
-    if(dma_sound_bass!=6||dma_sound_treble!=6)
-      TRACE("Microwire %d dma bass %X treble %X\n",OPTION_MICROWIRE,dma_sound_bass,dma_sound_treble);
-#endif
-#if defined(SSE_BOILER_PSEUDO_STACK___)
-    for(int i=0;i<PSEUDO_STACK_ELEMENTS;i++)
-      TRACE("%X\n",PseudoStack[i]);
-#endif
   }
 }
 #endif
@@ -835,7 +804,7 @@ void TDebug::TraceEvent(void* pointer) {
   else if(pointer==event_driveB_ip)
     TRACE("event_driveB_ip");
 #endif
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
   else if(pointer==event_acia)
     TRACE("event_acia");
 #endif

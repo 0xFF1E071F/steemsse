@@ -4,7 +4,7 @@
 
 #include "SSE/SSEDecla.h"
 
-#if !(defined(SSE_DMA_OBJECT))
+#if !defined(SSE_DMA)
 #include <conditions.h> // MEM_ADDRESS
 #endif
 #ifdef SSE_UNIX
@@ -32,7 +32,7 @@ EXT int floppy_current_drive();
 EXT BYTE floppy_current_side();
 EXT void fdc_add_to_crc(WORD &,BYTE);
 
-#if !(defined(SSE_DMA_OBJECT))
+#if !defined(SSE_DMA)
 EXT MEM_ADDRESS dma_address;
 #endif
 
@@ -100,7 +100,7 @@ EXT void pasti_update_reg(unsigned addr,unsigned data);
 #define FDC_CR_TYPE_1_VERIFY      BIT_2
 #define FDC_VERIFY                (fdc_cr & FDC_CR_TYPE_1_VERIFY)
 
-#if !(defined(SSE_DMA_OBJECT))
+#if !defined(SSE_DMA)
 EXT WORD dma_mode;
 EXT BYTE dma_status;
 #endif
@@ -115,10 +115,10 @@ EXT BYTE floppy_head_track[2];
 void floppy_fdc_command(BYTE);
 void fdc_execute();
 bool floppy_track_index_pulse_active();
-#if !(defined(SSE_DMA_OBJECT))
+#if !defined(SSE_DMA)
 EXT int dma_bytes_written_for_sector_count;
 #endif
-#if !(defined(SSE_DMA_OBJECT))
+#if !defined(SSE_DMA)
 EXT int dma_sector_count; 
 #endif
 #if defined(SSE_VAR_RESIZE)
@@ -160,15 +160,14 @@ EXT BYTE fdc_read_address_buffer[20];
 #define DMA_ADDRESS_IS_VALID_R (dma_address<himem)
 #define DMA_ADDRESS_IS_VALID_W (dma_address<himem && dma_address>=MEM_FIRST_WRITEABLE)
 
-#if defined(SSE_YM2149_DRIVE_392) // variables instead of function calls
+#if defined(SSE_YM2149_DRIVE) // variables instead of function calls
 #define DRIVE (YM2149.SelectedDrive)
 #define CURRENT_SIDE (YM2149.SelectedSide)
-#define CURRENT_TRACK (floppy_head_track[DRIVE])
 #elif defined(SSE_FLOPPY)
 #define DRIVE floppy_current_drive() // 0 or 1 guaranteed
 #define CURRENT_SIDE floppy_current_side()
-#define CURRENT_TRACK (SF314[DRIVE].Track())
 #endif
+#define CURRENT_TRACK (floppy_head_track[DRIVE])
 
 #undef EXT
 #undef INIT

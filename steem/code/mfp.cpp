@@ -18,17 +18,11 @@ the ST.
 EXT BYTE mfp_reg[24]; // 24 directly addressable internal registers, each 8bit
 EXT BYTE mfp_gpip_no_interrupt INIT(0xf7);
 BYTE mfp_gpip_input_buffer=0;
+
 #if defined(SSE_VAR_RESIZE)
-#if !defined(SSE_TIMING_MULTIPLIER_392)
-const WORD mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,
-                                        65535,4,10,16,50,64,100,200};
-#endif
 const BYTE mfp_timer_irq[4]={13,8,5,4};
 const BYTE mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 #else
-#if !defined(SSE_TIMING_MULTIPLIER_392)
-const int mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16,50,64,100,200};
-#endif
 const int mfp_timer_irq[4]={13,8,5,4};
 const int mfp_gpip_irq[8]={0,1,2,3,6,7,14,15};
 #endif
@@ -39,29 +33,31 @@ const int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,
 #else
 int mfp_timer_prescale[16]={65535,4,10,16,50,64,100,200,
                             65535,4,10,16,50,64,100,200};
+const int mfp_timer_8mhz_prescale[16]={65535,4,10,16,50,64,100,200,65535,4,10,16,50,64,100,200};
 #endif
+
 int mfp_timer_counter[4];
+
 #if defined(SSE_TIMINGS_CPUTIMER64)
 COUNTER_VAR mfp_timer_timeout[4];
 COUNTER_VAR mfp_time_of_start_of_last_interrupt[16];
+COUNTER_VAR cpu_time_of_first_mfp_tick;
 #else
 int mfp_timer_timeout[4];
 int mfp_time_of_start_of_last_interrupt[16];
+int cpu_time_of_first_mfp_tick;
 #endif
 
 bool mfp_timer_enabled[4]={0,0,0,0};
 int mfp_timer_period[4]={10000,10000,10000,10000};
+
 #if defined(SSE_INT_MFP_RATIO_PRECISION)
 int mfp_timer_period_fraction[4];
 int mfp_timer_period_current_fraction[4];
 #endif
+
 bool mfp_timer_period_change[4]={0,0,0,0};
 bool mfp_interrupt_enabled[16];
-#if defined(SSE_TIMINGS_CPUTIMER64)
-COUNTER_VAR cpu_time_of_first_mfp_tick;
-#else
-int cpu_time_of_first_mfp_tick;
-#endif
 
 #undef EXT
 #undef INIT
@@ -69,7 +65,7 @@ int cpu_time_of_first_mfp_tick;
 #include "SSE/SSEGlue.h"
 #endif
 
-#if defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP)
 TMC68901 MC68901; // singleton, the infamous MFP
 #endif
 
@@ -179,16 +175,7 @@ inline bool mfp_set_pending(int irq,int when_set)
 
 #if defined(SSE_INT_MFP_INLINE) 
 
-#if defined(SSE_TIMINGS_CPUTIMER64)
-
 bool mfp_set_pending(int irq,COUNTER_VAR when_set) {
-
-#else
-
-bool mfp_set_pending(int irq,int when_set) {
-
-#endif
-
   if(
 #if defined(SSE_INT_MFP_IACK)
     OPTION_C2 || 
@@ -223,7 +210,7 @@ bool mfp_set_pending(int irq,int when_set) {
       else
         TRACE_MFP("%d MFP irq %d pending\n",when_set,irq);
 #endif
-#if defined(SSE_INT_MFP_OBJECT) 
+#if defined(SSE_INT_MFP) 
       MC68901.UpdateNextIrq(when_set);
 #endif
     }
@@ -737,8 +724,7 @@ void mfp_interrupt(int irq) {
   }
 #endif
 
-#if defined(SSE_BLT_BLIT_MODE_INTERRUPT)
-// TODO 
+#if defined(SSE_BLT_BLIT_MODE_INTERRUPT) // MFD
   ASSERT(!Blit.HasBus); 
   Blit.HasBus=false; 
 #endif
@@ -861,7 +847,7 @@ void mfp_interrupt(int irq,int when_fired)
 }
 #endif
 
-#if defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP)
 
 TMC68901::TMC68901() {
   Init();

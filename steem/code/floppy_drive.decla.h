@@ -49,19 +49,6 @@ public:
 #if defined(SSE_DISK_392)
    BYTE Id;
    bool m_DiskInDrive;
-#else
-#if defined(SSE_DISK_CAPS)
-  bool IPFDisk,CTRDisk;
-#endif
-#if defined(SSE_DISK_SCP)
-  bool SCPDisk;
-#endif
-#if defined(SSE_DISK_STW)
-  bool STWDisk;
-#endif
-#if defined(SSE_DISK_HFE)
-  bool HFEDisk;
-#endif
 #endif
   bool ReadOnly;
   bool DIM_File,ValidBPB;
@@ -71,19 +58,6 @@ public:
   TFloppyImage()             { f=NULL;Format_f=NULL;PastiDisk=
 #if defined(SSE_DISK_392)
     m_DiskInDrive=
-#else
-#if defined(SSE_DISK_CAPS)    
-    IPFDisk=CTRDisk=
-#endif
-#if defined(SSE_DISK_SCP)
-    SCPDisk=
-#endif 
-#if defined(SSE_DISK_STW)
-    STWDisk=
-#endif 
-#if defined(SSE_DISK_HFE)
-    HFEDisk=
-#endif 
 #endif
     0;PastiBuf=NULL;RemoveDisk();}
 
@@ -96,25 +70,11 @@ public:
   EasyStr GetDisk()  { return ImageFile; }
   bool ReinsertDisk();
   void RemoveDisk(bool LoseChanges=0);
-  bool DiskInDrive() { 
 #if defined(SSE_DISK_392) // SF314 isn't known here
-    return m_DiskInDrive;  
+  bool DiskInDrive() { return m_DiskInDrive; }
 #else
-    return f!=NULL || PastiDisk 
-#if defined(SSE_DISK_CAPS)
-    || IPFDisk || CTRDisk
-#endif    
-#if defined(SSE_DISK_SCP)
-    || SCPDisk
-#endif   
-#if defined(SSE_DISK_STW)
-    || STWDisk
-#endif     
-#if defined(SSE_DISK_HFE)
-    || HFEDisk
+  bool DiskInDrive() { return f!=NULL || PastiDisk; } 
 #endif
-#endif
-    ; }
   bool NotEmpty() { return DiskInDrive(); }
   bool Empty()       { return DiskInDrive()==0; }
   bool IsMSA()       { return MSATempFile.NotEmpty(); }

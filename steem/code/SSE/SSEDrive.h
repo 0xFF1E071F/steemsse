@@ -2,7 +2,7 @@
 #ifndef SSEDRIVE_H
 #define SSEDRIVE_H
 
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 
 #include "SSEParameters.h"
 #include "SSEDisk.h"
@@ -108,5 +108,5 @@ struct TSF314 {
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
 
-#endif//SSE_DRIVE_OBJECT
+#endif//SSE_DRIVE
 #endif//#ifndef SSEDRIVE_H

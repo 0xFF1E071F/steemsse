@@ -68,7 +68,7 @@ void ASMCALL check_for_interrupts_pending() {
     HBI and VBI as well as MFP interrupts.
 */
 
-#if defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP)
 /*  For MFP interrupts, there are all sorts of tests before triggering the
     interrupt, the problem was that some of those tests were in mfp_interrupt().
     Here we place all the tests in check_for_interrupts_pending() and when

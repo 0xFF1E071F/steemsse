@@ -1,6 +1,6 @@
 #include "SSE.h"
 
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 #include "../pch.h"
 #include <cpu.decla.h>
 #include <fdc.decla.h>
@@ -550,7 +550,7 @@ void TSF314::Sound_CheckMotor() {
     return;
   DWORD dwStatus ;
   Sound_Buffer[MOTOR]->GetStatus(&dwStatus);
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
   Dma.UpdateRegs();//overkill
 #endif
   bool motor_on= ((fdc_str&0x80)//;//simplification TODO?

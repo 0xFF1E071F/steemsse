@@ -26,11 +26,8 @@ struct THD6301 {
 
   //DATA 
 
-#if defined(SSE_IKBD_6301_393_REF)
-  // less computing, more data
   COUNTER_VAR ChipCycles,MouseNextTickX,MouseNextTickY;
   int MouseCyclesPerTickX, MouseCyclesPerTickY;
-#endif
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;
 #if defined(SSE_DEBUG) 
@@ -38,13 +35,9 @@ struct THD6301 {
 #endif
   BYTE Initialised; // we do need a rom
   BYTE Crashed; // oops
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
   BYTE click_x,click_y; // current click
-#endif
-#if defined(SSE_IKBD_6301_380) 
   // lower case because uppercase are constants in 6301 emu itself
   BYTE rdr,rdrs,tdr,tdrs; 
-#endif
 #if defined(SSE_DEBUG) 
   BYTE LastCommand;
   BYTE CurrentParameter; //0-5
@@ -52,24 +45,15 @@ struct THD6301 {
   BYTE Parameter[6]; // max 6
   BYTE CustomProgram;
 #endif
-#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
-  char LineRxFreeTime; // cycles in (0-63)
-  char LineTxFreeTime; // cycles in (0-63)
-#endif
 
   //FUNCTIONS
 #ifdef __cplusplus //isolate member functions, for C it's just POD
   THD6301();
   ~THD6301();
-#if !defined(SSE_ACIA_393)
-  void ReceiveByte(BYTE data);
-#endif
   void ResetChip(int Cold);
   void ResetProgram();
   void Init();
-#if defined(SSE_IKBD_6301_VBL)
   void Vbl();
-#endif
 #if defined(SSE_DEBUG)
   void InterpretCommand(BYTE ByteIn);
   void ReportCommand();

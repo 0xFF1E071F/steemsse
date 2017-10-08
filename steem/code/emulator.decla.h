@@ -8,7 +8,7 @@
 #include <SSE/SSEVideo.h>
 #include <SSE/SSEDebug.h>
 
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
 #include <blitter.decla.h>
 #endif
 
@@ -56,9 +56,11 @@ EXT int extended_monitor INIT(0);//SS can't be bool
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 
 #if defined(SSE_TIMING_MULTIPLIER_392)
+#ifdef SSE_BUGFIX_394
+extern "C" double cpu_cycles_multiplier INIT(1.0);
+#else
 EXT double cpu_cycles_multiplier INIT(1.0);
-#elif defined(SSE_TIMING_MULTIPLIER)
-EXT BYTE cpu_cycles_multiplier INIT(1);
+#endif
 #endif
 
 EXT int on_rte;
@@ -78,25 +80,9 @@ EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
 
 #if defined(SSE_VAR_RESIZE)
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-#if defined(MINGW_BUILD) || defined(SSE_UNIX)
-extern "C"{ EXT BYTE shifter_freq INIT(60); }
-#else
-extern "C" EXT BYTE shifter_freq INIT(60);
-#endif
-#else
 EXT BYTE shifter_freq INIT(60);
-#endif
-#else
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-#if defined(MINGW_BUILD) || defined(SSE_UNIX)
-extern "C"{ EXT int shifter_freq INIT(60); }
-#else
-extern "C" EXT int shifter_freq INIT(60);
-#endif
 #else
 EXT int shifter_freq INIT(60);
-#endif
 #endif
 
 #if defined(SSE_VAR_RESIZE)

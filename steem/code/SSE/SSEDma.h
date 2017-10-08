@@ -4,7 +4,7 @@
 
 #include "SSE.h"
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
 
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)

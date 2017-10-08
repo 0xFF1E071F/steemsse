@@ -2,6 +2,7 @@
 
 MMU = Memory Management Unit
 
+
 Wake-up states (WU): how every 4 cycles are shared
 
 State 1
@@ -19,25 +20,11 @@ State 2
 | CPU |
 +-----+
 
-
-When we don't use the DL concept (SSE_MMU_WU not defined), variable 
-OPTION_WS is WU or 0.
-
-+--------------------------------------------+---------------+
-| Steem  option    |    Wake-up concepts     |    Cycle      |
-|    variable      |                         |  adjustment   |
-+------------------+------------+------------+-------+-------+
-|  OPTION_WS       |     WU     |      WS    | SHIFT |  SYNC |
-|                  |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
-+------------------+------------+------------+-------+-------+
-|   0 (ignore)     |     -      |      -     |    -  |    -  |
-|        1         |  1 (cold)  |     1+3    |    -  |    -  |
-|        2         |  2 (warm)  |     2+4    |   +2  |   +2  |
-+------------------+------------+------------+-------+-------+
-
-
-When we use the DL concept (SSE_MMU_WU defined), OPTION_WS 
-is more confusing, its value is no wake-up state but just an option index.
+This is important for timings relative to GLU "decisions", and is caused by
+two 2bit counters, one in GLU, one in MMU that get non deterministic
+values at power up on the STF.
+The relation between those counters causes a different latency between DE signal
+and LOAD signal (=DL latency), one of four, in CPU cycles.
 
 +------------------------------------------------------------+---------------+
 | Steem  option    |              Wake-up concepts           |    Cycle      |
@@ -46,14 +33,15 @@ is more confusing, its value is no wake-up state but just an option index.
 |  OPTION_WS       |   DL Latency  |     WU     |      WS    | SHIFT |  SYNC |
 |                  |     (Dio)     |    (ijor)  |    (LJBK)  | (Res) |(Freq) |
 +------------------+---------------+------------+------------+-------+-------+
-|   0 (ignore)     |      5        |     -      |      -     |    -  |    -  |
 |        1         |      3        |   2 (warm) |      2     |   +2  |   +2  |
 |        2         |      4        |     2      |      4     |    -  |   +2  |
 |        3         |      5        |   1 (cold) |      3     |    -  |    -  |
 |        4         |      6        |     1      |      1     |   -2  |    -  |
 +------------------+---------------+------------+------------+-------+-------+
 
-On STE there's no latency, DL=3, WS=1.
+'Cycle adjustment' is applied to apparent GLU timings.
+
+On the STE, DL=3, WS=1.
 
 */
 
@@ -100,11 +88,7 @@ struct TMMU {
 #if defined(SSE_MMU_LINEWID_TIMING)
   BYTE Linewid0;
 #endif
-#if defined(SSE_GLUE_392B)
-  BYTE ExtraBytesForHscroll; // for HSCROLL
-#else
-  BYTE WordsToSkip; // for HSCROLL
-#endif
+  BYTE ExtraBytesForHscroll;
   // FUNCTIONS
   MEM_ADDRESS ReadVideoCounter(int CyclesIn);
   void ShiftSDP(int shift);  

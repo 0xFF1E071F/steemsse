@@ -72,13 +72,10 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 
 #if defined(SSE_SHIFTER_UNSTABLE)
 #include "SSE/SSEVideo.h"
-//#include "SSE/SSEFrameReport.h"//same, temp
-//#include "SSE/SSEShifter.h"
 #endif
 
 #include "SSE/SSEGlue.h"
 
-//#define LOGSECTION LOGSECTION_INIT //SS
 #define LOGSECTION LOGSECTION_OPTIONS //SS
 
 //---------------------------------------------------------------------------
@@ -1212,6 +1209,13 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
             TRACE_LOG("Option FakeFullScreen = %d\n",OPTION_FAKE_FULLSCREEN);
             if(FullScreen && D3D9_OK)
               Disp.ScreenChange();
+#ifdef SSE_BUGFIX_394
+            else //it's not proper Windows programming but it works...
+            {
+              This->DestroyCurrentPage();
+              This->CreatePage(This->Page);
+            }
+#endif
           }
           break;
 #endif
@@ -1525,10 +1529,8 @@ LRESULT __stdcall TOptionBox::WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar
         case 1031:
           if(HIWORD(wPar)==BN_CLICKED)
           {
-            //STEALTH_MODE=!STEALTH_MODE;
             OPTION_EMU_DETECT=!OPTION_EMU_DETECT;
             TRACE_LOG("Emu detect: %d\n",OPTION_EMU_DETECT);
-            //SendMessage(HWND(lPar),BM_SETCHECK,!STEALTH_MODE,0);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_EMU_DETECT,0);
             emudetect_reset();
           }
@@ -1562,19 +1564,6 @@ ADVANCED_END
             OPTION_SCANLINES=!OPTION_SCANLINES;
             TRACE_LOG("Scanlines: %d\n",OPTION_SCANLINES);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_SCANLINES,0);
-#else
-            OPTION_INTERPOLATED_SCANLINES=!OPTION_INTERPOLATED_SCANLINES;
-            TRACE_LOG("Interpolated scanlines: %d\n",OPTION_INTERPOLATED_SCANLINES);
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_INTERPOLATED_SCANLINES,0);
-#endif
-#if !defined(SSE_VID_ST_MONITOR_393)
-            OPTION_ST_ASPECT_RATIO=OPTION_INTERPOLATED_SCANLINES;
-#endif
-#if !defined(SSE_GUI_CRISP_IN_DISPLAY) && defined(SSE_VID_ST_MONITOR_393)
-NOT_ADVANCED_BEGIN 
-            // stretch mode with scanlines = 'interpolated', by default
-            draw_win_mode[0]=draw_win_mode[1]=!OPTION_SCANLINES; 
-ADVANCED_END
 #endif
             StemWinResize();
           }
@@ -1623,17 +1612,6 @@ ADVANCED_END
             SSEOption.VMMouse=!SSEOption.VMMouse;
             TRACE_LOG("Option VMMouse: %d\n",SSEOption.VMMouse);
             SendMessage(HWND(lPar),BM_SETCHECK,SSEOption.VMMouse,0);
-          }
-          break;
-#endif
-
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-        case 1040:
-          if(HIWORD(wPar)==BN_CLICKED)
-          {
-            OPTION_ST_MOUSE_SPEED=!OPTION_ST_MOUSE_SPEED;
-            TRACE_LOG("ST Mouse Speed: %d\n",OPTION_ST_MOUSE_SPEED);
-            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_ST_MOUSE_SPEED,0);
           }
           break;
 #endif
@@ -1990,7 +1968,7 @@ ADVANCED_END
           }
           break;
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
         case 7105:
           if (HIWORD(wPar)==CBN_SELENDOK){
             OPTION_SOUND_RECORD_FORMAT=(BYTE)SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
@@ -2012,7 +1990,7 @@ ADVANCED_END
           if (HIWORD(wPar)==BN_CLICKED){
             SendMessage(HWND(lPar),BM_SETCHECK,1,true);
             EnableAllWindows(0,Win);
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
             char wildcard[6]="*.wav";
             if(OPTION_SOUND_RECORD_FORMAT)
               strcpy(wildcard,"*.ym");
@@ -2200,24 +2178,18 @@ ADVANCED_END
         case 7319: // Option D3D mode
           if (HIWORD(wPar)==CBN_SELENDOK)
           {
-#if defined(SSE_VID_D3D_382)
             UINT old_mode=Disp.D3DMode;
-#endif
             Disp.D3DMode=SendMessage(HWND(lPar),CB_GETCURSEL,0,0);
-#if defined(SSE_VID_D3D_382)
             Disp.D3DUpdateWH(Disp.D3DMode);
             TRACE_LOG("Option D3D mode = %d %dx%d\n",Disp.D3DMode,Disp.D3DFsW,Disp.D3DFsH);
             if(FullScreen && old_mode!=Disp.D3DMode)
             {
-#if defined(SSE_VID_GUI_392)
               Disp.ScreenChange();
-#endif
 #if !defined(SSE_VID_D3D_2SCREENS) // done in D3DCreateSurfaces()
               SetWindowPos(StemWin,HWND_TOPMOST,0,0,Disp.D3DFsW,Disp.D3DFsH,SWP_FRAMECHANGED   );
               InvalidateRect(StemWin,NULL,FALSE);
 #endif
             }
-#endif
           }
           break;
 #endif
@@ -2255,10 +2227,8 @@ ADVANCED_END
 #endif
             TRACE_LOG("Option Crisp D3D = %d\n",OPTION_D3D_CRISP);
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_D3D_CRISP,0);
-#if defined(SSE_VID_D3D_382)
             if(FullScreen && D3D9_OK)
               Disp.D3DSpriteInit();
-#endif
           }
           break;
 #endif

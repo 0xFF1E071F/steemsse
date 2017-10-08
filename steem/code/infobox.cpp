@@ -235,9 +235,7 @@ void TGeneralInfo::LoadIcons()
                               hGUIIcon[RC_ICO_CART_HOWTO],hGUIIcon[RC_ICO_INFO_FAQ]
 #if defined(SSE_GUI_INFOBOX)
                               ,hGUIIcon[RC_ICO_OPS_SSE]
-                              ,hGUIIcon[RC_ICO_INFO_FAQ] // for hints
-                              //,hGUIIcon[RC_ICO_OPS_SSE]
-                              //,hGUIIcon[RC_ICO_TEXT]
+                              ,hGUIIcon[RC_ICO_INFO_FAQ]
 #endif
                               ,0);
   }
@@ -373,9 +371,7 @@ void TGeneralInfo::CreateAboutPage()
   HWND Win;
 #endif
 #if defined(SSE_GUI)
-#if defined(SSE_LE)
-  EasyStr Text = EasyStr("Steem LE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
-#elif defined(SSE_VS2015)
+#if defined(SSE_VS2015)
   EasyStr Text = EasyStr("Steem SSE v") + SSE_VERSION + " (built " __DATE__" " + "- " __TIME__")\n";
 #else
   EasyStr Text=EasyStr("Steem SSE v")+SSE_VERSION+" (built " __DATE__" " +"- "__TIME__")\n";

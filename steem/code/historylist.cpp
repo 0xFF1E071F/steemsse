@@ -133,7 +133,7 @@ void THistoryList::RefreshHistoryBox()
       header="fdc "; 
 #endif
 
-#if defined(SSE_BOILER_BLIT_IN_HISTORY3)
+#if defined(SSE_BOILER_BLIT_IN_HISTORY)
     if(pc_history[n]==0x98764321)
       Dissasembly="BLiT";
     else

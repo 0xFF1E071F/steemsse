@@ -185,7 +185,7 @@ void power_on()
   fdc_str=BIT_2;
   for (int floppyno=0;floppyno<2;floppyno++){
     floppy_head_track[floppyno]=0;
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
     SF314[floppyno].Id=floppyno;
     SF314[floppyno].State.motor=false;
 #endif
@@ -310,7 +310,7 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_WD1772)
   WD1772.Reset();
 #endif
-#if defined(SSE_INT_MFP_OBJECT)
+#if defined(SSE_INT_MFP)
   MC68901.Reset();
 #endif
 
@@ -470,10 +470,10 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_GLUE)
   Glue.Reset(Cold);
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   Blit.BlitCycles=0;//useful?
 #endif
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
   Blit.Request=0;
 #endif
 #if defined(SSE_MMU_MONSTER_ALT_RAM)
@@ -482,7 +482,7 @@ void reset_peripherals(bool Cold)
 #if defined(SSE_YM2149_MAMELIKE)
   YM2149.Reset();
 #endif
-#if defined(SSE_MMU_WU_LE)
+#if defined(SSE_MMU_WU_RND)
 
   if(Cold &&!OPTION_ADVANCED)  
   {

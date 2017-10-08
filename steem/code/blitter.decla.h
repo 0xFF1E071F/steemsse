@@ -26,7 +26,7 @@ struct TBlitter{
   int XCounter,YCounter; //internal counters
 #if !defined(SSE_TIMINGS_CPUTIMER64)
   int TimeToSwapBus;
-#if defined(SSE_BLT_390B) 
+#if defined(SSE_BLT_CPU_RUNNING) 
   int TimeAtBlit,BlitCycles;
 #endif
 #endif
@@ -53,7 +53,10 @@ struct TBlitter{
 #if defined(SSE_BLT_RESTART)
   bool Restarted; // flag - cheat
 #endif
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
+/*  Because there are more checks for blitter start, we use a first flag
+    telling whether we should investigate or not.
+*/
   BYTE Request; //0 1 2
   BYTE BusAccessCounter; // count accesses by blitter and by CPU in blit mode
 #endif
@@ -114,7 +117,7 @@ All the address-related auxilary registers such as X-Count/Y-Count,
 #else
   bool InBlitter_Draw; //are we in the routine? //SS not used
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
   int TimeAtBlit,BlitCycles;
 #endif
 #if defined(SSE_BLT_COPY_LOOP)
@@ -136,28 +139,21 @@ extern void Blitter_Draw();
 BYTE Blitter_IO_ReadB(MEM_ADDRESS);
 void Blitter_IO_WriteB(MEM_ADDRESS,BYTE);
 
-#if defined(SSE_BLT_392)
-/*  Because there are more checks for blitter start, we use a first flag
-    telling whether we should investigate or not.
-*/
+
+
+#if defined(SSE_BLT_BUS_ARBITRATION)
 
 void Blitter_CheckRequest();
-
 inline void check_blitter_start() {
   if(Blit.Request)
     Blitter_CheckRequest();
 }
-#if defined(SSE_BLT_BUS_ARBITRATION)
+
 #define CHECK_BLITTER_START check_blitter_start();
 #else
 #define CHECK_BLITTER_START
 #endif
 
-#else
-
-#define CHECK_BLITTER_START
-
-#endif
 
 #undef EXT
 #undef INIT

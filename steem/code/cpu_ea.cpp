@@ -281,9 +281,6 @@ BYTE m68k_read_dest_b(){ //only used by tst.b, cmpi.b
       m68k_unrecognised();
     }
   }
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
   return x;
 }
 
@@ -357,9 +354,6 @@ WORD m68k_read_dest_w(){ // //only used by tst.w, cmpi.w
       m68k_unrecognised();
     }
   }
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
   return x;
 }
 
@@ -615,9 +609,6 @@ LONG m68k_read_dest_l(){ //only used by tst.l, cmpi.l
     }
     break;
   }
-#if !defined(SSE_BLT_BUS_ARBITRATION_393A)
-  CHECK_BLITTER_START
-#endif
   return x;
 }
 
