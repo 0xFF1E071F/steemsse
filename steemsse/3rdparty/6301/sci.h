@@ -8,7 +8,7 @@
 # define P_(s) ()
 #endif
 
-#if !defined(SSE_IKBD_6301_393_REF)
+#if !defined(SSE_IKBD_6301)
 extern int	rxinterrupts;	/* Number of outstanding rx interrupts */
 extern int	txinterrupts;	/* Number of outstanding tx interrupts */
 #endif
@@ -19,8 +19,8 @@ extern int	txinterrupts;	/* Number of outstanding tx interrupts */
  * Return nonzero if interrupt generated, zero if no interrupt
  */
 
-#if defined(SSE_IKBD_6301_393_REF) 
-// using the status register and not those confusing variables anymore
+#if defined(SSE_IKBD_6301) 
+// using the status register 
 #define serial_int()\
 	(((ireg_getb (TRCSR) & RDRF) && (ireg_getb (TRCSR) & RIE))\
 	 || ((ireg_getb (TRCSR) & TDRE) && (ireg_getb (TRCSR) & TIE)))

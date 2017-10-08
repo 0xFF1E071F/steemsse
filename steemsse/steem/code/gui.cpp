@@ -464,7 +464,9 @@ void GUIRefreshStatusBar() {
   // and it's no special string
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
+#ifdef SSE_BOILER
     && M68000.ProcessingState!=TM68000::BOILER_MESSAGE
+#endif
 #if defined(SSE_GUI_STATUS_BAR_392)
     && M68000.ProcessingState!=TM68000::HD6301_CRASH
 #endif
@@ -1574,12 +1576,12 @@ void ParseCommandLine(int NumArgs,char *Arg[],int Level)
       case ARG_SETPABUFSIZE:  UNIX_ONLY( pa_output_buffer_size=atoi(Path); ) break;
       case ARG_ALLOWREADOPEN: stemdos_comline_read_is_rb=true; break;
       case ARG_NOINTS:        no_ints=true; break; // SS removed _
-#if !(defined(SSE_SHIFTER_REMOVE_USELESS_VAR))
-      case ARG_STFMBORDER:    stfm_borders=4; break;
-#elif defined(SSE_VAR_ARG_STFM)
+#if defined(SSE_VAR_ARG_STFM)
       case ARG_STFMBORDER:
         ST_TYPE=STF; // to help DemobaseST just in case
         break;
+#elif !defined(SSE_VAR_RESIZE)
+      case ARG_STFMBORDER:    stfm_borders=4; break;
 #endif
       case ARG_SCREENSHOTUSEFULLNAME: Disp.ScreenShotUseFullName=true; break;
       case ARG_SCREENSHOTALWAYSADDNUM: Disp.ScreenShotAlwaysAddNum=true; break;
@@ -2026,7 +2028,7 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
 #endif
 {
   if (disable_input_vbl_count) return;
-#if defined(SSE_IKBD_6301_393)
+#if defined(SSE_IKBD_6301)
   if (!OPTION_C1 && ikbd_keys_disabled()) 
     return; //in duration mode
 #else

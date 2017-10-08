@@ -256,9 +256,6 @@ void osd_draw()
 #if defined(SSE_VID_ST_MONITOR_393)
   if(FullScreen && !screen_res && SCANLINES_OK)
     x1/=2;
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED)
-  if(FullScreen && !screen_res && SCANLINES_INTERPOLATED)
-    x1/=2;
 #endif
   y1=draw_blit_source_rect.bottom-draw_blit_source_rect.top;
   //TRACE_OSD("%d",y1);//540
@@ -343,7 +340,7 @@ void osd_draw()
         osd_draw_char(osd_font+((50+c)*64),draw_mem,x,start_y+PLASMA_H/2-OSD_LOGO_H/2,draw_line_length,col_white,OSD_LOGO_H);
         x+=32;
       }
-#endif//logo 3
+#endif//logo
     }
     if (draw_grille_black<4) draw_grille_black=4;
   }else if (osd_plasma_pal){
@@ -481,9 +478,6 @@ void osd_draw()
       && (psg_reg[PSGR_PORT_A]&6) != 6 //3.6.3
 #if defined(SSE_TOS_PRG_AUTORUN_392)
       && SF314[0].ImageType.Manager!=MNGR_PRG
-#elif defined(SSE_TOS_PRG_AUTORUN)
-      && SF314[0].ImageType.Extension!=EXT_PRG 
-      && SF314[0].ImageType.Extension!=EXT_TOS
 #endif
       && FloppyDrive[DRIVE].DiskInDrive() )
     {
@@ -524,24 +518,12 @@ void osd_draw()
 
         RECT cliprect={THE_LEFT,0,THE_RIGHT,y1}; //refactor...
         char tmp_buffer[BUFFER_LENGTH];
-#if defined(SSE_VAR_393)
 #ifdef SSE_DEBUG // add current command (CR)
         sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
           CURRENT_SIDE,floppy_head_track[DRIVE],fdc_sr);
 #else // not Debug
         sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
           CURRENT_SIDE,floppy_head_track[DRIVE],fdc_sr);
-#endif
-#else
-#ifdef SSE_DEBUG // add current command (CR)
-        sprintf(tmp_buffer,"%2X-%C:%d-%02d-%02d",fdc_cr,'A'+DRIVE,
-          CURRENT_SIDE,floppy_head_track[DRIVE],
-          (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
-#else // not Debug
-        sprintf(tmp_buffer,"%C:%d-%02d-%02d",'A'+DRIVE,
-          CURRENT_SIDE,floppy_head_track[DRIVE],
-          (WD1772.CommandType()==2||(WD1772.CR&0xF0)==0xC0)?fdc_sr:0);
-#endif
 #endif
         ASSERT( strlen(tmp_buffer) < BUFFER_LENGTH );
         size_t drive_info_length=strlen(tmp_buffer);

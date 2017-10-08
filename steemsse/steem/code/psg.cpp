@@ -25,12 +25,12 @@ EXT int sound_variable_d INIT(208);
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
 EXT bool sound_internal_speaker INIT(false);
 #endif
-#if defined(SSE_YM2149_392)
+#if defined(SSE_SOUND)
 EXT int sound_freq INIT(44100),sound_comline_freq INIT(0),sound_chosen_freq INIT(44100);
 #else
 EXT int sound_freq INIT(50066),sound_comline_freq INIT(0),sound_chosen_freq INIT(50066);
 #endif
-#if defined(SSE_GUI_393)
+#if defined(SSE_SOUND)
 EXT BYTE sound_num_channels INIT(2),sound_num_bits INIT(16);
 #elif defined(SSE_SOUND_NO_8BIT)
 BYTE sound_num_channels INIT(2);
@@ -306,13 +306,13 @@ extern IDirectSoundBuffer *PrimaryBuf,*SoundBuf;
 #endif
 #endif
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 bool written_to_env_this_vbl=true;
 #endif
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-HRESULT Sound_Start() // SS called by
+HRESULT Sound_Start() // SS called by run() and other functions
 {
 #ifdef UNIX
 #if !defined(SOUND_DISABLE_INTERNAL_SPEAKER)
@@ -648,7 +648,7 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     2 -> 0.5
     1 -> 0 !
     0 -> 0
-    We sacrifice the lowest value, of course.
+    We sacrifice the lowest value, of course. TODO: but we shifted the table already!
     We interpolate when the last bit isn't set.
     Because of that, we need to know if it was enveloped:
     11110 is max for fixed, 11111 is max for enveloped
@@ -657,29 +657,16 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
     eg Ace 2 on BIG demo
 */
 
-#if defined(SSE_SOUND_RECORD_391B)
-/*  Recording was broken with option 'Sampled YM-2149' because source_p
-    was modified then used again.
-*/
-  int source=*source_p;
-#endif
+  int source=*source_p; // *source_p will be used again, don't alter it
 
-  if(OPTION_SAMPLED_YM
-#if defined(SSE_YM2149_DYNAMIC_TABLE)
-    && YM2149.p_fixed_vol_3voices
-#endif
+  if(OPTION_SAMPLED_YM  && YM2149.p_fixed_vol_3voices
 #if defined(SSE_YM2149_MAMELIKE)
     && !OPTION_MAME_YM //already rendered
 #endif
     )
   {
-#if defined(SSE_SOUND_RECORD_391B)
-#if defined(SSE_YM2149_392)
     BYTE index[3],interpolate[4];
     *(int*)interpolate=0;
-#else
-    BYTE index[3],interpolate[3];
-#endif
     for(int abc=0;abc<3;abc++)
     {
       index[abc]=( ((source)>>1))&0xF; // 4bit volume
@@ -691,48 +678,19 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
       ASSERT( interpolate[abc]<=1 );
       ASSERT( index[abc]<=15 );
     }
-#else
-    BYTE index[3],interpolate[3];
-    for(int abc=0;abc<3;abc++)
-    {
-      index[abc]=( ((*source_p)>>1))&0xF; // 4bit volume
-
-      interpolate[abc]=
-        ( ((*source_p)&BIT_6) && index[abc]>0 && !((*source_p)&1)) ? 1 : 0;
-
-      *source_p>>=8;
-      ASSERT( interpolate[abc]<=1 );
-      ASSERT( index[abc]<=15 );
-    }
-#endif
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
     int vol=YM2149.p_fixed_vol_3voices[(16*16)*index[2]+16*index[1]+index[0]];
-#else
-    int vol=fixed_vol_3voices[index[2]] [index[1]] [index[0]];
-#endif
     if(*(int*)(&interpolate[0]))
     {
       ASSERT( !((index[0]-interpolate[0])&0x80) );
       ASSERT( !((index[1]-interpolate[1])&0x80) );
       ASSERT( !((index[2]-interpolate[2])&0x80) );
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
       int vol2=YM2149.p_fixed_vol_3voices[ (16*16)*(index[2]-interpolate[2])
         +16*(index[1]-interpolate[1])+(index[0]-interpolate[0])];
-#else
-      int vol2=fixed_vol_3voices[index[2]-interpolate[2]] 
-        [index[1]-interpolate[1]] [index[0]-interpolate[0]];
-#endif
       vol= (int) sqrt( (float) vol * (float) vol2); 
     }
-#if defined(SSE_SOUND_RECORD_391B)
     source=vol;
-#else
-    *source_p=vol;
-#endif
   }//OPTION_SAMPLED_YM
-
-
-#endif//mixing
+#endif //#if defined(SSE_YM2149_DELAY_RENDERING)
 
 #if defined(SSE_SOUND_MICROWIRE_MIXMODE_393)
 /*  According to Atari doc, 0 means YM -12db and 2 means no YM, but it doesn't
@@ -745,32 +703,20 @@ inline void AlterV(int Alter_V,int &v,int &dv,int *source_p) {
 */
   if(ST_TYPE==STE && OPTION_MICROWIRE && dma_sound_mixer!=1)
   {
-#if !defined(SSE_BASIC_ST)
     if(dma_sound_mixer==2)
       source>>=3;
-    else 
-#endif
-      if(!dma_sound_mixer)
+    else if(!dma_sound_mixer)
       source=0;
   }
 #endif
 
-  // Dispatches to the correct function  
-#if defined(SSE_SOUND_RECORD_391B)
+  // Dispatch to the correct function  
   if(Alter_V==CALC_V_CHIP)                    
     CalcVChip(v,dv,&source);                 
   else if(Alter_V==CALC_V_CHIP_25KHZ)         
     CalcVChip25Khz(v,dv,&source);            
   else if(Alter_V==CALC_V_EMU)                
     CalcVEmu(v,&source);                     
-#else
-  if(Alter_V==CALC_V_CHIP)                    
-    CalcVChip(v,dv,source_p);                 
-  else if(Alter_V==CALC_V_CHIP_25KHZ)         
-    CalcVChip25Khz(v,dv,source_p);            
-  else if(Alter_V==CALC_V_EMU)                
-    CalcVEmu(v,source_p);                     
-#endif
 }
 
 
@@ -809,20 +755,6 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     {       
       AlterV(Alter_V,v,dv,*source_p);
 
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE)
-      if(OPTION_MICROWIRE 
-#if defined(SSE_STF)
-        && ST_TYPE==STE // only if option checked and we're on STE
-#endif
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE2)//3.8.0
-        && (dma_sound_on_this_screen||!OPTION_HACKS) // hack Sabotage
-#endif
-        )
-      {
-        if(dma_sound_mixer!=1)
-          v=0; // dma-only
-      }
-#endif//SSE_SOUND_MICROWIRE_MIXMODE
       //LEFT-8bit
       val=v;
 #if defined(SSE_OSD_CONTROL)
@@ -915,20 +847,7 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
     while(c>0)
     {       
       AlterV(Alter_V,v,dv,*source_p);
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE)
-      if(OPTION_MICROWIRE 
-#if defined(SSE_STF)
-        && ST_TYPE==STE // only if option checked and we're on STE
-#endif
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE2)//3.8.0
-        && (dma_sound_on_this_screen||!OPTION_HACKS) // hack Sabotage
-#endif
-        )
-      {
-        if(dma_sound_mixer!=1)
-          v=0; // dma-only
-      }
-#endif//SSE_SOUND_MICROWIRE_MIXMODE
+
       //LEFT-16bit
       val=v; //inefficient?
 #if defined(SSE_SOUND_16BIT_CENTRED)
@@ -1074,17 +993,6 @@ inline void SoundRecord(int Alter_V, int Write,int& c,int &val,
   {       
     AlterV(Alter_V,v,dv,*source_p);
 
-#if defined(SSE_SOUND_MICROWIRE_MIXMODE)//3.6.3
-    if(OPTION_MICROWIRE 
-#if defined(SSE_STF)
-      && ST_TYPE==STE // only if option checked and we're on STE
-#endif
-      )
-    {
-      if(dma_sound_mixer!=1)
-        v=0; // dma-only
-    }
-#endif//SSE_SOUND_MICROWIRE_MIXMODE
     val=v;
 
 #if defined(SSE_SOUND_16BIT_CENTRED)
@@ -1419,7 +1327,11 @@ HRESULT Sound_VBL()
   }
 #endif
   // This just clears up some clicks when Sound_VBL is called very soon after Sound_Start
-  if (sound_first_vbl){
+  if (sound_first_vbl
+#ifdef SSE_BUGFIX_394
+    && !OPTION_MAME_YM
+#endif
+    ){
     sound_first_vbl=0;
     return DS_OK;
   }
@@ -1476,8 +1388,6 @@ HRESULT Sound_VBL()
 #if defined(SSE_YM2149_MAMELIKE)
   if(OPTION_MAME_YM)
   {
-#if defined(SSE_YM2149_MAMELIKE3)
-    
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
     YM2149.psg_write_buffer(time_of_next_vbl_to_write,true);
 //    TRACE_OSD("%d",YM2149.frame_samples); // should be 882 @50hz
@@ -1489,9 +1399,6 @@ HRESULT Sound_VBL()
     // Fill extra buffer, but without advancing the YM emu
     for(int i=max(1,psg_buf_pointer[0]);i<psg_buf_pointer[0]+PSG_WRITE_EXTRA;i++)
       *(psg_channels_buf+i)=*(psg_channels_buf+i-1);
-#else
-    YM2149.psg_write_buffer(time_of_next_vbl_to_write+PSG_WRITE_EXTRA);
-#endif
   }
   else
 #endif
@@ -1556,7 +1463,7 @@ HRESULT Sound_VBL()
 #endif
     if (sound_record){
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 /*  Each VBL we dump PSG registers. We must write the envelope register
     only if it was written to (even same value), otherwise we write $FF.
 */
@@ -1920,11 +1827,15 @@ void dma_sound_fetch()
         //average the channels out
 #if defined(SSE_SOUND_16BIT_CENTRED)
         if (RENDER_SIGNED_SAMPLES)
-          w1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8))>>8 );
+          w1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8))
+#ifndef SSE_BUGFIX_394 //nice double shift
+          >>8
+#endif          
+          );
         else
 #endif
         w1=WORD(((dma_sound_last_word & 255)+(dma_sound_last_word >> 8)) << 5);
-        w2=0; // skipped
+        w2=0; // skipped //SS no mixdown...
 #if defined(SSE_SOUND_16BIT_CENTRED)
       }else if (RENDER_SIGNED_SAMPLES){
         w1=WORD((dma_sound_last_word & 0xff00)>>8);
@@ -2753,7 +2664,7 @@ void psg_set_reg(int reg,BYTE old_val,BYTE &new_val)
 // from Hatari, see
 // http://www.atari-forum.com/viewtopic.php?f=51&t=31610&sid=b4e1d8fc35b06785db51e4f8e44d013d&p=319952#p319936
       YM2149.m_count_env = 0; 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
       written_to_env_this_vbl=true;
 #endif
     }
@@ -2901,7 +2812,7 @@ say, that the chip counts down.
         if (psg_reg[8+abc] & 16) psg_tone_start_time[abc]=abc_t[abc];
       }
 */
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
       written_to_env_this_vbl=true;
 #endif
       break;

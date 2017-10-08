@@ -95,8 +95,8 @@ EXT int cpu_timer_at_start_of_hbl;
 
 #endif
 
-// see SSEInterrupt.cpp for new definitions
-#if !(defined(SSE_INT_HBL_INLINE))
+// see SSEInterrupt.cpp
+#if !defined(SSE_INT_HBL)
 #define HBL_INTERRUPT  \
   {                  \
     hbl_pending=false;                 \
@@ -111,7 +111,7 @@ EXT int cpu_timer_at_start_of_hbl;
   }
 #endif
 
-#if !(defined(SSE_INT_VBL_INLINE))
+#if !defined(SSE_INT_VBL)
 #define VBL_INTERRUPT                                                        \
           {                                                               \
             vbl_pending=false;                                             \
@@ -364,45 +364,17 @@ void event_driveA_ip();
 void event_driveB_ip();
 #endif
 
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
 
 extern COUNTER_VAR time_of_event_acia;
 void event_acia();
 
-#if defined(SSE_ACIA_393) 
-  // as this is called very often, we make it simpler, just one check
 #define PREPARE_EVENT_CHECK_FOR_ACIA \
   if(OPTION_C1 && time_of_next_event-time_of_event_acia>=0)\
   {\
     time_of_next_event=time_of_event_acia;\
     screen_event_vector=event_acia;\
-  }\
-
-#else
-
-#define PREPARE_EVENT_CHECK_FOR_ACIA     \
-  if(OPTION_C1) {\
-  if(!HD6301.Crashed) {\
-  if (acia[0].LineRxBusy &&(time_of_next_event-acia[0].time_of_event_incoming) >= 0){\
-  time_of_next_event=time_of_event_acia=acia[0].time_of_event_incoming;  \
-  screen_event_vector=event_acia;                    \
-  } \
-  if (acia[0].LineTxBusy &&(time_of_next_event-acia[0].time_of_event_outgoing) >= 0){\
-  time_of_next_event=time_of_event_acia=acia[0].time_of_event_outgoing;  \
-  screen_event_vector=event_acia;                    \
-  } \
-  }\
-  if (acia[1].LineRxBusy && (time_of_next_event-acia[1].time_of_event_incoming) >= 0){\
-  time_of_next_event=time_of_event_acia=acia[1].time_of_event_incoming;  \
-  screen_event_vector=event_acia;                    \
-  } \
-  if (acia[1].LineTxBusy &&(time_of_next_event-acia[1].time_of_event_outgoing) >= 0){\
-  time_of_next_event=time_of_event_acia=acia[1].time_of_event_outgoing;  \
-  screen_event_vector=event_acia;                    \
-  } \
   }
-
-#endif//#if defined(SSE_ACIA_393)
 
 #endif//acia
 

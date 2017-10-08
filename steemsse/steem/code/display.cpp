@@ -1755,7 +1755,6 @@ void SteemDisplay::ChangeToFullScreen()
 
       }//SS
 
-
       SetForegroundWindow(StemWin);
 
       SetFocus(StemWin);
@@ -2910,17 +2909,7 @@ bool SteemDisplay::D3DBlit() {
       pD3DDevice->SetSamplerState(0,D3DSAMP_MAGFILTER ,D3DTEXF_POINT); //v3.7.2
 #endif
 
-#if defined(SSE_VID_D3D_FS_392A)
-    //TRACE_OSD_RECT(draw_blit_source_rect);//0 0 768 540
     d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
-#else
-    bool use_scr_rect=(FullScreen && OPTION_D3D_CRISP && !OPTION_INTERPOLATED_SCANLINES
-      && (screen_res<2 && draw_win_mode[screen_res]!=DWM_GRILLE));
-    if(use_scr_rect)
-      d3derr=pD3DSprite->Draw(pD3DTexture,&draw_blit_source_rect,NULL,NULL,0xFFFFFFFF);
-    else
-      d3derr=pD3DSprite->Draw(pD3DTexture,NULL,NULL,NULL,0xFFFFFFFF);
-#endif
     d3derr=pD3DSprite->End();
     d3derr=pD3DDevice->EndScene();
 
@@ -2943,8 +2932,6 @@ bool SteemDisplay::D3DBlit() {
 #endif
   }
 
-#if defined(SSE_VID_D3D_382)
-
   if(d3derr) 
   {
     TRACE("BLIT ERROR\n");
@@ -2957,10 +2944,7 @@ bool SteemDisplay::D3DBlit() {
 #endif
     runstate=RUNSTATE_STOPPING; // player can save & quit
   }
-#elif defined(SSE_DEBUG)
-  if(d3derr)
-    TRACE_LOG("D3D fail blit %d\n",d3derr);
-#endif
+
 
   return !d3derr;
 }
@@ -2994,9 +2978,6 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #endif
 
   D3DDestroySurfaces();
-#if !defined(SSE_VID_D3D_FS_392D)
-  D3DPRESENT_PARAMETERS d3dpp; 
-#endif
   ZeroMemory(&d3dpp, sizeof(d3dpp));
   d3dpp.Windowed=!FullScreen;
   d3dpp.SwapEffect=D3DSWAPEFFECT_DISCARD; // recommended by Microsoft
@@ -3010,7 +2991,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     (OPTION_3BUFFER_FS&&FullScreen)?2: // as simple as this
 #endif
     1;
-#if defined(SSE_VID_D3D_2SCREENS_393) //sooner...
+#if defined(SSE_VID_D3D_2SCREENS)
   // Update monitor rectangle. Hopefully, this won't call us again!
   D3DCheckCurrentMonitorConfig(); 
 #endif
@@ -3161,10 +3142,6 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #if defined(SSE_VID_D3D_2SCREENS)
   if(!d3derr && FullScreen)
   {
-#if !defined(SSE_VID_D3D_2SCREENS_393) // done before
-    // Update monitor rectangle. Hopefully, this won't call us again!
-    D3DCheckCurrentMonitorConfig(); 
-#endif
     // Compute size
     WORD cw=rcMonitor.right-rcMonitor.left;
     WORD ch=rcMonitor.bottom-rcMonitor.top;
@@ -3188,23 +3165,10 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
 #endif
   }
 
-#if !defined(SSE_VID_D3D_FS_392D1)
+
   // Create texture
-#if defined(SSE_VID_D3D_382) // maybe it changes nothing
   d3derr=pD3DDevice->CreateTexture(Width,Height,1,D3DUSAGE_DYNAMIC,
     d3dpp.BackBufferFormat,D3DPOOL_DEFAULT,&pD3DTexture,NULL);
-#else
-  UINT Levels=1;
-  D3DFORMAT Format=d3dpp.BackBufferFormat;
-  DWORD Usage=D3DUSAGE_DYNAMIC;
-  D3DPOOL Pool=D3DPOOL_DEFAULT;
-  d3derr=pD3DDevice->Clear(0,0,D3DCLEAR_TARGET,0,0,0);//XP-intel
-  HANDLE *pSharedHandle=NULL; //always
-  d3derr=pD3DDevice->CreateTexture(Width,Height,Levels,Usage,Format,
-    Pool,&pD3DTexture,pSharedHandle);
-  TRACE_LOG("D3D CreateTexture %dx%d levels %d Usage %d Format %d Pool %d Err %d\n",
-    Width,Height,Levels,Usage,Format,Pool,d3derr);
-#endif
 
   if(!pD3DTexture)
   {
@@ -3215,7 +3179,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
     return d3derr;
 #endif
   }
-#endif
+
 
   if(FullScreen)
   {
@@ -3415,7 +3379,6 @@ HRESULT SteemDisplay::D3DLock() {
   {
     D3DLOCKED_RECT LockedRect;
     d3derr=pD3DTexture->LockRect(0,&LockedRect,NULL,0);
-#if defined(SSE_VID_D3D_382)
     if(d3derr)
     {
       REPORT_D3D_ERR("LockRect",d3derr);
@@ -3424,17 +3387,13 @@ HRESULT SteemDisplay::D3DLock() {
     }
     else
     {
-#endif
       draw_line_length=LockedRect.Pitch;
       draw_mem=(BYTE*)LockedRect.pBits;
 #if defined(SSE_VID_ANTICRASH_392)
       // compute locked video memory as pitch * #lines
       Disp.VideoMemorySize=draw_line_length*SurfaceHeight;
 #endif
-#if defined(SSE_VID_D3D_382)
     }
-#endif
-
   }
   return d3derr;
 }
@@ -3472,23 +3431,6 @@ HRESULT SteemDisplay::D3DSpriteInit() {
 #endif
   if(pD3DSprite)
     pD3DSprite->Release(); //so we can init sprite anytime
-
-#if defined(SSE_VID_D3D_FS_392D1)
-/*  Deleting and creating the texture at each sprite init seems silly
-    but we're looking for ways to have clean rendering on all systems.
-*/
-  // Create texture
-  if(pD3DTexture)
-    pD3DTexture->Release();
-  pD3DTexture=NULL;
-  hr=pD3DDevice->CreateTexture(d3dpp.BackBufferWidth,d3dpp.BackBufferHeight,1,
-    D3DUSAGE_DYNAMIC,d3dpp.BackBufferFormat,D3DPOOL_DEFAULT,&pD3DTexture,NULL);
-  if(!pD3DTexture)
-  {
-    REPORT_D3D_ERR("CreateTexture",hr);
-    return hr;
-  }
-#endif
 
   hr = D3DXCreateSprite(pD3DDevice,&pD3DSprite); 
   if(!pD3DSprite)
@@ -3583,17 +3525,6 @@ HRESULT SteemDisplay::D3DSpriteInit() {
     {
       sh/=2;
     }
-#else
-    if(FullScreen)
-    {
-      if(screen_res>=2 ||SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D_382)
-        || FullScreen&&draw_win_mode[screen_res]==DWM_GRILLE
-#endif
-        )
-        if(!extended_monitor)
-          sh/=2;
-    }
 #endif
 #ifdef SSE_VID_EXT_FS1
     if(extended_monitor && stx==SurfaceWidth) //&&?
@@ -3617,7 +3548,6 @@ HRESULT SteemDisplay::D3DSpriteInit() {
   return hr;
 }
 
-#if defined(SSE_VID_D3D_382)
   
 void SteemDisplay::D3DUpdateWH(UINT mode) {
   if(!pD3D)
@@ -3631,17 +3561,14 @@ void SteemDisplay::D3DUpdateWH(UINT mode) {
   D3DDISPLAYMODE Mode; 
 #if defined(SSE_VID_D3D_2SCREENS)
   pD3D->EnumAdapterModes(m_Adapter,d3ddm.Format,mode,&Mode);
-#elif defined(SSE_VS2008_WARNING_390)//could do without param but it looks more logical this way
-  pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,mode,&Mode);
 #else
-  pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,D3DMode,&Mode);
+  pD3D->EnumAdapterModes(D3DADAPTER_DEFAULT,d3ddm.Format,mode,&Mode);
 #endif
   D3DFsW=Mode.Width;
   D3DFsH=Mode.Height;
   TRACE_LOG("D3DUpdateWH mode %d w %d h %d\n",mode,D3DFsW,D3DFsH);
 }
 
-#endif
 
 #if defined(SSE_VID_D3D_2SCREENS)
 /*  The D3D builds of Steem are now compatible with multiple displays,
@@ -3651,6 +3578,7 @@ void SteemDisplay::D3DUpdateWH(UINT mode) {
     As programmer we must do two things:
     - Create the D3D surfaces on the correct screen.
     - Use the correct rectangle to display the window/fullscreen.
+    Note: not BCC
 */
 
 void SteemDisplay::D3DCheckCurrentMonitorConfig(HMONITOR hCurrentMonitor) {

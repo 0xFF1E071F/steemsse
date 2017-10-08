@@ -257,36 +257,13 @@ BYTE TWD1772::IORead(BYTE Line) {
     else
 #endif
     {
-#if !defined(SSE_WD1772_393_) // seems wrong, breaks Super Hang-On
       // IP
       if(floppy_track_index_pulse_active())
         STR|=FDC_STR_T1_INDEX_PULSE;
       else
         STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-#endif
-#if defined(SSE_WD1772_393_) // all command types // that's wrong too! (Exile)
-      // WP
-      // disk has just been changed (30 VBL set at SetDisk())
-      if(floppy_mediach[drive])
-      {
-        STR&=(~FDC_STR_WRITE_PROTECT);
-        if(floppy_mediach[drive]/10!=1) 
-          STR|=FDC_STR_WRITE_PROTECT;
-      }
-      // Permanent status if disk is in
-      else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
-        STR|=FDC_STR_WRITE_PROTECT;
-#endif
       if(StatusType) // type I command status
       {
-#if defined(SSE_WD1772_393_)
-        // IP
-        if(floppy_track_index_pulse_active())
-          STR|=FDC_STR_T1_INDEX_PULSE;
-        else
-          STR&=BYTE(~FDC_STR_T1_INDEX_PULSE);
-#endif
-#if !defined(SSE_WD1772_393_)
         // WP
         // disk has just been changed (30 VBL set at SetDisk())
         if(floppy_mediach[drive])
@@ -298,14 +275,7 @@ BYTE TWD1772::IORead(BYTE Line) {
         // Permanent status if disk is in
         else if (FloppyDrive[drive].ReadOnly && !FloppyDrive[drive].Empty())
           STR|=FDC_STR_WRITE_PROTECT;
-#endif
         // SU
-#if defined(SSE_DISK_STW) // was set already (hopefully)
-#if !defined(SSE_WD1772_393) // don't bet on it ;)
-        if(SF314[drive].ImageType.Manager==MNGR_WD1772)
-          ; else
-#endif
-#endif
         if(fdc_spinning_up) //should be up-to-date for WD1772 emu too
           STR&=BYTE(~FDC_STR_T1_SPINUP_COMPLETE);
         else
@@ -388,10 +358,6 @@ WD doc:
 #endif
 
   return ior_byte;
-
-#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_390)
-#undef drive
-#endif
 }
 
 
@@ -407,7 +373,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #if defined(SSE_DMA_TRACK_TRANSFER) // we reset it here so it works for CAPS too
     Dma.Datachunk=0;
 #endif
-#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE_OBJECT) 
+#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE) 
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
     {
 #if defined(SSE_WD1772_EMU)
@@ -421,7 +387,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
         ACT,SF314[drive].ImageType.Manager,io_src_b,drive_char,CURRENT_SIDE,STR,TR,SF314[drive].Track(),SR,DR,Dma.BaseAddress,Dma.Counter,old_pc);
     }
 #endif
-#if defined(SSE_DEBUG) && defined(SSE_DRIVE_OBJECT) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
+#if defined(SSE_DEBUG) && defined(SSE_DRIVE) && defined(SSE_DRIVE_COMPUTE_BOOT_CHECKSUM)
 /*  Used this for Auto239.
     Gives the checksum of bootsector.
     $1234 means executable. Use last WORD to adjust.
@@ -452,7 +418,7 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       if(!Lines.CommandWasIntercepted) //would mess registers, and is instant
 #endif
       {
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
         Dma.UpdateRegs();
 #endif
         SF314[drive].TrackAtCommand=SF314[drive].Track(); //record
@@ -540,11 +506,6 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
       Caps.WriteWD1772(Line,io_src_b);
 #endif
-      
-#if !defined(SSE_DEBUG) && !defined(SSE_WD1772_390)
-#undef drive
-#endif
-  
 }
 
 ///////////////////////////////////// ACC /////////////////////////////////////
@@ -1641,14 +1602,9 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_HEAD_SETTLE: // we come directly or after 15ms delay
-//    SF314[DRIVE].State.reading=true;
     // check Write Protect for command write sector
-    if((CR&CR_TYPEII_WRITE) 
-#if defined(SSE_WD1772_390C) //Lines.write_protect is undefined!
-      && (FloppyDrive[DRIVE].ReadOnly) )
-#else
-      && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )
-#endif
+    // note: Lines.write_protect is undefined!
+    if((CR&CR_TYPEII_WRITE) && (FloppyDrive[DRIVE].ReadOnly) ) 
     {
       STR|=STR_WP;
       Irq(true);
@@ -1667,7 +1623,6 @@ r1       r0            1772
   case WD_TYPEII_TEST_ID:
     ASSERT(!n_format_bytes);
 #ifdef SSE_DEBUG___
-    ASSERT(!n_format_bytes);
     TRACE_LOG("At %d:",Disk[DRIVE].current_byte); // position
     IDField.Trace();
 #endif
@@ -1904,12 +1859,8 @@ r1       r0            1772
       Read();
     }
     // check Write Protect for command write track
-    else if((CR&CR_TYPEIII_WRITE) 
-#if defined(SSE_WD1772_390C) //Lines.write_protect is undefined!
-      && (FloppyDrive[DRIVE].ReadOnly) )
-#else
-      && (Lines.write_protect|| FloppyDrive[DRIVE].ReadOnly) )
-#endif
+     // Lines.write_protect is undefined!
+    else if((CR&CR_TYPEIII_WRITE) && (FloppyDrive[DRIVE].ReadOnly) )
     {
       TRACE_LOG("Can't write on disk\n");
       STR|=STR_WP;

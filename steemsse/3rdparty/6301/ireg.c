@@ -288,19 +288,7 @@ static dr2_getb (offs)
     Y# vertical movement
 */
 
-#if !defined(SSE_IKBD_6301_MOUSE_MASK3)
-#if defined(SSE_IKBD_6301_MOUSE_MASK)
-#define MOUSE_MASK 0xCCCCCCCC // fixes Jumping Jackson auto but breaks International Tennis
-#else
-#define MOUSE_MASK 0x33333333 // series of 11001100... for rotation
-#endif
-
-static unsigned int mouse_x_counter=MOUSE_MASK;
-static unsigned int mouse_y_counter=MOUSE_MASK;
-#endif
-
-
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+#if defined(SSE_IKBD_6301)
 #if defined(SSE_VAR_RESIZE)
 extern BYTE shifter_freq;
 #else
@@ -330,7 +318,7 @@ static dr4_getb (offs)
     If we test for DR2 bit 0 set, ok for desktop but it breaks Froggies.
 */
 
-#if 0 && defined(SSE_IKBD_6301_393_REF) //tmp to check frequency
+#if 0 //tmp to check frequency
   if(!(ddr4&0xF) && (ddr2&1) 
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
@@ -339,111 +327,34 @@ static dr4_getb (offs)
     debug1=cpu.ncycles;
   }
 #endif
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
+
   if(!(ddr4&0xF) && (ddr2&1) 
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
-#if defined(SSE_IKBD_6301_393_REF)
-  // need to update mouse at each read, because the ROM checks for stability
-  while(HD6301.MouseCyclesPerTickX && cpu.ncycles>=HD6301.MouseNextTickX
-    &&HD6301.click_x<abs(HD6301.MouseVblDeltaX))
-  {
-    if(HD6301.MouseVblDeltaX<0) // left
-      mouse_x_counter=_rotl(mouse_x_counter,1);
-    else  // right
-      mouse_x_counter=_rotr(mouse_x_counter,1);
-    HD6301.click_x++;
-    HD6301.MouseNextTickX+=HD6301.MouseCyclesPerTickX;
-    //TRACE("mouse tick x %d on %d, next on %d\n",HD6301.click_x,cpu.ncycles,HD6301.MouseNextTickX);
-  }
-  while(HD6301.MouseCyclesPerTickY && cpu.ncycles>=HD6301.MouseNextTickY
-    &&HD6301.click_y<abs(HD6301.MouseVblDeltaY))
-  {
-    if(HD6301.MouseVblDeltaY<0) // up
-      mouse_y_counter=_rotl(mouse_y_counter,1);
-    else  // down
-      mouse_y_counter=_rotr(mouse_y_counter,1);
-    HD6301.click_y++;
-    HD6301.MouseNextTickY+=HD6301.MouseCyclesPerTickY;
-    //TRACE("mouse tick y %d on %d, next on %d\n",HD6301.click_y,cpu.ncycles,HD6301.MouseNextTickY);
-  }
-#elif defined(SSE_BUGFIX_392) // protect vs corrupt snapshot
-    int cycles_per_frame=0;
-    if(shifter_freq)    
-      cycles_per_frame=HD6301_CLOCK/shifter_freq;   
-    if(HD6301.MouseVblDeltaX) // horizontal
-    { 
-      int clicks=abs(HD6301.MouseVblDeltaX);
-      int cycles_for_a_click=0, current_click=0;
-      if(clicks)
-        cycles_for_a_click=cycles_per_frame/clicks;
-      if(cycles_for_a_click)
-        current_click=hd6301_vbl_cycles/cycles_for_a_click;
-      if(current_click>=HD6301.click_x)
-      {
-        if(HD6301.MouseVblDeltaX<0) // left
-          mouse_x_counter=_rotl(mouse_x_counter,1);
-        else  // right
-          mouse_x_counter=_rotr(mouse_x_counter,1);
-        HD6301.click_x++;
-      }
-    }
-    if(HD6301.MouseVblDeltaY) // vertical
+    // need to update mouse at each read, because the ROM checks for stability
+    while(HD6301.MouseCyclesPerTickX && cpu.ncycles>=HD6301.MouseNextTickX
+      &&HD6301.click_x<abs(HD6301.MouseVblDeltaX))
     {
-      int clicks=abs(HD6301.MouseVblDeltaY);
-      int cycles_for_a_click=0, current_click=0;
-      if(clicks)
-        cycles_for_a_click=cycles_per_frame/clicks;
-      if(cycles_for_a_click)
-        current_click=hd6301_vbl_cycles/cycles_for_a_click;
-      if(current_click>=HD6301.click_y)
-      {
-        if(HD6301.MouseVblDeltaY<0) // up
-          mouse_y_counter=_rotl(mouse_y_counter,1);
-        else  // down
-          mouse_y_counter=_rotr(mouse_y_counter,1);
-        HD6301.click_y++;
-      }
-    } 
-#else
-    int cycles_per_frame;
-    ASSERT(shifter_freq);
-    ASSERT(shifter_freq==50||shifter_freq==60||shifter_freq==72);
-    cycles_per_frame=HD6301_CLOCK/shifter_freq;
-    if(HD6301.MouseVblDeltaX) // horizontal
-    { 
-      int clicks=abs(HD6301.MouseVblDeltaX);
-      int cycles_for_a_click=cycles_per_frame/clicks;
-      int current_click=hd6301_vbl_cycles/cycles_for_a_click;
-
-      if(current_click>=HD6301.click_x)
-      {
-        if(HD6301.MouseVblDeltaX<0) // left
-          mouse_x_counter=_rotl(mouse_x_counter,1);
-        else  // right
-          mouse_x_counter=_rotr(mouse_x_counter,1);
-        HD6301.click_x++;
-      }
+      if(HD6301.MouseVblDeltaX<0) // left
+        mouse_x_counter=_rotl(mouse_x_counter,1);
+      else  // right
+        mouse_x_counter=_rotr(mouse_x_counter,1);
+      HD6301.click_x++;
+      HD6301.MouseNextTickX+=HD6301.MouseCyclesPerTickX;
+      //TRACE("mouse tick x %d on %d, next on %d\n",HD6301.click_x,cpu.ncycles,HD6301.MouseNextTickX);
     }
-
-    if(HD6301.MouseVblDeltaY) // vertical
+    while(HD6301.MouseCyclesPerTickY && cpu.ncycles>=HD6301.MouseNextTickY
+      &&HD6301.click_y<abs(HD6301.MouseVblDeltaY))
     {
-      int clicks=abs(HD6301.MouseVblDeltaY);
-      int cycles_for_a_click=cycles_per_frame/clicks;
-      int current_click=hd6301_vbl_cycles/cycles_for_a_click;
-      if(current_click>=HD6301.click_y)
-      {
-        if(HD6301.MouseVblDeltaY<0) // up
-          mouse_y_counter=_rotl(mouse_y_counter,1);
-        else  // down
-          mouse_y_counter=_rotr(mouse_y_counter,1);
-        HD6301.click_y++;
-      }
-    }   
-    //TRACE("Read mouse %d/%d,%d/%d\n",HD6301.click_x,HD6301.MouseVblDeltaX,HD6301.click_y,HD6301.MouseVblDeltaY);    
-#endif
+      if(HD6301.MouseVblDeltaY<0) // up
+        mouse_y_counter=_rotl(mouse_y_counter,1);
+      else  // down
+        mouse_y_counter=_rotr(mouse_y_counter,1);
+      HD6301.click_y++;
+      HD6301.MouseNextTickY+=HD6301.MouseCyclesPerTickY;
+      //TRACE("mouse tick y %d on %d, next on %d\n",HD6301.click_y,cpu.ncycles,HD6301.MouseNextTickY);
+    }
   }
-#endif //#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
 
 
 /*  Joystick movements
@@ -456,34 +367,13 @@ static dr4_getb (offs)
     if(joy0mvt||joy1mvt)
     {
       value=0; // not always right (game mouse+joy?) but can't do better yet
-#if !defined(SSE_IKBD_6301_390)
-      if(joy0mvt) // for games using joystick 0
-        mouse_y_counter=mouse_x_counter=MOUSE_MASK; 
-#endif
       value|= joy0mvt | ( joy1mvt<<4);
       value=~value;
       //TRACE("sticks %X 0 %x 1 %X\n",value,stick[0],stick[1]);
-
-#if defined(SSE_IKBD_6301_MOUSE_MASK2)//no
-/*  Hack to have both Jumping Jackson-WNW and International Tennis working
-    It is unnecessary though as International Tennis (auto 373) is buggy and 
-    doesn't work right on real STE either. In Steem it will work when '6301'
-    isn't checked so there's the real hack.
-*/
-      if(OPTION_HACKS&&!(HD6301.MouseVblDeltaX||HD6301.MouseVblDeltaY))
-      {
-        mouse_x_counter=~MOUSE_MASK;
-        mouse_y_counter=~MOUSE_MASK;
-      }
-#endif
-
-
     }
   }  
 
-#if defined(SSE_IKBD_6301_390)
   if(!SSEConfig.Port0Joy)
-#endif
     value = (value&(~0xF))  | (mouse_x_counter&3) | ((mouse_y_counter&3)<<2);
 
   iram[offs]=value;

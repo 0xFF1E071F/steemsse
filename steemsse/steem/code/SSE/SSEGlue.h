@@ -34,13 +34,8 @@ struct TGlue {
   // ENUM
   enum {FREQ_50,FREQ_60,FREQ_72,NFREQS};
 
-#if defined(SSE_GLUE_392A)
-  enum {CHOOSE_FREQ,LINE_START,HBLANK_OFF,LINE_STOP,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
-    ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
-#else
   enum {LINE_START,HBLANK_OFF,LINE_STOP,HBLANK_ON,HSYNC_ON,HSYNC_OFF,RELOAD_SDP,
     ENABLE_VBI,VERT_OVSCN_LIMIT,NTIMINGS};
-#endif
 
   // DATA
   int TrickExecuted; //make sure that each trick will only be applied once
@@ -50,9 +45,7 @@ struct TGlue {
   short VCount;
   WORD DE_cycles[NFREQS];
   WORD ScanlineTiming[NTIMINGS][NFREQS];
-#if defined(SSE_GLUE_393B)
   short nLines; // 313, 263, 501
-#endif
 #if defined(SSE_GLUE_393C)
   short de_start_line,de_end_line;
 #endif

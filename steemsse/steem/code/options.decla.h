@@ -34,14 +34,6 @@ public: //TODO
   HBITMAP hBrightBmp;
   WNDPROC Old_GroupBox_WndProc;
   HWND BorderOption;
-#if !defined(SSE_VAR_REFACTOR_392)
-#if defined(SSE_STF) 
-  HWND STTypeOption;
-#endif
-#if defined(SSE_MMU_WU)
-  HWND MMUWakeUpOption;
-#endif
-#endif//ref
 #if defined(SSE_VID_BORDERS) && !defined(SSE_VID_BORDERS_GUI_392)
   HWND BorderSizeOption;
 #endif

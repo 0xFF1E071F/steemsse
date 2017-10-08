@@ -27,7 +27,7 @@ tcsr_getb (offs)
   if ((tcsr = ireg_getb (TCSR)) & OCF)
     tcsr_is_read = 1;
 
-#if defined(SSE_IKBD_6301_393_REF)
+#if defined(SSE_IKBD_6301)
   // clear TOF but we don't check if SR was read 
   ireg_putb (TCSR, ireg_getb (TCSR) & (~TOF)); 
 #endif
@@ -74,7 +74,7 @@ timer_inc (ncycles)
   u_int ncycles;
 {
   u_int  frc_old;     /* Free Running Counter */
-#if defined(SSE_IKBD_6301_393_REF)
+#if defined(SSE_IKBD_6301)
   u_short frc_new; // 16 bit, must overflow
 #else
   u_long frc_new;     /* 32 bits */
@@ -92,11 +92,7 @@ timer_inc (ncycles)
    */
   ocr = ireg_getw (OCR);
 
-#if defined(SSE_IKBD_6301_393_REF)
-/*  Argh! HD6301_TIMER_FIX below wasn't defined (name change) so our fix wasn't 
-    compiled. Timings were messed up with some random effects (Warp STX, 
-    Defulloir...).
-*/
+#if defined(SSE_IKBD_6301)
   // detect overflow (AFAIK nothing uses it)
   if(frc_old>frc_new)
     ireg_putb (TCSR, ireg_getb (TCSR) | TOF);
@@ -104,18 +100,7 @@ timer_inc (ncycles)
   //  detect output compare 
   if(frc_new>=ocr && (frc_old<ocr || frc_old>frc_new)) {
 #else
-  if (frc_new >= ocr
-#if defined(HD6301_TIMER_FIX)
-/*  According to Hitachi doc, the OCF flag is set when the match is exact, 
-    the comparison is constant. In the emu, cycles are added according to the
-    instruction timings, hence the >=. But once the flag has been set, it
-    shouldn't be set again if the OCR value isn't changed.
-    The max timing seems to be 12 according to optab.c.
-    Not sure it's a real fix, could even be a bug!
-*/    
-    && frc_new-ocr<14 
-#endif
-    ) {
+  if (frc_new >= ocr) {
 #endif
     ireg_putb (TCSR, ireg_getb (TCSR) | OCF);
     tcsr_is_read = 0;

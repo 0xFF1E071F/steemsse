@@ -126,11 +126,7 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   ASSERT( !drive || drive==1 );
   ASSERT( img_info );
   ASSERT( ContainerID[drive]!=-1 );
-#if defined(SSE_DISK_CAPS_390C) //didn't work with archives
   bool FileIsReadOnly=FloppyDrive[drive].ReadOnly;
-#else
-  bool FileIsReadOnly=bool(GetFileAttributes(File) & FILE_ATTRIBUTE_READONLY);
-#endif
   VERIFY( !CAPSLockImage(ContainerID[drive],File) ); // open the CAPS file
   VERIFY( !CAPSGetImageInfo(img_info,ContainerID[drive]) );
   ASSERT( img_info->type==ciitFDD );
@@ -161,10 +157,9 @@ int TCaps::InsertDisk(int drive,char* File,CapsImageInfo *img_info) {
   SF314[drive].diskattr|=CAPSDRIVE_DA_IN; // indispensable!
   if(!FileIsReadOnly)
     SF314[drive].diskattr&=~CAPSDRIVE_DA_WP; // Sundog
-#if defined(SSE_DISK_CAPS_390C)
   else
     SF314[drive].diskattr|=CAPSDRIVE_DA_WP; // Jupiter's Master Drive
-#endif
+
 #if defined(SSE_DRIVE_SINGLE_SIDE_CAPS)
   if(SSEOption.SingleSideDriveMap&(drive+1) && Caps.Version>50)
     SF314[drive].diskattr|=CAPSDRIVE_DA_SS; //tested OK on Dragonflight

@@ -1282,9 +1282,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
 #if !defined(SSE_C2_NOT_OPTIONAL)
           +(OPTION_C2)
 #endif
-#if !defined(SSE_LE)
           +(OPTION_HACKS)
-#endif
           +(!HardDiskMan.DisableHardDrives||ACSI_EMU_ON));
         }
         //TRACE("left %d right %d\n",left,left+Size.cx);
@@ -1344,7 +1342,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
             myx+=19;
           }
 #endif
-#if !defined(SSE_LE) // stands out without C1, C2
           if(OPTION_HACKS)
           {
             DrawIconEx(myHdc,myx,2,
@@ -1352,7 +1349,6 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
               hGUIIcon[RC_ICO_OPS_HACKS],16,16,0,NULL,DI_NORMAL);
             myx+=19;
           }
-#endif
         }
         return TRUE;
 #undef myHdc
@@ -1476,11 +1472,7 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
     We check here if the player dragged the main window over to another screen.
 */
     case WM_MOVE:
-#if defined(SSE_VID_D3D_2SCREENS_393) // signed 16bit, fool :)
-      POINT myPoint={(short)LOWORD(lPar),(short)HIWORD(lPar)};
-#else
-      POINT myPoint={LOWORD(lPar),HIWORD(lPar)};
-#endif
+      POINT myPoint={(short)LOWORD(lPar),(short)HIWORD(lPar)}; //signed 16bit
       // Get Windows handle to monitor. This function requires Windows 2000.
       HMONITOR hCurrentMonitor=MonitorFromPoint(myPoint,MONITOR_DEFAULTTOPRIMARY);
       if(!PtInRect(&Disp.rcMonitor,myPoint)) // player dragged to other monitor

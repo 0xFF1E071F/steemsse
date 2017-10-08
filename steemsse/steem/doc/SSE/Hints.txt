@@ -85,7 +85,6 @@ Games
 - Albedo STX: DI, pasti 02j
 - Altaïr: to use the missile, press any SHIFT key
 - Amberstar STX: WP
-- Ange de Cristal STX: Use Old Timing (02j)
 - Antago STX, SCP: WP
 - Arctic Fox: not T106
 - Billiards Simulator: <4MB
@@ -162,7 +161,7 @@ Demos
 - Awakening of the Gods: press space twice for menu; not T102
 - B.I.G. Demo: DI or patch
 - Beat Demo: Microwire (not 100%)
-- Big Wobble: STE, #; use arrow keys
+- Big Wobble: STE; use arrow keys
 - The Black Demo by The Black Cats: <4MB; Spritedemo and Circle: not T162
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
@@ -172,9 +171,8 @@ Demos
 - Cuddly Demos: DI, WS1 if STE
 - Dangerous Fantaisy: STE
 - Death of the Clock Cycles: 1MB
-- Death of the Left Border STF, WS2
 - Delirious 3: STE, numpad
-- Delirious 4: STE, ADAT; Tekila: #
+- Delirious 4: STE, ADAT
 - Deep Lair on Fuzion 80: STE
 - Dragonnels: C1
 - Drone: STE, 4MB
@@ -182,7 +180,7 @@ Demos
 - European Demos: No B or insert both disks before starting
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
-- Froggies Over The Fence: C1, #
+- Froggies Over The Fence: C1
 - Garcimore 1, 2 (FR): 1MB
 - Hackabonds Demo: STF
 - Hier sind noch zwei Plätze frei/plasma: C1
@@ -190,7 +188,7 @@ Demos
 - It makes me shake: STE
 - Japtro: DI, STF (depends on Steem version)
 - Knocking at Krystals Doors: press return
-- Kryos: STE, WS1, #
+- Kryos: STE, WS1
 - Megablast demo by Fashion: <4MB
 - More or less Zero: STE, 2MB
 - Musical Wonder 1990: WU1 or STE
@@ -212,12 +210,12 @@ Demos
 - Q-Lize: STE T162
 - Reality is a Lie STE/Schnusdie: STE
 - Red Fox sound demo by Exocet: <4MB
-- Relapse: STE, 'Help'; plasma: #
+- Relapse: STE, 'Help'
 - RGBeast: STE
 - Riverside: STE
 - Ronnie 2 demo by OUCH: <4MB
 - The Sierpinski Overdose: STE, medium res
-- Sadeness: WU1
+- Sadeness: STE
 - Sinfull Sinuses: STE T162 French 
 - Snork: DI
 - Sound Demo 3 by Pure Energy: STF
@@ -243,7 +241,7 @@ Demos
 - World of Music -NPG: WS1 if STE
 - Ventura: mouse to rotate menu
 - Ventura/Board and Spheres: STF, WU2
-- XMas 2004: #
+- XMas 2004: STE
 - Yanartas: STE
 
 

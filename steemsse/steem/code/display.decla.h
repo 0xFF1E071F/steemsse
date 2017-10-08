@@ -146,10 +146,8 @@ public: //temp
 #endif
 #endif//dd7?
 #endif//!defined(SSE_VID_D3D)
-#if defined(SSE_VID_D3D_FS_392D)
-  D3DPRESENT_PARAMETERS d3dpp; // double use for w,h, but we need other params
-#endif
 #if defined(SSE_VID_D3D)
+  D3DPRESENT_PARAMETERS d3dpp; // double use for w,h, but we need other params
   D3DFORMAT m_DisplayFormat;
   D3DDEVTYPE m_DeviceType;
   DWORD m_vtx_proc;
@@ -166,9 +164,9 @@ public: //temp
 #if defined(SSE_VID_D3D_LIST_MODES)
   UINT D3DMode; // depends on video card and format
 #endif
-#if defined(SSE_VID_D3D_382)
+#if defined(SSE_VID_D3D)
   UINT D3DFsW,D3DFsH;
-#endif//#if defined(SSE_VID_D3D_382)
+#endif
 #if !defined(SSE_VID_D3D)
   DWORD DDLockFlags;
   int DDClosestHz[3][2][NUM_HZ];
@@ -269,9 +267,7 @@ public:
   void D3DUnlock();
   bool D3DBlit();
   friend HRESULT check_device_type(D3DDEVTYPE DeviceType,D3DFORMAT DisplayFormat);
-#if defined(SSE_VID_D3D_382)
   void D3DUpdateWH(UINT mode);
-#endif
 #if defined(SSE_VID_D3D_2SCREENS)
   void D3DCheckCurrentMonitorConfig(HMONITOR hCurrentMonitor=NULL);
 #endif
@@ -399,10 +395,8 @@ public:
 #if defined(SSE_VID_D3D_LIST_MODES)
   UINT D3DMode; // depends on video card and format
 #endif
-#if defined(SSE_VID_D3D_382)
   UINT D3DFsW,D3DFsH;
   void D3DUpdateWH(UINT mode);
-#endif
 private:
 #endif//d3d
 

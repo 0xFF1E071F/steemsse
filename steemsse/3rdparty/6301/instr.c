@@ -49,7 +49,7 @@ instr_exec ()
 
 #ifndef M6800
 
-#if defined(SSE_IKBD_6301_393_REF)
+#if defined(SSE_IKBD_6301)
 
   // byte has just been received by ACIA?
   if(!ACIA_IKBD.LineRxBusy && !(iram[TRCSR]&TDRE))
@@ -70,38 +70,9 @@ instr_exec ()
     ASSERT(ACIA_IKBD.LineRxBusy==1);
   }
 
-#else 
-
-  if(hd6301_completed_transmission_to_MC6850)
-  {
-    hd6301_completed_transmission_to_MC6850--;
-    ASSERT(!hd6301_completed_transmission_to_MC6850);
-    txinterrupts=1;
-
-    //  Start shifting the waiting byte if any
-    if(ACIA_IKBD.ByteWaitingRx)
-    {
-#if defined(SSE_DEBUG_IKBD_6301_TRACE_SCI_TX)
-      TRACE("6301 TDRS waiting %X\n",iram[TDR]);
 #endif
-      HD6301.tdrs=iram[TDR];
-#if defined(SSE_IKBD_6301_MACRO)
-      keyboard_buffer_write(HD6301.tdrs); // call Steem's ikbd function
-#else
-      keyboard_buffer_write_n_record(HD6301.tdrs); // call Steem's ikbd function
-#endif
-      ACIA_IKBD.ByteWaitingRx=0;
-      txinterrupts=1;
-    }
-  }
 
-#endif //#if defined(SSE_IKBD_6301_393_REF)
-
-  if (!reg_getiflag () 
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-    && ExecutingInt!=EXECUTING_INT
-#endif
-  ) 
+  if (!reg_getiflag ()) 
   {
     /*
      * Check for interrupts in priority order
@@ -111,9 +82,6 @@ instr_exec ()
       interrupted = 1;
     } 
     else if (serial_int ()) {
-#if !defined(SSE_IKBD_6301_393_REF)
-      txinterrupts=0;
-#endif
       int_addr (SCIVECTOR);
       interrupted = 1;
     }
@@ -142,11 +110,7 @@ instr_exec ()
     if( ! ( pc>=0x80 && pc<0xFFFF) ) // eg bad snapshot
     {
       TRACE("6301 emu is hopelessly crashed!\n");
-#if defined(SSE_IKBD_6301_393_REF)
       HD6301.Crashed=1;
-#else
-      Crashed6301=1;
-#endif
       return -1;
     }
 

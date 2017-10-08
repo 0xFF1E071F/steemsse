@@ -224,7 +224,7 @@ void IKBD_VBL()
 #endif
       }
 #endif
-#if defined(SSE_IKBD_6301_390)
+#if defined(SSE_IKBD_6301)
       if(stick[0]&0xF)
         SSEConfig.Port0Joy=true; // it's joystick or mouse
 #endif
@@ -343,11 +343,7 @@ void IKBD_VBL()
         if (disable_input_vbl_count<=30){
           mouse_move_since_last_interrupt_x+=(pt.x-window_mouse_centre_x);
           mouse_move_since_last_interrupt_y+=(pt.y-window_mouse_centre_y);
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-          if (mouse_speed!=10 && !OPTION_ST_MOUSE_SPEED){     
-#else
           if (mouse_speed!=10){
-#endif
             int x_if_0=0;
             if (mouse_move_since_last_interrupt_x<0) x_if_0=-1;
             if (mouse_move_since_last_interrupt_x>0) x_if_0=1;
@@ -406,7 +402,7 @@ void IKBD_VBL()
       if (LMB_DOWN(mousek) && LMB_DOWN(old_mousek)==0) report_button_abs|=BIT_2;
       if (LMB_DOWN(mousek)==0 && LMB_DOWN(old_mousek)) report_button_abs|=BIT_3;
       ikbd.abs_mousek_flags|=report_button_abs;
-#if defined(SSE_IKBD_6301_380)
+#if defined(SSE_IKBD_6301)
       if(OPTION_C1) ; else 
 #endif
       // Handle mouse buttons as keys
@@ -440,7 +436,7 @@ void IKBD_VBL()
       mouse_change_since_last_interrupt=false;
       mouse_move_since_last_interrupt_x=0;
       mouse_move_since_last_interrupt_y=0;
-#if defined(SSE_IKBD_6301_390)
+#if defined(SSE_IKBD_6301)
       SSEConfig.Port0Joy=0;
 #endif
     }
@@ -451,7 +447,7 @@ void IKBD_VBL()
     }
 #endif
 
-#if defined(SSE_IKBD_6301_380)
+#if defined(SSE_IKBD_6301)
     if(OPTION_C1) ; else 
 #endif
     if (report_button_abs){
@@ -562,10 +558,7 @@ void ikbd_inc_hack(int &hack_val,int inc_val) // SS using a reference
 //---------------------------------------------------------------------------
 
 /*  All bytes that are written by the program on address $fffc02 end
-    up here, after a transmission delay. In Steem, this happens via
-    the agenda (not very precise). 
-    This function handles dispatching to the true 6301 emu as well.
-    To improve precision, this used the event system.
+    up here, after a transmission delay.
 */
 
 void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
@@ -582,45 +575,14 @@ void agenda_ikbd_process(int src)    //intelligent keyboard handle byte
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
   {
-#if !defined(SSE_ACIA_393) // only happens if and when TDR->TDRS
-    ACIA_IKBD.SR|=BIT_1; // TDRE
-    if((ACIA_IKBD.CR&BIT_5)&&!(ACIA_IKBD.CR&BIT_6))
-    {
-      ACIA_IKBD.SR|=BIT_7; 
-      mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ
-    }
-#endif
-#if defined(SSE_IKBD_6301_380) 
     ASSERT(ACIA_IKBD.TDRS==src);
     HD6301.rdrs=ACIA_IKBD.TDRS;
-#endif
-
-#if defined(SSE_IKBD_6301_393_REF) 
     hd6301_run_cycles(ACT); // run up to IO time
     hd6301_receive_byte(src);
-#elif defined(SSE_ACIA_EVENT)
-    int cycles=LINECYCLES;
-    ASSERT(cycles>=0);
-    HD6301.LineRxFreeTime=cycles/8;
-    if(!HD6301.LineRxFreeTime) // rare
-    {
-      TRACE_LOG("6301 Rx free at once\n");
-      hd6301_receive_byte(src);
-    }
-#endif
     ACIA_IKBD.LineTxBusy=false;
     // If there's a byte in TDR waiting to be shifted, do it now.
-#if defined(SSE_ACIA_393)
     if(!(ACIA_IKBD.SR&BIT_1))
       ACIA_IKBD.TransmitTDR();
-#else
-    if(ACIA_IKBD.ByteWaitingTx) 
-      HD6301.ReceiveByte(ACIA_IKBD.TDR);
-#endif
-#if !defined(SSE_ACIA_EVENT)
-    //TRACE_LOG("6301 RDRS->RDR %X\n",src);
-    hd6301_receive_byte(src);// send byte to 6301 emu
-#endif
     // That's it for Steem, the rest is handled by the program in ROM!
     return; 
   }//if
@@ -1456,37 +1418,12 @@ void agenda_keyboard_replace(int) {
   if(OPTION_C1) 
 #endif
   {
-#if defined(SSE_BUGFIX_392) && !defined(SSE_IKBD_6301_393_REF)
-    ASSERT( ACIA_IKBD.LineRxBusy );
-    ACIA_IKBD.LineRxBusy=false;
-#endif
     if (keyboard_buffer_length){ 
       keyboard_buffer_length--;
       ASSERT( keyboard_buffer_length>=0 );
-#if defined(SSE_IKBD_6301_380) && !defined(SSE_IKBD_6301_393_REF)
-      ACIA_IKBD.RDRS=HD6301.tdrs;
-#endif
       ASSERT( keyboard_buffer_length<2 );
-#if !defined(SSE_BUGFIX_392) && !defined(SSE_IKBD_6301_393_REF)
-      ASSERT( ACIA_IKBD.LineRxBusy );
-      ACIA_IKBD.LineRxBusy=false;
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
       hd6301_run_cycles(ACT); // run up to IO time
       ACIA_IKBD.RDRS=HD6301.tdrs;
-#elif defined(SSE_ACIA_EVENT)
-      int cycles=LINECYCLES;
-      ASSERT(cycles>=0);
-      HD6301.LineTxFreeTime=cycles/8;
-      // TRACE_OSD("%d",HD6301.LineTxFreeTime);
-      if(!HD6301.LineTxFreeTime)
-      {
-        TRACE_LOG("6301 Tx free at once\n");
-        hd6301_completed_transmission_to_MC6850=true;
-      }
-#else
-      hd6301_completed_transmission_to_MC6850=true;
-#endif
 
       /*  Check overrun.
       "The Overrun does not occur in the Status Register until the valid character
@@ -1511,48 +1448,12 @@ void agenda_keyboard_replace(int) {
         ACIA_IKBD.SR|=BIT_0; // set RDR full
       }
       // Check if we must activate IRQ (overrun or normal)
-#if defined(SSE_ACIA_393)
       ACIA_CHECK_IRQ(NUM_ACIA_IKBD);
-#else
-      if(ACIA_IKBD.CR&BIT_7)
-      {
-        dbg_log(EasyStr("IKBD: Changing ACIA IRQ bit from ")+ACIA_IKBD.irq+" to 1");
-        ACIA_IKBD.SR|=BIT_7;
-        TRACE_LOG("ACIA 1 IRQ (RDR)\n");
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0);
-      }
-
-#endif
     }//if (keyboard_buffer_length)
-#if defined(SSE_IKBD_6301_393_REF)
+
     ACIA_IKBD.LineRxBusy=false;
-#endif
-
-    // More to process?
     ASSERT(!keyboard_buffer_length); 
-#if !defined(SSE_ACIA_393) // never (?)
-    if(keyboard_buffer_length) 
-    {
-#if defined(SSE_ACIA_EVENT)
-      if(OPTION_C1)
-      {
-        HD6301.tdrs=HD6301.tdr;
-        TRACE_LOG("Buffer %d 6301 TDRS %X\n",keyboard_buffer_length,HD6301.tdrs);
-        time_of_event_acia=ACIA_IKBD.time_of_event_incoming
-          =time_of_next_event+HD6301_TO_ACIA_IN_CYCLES; 
-      }
-      else
-#endif
-        agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
 
-#if defined(SSE_IKBD_6301_380) 
-      HD6301.tdrs=keyboard_buffer[keyboard_buffer_length-1];
-#else
-      ACIA_IKBD.RDRS=keyboard_buffer[keyboard_buffer_length-1];
-#endif
-      ACIA_IKBD.LineRxBusy=true;
-    }
-#endif //#if !defined(SSE_ACIA_393)
 #if !defined(SSE_GUI_NO_MACROS)
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
@@ -1621,10 +1522,8 @@ void keyboard_buffer_write(BYTE src) {
 #if defined(SSE_IKBD_6301_MACRO)
       ASSERT(HD6301.tdrs==src||macro_play_has_keys);
       HD6301.tdrs=src;
-#elif defined(SSE_IKBD_6301_380)
-      ASSERT(HD6301.tdrs==src);
 #else
-      ACIA_IKBD.RDRS=src; // byte is being shifted
+      ASSERT(HD6301.tdrs==src);
 #endif
     }
     ACIA_IKBD.LineRxBusy=true;
@@ -1645,25 +1544,15 @@ void keyboard_buffer_write(BYTE src) {
       if(keyboard_buffer_length)
         memmove(keyboard_buffer+1,keyboard_buffer,keyboard_buffer_length); // shift
       else
-#if defined(SSE_ACIA_EVENT)
       {
         ASSERT(OPTION_C1);
         TRACE_LOG("IKBD TDRS %X\n",src);
-#if defined(SSE_ACIA_393)
         ACIA_IKBD.time_of_event_incoming
           =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
           + ACIA_IKBD.TransmissionTime();
         if(ACIA_IKBD.time_of_event_incoming-time_of_event_acia<=0)
           time_of_event_acia=ACIA_IKBD.time_of_event_incoming;        
-#else
-        time_of_event_acia=ACIA_IKBD.time_of_event_incoming
-          =cpu_timer_at_start_of_hbl + cycles_run*HD6301_CYCLE_DIVISOR 
-          + ACIA_TO_HD6301_IN_CYCLES;
-#endif
       }
-#else
-      agenda_add(agenda_keyboard_replace,HD6301_TO_ACIA_IN_HBL,0);
-#endif
       keyboard_buffer_length++;
       keyboard_buffer[0]=src;
       //TRACE_LOG("IKBD +$%X (%d)\n",src,keyboard_buffer_length);
@@ -1707,15 +1596,6 @@ void keyboard_buffer_write_string(int s1,...)
 void ikbd_mouse_move(int x,int y,int mousek,int max_mouse_move)
 {
   dbg_log(EasyStr("Mouse moves ")+x+","+y);
-
-#if defined(SSE_IKBD_MOUSE_ST_SPEED)
-  if(OPTION_ST_MOUSE_SPEED)
-  {
-    int limit=mouse_speed+5; //middle=10
-    x=max(-limit,min(limit,x));
-    y=max(-limit,min(limit,y));
-  }
-#endif
 
 #if defined(SSE_IKBD_6301)
   if(OPTION_C1)
@@ -1832,13 +1712,7 @@ void ikbd_reset(bool Cold)
     if(HD6301_OK) 
     {
       TRACE_LOG("6301 reset ikbd.cpp part\n");
-#if !defined(SSE_IKBD_6301_393_REF)
-      HD6301.Crashed=0;
-#endif
       ikbd.mouse_upside_down=false;
-#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
-      HD6301.LineRxFreeTime=HD6301.LineTxFreeTime=0;
-#endif
       return;
     }
 #if !defined(SSE_IKBD_6301_NOT_OPTIONAL)

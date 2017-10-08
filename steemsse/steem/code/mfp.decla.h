@@ -130,10 +130,7 @@ EXT BYTE mfp_gpip_input_buffer;
 #define MFP_S_BIT (mfp_reg[MFPR_VR] & BIT_3)
 
 
-#if defined(SSE_INT_MFP_OBJECT) 
-/*  We create this object for some additions, we don't transfer
-    all MFP emu into it. We don't create a SSE file yet.
-*/
+#if defined(SSE_INT_MFP) 
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
@@ -183,7 +180,7 @@ struct TMC68901 {
 
 extern TMC68901 MC68901; // declaring the singleton
 
-#endif//#if defined(SSE_INT_MFP_OBJECT)
+#endif//#if defined(SSE_INT_MFP)
 
 inline BYTE mfp_get_timer_control_register(int);
 

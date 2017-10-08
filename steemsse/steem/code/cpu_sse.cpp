@@ -317,7 +317,9 @@ FC2 FC1 FC0 Address Space
   }
 
 #endif
-#if defined(SSE_MMU_392)
+#if defined(SSE_BUGFIX_394)
+  if (sp<bytes_to_stack || sp> max((int)mem_len,FOUR_MEGS))
+#elif defined(SSE_MMU_392)
   if (sp<bytes_to_stack || sp>mem_len)
 #else
   if (sp<bytes_to_stack || sp>FOUR_MEGS)
@@ -483,10 +485,10 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState!=TM68000::HALTED
     &&M68000.ProcessingState!=TM68000::INTEL_CRASH
-#if defined(SSE_IKBD_6301_393_REF)
-    &&M68000.ProcessingState!=TM68000::HD6301_CRASH
+#ifdef SSE_BOILER
+    &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE
 #endif
-    &&M68000.ProcessingState!=TM68000::BOILER_MESSAGE )
+    &&M68000.ProcessingState!=TM68000::HD6301_CRASH)
     M68000.ProcessingState=TM68000::NORMAL;
 #endif
 
@@ -3116,7 +3118,7 @@ NOTES :
    evaluation on real hardware confirms the 10 cycles timing.
 */
     CHECK_READ=true;
-#if defined(SSE_BLT_392) // no blitter during read-modify-write bus cycle
+#if defined(SSE_BLT_BUS_ARBITRATION) // no blitter during read-modify-write bus cycle
     BYTE save=Blit.Request;
     Blit.Request=0;
 #endif
@@ -3129,7 +3131,7 @@ NOTES :
     SR_CHECK_Z_AND_N_B;
     m68k_DEST_B|=MSB_B;
     CHECK_IOW_B;//Good example where it could be important
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
     Blit.Request=save;
 #endif
     PREFETCH_IRC; // np
@@ -5460,7 +5462,7 @@ FLOWCHART :
     unsigned short divisor = (unsigned short) m68k_src_w;
     // using ijor's timings (in 3rdparty\pasti)
     int cycles_for_instr=getDivu68kCycles(dividend,divisor) -4; // -prefetch
-#if defined(SSE_BLT_392)
+#if defined(SSE_BLT_BUS_ARBITRATION)
     INSTRUCTION_TIME(4);
     INSTRUCTION_TIME(cycles_for_instr-4); 
 #else
@@ -5772,7 +5774,7 @@ FLOWCHART :
     signed short divisor = (signed short) m68k_src_w;
     // using ijor's timings (in 3rdparty\pasti)
     int cycles_for_instr=getDivs68kCycles(dividend,divisor)-4; // -prefetch
-#if defined(SSE_BLT_392) //other places?
+#if defined(SSE_BLT_BUS_ARBITRATION) //other places?
     INSTRUCTION_TIME(4);
     INSTRUCTION_TIME(cycles_for_instr-4); 
 #else

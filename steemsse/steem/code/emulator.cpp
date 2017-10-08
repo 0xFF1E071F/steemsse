@@ -34,21 +34,22 @@ EXT int em_height INIT(480);
 EXT int em_planes INIT(4);
 EXT int extended_monitor INIT(0);
 #endif
+
 #if defined(SSE_GUI_NO_CPU_SPEED)
 EXT DWORD n_cpu_cycles_per_second INIT(CPU_STE_PAL),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 #else
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 #endif
+
 #if defined(SSE_TIMING_MULTIPLIER_392)
-EXT double cpu_cycles_multiplier INIT(1.0); //need a more precise multiplier
-#elif defined(SSE_TIMING_MULTIPLIER)
-EXT BYTE cpu_cycles_multiplier INIT(1);
+EXT double cpu_cycles_multiplier INIT(1.0); //precise for mfp
 #endif
 
 EXT int on_rte;
 EXT int on_rte_interrupt_depth;
 
 EXT MEM_ADDRESS shifter_draw_pointer;
+
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_hscroll, shifter_skip_raster_for_hscroll; // the latter bool
 #else
@@ -57,26 +58,23 @@ EXT int shifter_hscroll,shifter_skip_raster_for_hscroll;
 
 EXT MEM_ADDRESS xbios2,shifter_draw_pointer_at_start_of_line;
 EXT int shifter_pixel;
-#if defined(SSE_IKBD_6301_MOUSE_ADJUST_SPEED)
-extern "C" 
-#endif
+
 #if defined(SSE_VAR_RESIZE)
 EXT BYTE shifter_freq INIT(60);
 EXT BYTE shifter_freq_idx INIT(1);
+EXT BYTE shifter_fetch_extra_words;
 #else
 EXT int shifter_freq INIT(60);
 EXT int shifter_freq_idx INIT(1);
+EXT int shifter_fetch_extra_words;
 #endif
+
 EXT int shifter_x,shifter_y;
 EXT int shifter_first_draw_line;
 EXT int shifter_last_draw_line;
 EXT int shifter_scanline_width_in_bytes;
-#if defined(SSE_VAR_RESIZE)
-EXT BYTE shifter_fetch_extra_words;
-#else
-EXT int shifter_fetch_extra_words;
-#endif
 EXT bool shifter_hscroll_extra_fetch;
+
 #if defined(SSE_VAR_RESIZE_392)
 EXT BYTE screen_res INIT(0);
 EXT short scan_y;
@@ -529,38 +527,18 @@ void ACIA_Reset(int nACIA,bool Cold)
   acia[nACIA].irq=false;
 
 #if defined(SSE_ACIA)
-  if(OPTION_C1)
-  {
-#if !defined(SSE_ACIA_393)
 /*  "Master Reset clears the status register (except for external conditions
     on CTS, DCD) and initializes both the receiver and the transmitter."
 */
-    if(Cold) 
-    {
-#endif
-      acia[nACIA].SR=2;
-      acia[nACIA].CR=0x80; //?
-      acia[nACIA].RDRS=0;
-      acia[nACIA].TDRS=0;
-      acia[nACIA].LineRxBusy=0;
-#if !defined(SSE_ACIA_393)
-      acia[nACIA].ByteWaitingRx=0;
-      acia[nACIA].ByteWaitingTx=0;
-#endif
-      acia[nACIA].LineTxBusy=0;
-#if !defined(SSE_ACIA_393)
-    }
-    else
-    {
-    /*
-    "Overrun is also reset by the Master Reset."
-      */
-      acia[nACIA].SR&=~(BIT_0|BIT_5); // from doc
-      ////    acia[nACIA].SR=2;
-      acia[nACIA].RDR=0;//?
-      acia[nACIA].TDR=0;
-    }
-#endif
+
+  if(OPTION_C1)
+  {
+    acia[nACIA].SR=2;
+    acia[nACIA].CR=0x80; //?
+    acia[nACIA].RDRS=0;
+    acia[nACIA].TDRS=0;
+    acia[nACIA].LineRxBusy=0;
+    acia[nACIA].LineTxBusy=0;
   }
 #endif
   if (Cold==0) mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
@@ -582,16 +560,7 @@ void ACIA_SetControl(int nACIA,BYTE Val)
 #if defined(SSE_ACIA)
   if(OPTION_C1)
   {
-#if defined(SSE_ACIA_393)  
     ACIA_CHECK_IRQ(nACIA);
-#else
-    if((acia[nACIA].IrqForTx()) && !acia[nACIA].ByteWaitingTx)
-      acia[nACIA].SR|=BIT_7; 
-    else
-      acia[nACIA].SR&=~BIT_7; 
-    mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!( (ACIA_IKBD.SR&BIT_7)
-      || (ACIA_MIDI.SR&BIT_7)));
-#endif
     return;
   }
 #endif
@@ -632,7 +601,7 @@ void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
   }
 }
 
-#if defined(SSE_ACIA_393)
+#if defined(SSE_ACIA)
 /*  The byte in TDR is moved into TDRS and transmission begins.
     TDRE is set, and IRQ is asserted if appropriate.
 */
@@ -646,27 +615,6 @@ void ACIA_STRUCT::TransmitTDR() {
   time_of_event_outgoing=time_of_next_event+TransmissionTime();
   if(time_of_event_outgoing-time_of_event_acia<=0)
     time_of_event_acia=time_of_event_outgoing;
-}
-
-#endif
-
-#if !defined(SSE_ACIA_393) // now shorter & inlined
-
-int ACIA_STRUCT::TransmissionTime() { 
-/*  
-Compute cycles according to bits 0-1 of CR
-SS1 SS0                  Speed (bit/s)
- 0   0    Normal            500000
- 0   1    Div by 16          31250 (ST: MIDI)
- 1   0    Div by 64         7812.5 (ST: IKBD)
-MIDI transmission is 4 times faster than IKBD
-*/
-  int cycles=n_cpu_cycles_per_second*( (CR&1)?16:64 );  // one or the other on ST
-  cycles/=50000; // not 500000, compensation 10 bit/byte
-  if(OPTION_HACKS&& LPEEK(0x18)==0xFEE74)
-    cycles+=(1345-1280)*8; // hack for froggies menu
-  //TRACE_OSD("%d",cycles);
-  return cycles;
 }
 
 #endif

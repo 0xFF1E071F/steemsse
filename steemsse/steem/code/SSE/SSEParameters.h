@@ -22,62 +22,6 @@
 #define STRUCTURE_ALIGNMENT 8 //default in Win32
 #endif
 
-//////////
-// ACIA //
-//////////
-
-#if defined(SSE_ACIA)
-
-/*
-The ACIA master clock is 500kHz.
-       |     |Clock divide                                      | ||
-       |     |00 - Normal --------------------------------------+-+|
-       |     |01 - Div by 16 -----------------------------------+-+|
-       |     |10 - Div by 64 -----------------------------------+-+|
-       |     |11 - Master reset --------------------------------+-'|
-
-10bits per byte
-
-*/
-
-#if !defined(SSE_ACIA_393)
-#define HD6301_TO_ACIA_IN_CYCLES (acia[0].TransmissionTime())
-#define ACIA_TO_HD6301_IN_CYCLES (acia[0].TransmissionTime())
-#endif
-
-#if !defined(SSE_ACIA_393)
-// in HBL, for Steem, -1 for precise timing (RX/IRQ delay)
-#if defined(SSE_IKBD_6301_373)
-#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
-  (((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR) \
-  /scanline_time_in_cpu_cycles_at_start_of_vbl)-1)
-#else// those were useless calculations while the result was available as a variable
-#define HD6301_CYCLES_TO_SEND_BYTE_IN_HBL \
-((HD6301_CYCLES_TO_SEND_BYTE*HD6301_CYCLE_DIVISOR/\
-(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ: \
-(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
-SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
-#endif
-
-#define HD6301_TO_ACIA_IN_HBL (OPTION_C1?HD6301_CYCLES_TO_SEND_BYTE_IN_HBL:(screen_res==2?24:12)) //is a mod??
-#endif
-
-#if defined(SSE_ACIA_TDR_COPY_DELAY) && !defined(SSE_ACIA_393)
-//#define ACIA_TDR_COPY_DELAY ACIA_CYCLES_NEEDED_TO_START_TX //formerly
-#define ACIA_TDR_COPY_DELAY (200)  // Hades Nebula vs. Nightdawn
-#endif
-
-#ifndef SSE_ACIA_393
-#define ACIA_MIDI_OUT_CYCLES (acia[1].TransmissionTime())
-#define ACIA_MIDI_IN_CYCLES (acia[1].TransmissionTime())
-#endif
-
-#else //!ACIA
-#if !defined(SSE_ACIA_393)
-#define HD6301_TO_ACIA_IN_HBL (screen_res==2?24:12) // to be <7200
-#endif
-#endif//ACIA
-
 
 /////////////
 // BLITTER //
@@ -85,12 +29,7 @@ SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))-1)
 
 #if defined(SSE_BLITTER)
 
-
 #define BLITTER_LATCH_LATENCY 4 // not sure what it precisely is nor of value
-
-#if defined(SSE_BLT_BLIT_MODE_CYCLES) && !defined(SSE_BLT_MAIN_LOOP)
-#define BLITTER_BLIT_MODE_CYCLES (256) //not used in v3.9.1
-#endif
 
 #endif
 
@@ -148,15 +87,10 @@ Peritel (STE) (as PAL)   32.084988   8.021247
 Some STFs                32.02480    8.0071
 */
 
-#define  CPU_STF_MEGA (8010613) //rounded
-
 #define  CPU_STF_PAL 8021247
-#define  CPU_STF_ALT (8007100) //ljbk's? 
-#if defined(SSE_CPU_MFP_RATIO_STE)
-#define  CPU_STE_PAL (OPTION_HACKS?8021030:CPU_STF_PAL)
-#else
+#define  CPU_STF_MEGA (8010613) //rounded
 #define  CPU_STE_PAL (CPU_STF_PAL) 
-#endif
+
 #endif
 
 
@@ -215,7 +149,7 @@ Some STFs                32.02480    8.0071
 // DRIVE //
 ///////////
 
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 
 #define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
@@ -269,12 +203,8 @@ enum {
   GLU_HBLANK_OFF_50=28, //+ WU_sync_modifier
   GLU_HSYNC_ON_50=464, //+ WU_res_modifier, STE-2
   GLU_HSYNC_DURATION=40,
-#if defined(SSE_GLUE_393A)
   GLU_RELOAD_VIDEO_COUNTER_50=50, //problem: 2 cycles precision TODO
   GLU_RELOAD_VIDEO_COUNTER_72=14, // + at last line
-#else
-  GLU_RELOAD_VIDEO_COUNTER_50=64-2, //+ WU_sync_modifier (STE -2?)
-#endif
   GLU_TRIGGER_VBI_50=64,	//STE+4
   GLU_DECIDE_NCYCLES=54, //+ WU_sync_modifier, STE +2
   GLU_VERTICAL_OVERSCAN_50=GLU_HSYNC_ON_50+GLU_HSYNC_DURATION // 504 //+ WU_sync_modifier, STE -2
@@ -313,28 +243,11 @@ enum {
 
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c for mouse speed
-#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40)
-
-#if !defined(SSE_ACIA_393)
-
-#if defined(SSE_ACIA_EVENT)
-// hack for Froggies TODO
-//#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1350:1280) // boo!
-#define HD6301_CYCLES_TO_SEND_BYTE ((OPTION_HACKS&& LPEEK(0x18)==0xFEE74)?1345:1280) // boo!
-#define HD6301_CYCLES_TO_RECEIVE_BYTE (HD6301_CYCLES_TO_SEND_BYTE)
+#ifdef SSE_BUGFIX_394
+#define IKBD_6301_MOUSE_VBL_MAX_TICKS (30)
 #else
-#define HD6301_CYCLES_TO_SEND_BYTE (1350)
-#define HD6301_CYCLES_TO_RECEIVE_BYTE (1350)
+#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40)
 #endif
-
-
-#define HD6301_CYCLES_TO_RECEIVE_BYTE_IN_HBL \
-(HD6301_CYCLES_TO_RECEIVE_BYTE*HD6301_CYCLE_DIVISOR/ \
-(shifter_freq_at_start_of_vbl==50?SCANLINE_TIME_IN_CPU_CYCLES_50HZ:\
-(screen_res==2?SCANLINE_TIME_IN_CPU_CYCLES_70HZ:\
-SCANLINE_TIME_IN_CPU_CYCLES_60HZ)))
-#endif
-
 #ifdef SSE_DEBUG
 #define HD6301_MAX_DIS_INSTR 2000 
 #endif

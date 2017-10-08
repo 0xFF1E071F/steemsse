@@ -22,50 +22,24 @@ unsigned int _rotl(unsigned int Data, unsigned int Bits) {
  
 // functions & variables from Steem (declared as extern "C") there
 extern void keyboard_buffer_write(unsigned char src) ;
-//extern int cpu_timer,cpu_cycles; // for debug
-//#define ABSOLUTE_CPU_TIME (cpu_timer-cpu_cycles)
-//#define act ABSOLUTE_CPU_TIME
 extern unsigned char  stick[8]; // joysticks
 // variables from Steem we declare here as 'C' linkage (easier than in Steem)
 BYTE ST_Key_Down[128];
 int mousek;
 // our variables that Steem must see
-#if !defined(SSE_IKBD_6301_393_REF)
-int hd6301_completed_transmission_to_MC6850; // for sync
-#endif
-#if defined(SSE_ACIA_EVENT)
 int cycles_run=0; 
-#endif
 
 // additional variables for our module
-
 unsigned char rec_byte;
-
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-#define NOT_EXECUTING_INT 0
-#define EXECUTING_INT 1
-#define FINISHED_EXECUTING_INT -1
-char ExecutingInt=NOT_EXECUTING_INT;
-#endif
-#if !defined(SSE_IKBD_6301_393_REF)
-int Crashed6301=0;
-#endif
-#if defined(SSE_IKBD_6301_MOUSE_MASK3)
 unsigned int mouse_x_counter;
 unsigned int mouse_y_counter;
-#endif
-
-#if defined(SSE_IKBD_6301_VBL)
+#if defined(SSE_BUGFIX_394)
+COUNTER_VAR hd6301_vbl_cycles;
+#else
 int hd6301_vbl_cycles;
 #endif
-
-#if defined(SSE_IKBD_6301_393_REF)
 COUNTER_VAR time_of_tdr_to_tdrs=0;
-#endif
-
-#if defined(SSE_IKBD_6301_393_REF)
 COUNTER_VAR current_m68_cycle=0; // will lag or be forward
-#endif
 
 // Debug facilities
 // ASSERT
@@ -161,63 +135,33 @@ hd6301_reset(int Cold) {
   cpu_reset();
   if(Cold)
     memset (ram, 0, 256);
-#if !defined(SSE_IKBD_6301_393_REF)
-  hd6301_completed_transmission_to_MC6850=0;
-  Crashed6301=0; // note no cold condition?
-#endif
   iram[TRCSR]=0x20;
-#if defined(SSE_IKBD_6301_393_REF)
   mem_putw (OCR, 0xFFFF);
-#endif
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-  ExecutingInt=NOT_EXECUTING_INT;
-#endif
-#ifdef SSE_BUGFIX_392
   if(Cold)
-#endif
   {
     mouse_x_counter=MOUSE_MASK;
     mouse_y_counter=MOUSE_MASK;
   }
-#if !defined(SSE_IKBD_6301_373)
-  cpu_start(); // since we don't use the command.c file
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
   current_m68_cycle=0;
-#endif
 }
 
-#if defined(SSE_IKBD_6301_393_REF)
+extern double cpu_cycles_multiplier;
+  
 hd6301_run_cycles(COUNTER_VAR to_m68_cycle) {
+  // Called by Steem to run some cycles (per scanline or to update before to IO)
   COUNTER_VAR cycles_to_run=(to_m68_cycle-current_m68_cycle)/HD6301_CYCLE_DIVISOR;
-#elif defined(SSE_VS2008_WARNING_382)
-hd6301_run_cycles(int cycles_to_run) {
-#else
-hd6301_run_cycles(u_int cycles_to_run) {
-#endif
-  // Called by Steem to run some cycles, generally 64/scanline
   int pc;
-#if !defined(SSE_ACIA_EVENT)
-  int cycles_run=0;
+  COUNTER_VAR starting_cycles=cpu.ncycles;
+#if defined(SSE_BUGFIX_394) && defined(SSE_TIMING_MULTIPLIER_392) //forgot that...
+  if(cpu_cycles_multiplier>1.0)
+    cycles_to_run/=cpu_cycles_multiplier;
 #endif
-#ifndef SSE_VS2008_WARNING_382
-  int i=0;
-#endif
-#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
-  static int cycles_to_give_back=0;
-#endif
-#if defined(SSE_TIMINGS_CPUTIMER64)
-  unsigned COUNTER_VAR starting_cycles=cpu.ncycles;
-#else
-  int starting_cycles=cpu.ncycles;
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
   if(cycles_to_run<-256 || cycles_to_run>255)
   {
     current_m68_cycle=to_m68_cycle; //safety
     return 0;
   }
-#endif
+
   // make sure our 6301 is running OK
   if(!cpu_isrunning())
   {
@@ -235,113 +179,27 @@ hd6301_run_cycles(u_int cycles_to_run) {
     TRACE("PC out of range, resetting chip\n"); 
     reset(); // hack
   }
-#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
-  if(cycles_to_give_back)
+  while(!HD6301.Crashed && (cycles_run<cycles_to_run))
   {
-    // we really must go slowly here, better lose some time sync
-    // than break custom programs (TB2 etc.)
-#ifdef WIN32
-    int cycles_given_back=min(20,cycles_to_give_back);
-#else
-    int cycles_given_back=cycles_to_give_back;
-    if(cycles_given_back>20)
-      cycles_given_back=20;
-#endif
-    cycles_to_run-=cycles_given_back;
-    cycles_to_give_back-=cycles_given_back;
-
-#ifdef SSE_ACIA_EVENT
-    if(HD6301.LineRxFreeTime>cycles_given_back)
-      HD6301.LineRxFreeTime-=cycles_given_back;
-    else if(HD6301.LineRxFreeTime)
-      HD6301.LineRxFreeTime=-1;
-    if(HD6301.LineTxFreeTime>cycles_given_back)
-      HD6301.LineTxFreeTime-=cycles_given_back;
-    else  if(HD6301.LineTxFreeTime)
-      HD6301.LineTxFreeTime=-1;
-#endif
-
-  }
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
-  while(!HD6301.Crashed && (cycles_run<cycles_to_run 
-#else
-  while(!Crashed6301 && (cycles_run<cycles_to_run 
-#endif
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-    || ExecutingInt==EXECUTING_INT 
-#endif
-#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
-    || HD6301.LineRxFreeTime || HD6301.LineTxFreeTime
-#endif
-  ))
-  {
-#if defined(SSE_ACIA_EVENT) && !defined(SSE_IKBD_6301_393_REF)
-    if(HD6301.LineTxFreeTime && cycles_run>=HD6301.LineTxFreeTime)
-    {
-      TRACE("6301 sending $%X %d cycles in\n",ACIA_IKBD.RDRS,cycles_run);
-      ASSERT(!hd6301_completed_transmission_to_MC6850);
-      hd6301_completed_transmission_to_MC6850=TRUE; 
-      HD6301.LineTxFreeTime=0;
-    }
-    if(HD6301.LineRxFreeTime && cycles_run>=HD6301.LineRxFreeTime)
-    {
-      TRACE("6301 receiving $%X %d cycles in\n",ACIA_IKBD.TDRS,cycles_run);
-#if defined(SSE_IKBD_6301_380) 
-      hd6301_receive_byte(HD6301.rdrs); // ACIA_IKBD.TDRS could have been updated
-#else
-      hd6301_receive_byte(ACIA_IKBD.TDRS);
-#endif
-      HD6301.LineRxFreeTime=0;
-    }
-#endif
     instr_exec (); // execute one instruction
     cycles_run=cpu.ncycles-starting_cycles;
   }
-#if defined(SSE_IKBD_6301_RUN_IRQ_TO_END)
-  if(ExecutingInt)
-  {
-    ASSERT(!Crashed6301);
-    ASSERT( ExecutingInt==FINISHED_EXECUTING_INT );
-    //ASSERT( !reg_getiflag () ); 
-#ifdef SSE_DEBUG
-    if(ExecutingInt!=FINISHED_EXECUTING_INT)
-      TRACE("cycles_run %d cycles_to_run %d ExecutingInt %d\n",cycles_run,cycles_to_run,ExecutingInt);
-#endif
-    ExecutingInt=NOT_EXECUTING_INT;
-  }
-#endif
   
-#if defined(SSE_IKBD_6301_ADJUST_CYCLES)
-  cycles_to_give_back+=cycles_run-cycles_to_run;
-#endif
-#if defined(SSE_IKBD_6301_VBL)
   hd6301_vbl_cycles+=cycles_run;
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
   HD6301.ChipCycles=cpu.ncycles; // HD6301 object doesn't know cpu.ncycles
-  current_m68_cycle+=cycles_run*HD6301_CYCLE_DIVISOR;
+  current_m68_cycle+=cycles_run*HD6301_CYCLE_DIVISOR
+#if defined(SSE_BUGFIX_394) && defined(SSE_TIMING_MULTIPLIER_392)
+    *(cpu_cycles_multiplier>1.0 ? cpu_cycles_multiplier : 1)
 #endif
-#if defined(SSE_ACIA_EVENT)
+    ;
   cycles_run=0;
-#endif
-#if defined(SSE_IKBD_6301_393_REF)
-  return cycles_run;
-#else
-  return (Crashed6301) ? -1 : cycles_run; //v3.7.3
-#endif
+  return cycles_run; //unused
 }
 
 
 hd6301_receive_byte(u_char byte_in) {
-#if defined(SSE_IKBD_6301_380) 
   ASSERT(byte_in==HD6301.rdrs);
-#endif
-#ifdef SSE_IKBD_6301_373
   return sci_in(&byte_in,1);
-#else
-  sci_in(&byte_in,1);
-#endif
 }
 
 
@@ -398,10 +256,8 @@ hd6301_load_save(int one_if_save,unsigned char *buffer) {
     memmove(&iram,i,sizeof(iram));
   i+=sizeof(iram);
 
-#if defined(SSE_IKBD_6301_393_REF)
   if(!one_if_save)
     current_m68_cycle=0;
-#endif
 
   return i-buffer;
 }

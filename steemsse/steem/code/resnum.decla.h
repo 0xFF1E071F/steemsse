@@ -84,7 +84,7 @@
 #define RC_ICO_TAKESCREENSHOTBUT 72
 #define RC_ICO_DISKMANTOOLS 73
 
-#if defined(SSE_VAR_393) // to become SSE_BUILD and delete the rest
+#if defined(SSE_BUILD)
 
 #define RC_ICO_HARDDRIVES_ACSI 74
 #define RC_ICO_OPS_SSE 75
@@ -95,79 +95,10 @@
 #define RC_NUM_ICONS 80
 
 #else
-//#if defined(SSE_GUI_OPTION_PAGE)
 
-#if defined(SSE_GUI_OPTION_PAGE) //// argh! need enum. possible?
-
-#if defined(SSE_LE) //temp...
-
-#define RC_ICO_HARDDRIVES_ACSI 74
-#define RC_ICO_OPS_SSE 75
-#define RC_ICO_OPS_C1 76
-#define RC_ICO_OPS_C2 77
-#define RC_ICO_CFG 78
-#define RC_ICO_OPS_HACKS 79
-#define RC_NUM_ICONS 80
-
-
-
-#elif defined(SSE_ACSI_ICON) //depends on WIN32!
-#ifdef SSE_GUI_CONFIG_FILE
-#define RC_ICO_HARDDRIVES_ACSI 74
-#define RC_ICO_OPS_SSE 75
-#define RC_ICO_OPS_C1 76
-#define RC_ICO_OPS_C2 77
-#define RC_ICO_CFG 78
-#define RC_ICO_OPS_HACKS 79
-#define RC_NUM_ICONS 80
-#else
-#ifdef SSE_GUI_STATUS_BAR_ICONS
-#define RC_ICO_HARDDRIVES_ACSI 74
-#define RC_ICO_OPS_SSE 75
-#define RC_ICO_OPS_C1 76
-#define RC_ICO_OPS_C2 77
-#define RC_NUM_ICONS 78
-#else
-#define RC_ICO_HARDDRIVES_ACSI 74
-#define RC_ICO_OPS_SSE 75
-#define RC_NUM_ICONS 76
-#endif
-#endif//#ifdef SSE_ACSI_ICON 
-#elif defined(SSE_INT_MFP_OPTION) && !defined(SSE_IKBD_6301)
-#define RC_ICO_OPS_SSE 74
-#define RC_ICO_OPS_C2 75
-#define RC_ICO_CFG 76
-#define RC_NUM_ICONS 77
-#elif !defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301)
-#define RC_ICO_OPS_SSE 74
-#define RC_ICO_OPS_C1 75
-#define RC_ICO_CFG 76
-#define RC_NUM_ICONS 77
-#elif defined(SSE_INT_MFP_OPTION) && defined(SSE_IKBD_6301) //&& !defined(SSE_LE)
-#define RC_ICO_OPS_SSE 74
-#define RC_ICO_OPS_C1 75
-#define RC_ICO_OPS_C2 76
-#define RC_ICO_CFG 77
-
-enum {RC_ICO_OPS_HACKS=79};
-
-#define RC_NUM_ICONS 78
-#else
-#define RC_ICO_OPS_SSE 74
-#define RC_ICO_CFG 75
-#define RC_NUM_ICONS 76
-#endif
-#else
 #define RC_NUM_ICONS 74
+
 #endif
-
-#endif //#if defined(SSE_VAR_393) // to become SSE_BUILD
-
-/*
-#define RC_ICO_HARDDRIVES_ACSI 74
-#define RC_ICO_OPS_SSE 75
-#define RC_NUM_ICONS 76
-*/
 
 #define CART_ICON_NUM (RC_ICO_CHIP-1)
 #define DISK_ICON_NUM (RC_ICO_DRIVE-1)

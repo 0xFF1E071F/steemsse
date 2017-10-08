@@ -211,14 +211,8 @@ void TShifter::DrawScanlineToEnd()  {
 
       if(scan_y>=draw_first_possible_line && scan_y<draw_last_possible_line)
       {
-
-
         ASSERT(screen_res==2);
-#if defined(SSE_SHIFTER_390)
         if(nsdp<=mem_len)
-#elif defined(SSE_SHIFTER_382)
-        if(nsdp<mem_len) // potential crash
-#endif
 #if defined(SSE_VID_BORDERS_GUI_392)
         if (border)
 #else
@@ -360,26 +354,13 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
   case DISPATCHER_SET_PAL:
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
 #if defined(SSE_MMU_WU_PALETTE_STE)
-#if defined(SSE_SHIFTER_393) // difficult choice!!!
     if((ST_TYPE==STF || MMU.WU[OPTION_WS]==2)) // dots in Overscan demos frequent on STE
-#else
-    if(!(ST_TYPE==STE && MMU.WU[OPTION_WS]==2)) // it really is another WU, to check Spectrum 512 pics
-#endif
 #endif
       cycles_since_hbl++;
 #endif
     //60hz line with border, HSCROLL or not
-#if defined(SSE_GLUE_392E)
     if(Glue.CurrentScanline.StartCycle==GLU_DE_ON_60
       || Glue.CurrentScanline.StartCycle==GLU_DE_ON_60-16) //TODO
-#elif defined(SSE_GLUE_392A)
-    // or we would need another variable to record 'choose' timing
-    if(Glue.CurrentScanline.StartCycle== ((shifter_hscroll_extra_fetch) // or HSCROLL? TODO
-      ? Glue.ScanlineTiming[TGlue::CHOOSE_FREQ][TGlue::FREQ_60]
-      : Glue.ScanlineTiming[TGlue::LINE_START][TGlue::FREQ_60]))
-#else
-    if(Glue.CurrentScanline.StartCycle==52 || Glue.CurrentScanline.StartCycle==36)
-#endif
       cycles_since_hbl+=4; // it's a girl 2 bear //TODO better way?
     break;
   case DISPATCHER_SET_SHIFT_MODE:
@@ -510,12 +491,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     TODO: be able to shift the line by an arbitrary #pixels left ot right
     (assembly)
 */
-        if(Glue.CurrentScanline.Tricks
-#if defined(SSE_GLUE_393)
-          &(TRICK_4BIT_SCROLL))
-#else
-          &(TRICK_4BIT_SCROLL|TRICK_LINE_PLUS_20|TRICK_UNSTABLE)) // as refactored in 380
-#endif
+        if(Glue.CurrentScanline.Tricks&TRICK_4BIT_SCROLL)
         {
           hscroll-=HblPixelShift;
           if(hscroll<0)

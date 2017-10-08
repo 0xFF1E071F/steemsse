@@ -28,7 +28,7 @@ EXT int floppy_current_drive();
 EXT BYTE floppy_current_side();
 EXT void fdc_add_to_crc(WORD &,BYTE);
 
-#if !defined(SSE_DMA_OBJECT)
+#if !defined(SSE_DMA)
 EXT MEM_ADDRESS dma_address;
 WORD dma_mode;
 BYTE dma_status;
@@ -129,7 +129,7 @@ EXT BYTE fdc_read_address_buffer[20];
   }
 #endif
 
-#if defined(SSE_DRIVE_OBJECT)
+#if defined(SSE_DRIVE)
 #define FDC_HBLS_PER_ROTATION  (ADAT?SF314[DRIVE].HblsPerRotation():(313*50/5))
 #else
 // 5 revolutions per second, 313*50 HBLs per second
@@ -259,14 +259,14 @@ bool floppy_track_index_pulse_active()
 void fdc_type1_check_verify()
 {
 #if defined(SSE_FDC_VERIFY_AGENDA)
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST) && !defined(SSE_BUGFIX_394)
   if(true)
 #else
   if(ADAT)
 #endif
   {
     if(FDC_VERIFY
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST) && !defined(SSE_BUGFIX_394)
       && ADAT
 #endif
       )
@@ -332,8 +332,18 @@ void floppy_fdc_command(BYTE cm)
 #endif
 
   if (fdc_str & FDC_STR_BUSY){
-    
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
+#if defined(SSE_BUGFIX_394)
+/*  Froggies broken!
+    Quick fix: only commands of type 1 can be interrupted.
+*/
+      if(fdc_spinning_up &&!(WD1772.CR&BIT_3) 
+      && WD1772.CommandType()==1  && cm!=WD1772.CR)
+
+    {
+      TRACE_LOG("CR %X->%X during spin-up\n",WD1772.CR,cm);
+    }
+    else
+#elif defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
   The doc states:
   "Command Register (CR)
@@ -482,6 +492,7 @@ void fdc_execute()
 
   int floppyno=floppy_current_drive();
   TFloppyImage *floppy=&FloppyDrive[floppyno];
+//  ASSERT(!(floppy->Empty() && floppy_head_track[floppyno]!=0));
   floppy_irq_flag=FLOPPY_IRQ_YES;
 #if defined(SSE_FDC_ACCURATE_TIMING)
   int hbls_to_interrupt=64;
@@ -640,6 +651,10 @@ and ends the command.
           {
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
+#if defined(SSE_BUGFIX_394)
+            if(floppy_head_track[floppyno]==0)
+              fdc_tr=0; // Overdrive fast
+#endif
             agenda_add(agenda_floppy_seek,1,0); //1 scanline
           }
           else
@@ -1363,7 +1378,7 @@ void agenda_fdc_verify(int) {
 void agenda_fdc_finished(int)
 {
   
-#if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
+#if defined(SSE_DMA) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)) 
     Dma.UpdateRegs(true); // -> "IRQ" trace
 #endif
@@ -1448,7 +1463,7 @@ issued."
   ->
   Seek works with DR and TR, not DR and disk track.
 */
-#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
+#if defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST) && !defined(SSE_BUGFIX_394)
   if(true)
 #else
   if(ADAT)
@@ -2346,9 +2361,6 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
 {
 //  log_to(LOGSECTION_PASTI,Str("PASTI: Handling return, update cycles=")+pPIOI->updateCycles+" irq="+pPIOI->intrqState+" Xfer="+pPIOI->haveXfer);
 
-#if defined(SSE_DMA_OBJECT) && !defined(SSE_BUGFIX_392)// osd, fdcdebug //WTF?
-  Dma.UpdateRegs(); // for pasti, registers AFTER operation
-#endif
   pasti_update_time=ABSOLUTE_CPU_TIME+pPIOI->updateCycles; //SS smart...
   
   bool old_irq=(mfp_reg[MFPR_GPIP] & BIT_5)==0; // 0=irq on
@@ -2421,7 +2433,7 @@ void pasti_handle_return(struct pastiIOINFO *pPIOI)
     }
   }
     
-#if defined(SSE_DMA_OBJECT) && defined(SSE_DEBUG)
+#if defined(SSE_DMA) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)&&!old_irq&&old_irq!=(bool)pPIOI->intrqState) 
     Dma.UpdateRegs(true);
 #endif

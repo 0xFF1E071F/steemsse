@@ -9,9 +9,18 @@
 #endif
 // EDIT in NOTEPAD, not the VC IDE!!!!!!!
 //Update "FileVersion" and "ProductVersion" too!
+
+// error if bad version
+#if SSE_VERSION==394 
 #define STEEM_VER_MAJOR 3
 #define STEEM_VER_MINOR_1 9
-#define STEEM_VER_MINOR_2 3
+#define STEEM_VER_MINOR_2 4
+#elif SSE_VERSION==400
+#define STEEM_VER_MAJOR 4
+#define STEEM_VER_MINOR_1 0
+#define STEEM_VER_MINOR_2 0
+#endif
+
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION STEEM_VER_MAJOR,STEEM_VER_MINOR_1,STEEM_VER_MINOR_2,0
@@ -29,12 +38,21 @@ BEGIN
             VALUE "Comments", "Atari ST Emulator for all Windows systems\000"
             VALUE "CompanyName", "Anthony and Russell Hayward\000"
             VALUE "FileDescription", "Steem Engine (Atari ST Emulator)\000"
-            VALUE "FileVersion", "3.9.3\000"
+#if SSE_VERSION==394
+            VALUE "FileVersion", "3.9.4\000"
             VALUE "InternalName", "Steem\000"
             VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
-            VALUE "OriginalFilename", "Steem SSE 3.9.3.exe\000"
+            VALUE "OriginalFilename", "Steem SSE 3.9.4.exe\000"
             VALUE "ProductName", "The Steem Engine\000"
-            VALUE "ProductVersion", "3.9.3\000"
+            VALUE "ProductVersion", "3.9.4\000"
+#elif SSE_VERSION==400
+            VALUE "FileVersion", "4.0.0\000"
+            VALUE "InternalName", "Steem\000"
+            VALUE "LegalCopyright", "Copyright Anthony and Russell Hayward\000"
+            VALUE "OriginalFilename", "Steem SSE 4.0.0.exe\000"
+            VALUE "ProductName", "The Steem Engine\000"
+            VALUE "ProductVersion", "4.0.0\000"
+#endif
         END
     END
     BLOCK "VarFileInfo"

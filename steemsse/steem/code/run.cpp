@@ -159,7 +159,7 @@ void run()
   //TODO don't restart if blit error, init DX should change state
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED
-#if defined(SSE_IKBD_6301_393_REF)
+#if defined(SSE_IKBD_6301) //TODO
     || HD6301.Crashed
 #endif
     )
@@ -267,23 +267,6 @@ void run()
           m68k_PROCESS 
           
 #undef LOGSECTION
-
-#if defined(SSE_BLT_MAIN_LOOP) && !defined(SSE_BLT_392)
-/*  "Little" drawback of our blitter refactoring, the run function has
-    one more test... :)
-    TOS restarts the blitter, but interrupts don't stop it, so it can
-    go on during one. 
-    Precise timing of this doesn't appear vital, so we check the blitter
-    only between instructions.
-    update 3.9.2: for some test programs we need to check inside instructions
-    so we do now
-*/
-          if(Blit.Busy && !(ioaccess&IOACCESS_FLAG_DO_BLIT))
-          {
-            if((ABSOLUTE_CPU_TIME-Blit.TimeToSwapBus)>=0) 
-              Blitter_Draw();
-          }
-#endif
           DEBUG_ONLY( debug_first_instruction=0; )
           CHECK_BREAKPOINT
         }//while (cpu_cycles>0 && runstate==RUNSTATE_RUNNING)
@@ -463,7 +446,7 @@ void inline prepare_event_again() //might be an earlier one
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
     PREPARE_EVENT_CHECK_FOR_ACIA;
 #endif
 
@@ -514,7 +497,7 @@ void inline prepare_next_event() //SS check this "inline" thing
     PREPARE_EVENT_CHECK_FOR_FLOPPY;
 #endif
 
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
     PREPARE_EVENT_CHECK_FOR_ACIA;
 #endif
 
@@ -731,20 +714,14 @@ void event_hbl()   //just HBL, don't draw yet
   if(OPTION_C1 && !HD6301.Crashed)
   {
     ASSERT(HD6301_OK);
-    int n6301cycles;
-    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-    ASSERT(n6301cycles);
-#error TODO 
-#if defined(SSE_ACIA_EVENT)
-    if(hd6301_run_cycles(n6301cycles)==-1)
-#else
-    if(!hd6301_run_cycles(n6301cycles))
-#endif
+    hd6301_run_cycles(ACT);
+    if(HD6301.Crashed)
     {
-#define LOGSECTION LOGSECTION_IKBD
-      TRACE_LOG("6301 emu is hopelessly crashed!\n");
-#undef LOGSECTION
-      HD6301.Crashed=1; 
+      TRACE("6301 CRASH\n");
+#if defined(SSE_GUI_STATUS_BAR_392)
+      GUIRefreshStatusBar();
+#endif
+      runstate=RUNSTATE_STOPPING;
     }
   }
 #endif//6301
@@ -767,14 +744,10 @@ void event_scanline_sub() {
   CHECK_AGENDA;
 #undef LOGSECTION
 #if defined(SSE_IKBD_6301)
-  if(OPTION_C1
-#if !defined(SSE_IKBD_6301_393_REF)
-    && !HD6301.Crashed
-#endif
-    )
+  if(OPTION_C1)
   {
     ASSERT(HD6301_OK);
-#if defined(SSE_IKBD_6301_393_REF)
+
     hd6301_run_cycles(ACT);
     if(HD6301.Crashed)
     {
@@ -784,24 +757,6 @@ void event_scanline_sub() {
 #endif
       runstate=RUNSTATE_STOPPING;
     }
-#else
-    int n6301cycles;
-#if defined(SSE_GLUE)
-    ASSERT(Glue.CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
-    n6301cycles=Glue.CurrentScanline.Cycles/HD6301_CYCLE_DIVISOR;
-#else
-    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-#endif
-    ASSERT(n6301cycles);
-    if(hd6301_run_cycles(n6301cycles)==-1)
-    {
-      TRACE("6301 CRASH\n");
-      HD6301.Crashed=1; 
-#if defined(SSE_GUI_STATUS_BAR_392)
-      GUIRefreshStatusBar();
-#endif
-    }
-#endif
   }
 #endif
 
@@ -1049,12 +1004,9 @@ void event_scanline()
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line=MMU.VideoCounter;
 #else
     short added_bytes=Glue.CurrentScanline.Bytes;
+    // extra words for HSCROLL are included in Bytes
     if(ST_TYPE==STE && added_bytes)
-#if defined(SSE_GLUE_392B) // extra words for HSCROLL are in Bytes now
       added_bytes+=LINEWID*2; 
-#else
-      added_bytes+=(LINEWID+MMU.WordsToSkip)*2; 
-#endif
     shifter_draw_pointer_at_start_of_line+=added_bytes;
     shifter_draw_pointer=shifter_draw_pointer_at_start_of_line;
 #endif
@@ -1229,18 +1181,8 @@ void event_vbl_interrupt() //SS misleading name?
     Important for Relapse DMA sound
 */
   event_scanline_sub(); 
-#if defined(SSE_GLUE_393B)
   ASSERT(Glue.VCount<Glue.nLines);
-  //if(Glue.VCount<Glue.nLines)
-    //Glue.VCount++; 
-  //else
-    //Glue.VCount=0;
   Glue.VCount=0;
-#else
-  ASSERT(Glue.VCount);
-  if(Glue.VCount)//? points to some problem...
-    Glue.VCount--; 
-#endif
 #endif
 
 #if defined(SSE_VID_VSYNC_WINDOW)
@@ -1572,7 +1514,7 @@ void event_vbl_interrupt() //SS misleading name?
     }
   }
   IKBD_VBL();    // Handle ST joysticks and mouse
-#if defined(SSE_IKBD_6301_VBL)
+#if defined(SSE_IKBD_6301)
   if(OPTION_C1)
     HD6301.Vbl();
 #endif
@@ -1634,7 +1576,7 @@ void event_vbl_interrupt() //SS misleading name?
   log_to(LOGSECTION_SPEEDLIMIT,Str("SPEED: speed_limit_wait_till is ")+(speed_limit_wait_till-run_start_time));
 
   // The MFP clock aligns with the CPU clock every 8000 CPU cycles
-#if defined(SSE_X64_393)
+#if defined(SSE_X64)
   while (abs(int(ABSOLUTE_CPU_TIME-cpu_time_of_first_mfp_tick))>160000){
     cpu_time_of_first_mfp_tick+=160000; 
   }
@@ -1672,9 +1614,7 @@ void event_vbl_interrupt() //SS misleading name?
   if((Glue.m_ShiftMode&2)&&screen_res<2)
   {
     shifter_last_draw_line*=2; //400 fetching lines
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY_393)
     memset(PCpal,0,sizeof(long)*16); // all colours black
-#endif
   }
 #endif
 
@@ -1780,20 +1720,14 @@ void prepare_cpu_boosted_event_plans()
   screen_event_struct *source,*dest;
 #endif
   int factor=n_millions_cycles_per_sec; //SS TODO optimise away
-#if defined(SSE_TIMING_MULTIPLIER)
+
 #if defined(SSE_TIMING_MULTIPLIER_392)
 /*  Rather than multiplying prescales, which causes imprecision, we will
     directly apply the multiplier to timer periods.
     This change also affects screen_event.time (for the best hopefully).
 */
   cpu_cycles_multiplier=(double)factor/8;
-#else
-  cpu_cycles_multiplier=factor/8;
-#endif
   ASSERT(cpu_cycles_multiplier>0);
-#elif defined(SSE_CPU_4GHZ) || defined(SSE_CPU_3GHZ) || defined(SSE_CPU_2GHZ) || defined(SSE_CPU_1GHZ) || defined(SSE_CPU_512MHZ)
-  if(factor>=512)
-    SSEOption.Chipset2=SSEOption.Chipset1=false; 
 #endif
 
   for (int idx=0;idx<3;idx++){ //3 frequencies
@@ -1807,7 +1741,7 @@ void prepare_cpu_boosted_event_plans()
       source++;dest++;
     }
 #endif
-#if defined(SSE_TIMING_MULTIPLIER_392B)
+#if defined(SSE_TIMING_MULTIPLIER_392)
     scanline_time_in_cpu_cycles[idx]=
       scanline_time_in_cpu_cycles_8mhz[idx]*cpu_cycles_multiplier;
 #else
@@ -1941,13 +1875,10 @@ is asserted.
     We do it when VBI is enabled, by convenience.
 */
 
-#if defined(SSE_GLUE_393B)
-  //Glue.VCount=0;
   ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
   if(Glue.m_ShiftMode&2) // 72hz (monochrome)
   {
     Glue.nLines=501; // not 500
-    //TRACE_OSD("%d %d",Glue.VCount,scan_y); //0 -23
 #if defined(SSE_GLUE_393C)
     Glue.de_start_line=34;
     Glue.de_end_line=434-1;
@@ -1980,16 +1911,6 @@ is asserted.
   if(Glue.m_ShiftMode&2) // risky
     scan_y=-scanlines_above_screen[2];
 #endif
-
-#else
-  ASSERT(!Glue.VCount); // event_trigger_vbi() enabled only if VCount=0
-  if(Glue.m_ShiftMode&2) // 72hz (monochrome)
-    Glue.VCount=501; // not 500
-  else if (Glue.m_SyncMode&2) // 50hz
-    Glue.VCount=313;
-  else // 60hz
-    Glue.VCount=263;
-#endif //#if defined(SSE_GLUE_393B)
 }
 
 #endif
@@ -2027,10 +1948,8 @@ void event_driveB_ip() {
 
 #endif//wd
 
-#if defined(SSE_ACIA_EVENT)
+#if defined(SSE_ACIA)
 //  ACIA events to handle IO with both 6301 and MIDI
-
-#if defined(SSE_ACIA_393) 
 
 COUNTER_VAR time_of_event_acia;
 
@@ -2073,47 +1992,6 @@ void event_acia() {
   }
 }
 
-
-#else
-
-COUNTER_VAR time_of_event_acia=0;
-
-void event_acia() {
-  time_of_event_acia=time_of_next_event+n_cpu_cycles_per_second; 
-
-  if(OPTION_C1)
-  {
-    // IKBD
-    if(ACIA_IKBD.LineRxBusy && time_of_next_event==ACIA_IKBD.time_of_event_incoming)
-      agenda_keyboard_replace(0); // from IKBD
-    else if(ACIA_IKBD.LineTxBusy && time_of_next_event==ACIA_IKBD.time_of_event_outgoing)
-      agenda_ikbd_process(ACIA_IKBD.TDRS); // to IKBD
-    // MIDI
-    else if(ACIA_MIDI.LineRxBusy && time_of_next_event==ACIA_MIDI.time_of_event_incoming)
-      agenda_midi_replace(0); // from MIDI
-    else if(ACIA_MIDI.LineTxBusy && time_of_next_event==ACIA_MIDI.time_of_event_outgoing)
-    { // to MIDI, do the job here
-      MIDIPort.OutputByte(ACIA_MIDI.TDRS);
-      ACIA_MIDI.SR|=BIT_1; // TDRE (register free)
-      if((ACIA_MIDI.CR&BIT_5)&&!(ACIA_MIDI.CR&BIT_6))
-      {
-        ACIA_MIDI.SR|=BIT_7; 
-        mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,0); //trigger IRQ (rare!)
-      }
-      ACIA_MIDI.LineTxBusy=false;
-      // send next MIDI note if any
-      if(ACIA_MIDI.ByteWaitingTx)
-      {
-        ACIA_MIDI.TDRS=ACIA_MIDI.TDR;
-        ACIA_MIDI.LineTxBusy=true;
-        time_of_event_acia=time_of_next_event+ACIA_MIDI_OUT_CYCLES;
-        ACIA_MIDI.ByteWaitingTx=false;
-      }
-    }
-  }
-}
-
-#endif //#if defined(SSE_ACIA_393) 
 
 #endif//acia
 

@@ -41,11 +41,9 @@
 
 #include "SSESTF.h"
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
 
-#if defined(SSE_BOILER_390_LOG2)
 #define LOGSECTION LOGSECTION_DMA
-#endif
 
 #define DMA_INC_ADDRESS IncAddress();
 

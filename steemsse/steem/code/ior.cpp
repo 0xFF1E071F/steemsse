@@ -180,18 +180,6 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
 #endif
         {
           ior_byte=acia[acia_num].SR;
-#if !defined(SSE_ACIA_393) // SR should be up-to-date now
-#if defined(SSE_TIMINGS_CPUTIMER64)
-          if(abs((int)(ACT-acia[acia_num].last_tx_write_time))
-            <ACIA_TDR_COPY_DELAY)
-#else
-          if(abs(ACT-acia[acia_num].last_tx_write_time)<ACIA_TDR_COPY_DELAY)
-#endif
-          {
-            TRACE_LOG("ACIA %d SR TDRE not set yet (%d)\n",acia_num,ACT-acia[acia_num].last_tx_write_time);
-            ior_byte&=~BIT_1; // eg Nightdawn STF
-          }
-#endif
           break;
         }//C1
         ior_byte=0;
@@ -223,10 +211,6 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           {
             acia[acia_num].overrun=ACIA_OVERRUN_YES;
             acia[acia_num].SR|=BIT_5; // set overrun (only now, conform to doc)
-#if !defined(SSE_ACIA_393)              
-            if(acia[acia_num].CR&BIT_7) // irq enabled
-              acia[acia_num].SR|=BIT_7; // there's a new IRQ when overrun bit is set
-#endif            
             TRACE_LOG("%d %d %d PC %X reads ACIA %d RDR %X, OVR\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
           }
           // no overrun, normal
@@ -241,19 +225,9 @@ to clear overrun
             acia[acia_num].overrun=ACIA_OVERRUN_NO;
             acia[acia_num].SR&=~BIT_0;
             acia[acia_num].SR&=~BIT_5;
-#if !defined(SSE_ACIA_393)  
-            if(!( acia[acia_num].IrqForTx() && acia[acia_num].SR&BIT_1))
-              acia[acia_num].SR&=~BIT_7;
-#endif
             TRACE_LOG("%d %d %d PC %X CPU reads ACIA %d RDR %X\n",TIMING_INFO,old_pc,acia_num,acia[acia_num].RDR);
           }
-#if defined(SSE_ACIA_393)      
           ACIA_CHECK_IRQ(acia_num);
-#else
-          mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,
-            !( (ACIA_IKBD.SR&BIT_7) || (ACIA_MIDI.SR&BIT_7)) );
-#endif
-
 /*
 "The nondestructive read cycle (...) although the data in the
 Receiver Data Register is retained.
@@ -828,7 +802,7 @@ Receiver Data Register is retained.
 
     case 0xff8600:   
 
-#if defined(SSE_DMA_OBJECT)
+#if defined(SSE_DMA)
       ior_byte=Dma.IORead(addr);
       break;
 #else 
@@ -994,7 +968,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS)
         cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
         Blit.BlitCycles=0;
 #endif
         int n=(addr-0xff8240)/2; // which palette
@@ -1066,7 +1040,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS)
           cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
           Blit.BlitCycles=0;
 #endif
           ior_byte&=~3;           // this way takes care
@@ -1077,7 +1051,7 @@ Receiver Data Register is retained.
 #if defined(SSE_MMU_ROUNDING_BUS)
           cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
           Blit.BlitCycles=0;
 #endif
           DEBUG_ONLY( if (mode==STEM_MODE_CPU) ) 
@@ -1870,7 +1844,7 @@ WORD ASMCALL io_read_w(MEM_ADDRESS addr)
 #if defined(SSE_MMU_ROUNDING_BUS)
     cpu_cycles&=-4; // Shifter access -> wait states possible
 #endif
-#if defined(SSE_BLT_390B)
+#if defined(SSE_BLT_CPU_RUNNING)
     Blit.BlitCycles=0;
 #endif
 

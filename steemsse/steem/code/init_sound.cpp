@@ -36,7 +36,7 @@ EXT int rt_buffer_size INIT(256),rt_buffer_num INIT(4);
 EXT int pa_output_buffer_size INIT(128);
 #endif
 
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 extern bool written_to_env_this_vbl;
 #endif
 
@@ -101,7 +101,7 @@ void sound_record_open_file()
   if (wav_file) return;
   wav_file=fopen(WAVOutputFile.Text,"wb");
   if (wav_file==NULL){
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
     Alert(T("Could not open sound file for writing"),T("Sound Recording Error"),MB_ICONEXCLAMATION);
 #else
     Alert(T("Could not open WAV file for writing"),T("WAV Recording Error"),MB_ICONEXCLAMATION);
@@ -109,7 +109,7 @@ void sound_record_open_file()
     sound_record=false;
     return;
   }
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
   if(OPTION_SOUND_RECORD_FORMAT==TOption::SoundFormatWav)
 #endif
   {//SS
@@ -132,7 +132,7 @@ void sound_record_close_file()
   fflush(wav_file);
   int length=ftell(wav_file);
   
-#if defined(SSE_YM2149_RECORD)
+#if defined(SSE_YM2149_RECORD_YM)
 /*  Convert temp file to YM3 format.
     temp file is a dump of PSG registers every VBL, in YM3, the same data
     is grouped per register.
@@ -600,7 +600,6 @@ HRESULT DSGetPrimaryBuffer()
     factor=ceil(r);
     ASSERT(factor==2||factor==4||factor==5||factor==8);
   }
-  //factor*=4;
   int samples_per_vbl=8192*SCREENS_PER_SOUND_VBL*factor; // Steem original
 #else  
   int samples_per_vbl=((sound_freq/50)+1)*SCREENS_PER_SOUND_VBL;
