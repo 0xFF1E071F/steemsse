@@ -71,6 +71,11 @@ MEM_ADDRESS stemdos_dta;
 
 short stemdos_save_sr;
 int stemdos_current_drive;
+
+#if defined(SSE_TOS_GEMDOS_394)
+EXT MEM_ADDRESS original_return_address;
+#endif
+
 #endif//DISABLE_STEMDOS
 
 #undef EXT
@@ -1156,6 +1161,10 @@ void stemdos_intercept_trap_1()
 
   stemdos_command=m68k_dpeek(sp);
 //  ASSERT((stemdos_command&0xFF)==stemdos_command); //asserts...
+
+#if defined(SSE_TOS_GEMDOS_394)
+  original_return_address=m68k_lpeek(areg[7]+2);
+#endif
 
   switch (stemdos_command){
 /*

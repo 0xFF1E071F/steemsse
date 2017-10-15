@@ -3081,12 +3081,23 @@ void d2_routines_init(){
 
 }
 
-
+#if defined(SSE_BOILER_394)
+EasyStr disa_d2(MEM_ADDRESS new_dpc,WORD pir)
+#else
 EasyStr disa_d2(MEM_ADDRESS new_dpc)
+#endif
 {
   EasyStr dt;
   dpc=new_dpc & 0xffffff;
   ir=d2_fetchW(); //fetch
+#if defined(SSE_BOILER_394)
+  if(pir && pir!=ir)
+  {
+    //TRACE("PC %X prefetch trick? IR %X\n",dpc,pir); 
+    ir=pir;
+  }
+#endif
+
   dpc+=2;
   if (d2_peekvalid) return "Not valid address";
   old_dpc=dpc;

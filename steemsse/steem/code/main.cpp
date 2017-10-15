@@ -236,6 +236,11 @@ int main(int argc,char *argv[])
 #endif//UNIX
 
   NO_SLASH(RunDir);
+
+#if defined(SSE_VAR_SET_RUNDIR_AS_DEFAULT)
+  SetCurrentDirectory(RunDir.Text); // can help using relative paths in ini
+#endif
+
 #if defined(SSE_VAR_MAIN_LOOP2)
   try {
 #if defined(SSE_VAR_MAIN_LOOP3) 

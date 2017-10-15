@@ -64,7 +64,11 @@
 #define D2_IRIWO_N d2_iriwo_N()
 #define D2_IRIWO_PC d2_iriwo_pc()
 
+#if defined(SSE_BOILER_394)
+ EasyStr disa_d2(MEM_ADDRESS,WORD pir=0);
+#else
 EasyStr disa_d2(MEM_ADDRESS);
+#endif
 
 EXT LONG d2_peekvalid;
 

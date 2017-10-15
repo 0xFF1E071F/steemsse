@@ -859,7 +859,7 @@ void TOptionBox::Show()
   AddPageLabel(T("MIDI"),4);
 #endif
 #if !defined(SSE_GUI_NO_MACROS)
-#if defined(SSE_IKBD_6301_MACRO)
+#if defined(SSE_BUILD) 
   AddPageLabel(T("Record Input"),13);
 #else
   AddPageLabel(T("Macros"),13);
@@ -2084,6 +2084,16 @@ ADVANCED_END
               YM2149.FreeFixedVolTable();
 #endif
             SendMessage(HWND(lPar),BM_SETCHECK,OPTION_SAMPLED_YM,0);
+          }
+          break; 
+#endif
+
+#if defined(SSE_YM2149_MAMELIKE) && defined(SSE_YM2149_MAMELIKE_394)
+        case 7312: // option Low-level YM
+          if (HIWORD(wPar)==BN_CLICKED){
+            OPTION_MAME_YM=!OPTION_MAME_YM;
+            TRACE_LOG("Option Low-level YM %d\n",OPTION_MAME_YM);
+            SendMessage(HWND(lPar),BM_SETCHECK,OPTION_MAME_YM,0);
           }
           break; 
 #endif

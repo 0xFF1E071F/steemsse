@@ -106,9 +106,11 @@ void TOption::Restore(bool all) {
 #if USE_PASTI
   pasti_active=false;
 #endif
-  // sound: C2 is checked too (MAME-like = default)
   SampledYM=true; // need file
   YM2149.LoadFixedVolTable();
+#if defined(SSE_YM2149_MAMELIKE_394)
+  YmLowLevel=true;
+#endif
   Microwire=true;
   sound_freq=44100;
   sound_write_primary=false;

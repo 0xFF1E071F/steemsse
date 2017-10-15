@@ -471,7 +471,9 @@ Receiver Data Register is retained.
             }
 #endif
             if (n>=MFPR_TADR && n<=MFPR_TDDR){ //timer data registers
+              //debug1=1;
               mfp_calc_timer_counter(n-MFPR_TADR);
+              //debug1=0;
               ior_byte=BYTE(mfp_timer_counter[n-MFPR_TADR]/64);
               if (n==MFPR_TBDR){
                 //TRACE("read TBDR y %d lc %d tontb %d ior_byte %x mfp_reg[MFPR_TBDR] %x\n",scan_y,LINECYCLES,time_of_next_timer_b-cpu_timer_at_start_of_hbl,ior_byte,mfp_reg[MFPR_TBDR]);
@@ -543,7 +545,7 @@ Receiver Data Register is retained.
 #if defined(SSE_INT_MFP_JAM_AFTER_READ)
 /*  Counting the bus jam after the read makes sense in the way we can
     remove the 'if ((ABSOLUTE_CPU_TIME-time_of_next_timer_b) > 4)'
-    This seems to fix Down TLN.
+    This seems to fix Down TLN. TODO or interfere with 'blitter restart'?
 */
           if(OPTION_C2)
           {

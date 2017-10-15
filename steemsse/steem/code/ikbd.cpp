@@ -1420,8 +1420,10 @@ void agenda_keyboard_replace(int) {
   {
     if (keyboard_buffer_length){ 
       keyboard_buffer_length--;
+#if !defined(SSE_IKBD_6301_394)
       ASSERT( keyboard_buffer_length>=0 );
       ASSERT( keyboard_buffer_length<2 );
+#endif
       hd6301_run_cycles(ACT); // run up to IO time
       ACIA_IKBD.RDRS=HD6301.tdrs;
 
@@ -1449,11 +1451,25 @@ void agenda_keyboard_replace(int) {
       }
       // Check if we must activate IRQ (overrun or normal)
       ACIA_CHECK_IRQ(NUM_ACIA_IKBD);
+
     }//if (keyboard_buffer_length)
 
     ACIA_IKBD.LineRxBusy=false;
-    ASSERT(!keyboard_buffer_length); 
 
+#if defined(SSE_IKBD_6301_394)
+    // schedule next event if characters are not coming from 6301
+    if(keyboard_buffer_length)
+    {
+      HD6301.tdrs=keyboard_buffer[keyboard_buffer_length-1];
+      TRACE_LOG("fake IKBD TDRS %X\n",HD6301.tdrs);
+      ACIA_IKBD.LineRxBusy=true;
+      ACIA_IKBD.time_of_event_incoming=ACT + ACIA_IKBD.TransmissionTime();
+      if(ACIA_IKBD.time_of_event_incoming-time_of_event_acia<=0)
+        time_of_event_acia=ACIA_IKBD.time_of_event_incoming; 
+    }
+#else
+    ASSERT(!keyboard_buffer_length); 
+#endif
 #if !defined(SSE_GUI_NO_MACROS)
     if (macro_start_after_ikbd_read_count) 
       macro_start_after_ikbd_read_count--;
@@ -1520,7 +1536,9 @@ void keyboard_buffer_write(BYTE src) {
     if(!ACIA_IKBD.LineRxBusy)
     {
 #if defined(SSE_IKBD_6301_MACRO)
+#if !defined(SSE_IKBD_6301_394)
       ASSERT(HD6301.tdrs==src||macro_play_has_keys);
+#endif
       HD6301.tdrs=src;
 #else
       ASSERT(HD6301.tdrs==src);
@@ -1530,10 +1548,10 @@ void keyboard_buffer_write(BYTE src) {
 
 /*  Normally the buffer should be 2 bytes, one being shifted, one in the 
     register. In fake mode, it's much more.
-    If this is first byte, we prepare an agenda to emulate the ACIA transmission
+    If this is first byte, we prepare an event to emulate the ACIA transmission
     delay.
-    If there's already info in the buffer, an agenda was already prepared,
-    a new agenda will be prepared when this one is executed. We only need to
+    If there's already info in the buffer, an event was already prepared,
+    a new event will be prepared when this one is executed. We only need to
     shift the buffer and insert the new value.
     For the moment we keep this system of keyboard buffer even for 6301 true
     emu because it is flexible.

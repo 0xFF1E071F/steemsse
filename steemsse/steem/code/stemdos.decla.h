@@ -33,7 +33,22 @@ EXT bool stemdos_intercept_datetime INIT(0);
 //#ifdef IN_EMU
 
 EXT EasyStr mount_gemdos_path[26];
-#if defined(SSE_CPU_392B)
+
+#if defined(SSE_TOS_GEMDOS_394)
+  //  original_return_address was mostly wrong at this point, after
+  // pushing some more parameters - big bugfix, but don't understand that
+  // it wouldn't just crash
+EXT MEM_ADDRESS original_return_address;
+
+#define STEMDOS_TRAP_1     \
+  {M68000.ProcessingState=TM68000::EXCEPTION;\
+    SET_PC(original_return_address);    \
+    m68k_interrupt(os_gemdos_vector);        \
+    M68000.ProcessingState=TM68000::NORMAL;\
+  }
+
+
+#elif defined(SSE_CPU_392B)
 #define STEMDOS_TRAP_1     \
   {M68000.ProcessingState=TM68000::EXCEPTION;\
     MEM_ADDRESS original_return_address=m68k_lpeek(areg[7]+2);   \

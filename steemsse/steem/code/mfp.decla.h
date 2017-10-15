@@ -293,15 +293,6 @@ inline void mfp_calc_timer_period(int t) {
 #endif
 }
 #define MFP_CALC_TIMER_PERIOD(t) mfp_calc_timer_period(t)
-
-#elif defined(SSE_INT_MFP_RATIO_PRECISION)
-// the fraction is computed anyway but is used only if option C2 is checked
-#define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
-          double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
-            int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t])))*CPU_CYCLES_PER_MFP_CLK);\
-          mfp_timer_period_fraction[t]=int(  1000*((double(mfp_timer_prescale[mfp_get_timer_control_register(t)]*int(BYTE_00_TO_256(mfp_reg[MFPR_TADR+t]))) * CPU_CYCLES_PER_MFP_CLK)-(double)mfp_timer_period[t])  );\
-         mfp_timer_period_current_fraction[t]=0;
-         
 #else
 #define MFP_CALC_TIMER_PERIOD(t)  mfp_timer_period[t]=int(  \
           double(mfp_timer_prescale[mfp_get_timer_control_register(t)]* \
