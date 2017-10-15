@@ -576,6 +576,7 @@ void mfp_init_timers() // For load state and CPU speed change
 
 //SS This is called whether a timer is being started or stopped
 // reference is timeout
+// this is called by ior too
 
 int mfp_calc_timer_counter(int timer)
 {
@@ -588,6 +589,24 @@ int mfp_calc_timer_counter(int timer)
 #endif
     if (stage<0){ //SS has timed out? - no high precision here...
       MFP_CALC_TIMER_PERIOD(timer);
+#ifdef SSE_BUGFIX_394
+      if(OPTION_C2) 
+      {
+        // If the counter wrapped not long ago, its visible value
+        // is 0, not TXDR - fixes Froggies Over The Fence back to menu after disk 2
+        if(stage>=-4)
+        {
+          mfp_timer_counter[timer]=0;
+          MC68901.Counter[timer]=0;
+          MC68901.Prescale[timer]=0;
+          return MC68901.Prescale[timer];
+        }
+        // guess it's the intention, don't like that +1 (probably against /0)
+        while(stage<0 && mfp_timer_period[timer]>0)
+          stage+=mfp_timer_period[timer];
+      }
+      else
+#endif
       stage+=((-stage/mfp_timer_period[timer])+1)*mfp_timer_period[timer];
     }
     stage%=mfp_timer_period[timer];
@@ -600,6 +619,7 @@ int mfp_calc_timer_counter(int timer)
 #else
     stage=int(double(stage)/CPU_CYCLES_PER_MFP_CLK);
 #endif
+    
     mfp_timer_counter[timer]=(stage/ticks_per_count)*64 + 64;
 #if defined(SSE_INT_MFP_PRESCALE)
     MC68901.Counter[timer]=mfp_timer_counter[timer]/64;

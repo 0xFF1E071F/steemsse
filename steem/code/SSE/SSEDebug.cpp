@@ -67,7 +67,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
-  logsection_enabled[ LOGSECTION_IKBD ] = 0;
+  logsection_enabled[ LOGSECTION_IKBD ] = 1;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
@@ -81,7 +81,7 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_CPU ] = 0;
   logsection_enabled[ LOGSECTION_INIFILE ] = 0;
   logsection_enabled[ LOGSECTION_GUI ] = 0;
-  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 1;
+  logsection_enabled[ LOGSECTION_VIDEO_RENDERING ] = 0;
   logsection_enabled[ LOGSECTION_OPTIONS ] = 1;
   // no PASTI, no DIV
 // additions
@@ -600,7 +600,8 @@ void TDebug::TraceLog(char *fmt, ...) { // static
       strcpy(Debug.trace_buffer,"TRACE buffer overrun\n");
 
 #if defined(SSE_DEBUG_TRACE_IDE) && defined(WIN32)
-    OutputDebugString(Debug.trace_buffer);
+    if(Debug.LogSection!=LOGSECTION_CPU) //there are limits!
+      OutputDebugString(Debug.trace_buffer);
 #endif
 
 #if defined(SSE_UNIX_TRACE)

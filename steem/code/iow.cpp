@@ -163,7 +163,11 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
         ASSERT(acia_num==0 || acia_num==1);
         acia[acia_num].TDR=io_src_b;
         TRACE_LOG("ACIA %d PC %X TDR %X\n",acia_num,old_pc,io_src_b);
+#if defined(SSE_IKBD_6301_PASTE)
         if(OPTION_C1 && !bPastingText)
+#else
+        if(OPTION_C1)
+#endif
         {
           acia[acia_num].SR&=~BIT_1; // clear TDRE bit
           ACIA_CHECK_IRQ(acia_num); // writing on TDR clears the TX IRQ

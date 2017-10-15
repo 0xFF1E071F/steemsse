@@ -169,6 +169,7 @@ BYTE TDma::GetFifoByte() {
 */
 
 #if !defined(SSE_BOILER_390_LOG2)
+#undef LOGSECTION
 #define LOGSECTION LOGSECTION_IO
 #endif
 

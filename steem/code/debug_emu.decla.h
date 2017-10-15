@@ -6,8 +6,11 @@
 #define INIT(s)
 
 class m68k_exception;//390
-
+#if defined(SSE_BOILER_394)
+extern EasyStr disa_d2(MEM_ADDRESS,WORD pir);
+#else
 extern EasyStr disa_d2(MEM_ADDRESS);
+#endif
 void breakpoint_check();
 extern int debug_get_ad_mode(MEM_ADDRESS);
 extern WORD debug_get_ad_mask(MEM_ADDRESS,bool);

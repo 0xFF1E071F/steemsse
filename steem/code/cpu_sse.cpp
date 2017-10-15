@@ -46,8 +46,11 @@ WORD prefetch_buf[2]; //2 words prefetch queue
 MEM_ADDRESS debug_mem_write_log_address;
 int debug_mem_write_log_bytes;
 #endif
-
+#if defined(SSE_CPU_394A)
+BYTE cpu_stopped=0; //need 3 states
+#else
 bool cpu_stopped=0;
+#endif
 #if !defined(SSE_CPU_TRACE_LINE_A_F)
 bool m68k_do_trace_exception;
 #endif
@@ -146,6 +149,10 @@ void m68k_exception::init(int a,exception_action ea,MEM_ADDRESS _abus)
   address=_abus;
   _sr=::sr;_ir=::ir;
   action=ea;
+#ifdef SSE_BUGFIX_394 //simplification
+  if(action==EA_WRITE && CHECK_READ)
+    action=EA_READ;
+#endif
 }
 //---------------------------------------------------------------------------
 void ASMCALL perform_crash_and_burn()
@@ -232,6 +239,9 @@ FC2 FC1 FC0 Address Space
   may be more appropriate.
   TODO, it's preliminary  
 */
+#if defined(SSE_CPU_394A)
+  M68K_UNSTOP;
+#endif
   if(bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
   {
     switch(_ir)
@@ -313,7 +323,7 @@ FC2 FC1 FC0 Address Space
     TRACE_LOG("\n");
     for(int i=0;i<8;i++) // A0-A7 (A7 when the exception occurred)
       TRACE_LOG("A%d=%X ",i,areg[i]);
-    TRACE_LOG("\n");
+    TRACE_LOG(" %X\n",other_sp);
   }
 
 #endif
@@ -400,6 +410,7 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
 /*  BUSERRT1.TOS
     The GLU keeps trying to access the address for a while
     before asserting bus error.
+    TODO: even if it's a problem of not being in supervisor mode?
 */
       if(bombs==BOMBS_BUS_ERROR)
         INSTRUCTION_TIME(70); // timing on STE
@@ -707,7 +718,7 @@ void m68kProcess() {
         if(TRACE_MASK4 & TRACE_CONTROL_CPU_REGISTERS_VAL) //v3.7.1
           TRACE_LOG("(%X) ",(areg[i]&1)?d2_peek(areg[i]):d2_dpeek(areg[i]));
       }
-      TRACE_LOG("SR=%X\n",sr);
+      TRACE_LOG("%X SR=%X\n",other_sp,sr);
     }
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_SP)
     {
@@ -716,10 +727,18 @@ void m68kProcess() {
       TRACE_LOG("\n");      
     }
 #endif
+#if defined(SSE_BOILER_394)
+    // makes a difference when there's a prefetch trick (only IRD is correct) TODO
+    if(sr&SR_TRACE)
+      TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc,IR).Text);
+    else
+      TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc,IR).Text);
+#else
     if(sr&SR_TRACE)
       TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc).Text);
     else
       TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc).Text);
+#endif
   }
 #endif//boiler
   M68000.IrAddress=pc;
@@ -853,8 +872,44 @@ exception vector.
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
 
+#ifdef SSE_CPU_394B
+
+    INSTRUCTION_TIME(4); //  nn 4
+    WORD _sr=sr;
+    if(!SUPERFLAG)
+      change_to_supervisor_mode();
+#if defined(SSE_VC_INTRINSICS_390E)
+    BITRESET(sr,SR_TRACE_BIT);
+#else
+    SR_CLEAR(SR_TRACE);
+#endif
+#if defined(SSE_BOILER_68030_STACK_FRAME)
+    if(Debug.M68030StackFrame)
+    {//macro must be scoped!
+      CPU_ABUS_ACCESS_WRITE_PUSH;
+      m68k_PUSH_W(0); // format + offset, both may be 0
+    }
+#endif
+    CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS 16
+    m68k_PUSH_L(PC32);
+#if defined(SSE_BOILER_PSEUDO_STACK)
+    Debug.PseudoStackPush(PC32);
+#endif
+    CPU_ABUS_ACCESS_WRITE_PUSH; // ns 8
+    m68k_PUSH_W(_sr);
+    CPU_ABUS_ACCESS_READ_L; // nV nv 24
+    SET_PC(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+    CPU_ABUS_ACCESS_READ_FETCH; //np 28
+    INSTRUCTION_TIME(2); // n 30 // on ST it will provoke alignment of last fetch
+    CPU_ABUS_ACCESS_READ_FETCH; //np 34
+    interrupt_depth++;
+//  TRACE_LOG("%X %d\n",ad,interrupt_depth);
+#else
+
     m68kTrapTiming();
     m68k_interrupt(LPEEK(BOMBS_TRACE_EXCEPTION*4));
+
+#endif//394
 
 #if defined(SSE_CPU_392B)
     M68000.ProcessingState=TM68000::NORMAL;
@@ -887,19 +942,27 @@ void m68kSetPC(MEM_ADDRESS ad) {
   lpfetch=lpDPEEK(0); //Default to instant bus error when fetch
   lpfetch_bound=lpDPEEK(0);         
   if (pc>=himem){                                                       
-    if (pc<MEM_IO_BASE){           
-      if (pc>=MEM_EXPANSION_CARTRIDGE){                                
-        if (pc>=0xfc0000){                                                   
+    if (pc<MEM_IO_BASE)
+    {           
+      if (pc>=MEM_EXPANSION_CARTRIDGE)
+      {                                
+        if (pc>=0xfc0000)
+        {                                                   
           if (tos_high && pc<(0xfc0000+192*1024)){         
             lpfetch=lpROM_DPEEK(pc-0xfc0000); 
             lpfetch_bound=lpROM_DPEEK(192*1024);         
           }                                                
-        }else if (cart){                    
+        }
+        else if (cart)
+        {                    
           lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE);
           lpfetch_bound=lpCART_DPEEK(128*1024);       
         }                   
-      }else if(pc>=rom_addr){            
-        if (pc<(0xe00000 + 256*1024)){   
+      }
+      else if(pc>=rom_addr)
+      {            
+        if (pc<(0xe00000 + 256*1024))
+        {   
           lpfetch=lpROM_DPEEK(pc-0xe00000);
           lpfetch_bound=lpROM_DPEEK(256*1024);   
         }              
@@ -921,13 +984,17 @@ void m68kSetPC(MEM_ADDRESS ad) {
         lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));
       }
 #endif
-    }else{ 
+    }
+    else //if (pc<MEM_IO_BASE)
+    { 
       if (pc>=0xff8240 && pc<0xff8260){      
         lpfetch=lpPAL_DPEEK(pc-0xff8240); 
         lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);     
       }                                          
     }                     
-  }else{             
+  }
+  else //<himem
+  {             
     lpfetch=lpDPEEK(pc); 
     lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));  
   }                        
@@ -3642,6 +3709,7 @@ R --> M           |                 |
 */
     PREFETCH_CLASS(1);
     CPU_ABUS_ACCESS_READ_FETCH;
+    // get register mask - can be 0
     m68k_src_w=m68k_fetchW();pc+=2;
     abus=areg[PARAM_M];
     DWORD areg_hi=(areg[PARAM_M] & 0xff000000);
@@ -4658,7 +4726,11 @@ void                              m68k_nop(){
 
 
 void                              m68k_stop(){
+#if defined(SSE_CPU_394A) // check only once
+  if (SUPERFLAG||cpu_stopped){
+#else
   if (SUPERFLAG){
+#endif
 /*
 -------------------------------------------------------------------------------
                   |    Exec Time    |               Data Bus Usage
@@ -4669,30 +4741,54 @@ NOTES :
   .At this point, there is no real clues of how the second microcyle of this *
    instruction is spent. 
 */
-    if (cpu_stopped==0){
-/*http://www.atari-forum.com/viewtopic.php?f=68&t=13264&p=292437#p292437
+#if defined(SSE_CPU_394A)
+/* http://www.atari-forum.com/viewtopic.php?f=68&t=13264&p=329205#p329205
+(ijor)
+
 "Yes, STOP can (kinda) pair with the previous instruction. It's not a pairing
 in the strict sense. STOP would always take a multiple of 4 cycles. 
 But STOP is transparent (because it doesn't perform any bus access) in terms 
 of pairing to the previous instruction.
-
 So EXG+STOP+INTR does pair, because EXG and INTR pair."
 
---> STOP must read the immediate, but we know it's already fetched, so 
-    it just uses it without refetching at the same time.
+STOP always takes a multiple of 4 cycles. 
+STOP operates like a regular instruction that takes 4 cycles. 
+The only thing special about STOP is that no prefetch is being performed. 
+So the same instruction is executed again and again until interrupted.
+
+Regarding a minimum of 8 cycles. That is not 100% accurate. 
+If the interrupt was pending before but masked by the status register, and 
+it is being triggered only as a consequence of the STOP instruction lowering 
+the interrupt mask, then yes, it would take 8 cycles. This is because the CPU
+takes some time to update the status register. By the time the interrupt mask
+is updated and checked, it is already too late to interrupt the first STOP 
+iteration, it would interrupt the second one and then it would take 8 cycles.
+
+However, if the interrupt mask on the previous instruction was already low
+enough to accept the interrupt, but it didn't actually trigger because the
+interrupt reached the CPU too late by the end of the previous instruction, 
+then STOP would take 4 cycles only. In this case the delay to update the
+interrupt mask is obviously not relevant, and then STOP would be interrupted
+at its first iteration.
+
 */
+    INSTRUCTION_TIME(4);
+#endif
+    if (cpu_stopped==0){
       m68k_GET_IMMEDIATE_W;
       DEBUG_ONLY( int debug_old_sr=sr; )
+#if defined(SSE_CPU_394A)
+      M68000.future_sr=m68k_src_w; //need var because "immediate" will change
+      cpu_stopped=1; // because of the delay to update SR
+#else
       sr=m68k_src_w; // IPL
       sr&=SR_VALID_BITMASK;
       DETECT_CHANGE_TO_USER_MODE;
       cpu_stopped=true;
-
       DETECT_TRACE_BIT;
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
       CHECK_STOP_ON_USER_CHANGE;
-
 /*  from Hatari:
     The CPU can't be restarted at once after a STOP, there's a
     delay of 8 cycles, even if an interrupt is pending.
@@ -4700,13 +4796,27 @@ So EXG+STOP+INTR does pair, because EXG and INTR pair."
 */
       if(!M68000.tpend)//390
         INSTRUCTION_TIME(CPU_STOP_DELAY); 
-
+#endif
     }else{ // already stopped
+#if defined(SSE_CPU_394A)
+      if(cpu_stopped==1)
+      {
+        cpu_stopped++;
+        ASSERT(sr&0x2000);
+        sr=M68000.future_sr; // IPL, with some delay
+        sr&=SR_VALID_BITMASK;
+        DETECT_CHANGE_TO_USER_MODE;
+      }
+#else
       // If we have got here then there were no interrupts pending when the IPL
       // was changed. Now unless we are in a blitter loop nothing can possibly
       // happen until cpu_cycles<=0.
       INSTRUCTION_TIME(4); // n*
+#endif
     }
+#if defined(SSE_CPU_394A)
+    ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+#endif
     SET_PC(old_pc); // note it refills prefetch (TODO)
   }else{
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
@@ -4730,7 +4840,10 @@ void                              m68k_rte(){
     CPU_ABUS_ACCESS_READ_POP; //nu
     CPU_ABUS_ACCESS_READ_FETCH_L; // np np
     M68K_PERFORM_RTE(;);
-
+#if defined(SSE_CPU_394C)
+    abus=pc;
+    ReadW(); // test for crash was missing in RTE
+#endif
     log_to(LOGSECTION_INTERRUPTS,Str("INTERRUPT: ")+HEXSl(old_pc,6)+" - RTE to "+HEXSl(pc,6)+" sr="+HEXSl(sr,4)+
                                   " at "+ABSOLUTE_CPU_TIME+" idepth="+interrupt_depth);
     if (on_rte){

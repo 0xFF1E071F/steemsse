@@ -51,7 +51,7 @@
 // CPU //
 /////////
 
-#if defined(SSE_CPU)
+#if defined(SSE_CPU) && !defined(SSE_CPU_394A)
 
 #define CPU_STOP_DELAY 8
 

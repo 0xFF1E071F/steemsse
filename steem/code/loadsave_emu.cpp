@@ -1107,7 +1107,12 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   if(Version>=46) // 3.5.4
   {
 #if defined(SSE_MMU_WU)
+#if defined(SSE_GUI_WS_394)
+    BYTE dummy=0;
+    ReadWrite(dummy);
+#else
     ReadWrite(OPTION_WS); // and not struct MMU
+#endif
 #if defined(SSE_GUI_STATUS_BAR)
     GUIRefreshStatusBar();//overkill
 #endif

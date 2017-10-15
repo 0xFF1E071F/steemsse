@@ -880,6 +880,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     ST_TYPE=pCSF->GetInt("Machine","STType",ST_TYPE);
     SSEConfig.SwitchSTType(ST_TYPE);
 #endif
+#if defined(SSE_GUI_WS_394)
+    OPTION_WS=pCSF->GetInt("Machine","Wakeup",OPTION_WS);
+#endif
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
     OPTION_CPU_CLOCK=pCSF->GetInt("Options","FinetuneCPUclock",OPTION_CPU_CLOCK);
     CpuCustomHz=pCSF->GetInt("Machine","CpuCustomHz",CpuCustomHz);
@@ -939,6 +942,9 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
     else
       YM2149.FreeFixedVolTable();
 #endif
+#endif
+#if defined(SSE_YM2149_MAMELIKE_394)
+    OPTION_MAME_YM=pCSF->GetInt("Sound","YmLowLevel",OPTION_MAME_YM);
 #endif
 #if defined(SSE_SOUND_MICROWIRE) && !defined(SSE_SOUND_MICROWIRE_NOT_OPTIONAL)
     SSEOption.Microwire=pCSF->GetInt("Sound","Microwire",SSEOption.Microwire);
@@ -1491,6 +1497,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
   pCSF->SetStr("Sound","PsgMod",EasyStr(OPTION_SAMPLED_YM));  
 #endif
+#if defined(SSE_YM2149_MAMELIKE_394)
+  pCSF->SetStr("Sound","YmLowLevel",EasyStr(OPTION_MAME_YM));  
+#endif
 #if defined(SSE_SOUND_MICROWIRE)
   //pCSF->SetStr("Sound","Microwire",EasyStr(OPTION_MICROWIRE));  
   pCSF->SetStr("Sound","Microwire",EasyStr(SSEOption.Microwire));  
@@ -1731,6 +1740,9 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 
 #if defined(SSE_STF)
   pCSF->SetStr("Machine","STType",EasyStr(ST_TYPE));
+#endif
+#if defined(SSE_GUI_WS_394)
+  pCSF->SetStr("Machine","Wakeup",EasyStr(OPTION_WS));
 #endif
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
   pCSF->SetStr("Options","FinetuneCPUclock",EasyStr(OPTION_CPU_CLOCK));

@@ -71,7 +71,9 @@ struct TOption {
 #if defined(SSE_GUI_ADVANCED)
   unsigned int Advanced:1;
 #endif
-
+#if defined(SSE_YM2149_MAMELIKE_394)
+  unsigned int YmLowLevel:1;
+#endif
 #ifdef __cplusplus // visible only to C++ objects
   TOption();
   void Init();
@@ -188,8 +190,11 @@ extern struct TOption SSEOption;
 #else
 #define OPTION_FAKE_FULLSCREEN (false)
 #endif
+#if defined(SSE_YM2149_MAMELIKE_394)
+#define OPTION_MAME_YM (SSEOption.YmLowLevel)
+#else
 #define OPTION_MAME_YM (SSEOption.Chipset2) //C2 commands MFP and PSG mods
-
+#endif
 #if defined(SSE_SOUND_16BIT_CENTRED)
 #if defined(SSE_SOUND_NO_8BIT)
 #define RENDER_SIGNED_SAMPLES (true)

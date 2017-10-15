@@ -2320,7 +2320,11 @@ void TOptionBox::CreateSoundPage()
 #if defined(SSE_GUI_OPTIONS_SOUND) 
   long Offset=0;
   const int LineHeight=30;
+#if defined(SSE_YM2149_MAMELIKE_394)
+  const int HorizontalSeparation=5;
+#else
   const int HorizontalSeparation=10;
+#endif
   DWORD mask;
 #endif
   int y=10;
@@ -2393,11 +2397,25 @@ ADVANCED_BEGIN
   if(!SSEConfig.ym2149_fixed_vol && !YM2149.LoadFixedVolTable())
     mask|=WS_DISABLED;
 #endif
-  Win=CreateWindow("Button",T("Sampled YM-2149"),mask,
+  Win=CreateWindow("Button",T("Sampled YM2149"),mask,
     page_l+HorizontalSeparation,y,Wid,25,Handle,(HMENU)7311,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_SAMPLED_YM,0);
   ToolAddWindow(ToolTip,Win,
-    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"));
+    T("Punchier P.S.G. (YM2149) sound using a table by ljbk, thx dude!"));
+  y+=LineHeight;
+ADVANCED_END
+#endif
+
+#if defined(SSE_YM2149_MAMELIKE) && defined(SSE_YM2149_MAMELIKE_394)
+ADVANCED_BEGIN
+  y-=LineHeight;
+  Offset+=Wid+HorizontalSeparation*2;
+  Wid=GetCheckBoxSize(Font,T("Low-level YM2149")).Width;
+  mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
+  Win=CreateWindow("Button",T("Low-level YM2149"),mask,
+    page_l+Offset,y,Wid,25,Handle,(HMENU)7312,HInstance,NULL);
+  SendMessage(Win,BM_SETCHECK,OPTION_MAME_YM,0);
+  ToolAddWindow(ToolTip,Win,T("Inspired by MAME, thx Couriersud!"));
   y+=LineHeight;
 ADVANCED_END
 #endif
@@ -2409,8 +2427,9 @@ ADVANCED_BEGIN
   y-=LineHeight; // maybe it will be optimised away!
 #endif
   Wid=GetCheckBoxSize(Font,T("Microwire")).Width;
+#if !defined(SSE_YM2149_MAMELIKE_394)
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-
+#endif
 #if defined(SSE_SOUND_OPTION_DISABLE_DSP)
   if(DSP_DISABLED)
     mask|=WS_DISABLED;
@@ -3326,7 +3345,7 @@ ADVANCED_BEGIN
   y-=LineHeight; // maybe it will be optimised away!
 #endif
   Offset=Wid+HorizontalSeparation;
-#if defined(SSE_YM2149_MAMELIKE)
+#if defined(SSE_YM2149_MAMELIKE) && !defined(SSE_YM2149_MAMELIKE_394)
   Wid=GetCheckBoxSize(Font,T("C2: 68901/YM2149")).Width;
   Win=CreateWindow("Button",T("C2: 68901/YM2149"),WS_CHILD | WS_TABSTOP |
     BS_CHECKBOX,page_l+Offset,y,Wid,25,Handle,(HMENU)7323,HInstance,NULL);
@@ -3337,7 +3356,7 @@ ADVANCED_BEGIN
 #endif
   SendMessage(Win,BM_SETCHECK,OPTION_C2,0);
   ToolAddWindow(ToolTip,Win,
-#if defined(SSE_YM2149_MAMELIKE)
+#if defined(SSE_YM2149_MAMELIKE) && !defined(SSE_YM2149_MAMELIKE_394)
     T("Chipset 2 - Check for a more precise emulation of the MFP and a lower level emulation of the PSG."));
 #else
     T("Chipset 2 - Check for a more precise emulation of the MFP."));

@@ -64,6 +64,9 @@ so refactoring due!
   int nExceptions;
   int nInstr;
 #endif
+#if defined(SSE_CPU_394A)
+  WORD future_sr;
+#endif
 #if defined(SSE_DEBUG)
   WORD PreviousIr;
 #endif

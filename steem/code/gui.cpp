@@ -2061,8 +2061,11 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
     && VKCode!=VK_F12
 #endif
     ){
-    ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
-
+#if defined(SSE_IKBD_6301_394)
+    // If we're sending key combinations, we don't want 6301 to see the key
+    if(!DidShiftSwitching||!OPTION_C1)
+#endif
+      ST_Key_Down[STCode]=!Up; // this is used by ikbd.cpp & ireg.c
 
 #if defined(SSE_DEBUG) //&& defined(SSE_DEBUG_IKBD_6301_TRACE_KEYS)
 #define LOGSECTION LOGSECTION_IKBD
@@ -2080,6 +2083,10 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
       //ST_Key_Down.
       if(macro_record)
         macro_record_key(STCode);
+#if defined(SSE_IKBD_6301_394)
+      if(DidShiftSwitching)
+        keyboard_buffer_write(STCode); //must send ourselves to ACIA
+#endif
     }
     else
       keyboard_buffer_write_n_record(STCode);

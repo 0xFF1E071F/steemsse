@@ -468,7 +468,7 @@ void osd_draw()
   // Green led for floppy disk read; red for write.
   {
     Dma.UpdateRegs();
-#ifdef WD1772
+#ifdef SSE_WD1772
     bool FDCWriting=WD1772.WritingToDisk();
 #else
     bool FDCWriting=false;

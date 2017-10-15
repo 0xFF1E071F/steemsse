@@ -1459,8 +1459,11 @@ extern int debug_mem_write_log_bytes;
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
 #endif
-
+#if defined(SSE_CPU_394A)
+extern BYTE cpu_stopped;
+#else
 extern bool cpu_stopped;
+#endif
 extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc
@@ -2348,6 +2351,15 @@ void m68k_interrupt(MEM_ADDRESS ad);
 inline void m68kUnstop() {
   if(cpu_stopped)
   {
+#if defined(SSE_CPU_394A)
+    if(cpu_stopped==1)
+    {
+      ASSERT(sr&0x2000);
+      sr=M68000.future_sr;
+      sr&=SR_VALID_BITMASK;
+      DETECT_CHANGE_TO_USER_MODE;
+    }
+#endif
     cpu_stopped=false;     
     m68kSetPC((pc+4) | pc_high_byte); 
   }
