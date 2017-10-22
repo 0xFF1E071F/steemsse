@@ -1521,6 +1521,10 @@ LRESULT __stdcall DWndProc(HWND Win,UINT Mess,UINT wPar,long lPar)
 #if defined(SSE_BOILER_BLIT_IN_HISTORY)
           if(pc_history[n]==0x98764321)
             Dissasembly="BLiT";
+#if defined(SSE_BOILER_IRQ_IN_HISTORY) 
+          else if((pc_history[n]&0xFF0000FF)==0x99000001)
+            Dissasembly=Str("irq ") + Str( (pc_history[n]>>16)&0xff ) + "-" + Str( (pc_history[n]>>8)&0xFF);
+#endif
           else
             Dissasembly=HEXSl(pc_history[n],6)+" - "+disa_d2(pc_history[n]);
           InsertMenu(history_menu,0,MF_BYPOSITION | MF_STRING,17000+n,Dissasembly);

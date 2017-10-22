@@ -103,14 +103,10 @@ void THistoryList::RefreshHistoryBox()
     EasyStr header;
     if(pc_history[n]==LPEEK(0x120))
       header="TB ";
-    else if(pc_history[n]==LPEEK(0x2C))
-      header="lF ";
-    else if(pc_history[n]==LPEEK(0x28))
-      header="lA ";
+    else if(pc_history[n]==LPEEK(0x118))
+      header="Acia ";
     else if(pc_history[n]==LPEEK(0x24))
       header="trc ";
-    else if(pc_history[n]==LPEEK(0x18))
-      header="chk ";
     else if(pc_history[n]==LPEEK(0x10))
       header="Ill ";
     else if(pc_history[n]==LPEEK(0xC))
@@ -127,8 +123,12 @@ void THistoryList::RefreshHistoryBox()
       header="TA ";
     else if(pc_history[n]==LPEEK(0x110))
       header="TD ";
-    else if(pc_history[n]==LPEEK(0x118))
-      header="Acia ";
+    else if(pc_history[n]==LPEEK(0x18))
+      header="chk ";
+    else if(pc_history[n]==LPEEK(0x2C))
+      header="LF ";
+    else if(pc_history[n]==LPEEK(0x28))
+      header="LA ";
     else if(pc_history[n]==LPEEK(0x11c))
       header="fdc "; 
 #endif
@@ -138,7 +138,12 @@ void THistoryList::RefreshHistoryBox()
       Dissasembly="BLiT";
     else
 #endif
-    Dissasembly=debug_parse_disa_for_display(disa_d2(pc_history[n]));
+#if defined(SSE_BOILER_IRQ_IN_HISTORY) 
+    if((pc_history[n]&0xFF0000FF)==0x99000001)
+      Dissasembly=Str("irq ") + Str( (pc_history[n]>>16)&0xff ) + "-" + Str( (pc_history[n]>>8)&0xFF);
+    else
+#endif
+      Dissasembly=debug_parse_disa_for_display(disa_d2(pc_history[n]));
 #if defined(SSE_BOILER_HISTORY_VECS)
 #if defined(SSE_BOILER_HISTORY_TIMING)
     char timing[30];
