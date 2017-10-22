@@ -303,7 +303,9 @@ void run()
 #pragma warning(disable: 4611) //390
         TRY_M68K_EXCEPTION
 #pragma warning(default: 4611)
+#ifndef SSE_BOILER_394
           WORD a=m68k_dpeek(LPEEK(e.bombs*4));
+#endif
           if (e.bombs>8){
             alertflag=false;
 #if defined(SSE_BOILER_EXCEPTION_NOT_TOS)
@@ -312,7 +314,11 @@ void run()
             alertflag=false;
 #endif
           }else if (crash_notification==CRASH_NOTIFICATION_BOMBS_DISPLAYED &&
+#ifdef SSE_BOILER_394
+            LPEEK(e.bombs*4)<rom_addr){ // 'bombs' handler is in rom
+#else
                    a!=0x6102 && a!=0x4eb9 ){ //not bombs routine
+#endif
             alertflag=false;
           }
 //        }catch (m68k_exception &m68k_e){

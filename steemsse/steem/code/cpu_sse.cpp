@@ -383,6 +383,7 @@ ST:                 | 36(4/3)  |              nn    ns nS ns nV nv np n+ np
         address=ad;
         action=EA_FETCH;
       }
+// + bus error?
       else
       {
         pc=ad;//390
@@ -452,9 +453,15 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
         TRACE_LOG("Push IR %X on %X\n",_ir,r[15]-2);
         CPU_ABUS_ACCESS_WRITE_PUSH; // ns
         m68k_PUSH_W(_ir);
+#ifdef SSE_BUGFIX_394 //serious bug!
+        TRACE_LOG("Push crash address %X on %X\n",address,r[15]-4);
+        CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS
+        m68k_PUSH_L(address); 
+#else
         TRACE_LOG("Push crash address %X->%X on %X\n",address,(address & 0x00ffffff) | pc_high_byte,r[15]-4);
         CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS
         m68k_PUSH_L((address & 0x00ffffff) | pc_high_byte); 
+#endif
         // status
         // strangely, status word is based on the opcode
         WORD x=WORD(_ir & 0xffe0); 
@@ -486,7 +493,7 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
       CPU_ABUS_ACCESS_READ_L; //nV nv
       CPU_ABUS_ACCESS_READ_FETCH; // np
       INSTRUCTION_TIME(2); //n (-> nn)
-      SET_PC(abus);
+      SET_PC(abus);//TODO HALT if error here
       CPU_ABUS_ACCESS_READ_FETCH; //np
 #if defined(SSE_VC_INTRINSICS_390E)
       BITRESET(sr,SR_TRACE_BIT);
@@ -794,6 +801,7 @@ void m68kProcess() {
 
   old_pc=pc;  
 //  ASSERT(old_pc!=0xc374);
+//  ASSERT(pc!=0x78892);
 
 #if defined(SSE_OSD_CONTROL)
   if(OSD_MASK_CPU & OSD_CONTROL_CPUIO) 
@@ -1181,6 +1189,8 @@ bool m68k_condition_test_gt(){return (!(sr&SR_Z) && ( ((sr&(SR_N+SR_V))==0) || (
 bool m68k_condition_test_le(){return ((sr&SR_Z) || ( ((sr&(SR_N+SR_V))==SR_N) || ((sr&(SR_N+SR_V))==SR_V) ));}
 
 #endif
+
+//TODO: macros mimicking microcodes
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3322,21 +3332,20 @@ void                              m68k_move_to_sr(){
     (d8,An,Xn)    | 12(1/0) 10(2/0) | n    np    nr |         nn np np          
     (xxx).W       | 12(1/0)  8(2/0) |      np    nr |         nn np np          
     (xxx).L       | 12(1/0) 12(3/0) |   np np    nr |         nn np np          
-    #<data>       | 12(1/0)  4(1/0) |      np       |         nn np np          
+    #<data>       | 12(1/0)  4(1/0) |      np       |         nn np np    
+
+    notice only 1 nn to update SR, there are 2 in the ORI etc instructions
+
 */
       DEBUG_ONLY( int debug_old_sr=sr; )
-      //ASSERT(!(ioaccess&7));
       m68k_GET_SOURCE_W; //EA
       INSTRUCTION_TIME(4); // nn
       sr=m68k_src_w;
       sr&=SR_VALID_BITMASK;
       REFETCH_IR; // np
       PREFETCH_IRC; // np
-      //ASSERT(!(ioaccess&7));
       DETECT_CHANGE_TO_USER_MODE;
-      //ASSERT(!(ioaccess&7));
       DETECT_TRACE_BIT;
-      //ASSERT(!(ioaccess&7));
       // Interrupts must come after trace exception
       ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
       CHECK_STOP_ON_USER_CHANGE;
@@ -4865,6 +4874,7 @@ void                              m68k_rte(){
 ------------------+-----------------+------------------------------------------
                   | 20(5/0)         |                      nU nu nu np np       
 */
+    //TODO: shouldn't SR be popped first?
     CPU_ABUS_ACCESS_READ_POP_L; //nU nu
     CPU_ABUS_ACCESS_READ_POP; //nu
     CPU_ABUS_ACCESS_READ_FETCH_L; // np np
@@ -5995,7 +6005,6 @@ void                              m68k_sub_b_to_dN(){
 <ea>,Dn :         |                 |              \              |
   .B or .W :      |                 |               |             |
     Dn            |  4(1/0)  0(0/0) |               |             | np          
-    An            |  4(1/0)  0(0/0) |               |             | np          
     (An)          |  4(1/0)  4(1/0) |            nr |             | np          
     (An)+         |  4(1/0)  4(1/0) |            nr |             | np          
     -(An)         |  4(1/0)  6(1/0) | n          nr |             | np          

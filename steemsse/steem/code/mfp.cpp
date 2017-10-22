@@ -434,6 +434,8 @@ TODO
     next timer.
     TEST10B doesn't confirm, but unconlusive
     MFPTA001 could indicate timer wobble
+    (non-working image) Audio Sculpture suggests there's no such wobble.
+    Suppose the real interaction between CPU and MFP clocks should be emulated.
 */
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
             MC68901.Wobble[timer]=(rand() % MFP_TIMERS_WOBBLE); //1-4
@@ -589,7 +591,7 @@ int mfp_calc_timer_counter(int timer)
 #endif
     if (stage<0){ //SS has timed out? - no high precision here...
       MFP_CALC_TIMER_PERIOD(timer);
-#ifdef SSE_BUGFIX_394
+#ifdef SSE_INT_MFP_394
       if(OPTION_C2) 
       {
         // If the counter wrapped not long ago, its visible value
