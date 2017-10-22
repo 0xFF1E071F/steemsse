@@ -1788,7 +1788,10 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if SSE_VERSION>=394 && defined(SSE_BETA) //features for next version
 
+#ifdef SSE_BOILER
 #define SSE_BOILER_394
+#define SSE_BOILER_IRQ_IN_HISTORY
+#endif
 //#define SSE_CPU_394B // trace timings extended (?)
 #define SSE_GUI_WS_394 // save in ini, not sts
 #define SSE_VAR_SET_RUNDIR_AS_DEFAULT

@@ -788,6 +788,14 @@ void mfp_interrupt(int irq) {
 #if defined(SSE_BOILER_SHOW_INTERRUPT)
   Debug.RecordInterrupt("MFP",irq);
 #endif
+#if defined(SSE_BOILER_IRQ_IN_HISTORY) 
+  pc_history_y[pc_history_idx]=scan_y;
+  pc_history_c[pc_history_idx]=LINECYCLES;
+  pc_history[pc_history_idx++]=0x99000001+(6<<16)+(irq<<8); 
+  if (pc_history_idx>=HISTORY_SIZE) 
+    pc_history_idx=0;
+#endif
+
 #endif//dbg
 
 #if defined(SSE_INT_MFP_IRQ_TIMING)

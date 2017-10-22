@@ -323,6 +323,16 @@ void HBLInterrupt() {
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x20);
 #endif
   TRACE_LOG("%d %d %d (%d) HBI #%d Vec %X\n",TIMING_INFO,ACT,Debug.nHbis,LPEEK(0x0068));
+
+#if defined(SSE_BOILER_IRQ_IN_HISTORY) 
+  pc_history_y[pc_history_idx]=scan_y;
+  pc_history_c[pc_history_idx]=LINECYCLES;
+  pc_history[pc_history_idx++]=0x99000001+(2<<16); 
+  if (pc_history_idx>=HISTORY_SIZE) 
+    pc_history_idx=0;
+#endif
+
+
 #endif//dbg
 
   if (cpu_stopped)
@@ -398,6 +408,15 @@ void VBLInterrupt() {
 #endif
   log_to_section(LOGSECTION_INTERRUPTS,EasyStr("INTERRUPT: VBL at PC=")+HEXSl(pc,6)+" time is "+ABSOLUTE_CPU_TIME+" ("+(ABSOLUTE_CPU_TIME-cpu_time_of_last_vbl)+" cycles into screen)");
   TRACE_LOG("%d %d %d (%d) VBI Vec %X\n",TIMING_INFO,ACT,LPEEK(0x0070));
+
+#if defined(SSE_BOILER_IRQ_IN_HISTORY) 
+  pc_history_y[pc_history_idx]=scan_y;
+  pc_history_c[pc_history_idx]=LINECYCLES;
+  pc_history[pc_history_idx++]=0x99000001+(4<<16); 
+  if (pc_history_idx>=HISTORY_SIZE) 
+    pc_history_idx=0;
+#endif
+
 #endif//dbg
 
   if (cpu_stopped)
