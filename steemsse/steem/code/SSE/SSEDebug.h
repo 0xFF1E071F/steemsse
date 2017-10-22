@@ -141,6 +141,10 @@ struct TDebug {
 #if defined(SSE_OSD_DEBUG_MESSAGE)
   char m_OsdMessage[OSD_DEBUG_MESSAGE_LENGTH+1]; // +null as usual
 #endif
+#if defined(SSE_BOILER_394)
+  BYTE indbcc;
+#endif
+
   // FUNCTIONS
 #ifdef __cplusplus 
   TDebug();
@@ -321,6 +325,7 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_CPU_REGISTERS_VAL (1<<14)  // values of (Ai)
 #define TRACE_CONTROL_CPU_SP (1<<13) 
 #define TRACE_CONTROL_CPU_CYCLES (1<<12) 
+#define TRACE_CONTROL_CPU_LIMIT (1<<11) //394
 
 #define TRACE_MASK_IO (Debug.ControlMask[12])
 #define TRACE_CONTROL_IO_W (1<<15)
