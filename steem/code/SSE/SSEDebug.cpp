@@ -64,10 +64,10 @@ TDebug::TDebug() {
   logsection_enabled[ LOGSECTION_FDC ] = 0;
   logsection_enabled[ LOGSECTION_IO ] = 0;
   logsection_enabled[ LOGSECTION_MFP_TIMERS ] = 0;
-  logsection_enabled[ LOGSECTION_INIT ] =1; //0; by default
+  logsection_enabled[ LOGSECTION_INIT ] =0; //0; by default
   logsection_enabled[ LOGSECTION_CRASH ] = 0;
   logsection_enabled[ LOGSECTION_STEMDOS ] = 0;
-  logsection_enabled[ LOGSECTION_IKBD ] = 1;
+  logsection_enabled[ LOGSECTION_IKBD ] = 0;
   logsection_enabled[ LOGSECTION_AGENDA ] = 0;
   logsection_enabled[ LOGSECTION_INTERRUPTS ] = 0;
   logsection_enabled[ LOGSECTION_TRAP ] = 0;
@@ -279,6 +279,9 @@ void TDebug::Reset(bool Cold) {
 #if defined(SSE_OSD_CONTROL)
   else if((OSD_MASK_CPU&OSD_CONTROL_CPURESET)) 
     TRACE_OSD("RESET");
+#endif
+#if defined(SSE_BOILER_394)
+  indbcc=false;
 #endif
 }
 

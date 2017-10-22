@@ -367,8 +367,7 @@ iolist_add_entry(0x5B0,"kcl_hook",4);
 
 #if defined(SSE_BOILER_TRACE_CONTROL)
   iolist_add_entry(FAKE_IO_START+26,"TRACE CPU",2,
-    "reg|val|sp|cyc|.|.|.|.|.|.|.|.|.|.|.|.");
-
+    "reg|val|sp|cyc|lim|.|.|.|.|.|.|.|.|.|.|.");
 #endif
 
 #if defined(SSE_BOILER_TRACE_CONTROL)

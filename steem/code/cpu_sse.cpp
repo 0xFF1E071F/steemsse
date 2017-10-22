@@ -242,6 +242,9 @@ FC2 FC1 FC0 Address Space
 #if defined(SSE_CPU_394A)
   M68K_UNSTOP;
 #endif
+#if defined(SSE_BOILER_394)
+  Debug.indbcc=false;
+#endif
   if(bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
   {
     switch(_ir)
@@ -685,6 +688,19 @@ inline void handle_ioaccess() {
 
 
 #define LOGSECTION LOGSECTION_CPU
+#if defined(SSE_BOILER_394)
+
+inline bool pc_in_pattern() {
+  int n=0;
+  for(int i=pc_history_idx-2;i>pc_history_idx-14 && i>0 ;i--)
+  {
+    if(pc_history[i]==pc)
+      n++;
+  }
+  return (n>1);
+}
+
+#endif
 
 // a big function now
 void m68kProcess() {
@@ -698,7 +714,20 @@ void m68kProcess() {
     registers, and values pointed to by address registers as well
     as the stack.
 */
-  if(TRACE_ENABLED(LOGSECTION_CPU))
+  if(TRACE_ENABLED(LOGSECTION_CPU)
+#if defined(SSE_BOILER_394)
+    // try to limit trace output
+    && (!(TRACE_MASK4 & TRACE_CONTROL_CPU_LIMIT) ||
+    // not TOS
+    pc<rom_addr
+    // pause trace while in a dbcc loop
+    && !Debug.indbcc
+    // STOP
+    && pc!=old_pc
+    // same pc repeating a 3rd time
+    && ! pc_in_pattern())
+#endif
+    )
   {
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK4 & TRACE_CONTROL_CPU_CYCLES)
@@ -730,9 +759,9 @@ void m68kProcess() {
 #if defined(SSE_BOILER_394)
     // makes a difference when there's a prefetch trick (only IRD is correct) TODO
     if(sr&SR_TRACE)
-      TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc,IR).Text);
+      TRACE_LOG("(T) %X %s\n",pc,disa_d2(pc,IR).Text);
     else
-      TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc,IR).Text);
+      TRACE_LOG("%X %s\n",pc,disa_d2(pc,IR).Text);
 #else
     if(sr&SR_TRACE)
       TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc).Text);
@@ -5326,11 +5355,17 @@ FLOWCHART :
 #endif
         SET_PC(new_pc); 
         CPU_ABUS_ACCESS_READ_FETCH; // np
+#if defined(SSE_BOILER_394)
+        Debug.indbcc=true;
+#endif
       }else{ 
         // counter expired, branch not taken
         // | 14(3/0)         |                      n np    np np     
         CPU_ABUS_ACCESS_READ_FETCH; //np
         PREFETCH_IRC; //np
+#if defined(SSE_BOILER_394)
+        Debug.indbcc=false;
+#endif
       }
     }else{ 
       //  cc
@@ -5339,6 +5374,9 @@ FLOWCHART :
       CPU_ABUS_ACCESS_READ_FETCH; //np
       m68k_GET_IMMEDIATE_W;
       PREFETCH_IRC; //np
+#if defined(SSE_BOILER_394)
+      Debug.indbcc=false;
+#endif
     }
   }else{ // SCC
 /*
