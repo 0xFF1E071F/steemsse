@@ -886,7 +886,7 @@ void SteemDisplay::Unlock()
 #endif
       *OurBackSur=(OPTION_3BUFFER_WIN && DDBackSur2 && SurfaceToggle) 
         ? DDBackSur2 : DDBackSur;
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY) && !defined(SSE_BUGFIX_394)
     // moved here because now we draw garbage after lock (note: DD-only)
       if(COLOUR_MONITOR && shifter_last_draw_line==400)
       {
