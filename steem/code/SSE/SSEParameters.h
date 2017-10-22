@@ -308,7 +308,9 @@ enum {
 #define MFP_READ_REGISTER_DELAY (-2)
 #endif
 
-#if defined(SSE_INT_MFP_PRESCALE)
+#if defined(SSE_INT_MFP_394B)
+#define MFP_TIMER_SET_DELAY (6)
+#elif defined(SSE_INT_MFP_PRESCALE)
 // compensates the non-substraction in mfp_set_timer_reg()
 // seems likelier this way
 #define MFP_TIMER_SET_DELAY (4) 
@@ -316,8 +318,8 @@ enum {
 #define MFP_TIMER_SET_DELAY (8) // see DSOTS
 #endif
 
-
-#if defined(SSE_INT_MFP_PRESCALE)
+#if defined(SSE_INT_MFP_394B)
+#elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
 #define MFP_TIMERS_WOBBLE (4+1) //<
