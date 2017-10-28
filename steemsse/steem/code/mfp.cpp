@@ -953,8 +953,16 @@ void TMC68901::ComputeNextTimerB(int info) {
     ; // skip - notice TOS expects groups of lines with no timer B tick at reset
   else
 #endif
-
-  if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE))
+#ifdef SSE_GLUE_HIRES_394
+/*  Audio Sculpture in hires switches to shift mode 0 and uses the timer B 
+    so it needs to be more precise.
+    FetchingLine() is based on scan_y and actual screen (mono or colour)
+*/
+  if(Glue.de_v_on && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+#else
+  if(Glue.FetchingLine() && !(Glue.CurrentScanline.Tricks&TRICK_0BYTE_LINE)
+#endif    
+    )
   {
     // time of DE transition this scanline
     cpu_cycles_from_hbl_to_timer_b = 

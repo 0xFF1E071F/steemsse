@@ -639,7 +639,10 @@ What was in the buffers will go nowhere, the internal counter is reset.
     // detect toggling of bit 8 (boolean !x ^ !y = logical x ^^ y)
     if( !(MCR&CR_WRITE) ^ !(io_src_b) ) // fixes Archipelagos IPF
     {
-      TRACE_LOG("DMA Reset\n");
+#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE) 
+      if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+        TRACE_LOG("DMA Reset\n");
+#endif
 #if !defined(SSE_DMA_FIFO_FDC_READ_ADDRESS)
       fdc_read_address_buffer_len=0;// this is only for command III read address
 #endif
@@ -690,9 +693,12 @@ What was in the buffers will go nowhere, the internal counter is reset.
       BaseAddress&=0x3FFFFF;
 #endif
 
-
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6)); 
-    TRACE_LOG("DMA base address: %X\n",BaseAddress);
+#if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE) 
+    if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
+      TRACE_LOG("DMA base address: %X\n",BaseAddress);
+#endif
+
     break;
     
   case 0xff860b:  // DMA Base and Counter Mid

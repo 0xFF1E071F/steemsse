@@ -164,6 +164,9 @@ void ASMCALL perform_crash_and_burn()
 #if defined(SSE_GUI_STATUS_BAR)
   GUIRefreshStatusBar();
 #endif
+#ifdef SSE_BUGFIX_394
+  runstate=RUNSTATE_STOPPED; // (try to) fix freeze on HALT
+#endif
 #else
   reset_st(RESET_COLD | RESET_NOSTOP | RESET_CHANGESETTINGS | RESET_NOBACKUP);
   osd_start_scroller(T("CRASH AND BURN - ST RESET"));
@@ -437,7 +440,12 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
     We test here, not before, for performance.
 */
         if(M68000.CheckRead && abus<MEM_FIRST_WRITEABLE) 
+        {
           M68000.Pc=pc+2;
+#ifdef SSE_CPU_394D // introducing a new bug? (Aladin OK)
+          action=EA_READ;
+#endif
+        }
         if(_pc!=M68000.Pc)
         {
           TRACE_LOG("pc %X true PC %X\n",_pc,M68000.Pc);
@@ -454,6 +462,8 @@ ST:                 | 52(4/7)  |     nn ns nS ns ns ns nS ns nV nv np n+ np
         CPU_ABUS_ACCESS_WRITE_PUSH; // ns
         m68k_PUSH_W(_ir);
 #ifdef SSE_BUGFIX_394 //serious bug!
+        if(!(address&0xFF000000) && address&0x800000)
+          address|=0xFF000000; //extend...
         TRACE_LOG("Push crash address %X on %X\n",address,r[15]-4);
         CPU_ABUS_ACCESS_WRITE_PUSH_L; // ns nS
         m68k_PUSH_L(address); 
@@ -766,9 +776,9 @@ void m68kProcess() {
 #if defined(SSE_BOILER_394)
     // makes a difference when there's a prefetch trick (only IRD is correct) TODO
     if(sr&SR_TRACE)
-      TRACE_LOG("(T) %X %s\n",pc,disa_d2(pc,IR).Text);
+      TRACE_LOG("(T) %X: %X %X %s\n",pc,IR,prefetch_buf[1],disa_d2(pc,IR).Text);
     else
-      TRACE_LOG("%X %s\n",pc,disa_d2(pc,IR).Text);
+      TRACE_LOG("%X: %X %X %s\n",pc,IR,prefetch_buf[1],disa_d2(pc,IR).Text);
 #else
     if(sr&SR_TRACE)
       TRACE_LOG("(T) %X %X %s\n",pc,ir,disa_d2(pc).Text);
@@ -776,6 +786,20 @@ void m68kProcess() {
       TRACE_LOG("%X %X %s\n",pc,ir,disa_d2(pc).Text);
 #endif
   }
+  // moved up because of self-changing code
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_TRACE
+#ifdef DEBUG_BUILD
+  if((sr&SR_TRACE) &&!Debug.logsection_enabled[LOGSECTION_CPU] 
+  && !logsection_enabled[LOGSECTION_CPU])
+    TRACE_LOG("(T) PC %X SR %X VEC %X IR %04X: %s\n",pc,sr,LPEEK(0x24),IR,disa_d2(pc,IR).Text);
+#if defined(SSE_BOILER_SHOW_INTERRUPT)
+    Debug.RecordInterrupt("TRACE");
+#endif
+#endif
+#undef LOGSECTION
+#define LOGSECTION LOGSECTION_CPU
+
 #endif//boiler
   M68000.IrAddress=pc;
   M68000.PreviousIr=IRD;
@@ -848,8 +872,6 @@ already fetched. One word will be in IRD and another one in IRC.
   m68k_high_nibble_jump_table[ir>>12]();
 
 #if defined(SSE_CPU_TRACE_REFACTOR)
-#undef LOGSECTION
-#define LOGSECTION LOGSECTION_TRACE
 /*  Why refactor something that works?
     Because the former way causes a glitch in the Boiler, where
     the instruction being traced always seems to be skipped (can't 
@@ -895,16 +917,6 @@ exception vector.
 
   if(M68000.tpend)
   {
-#ifdef DEBUG_BUILD
-    if(!Debug.logsection_enabled[LOGSECTION_CPU] && !logsection_enabled[LOGSECTION_CPU])
-      TRACE_LOG("(T) PC %X SR %X VEC %X IR %04X: %s\n",old_pc,sr,LPEEK(0x24),ir,disa_d2(old_pc).Text);
-#if defined(SSE_BOILER_SHOW_INTERRUPT)
-    Debug.RecordInterrupt("TRACE");
-#endif
-#else
-    TRACE_LOG("TRACE PC %X IR %X SR %X $24 %X\n",pc,ir,sr,LPEEK(0x24));
-#endif
-
 #if defined(SSE_CPU_392B)
     M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
@@ -4764,11 +4776,7 @@ void                              m68k_nop(){
 
 
 void                              m68k_stop(){
-#if defined(SSE_CPU_394A) // check only once
-  if (SUPERFLAG||cpu_stopped){
-#else
   if (SUPERFLAG){
-#endif
 /*
 -------------------------------------------------------------------------------
                   |    Exec Time    |               Data Bus Usage
@@ -4857,6 +4865,8 @@ at its first iteration.
 #endif
     SET_PC(old_pc); // note it refills prefetch (TODO)
   }else{
+    // from npomarede, this fixes the infinite loop on STOP #$777 in Audio Sculpture
+    old_pc+=4; // old_pc will be stacked as PC for next instruction
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
@@ -5366,7 +5376,8 @@ FLOWCHART :
         SET_PC(new_pc); 
         CPU_ABUS_ACCESS_READ_FETCH; // np
 #if defined(SSE_BOILER_394)
-        Debug.indbcc=true;
+        if(!M68000.tpend)
+          Debug.indbcc=true;
 #endif
       }else{ 
         // counter expired, branch not taken

@@ -242,9 +242,41 @@ void trace_add_entry(char*name1,char*name2,short when,bool regflag,
     if(trace_entries<MAX_TRACE_DISPLAY_ENTRIES)
       trace_entries++;
   }
+#ifdef SSE_BOILER_394
+/*  We give the 'before' values as seen here. It's a little
+    confusing, not always relevant but it can help.
+*/
+  else if((TRACE_ENABLED(LOGSECTION_CPU))
+    && (TRACE_MASK4 & TRACE_CONTROL_CPU_VALUES)
+    && (runstate==RUNSTATE_RUNNING))
+  {
+    unsigned long value=0;
+    if(regflag)
+      value=*(unsigned long *)ad; //32bit only...
+    else
+    {
+      ad&=0xffffff;
+      switch(bytes) 
+      {
+        case 1:value=d2_peek(ad);
+          break;
+        case 2:value=d2_dpeek(ad);
+          break;
+        case 4:value=d2_lpeek(ad); 
+          break;
+      }
+    }
+    if(value)
+    {
+      char value_str[20];
+      sprintf(value_str," ($%x)",value);
+      d2_pc_rel_ex+=value_str;
+    }
+  }
+#endif
 }
 //---------------------------------------------------------------------------
-void trace_get_after()
+void trace_get_after() //SS unused
 {
   for (int n=0;n<trace_entries;n++){
     if ((t_d_e[n].when)&TDE_AFTER){

@@ -10,6 +10,7 @@ with some minor (gasp) corrections and additions by Steven Seagal.
 Interesting ST cases
 =====================
 
+Audio Sculpture
 Barbarian
 Cobra Compil 1
 Dragonnels (Menu, Unlimited Bobs, Great Plazma)
@@ -368,6 +369,7 @@ Custom Programs
 ================
 
 On the ST, only a handful of programs reprogram the 6301:
+Audio Sculpture
 Dragonnels Menu
 Froggies over the Fence Menu
 Transbeauce 2 Menu

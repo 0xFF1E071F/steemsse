@@ -326,6 +326,7 @@ enum logsection_enum_tag {
 #define TRACE_CONTROL_CPU_SP (1<<13) 
 #define TRACE_CONTROL_CPU_CYCLES (1<<12) 
 #define TRACE_CONTROL_CPU_LIMIT (1<<11) //394
+#define TRACE_CONTROL_CPU_VALUES (1<<10) //394 //gets hard to reach
 
 #define TRACE_MASK_IO (Debug.ControlMask[12])
 #define TRACE_CONTROL_IO_W (1<<15)

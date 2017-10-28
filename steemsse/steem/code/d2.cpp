@@ -3082,22 +3082,53 @@ void d2_routines_init(){
 }
 
 #if defined(SSE_BOILER_394)
+
 EasyStr disa_d2(MEM_ADDRESS new_dpc,WORD pir)
+{
+  EasyStr dt="";
+  dpc=new_dpc & 0xffffff;
+  ir=d2_fetchW(); //fetch
+  if(pir && pir!=ir)
+  {
+    //TRACE("PC %X prefetch trick? IR %X\n",dpc,pir); 
+    dt="! ";
+    ir=pir;
+  }
+  dpc+=2;
+  if (d2_peekvalid) return "Not valid address";
+  old_dpc=dpc;
+  d2_src="";
+  d2_dest="";
+  d2_command="";
+  d2_pc_rel_ex="";
+  d2_high_nibble_jump_table[ir>>12]();     //execute
+  if (strstr(d2_command.c_str(),"dc.w")==NULL){
+    dt+=d2_command+" ";
+    if (d2_src.IsEmpty()){
+      dt+=d2_dest;
+    }else{
+      if (d2_dest.IsEmpty()){
+        dt+=d2_src;
+      }else{
+        dt+=d2_src+","+d2_dest;
+      }
+    }
+  }else{
+    dt+=d2_command;
+    dpc=old_dpc;
+  }
+  dt+=d2_pc_rel_ex;
+  return dt;
+}
+
+
 #else
+
 EasyStr disa_d2(MEM_ADDRESS new_dpc)
-#endif
 {
   EasyStr dt;
   dpc=new_dpc & 0xffffff;
   ir=d2_fetchW(); //fetch
-#if defined(SSE_BOILER_394)
-  if(pir && pir!=ir)
-  {
-    //TRACE("PC %X prefetch trick? IR %X\n",dpc,pir); 
-    ir=pir;
-  }
-#endif
-
   dpc+=2;
   if (d2_peekvalid) return "Not valid address";
   old_dpc=dpc;
@@ -3124,5 +3155,8 @@ EasyStr disa_d2(MEM_ADDRESS new_dpc)
   dt+=d2_pc_rel_ex;
   return dt;
 }
+
+#endif
+
 
 #endif//#ifdef DEBUG_BUILD//SS

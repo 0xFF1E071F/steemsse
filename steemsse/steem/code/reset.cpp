@@ -524,7 +524,11 @@ void reset_st(DWORD flags)
   
   if (runstate==RUNSTATE_RUNNING && Stop) runstate=RUNSTATE_STOPPING;
   if (Backup) GUISaveResetBackup();
-
+#if defined(SSE_CPU_394E)
+  areg[7]=LPEEK(0);
+  SET_PC(LPEEK(4));
+  sr=0x2700;
+#endif
   if (Warm){
 #if defined(SSE_CPU_HALT) // real ST can be reset on HALT
     if(M68000.ProcessingState==TM68000::HALTED)
