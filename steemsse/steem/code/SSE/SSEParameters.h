@@ -183,7 +183,7 @@ Some STFs                32.02480    8.0071
 #define STEEM_SSE_FAQ "Steem SSE FAQ"
 #define STEEM_HINTS "Hints"
 #define STEEM_MANUAL_SSE "Steem SSE manual"
-#define STEEM_RELEASE_NOTES "Steem SSE 3.9.3" //TODO
+#define STEEM_RELEASE_NOTES "Steem SSE 3.9.4" //TODO
 
 
 /////////

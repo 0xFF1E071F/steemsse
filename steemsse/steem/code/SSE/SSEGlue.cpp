@@ -133,7 +133,8 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
       [(m_ShiftMode&2)&&((CyclesIn==-1)||PreviousScanline.Cycles!=224)
         ? 2 : 
 #ifdef SSE_GLUE_HIRES_394 //was always 224 with monochrome screen
-    (m_ShiftMode&1) 
+    //(m_ShiftMode&1) //duh! shift? 
+    ( (m_SyncMode&2)!=2  ) 
 #else
     shifter_freq_idx
 #endif
@@ -1834,7 +1835,9 @@ void TGlue::GetNextScreenEvent() {
   {
     screen_event_vector=event_scanline;
 //    ASSERT(m_ShiftMode);
+#ifdef SSE_GLUE_HIRES_394
     ASSERT(CurrentScanline.Cycles);
+#endif
     screen_event.time=CurrentScanline.Cycles;
   }
 

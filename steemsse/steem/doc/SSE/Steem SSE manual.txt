@@ -1,7 +1,7 @@
 Steem SSE manual
 =================
 
-v3.9.3
+v3.9.4
 
 
 About Steem SSE
@@ -353,7 +353,9 @@ Steem we crash joyously: you mustn't wait).
 
  BLIT ERROR
 
-Serious problem with video rendering. Better leave at once and restart Steem.
+Serious problem with video rendering. Better leave at once if possible! you
+may need to use the task manager to end the process. Sorry about that, but
+when Direct3D crashes it's hard to recover.
 Maybe check your display options. As a recourse if it persists, you could
 try the DirectDraw build.
 
@@ -405,7 +407,7 @@ http://ataristeven.exxoshost.co.uk/Steem_apps.htm#Overscan
 -Wake-up (advanced)
 
 This is a very technical point, related to latency between some 
-electronic chips. It is rarely relevant. 
+electronic chips. 
 Normally you'll use this option only if the display of some demo isn't 
 correct without (see Hints). 
 
@@ -574,8 +576,6 @@ EmuTOS
 EmuTOS is a GEMDOS compatible operating system for Atari ST series computers. 
 It is made from Digital Research's GPLed original sources and is a free and 
 open source replacement for common TOS images for Atari ST emulators.
-
-
 
  References:
 
@@ -2009,9 +2009,10 @@ the cold reset.
 Debugging info
 _______________
 
-Like it or not, Steem SSE saves a log called TRACE.txt each time it is
-stopped. 
-It is overwritten at each cold reset.
+Unless the NOTRACE argument is specified, Steem SSE saves a log called
+TRACE.txt in its running directory each time it is stopped. 
+It is overwritten at each cold reset (except in the Boiler, there's a
+setting).
 
 Abbreviations:
 
@@ -2026,7 +2027,7 @@ ALSS  Auto Load SnapShot
 Mem   Use Video Ram
 BHM   Hide Mouse on Blit
 DX    DirectX
-YM    Sampled YM-2149
+YM    YM-2149 (Sampled Mame-like)
 WM    window mode (display size)
 FS    fullscreen
 
