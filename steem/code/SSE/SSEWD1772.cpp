@@ -42,6 +42,9 @@ void TWD1772::Reset() {
   prg_phase=WD_READY;
 #endif
   StatusType=1;
+#ifdef SSE_BUGFIX_394
+  Lines.motor=false; // fixes timing of 6301 reprogramming in Audio Sculpture SCP
+#endif
 }
 
 
@@ -1309,7 +1312,6 @@ void TWD1772::OnIndexPulse(bool image_triggered) {
 void TWD1772::OnUpdate() {
 
   update_time=time_of_next_event+n_cpu_cycles_per_second; // we come here anyway
-
 
 #if defined(SSE_WD1772_393C)
   if(TimeOut>1 && fdc_spinning_up)

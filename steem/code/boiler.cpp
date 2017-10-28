@@ -409,6 +409,9 @@ void update_register_display(bool reset_pc_display)
 
 #if defined(SSE_BOILER_STACK_CHOICE)
   m_b_stack.ad=Debug.StackDisplayUseOtherSp?other_sp:r[15];//that's it
+#ifdef SSE_BUGFIX_394
+  m_b_stack.ad&=0xFFFFFF; // fixes long-standing bug (xxx instead of values)
+#endif
 #endif
   debug_update_cycle_counts();
 

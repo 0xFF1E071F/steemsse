@@ -852,6 +852,12 @@ fly. The envelope is in fact rarely used.
 2) The sound of the PSG is reported to be different, relatively softer on the
 STE, but we only have one table, for STF.
 
+
+-Low-level YM2149 (advanced)
+
+This activates an alternative, lower level YM2149 emulation inspired by 
+MAME (thx Couriersud).
+
   
 -Microwire (advanced)
    
@@ -1425,14 +1431,12 @@ If the option isn't checked, Steem falls back on the same emulation as
 Steem 3.2 for all those chips.
      
 
--C2: 68901/YM2149 (advanced)
+-C2: 68901 (advanced)
 
 This activates some MFP (aka MC68901, an important chip on the ST) emulation
 improvements that are seldom needed and a bit risky, such as IACK and writing
 latencies, IRQ latency, (especially) spurious interrupt, cycle-precise 
 timers...
-C2 also activates an alternative, lower level YM2149 emulation inspired by 
-MAME (thx Couriersud).
 
 
 -Capture mouse

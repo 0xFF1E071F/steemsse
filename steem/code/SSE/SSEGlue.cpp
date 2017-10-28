@@ -95,9 +95,14 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
       } 
     }
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY) //&& !defined(SSE_GLUE_HIRES_394)
+    // we can't say =80 or =160 because of various tricks changing those numbers
     // a bit tricky, saves a variable + rewriting
-    if(COLOUR_MONITOR && CyclesIn<ScanlineTiming[LINE_STOP][FREQ_72])
+    if(
+#if !defined(SSE_GLUE_HIRES_394)      
+      COLOUR_MONITOR && // wasn't right for low res with monochrome screen
+#endif
+      CyclesIn<ScanlineTiming[LINE_STOP][FREQ_72])
     {
       if((m_ShiftMode&2) && !(CurrentScanline.Tricks&TRICK_80BYTE_LINE))
       {
@@ -113,7 +118,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
 #endif
   }
 
-#if defined(SSE_INT_MFP_TIMER_B_392)
+#if defined(SSE_INT_MFP_TIMER_B_392) && !defined(SSE_GLUE_HIRES_394) //see below
   if(OPTION_C2)
     MC68901.ComputeNextTimerB(CyclesIn);
 #endif
@@ -126,9 +131,22 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
     CurrentScanline.Cycles=scanline_time_in_cpu_cycles_8mhz
 #endif
       [(m_ShiftMode&2)&&((CyclesIn==-1)||PreviousScanline.Cycles!=224)
-        ? 2 : shifter_freq_idx];
+        ? 2 : 
+#ifdef SSE_GLUE_HIRES_394 //was always 224 with monochrome screen
+    (m_ShiftMode&1) 
+#else
+    shifter_freq_idx
+#endif
+      ];
     prepare_next_event();
   }
+
+#if defined(SSE_INT_MFP_TIMER_B_392) && defined(SSE_GLUE_HIRES_394)
+  // call it when .Cycles <>0
+  if(OPTION_C2)
+    MC68901.ComputeNextTimerB(CyclesIn);
+#endif
+
 }
 
 
@@ -1457,7 +1475,11 @@ void TGlue::IncScanline() {
   if(CurrentScanline.Tricks)
     ; // don't change #bytes
   else if(de_v_on)
+#ifdef SSE_GLUE_HIRES_394 
+    CurrentScanline.Bytes=160; //Start with 160, it's adapted in AdaptScanlineValues
+#else
     CurrentScanline.Bytes=(screen_res==2)?80:160;
+#endif
   else
     NextScanline.Bytes=0;
 
@@ -1811,6 +1833,8 @@ void TGlue::GetNextScreenEvent() {
   else
   {
     screen_event_vector=event_scanline;
+//    ASSERT(m_ShiftMode);
+    ASSERT(CurrentScanline.Cycles);
     screen_event.time=CurrentScanline.Cycles;
   }
 

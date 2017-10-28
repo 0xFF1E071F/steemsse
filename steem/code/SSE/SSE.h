@@ -1792,7 +1792,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_394
 #define SSE_BOILER_IRQ_IN_HISTORY
 #endif
+#define SSE_CPU_394A // STOP behaviour + timing
 //#define SSE_CPU_394B // trace timings extended (?)
+#define SSE_CPU_394E // reset
 #define SSE_GUI_WS_394 // save in ini, not sts
 #define SSE_VAR_SET_RUNDIR_AS_DEFAULT
 #define SSE_YM2149_MAMELIKE_394 // move option
@@ -1821,8 +1823,9 @@ Beta: not SSE_PRIVATE_BUILD
 #if SSE_VERSION>=394 && defined(SSE_BETA_BUGFIX) //bugfixes for next version
 
 #define SSE_BUGFIX_394
-#define SSE_CPU_394A // STOP behaviour + timing
 #define SSE_CPU_394C // check PC in RTE
+#define SSE_CPU_394D // action read in exception
+#define SSE_GLUE_HIRES_394 // low res in monochrome
 #define SSE_IKBD_6301_394
 #undef SSE_IKBD_6301_PASTE
 #define SSE_INT_MFP_394
