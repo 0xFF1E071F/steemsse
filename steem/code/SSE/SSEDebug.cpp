@@ -483,8 +483,7 @@ void TDebug::TraceGeneralInfos(int when) {
 #endif
 #endif
 #if !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
-    if(OPTION_SAMPLED_YM)
-      TRACE("; YM");
+    TRACE("; YM%d%d",OPTION_SAMPLED_YM,OPTION_MAME_YM);
 #endif
 #if defined(SSE_DONGLE_PORT) // if bug report = mouse drift...
     if(STPort[3].Type)

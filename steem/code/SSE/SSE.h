@@ -37,6 +37,7 @@ Important (note to self)
 Release: not SSE_BETA
 All SSE_TEST_ON must go
 Version for snapshot (in LoadSave.h) + Windows properties (rc\resource.rc)
+check STEEM_RELEASE_NOTES in SSEParameters
 Rebuild so that dates are correct
 
 Beta: not SSE_PRIVATE_BUILD
@@ -70,11 +71,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-#if SSE_VERSION>393
+#if SSE_VERSION>=394
 #define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
-#if SSE_VERSION>393
+#if SSE_VERSION>=394
 #define SSE_BETA //title, OSD, plus some testing - new features
 #endif
 
@@ -1763,6 +1764,44 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_DEBUG
 
 
+////////////
+// v3.9.4 //
+////////////
+
+#if SSE_VERSION>=394 && 1 //features for next version
+
+#ifdef SSE_BOILER
+#define SSE_BOILER_394
+#define SSE_BOILER_IRQ_IN_HISTORY
+#endif
+#define SSE_CPU_394A // STOP behaviour + timing
+//#define SSE_CPU_394B // trace timings extended (?)
+#define SSE_CPU_394E // reset
+#define SSE_GUI_WS_394 // save in ini, not sts
+#define SSE_VAR_SET_RUNDIR_AS_DEFAULT
+#define SSE_YM2149_MAMELIKE_394 // move option
+#define SSE_IKBD_6301_ROM_KEYTABLE //?
+
+#endif//beta
+
+#if SSE_VERSION>=394 && 1 //bugfixes for next version
+
+#define SSE_BUGFIX_394
+#define SSE_CPU_394C // check PC in RTE
+#define SSE_CPU_394D // action read in exception
+#define SSE_GLUE_HIRES_394 // low res in monochrome
+#define SSE_IKBD_6301_394
+#undef SSE_IKBD_6301_PASTE
+#define SSE_INT_MFP_394
+#define SSE_INT_MFP_394B
+#undef SSE_INT_MFP_TIMERS_WOBBLE
+#undef SSE_INT_MFP_TIMERS_WOBBLE_390
+#undef SSE_SOUND_DYNAMICBUFFERS3 //?
+#define SSE_TOS_GEMDOS_394 //serious bugfix?
+
+#endif//bugfix
+
+
 ///////////////
 // DEV BUILD //
 ///////////////
@@ -1786,19 +1825,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if SSE_VERSION>=394 && defined(SSE_BETA) //features for next version
-
-#ifdef SSE_BOILER
-#define SSE_BOILER_394
-#define SSE_BOILER_IRQ_IN_HISTORY
-#endif
-#define SSE_CPU_394A // STOP behaviour + timing
-//#define SSE_CPU_394B // trace timings extended (?)
-#define SSE_CPU_394E // reset
-#define SSE_GUI_WS_394 // save in ini, not sts
-#define SSE_VAR_SET_RUNDIR_AS_DEFAULT
-#define SSE_YM2149_MAMELIKE_394 // move option
-#define SSE_IKBD_6301_ROM_KEYTABLE //?
+#if SSE_VERSION>394 && defined(SSE_BETA) //features for next version
 
 #endif//beta
 
@@ -1820,20 +1847,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if SSE_VERSION>=394 && defined(SSE_BETA_BUGFIX) //bugfixes for next version
-
-#define SSE_BUGFIX_394
-#define SSE_CPU_394C // check PC in RTE
-#define SSE_CPU_394D // action read in exception
-#define SSE_GLUE_HIRES_394 // low res in monochrome
-#define SSE_IKBD_6301_394
-#undef SSE_IKBD_6301_PASTE
-#define SSE_INT_MFP_394
-#define SSE_INT_MFP_394B
-#undef SSE_INT_MFP_TIMERS_WOBBLE
-#undef SSE_INT_MFP_TIMERS_WOBBLE_390
-#undef SSE_SOUND_DYNAMICBUFFERS3 //?
-#define SSE_TOS_GEMDOS_394 //serious bugfix?
+#if SSE_VERSION>394 && defined(SSE_BETA_BUGFIX) //bugfixes for next version
 
 #endif//bugfix
 
