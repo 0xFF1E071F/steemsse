@@ -2362,6 +2362,13 @@ inline void m68kUnstop() {
 #endif
     cpu_stopped=false;     
     m68kSetPC((pc+4) | pc_high_byte); 
+#if defined(SSE_CPU_394A)
+    if(!SUPERFLAG)
+    {
+      old_pc=pc; // old_pc will be stacked as PC for next instruction
+      exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
+    }
+#endif
   }
 }
 #define M68K_UNSTOP m68kUnstop();

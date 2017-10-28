@@ -4852,6 +4852,13 @@ at its first iteration.
         sr=M68000.future_sr; // IPL, with some delay
         sr&=SR_VALID_BITMASK;
         DETECT_CHANGE_TO_USER_MODE;
+        // from npomarede, this fixes the infinite loop on STOP #$777 in Audio Sculpture
+        if(!SUPERFLAG)
+        {
+          old_pc+=4; // old_pc will be stacked as PC for next instruction
+          cpu_stopped=0;
+          exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
+        }
       }
 #else
       // If we have got here then there were no interrupts pending when the IPL
@@ -4865,8 +4872,6 @@ at its first iteration.
 #endif
     SET_PC(old_pc); // note it refills prefetch (TODO)
   }else{
-    // from npomarede, this fixes the infinite loop on STOP #$777 in Audio Sculpture
-    old_pc+=4; // old_pc will be stacked as PC for next instruction
     exception(BOMBS_PRIVILEGE_VIOLATION,EA_INST,0);
   }
 }
