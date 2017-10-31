@@ -1584,6 +1584,10 @@ r1       r0            1772
     else // they should all have correct track, will probably time out
     {
       prg_phase=WD_TYPEI_FIND_ID;
+#if defined(SSE_DISK_SCP_394)
+      if(IMAGE_SCP && ImageSCP[DRIVE].rev) 
+        ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+#endif
       if(IDField.track==TR)
       {
         STR|=STR_CRC; // set CRC error if track field was OK
@@ -1645,7 +1649,13 @@ r1       r0            1772
       }
     }
     else // it's no error (yet), the WD1772 must browse the IDs
+    {
       prg_phase=WD_TYPEII_FIND_ID;
+#if defined(SSE_DISK_SCP_394) // switch back: Turrican SCP 2 revs was broken
+      if(IMAGE_SCP && ImageSCP[DRIVE].rev) 
+        ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+#endif
+    }
     Amd.Reset();
     Read();
     break;
@@ -1756,6 +1766,10 @@ r1       r0            1772
     break;
 
   case WD_TYPEII_CHECK_MULTIPLE:
+#if defined(SSE_DISK_SCP_394)
+    if(IMAGE_SCP && ImageSCP[DRIVE].rev) 
+      ImageSCP[DRIVE].LoadTrack(CURRENT_SIDE,CURRENT_TRACK);
+#endif
     if(CR&CR_M)
     {
       SF314[DRIVE].State.writing=0;

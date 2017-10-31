@@ -336,9 +336,8 @@ void floppy_fdc_command(BYTE cm)
 /*  Froggies broken!
     Quick fix: only commands of type 1 can be interrupted.
 */
-      if(fdc_spinning_up &&!(WD1772.CR&BIT_3) 
+    if(fdc_spinning_up &&!(WD1772.CR&BIT_3) 
       && WD1772.CommandType()==1  && cm!=WD1772.CR)
-
     {
       TRACE_LOG("CR %X->%X during spin-up\n",WD1772.CR,cm);
     }
@@ -388,9 +387,11 @@ void floppy_fdc_command(BYTE cm)
   agenda_delete(agenda_fdc_finished);
 
   floppy_irq_flag=0;
+#if !defined(SSE_BUGFIX_394) // fixes slow boot to GEM + Audio Sculpture STF stuck
   if (floppy_current_drive()==1 && num_connected_floppies<2){ // Drive B disconnected?
     return;
   }
+#endif
 #if !defined(SSE_OSD_DRIVE_LED3)
   disk_light_off_time=timer+DisableDiskLightAfter;
 #endif

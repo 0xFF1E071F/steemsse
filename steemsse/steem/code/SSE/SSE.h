@@ -1789,6 +1789,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_394
 #define SSE_CPU_394C // check PC in RTE
 #define SSE_CPU_394D // action read in exception
+#define SSE_DISK_SCP_394 // Turrican 2 revs
 #define SSE_GLUE_HIRES_394 // low res in monochrome
 #define SSE_IKBD_6301_394
 #undef SSE_IKBD_6301_PASTE

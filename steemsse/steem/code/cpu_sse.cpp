@@ -4817,6 +4817,9 @@ then STOP would take 4 cycles only. In this case the delay to update the
 interrupt mask is obviously not relevant, and then STOP would be interrupted
 at its first iteration.
 
+Note: our implementation is approximative for the moment. We need to
+emulate the delay to check IPL.
+
 */
     INSTRUCTION_TIME(4);
 #endif
@@ -4824,8 +4827,11 @@ at its first iteration.
       m68k_GET_IMMEDIATE_W;
       DEBUG_ONLY( int debug_old_sr=sr; )
 #if defined(SSE_CPU_394A)
-      M68000.future_sr=m68k_src_w; //need var because "immediate" will change
-      cpu_stopped=1; // because of the delay to update SR
+      M68000.future_sr=m68k_src_w;
+      if(M68000.tpend)
+        sr=M68000.future_sr; // this will be stacked by trace exception
+      else
+        cpu_stopped=1;
 #else
       sr=m68k_src_w; // IPL
       sr&=SR_VALID_BITMASK;
@@ -4869,6 +4875,7 @@ at its first iteration.
     }
 #if defined(SSE_CPU_394A)
     ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS;
+    if(!M68000.tpend) // keep advanced PC if trace is pending
 #endif
     SET_PC(old_pc); // note it refills prefetch (TODO)
   }else{

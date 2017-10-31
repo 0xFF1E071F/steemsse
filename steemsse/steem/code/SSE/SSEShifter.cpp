@@ -385,9 +385,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
   // this is the most tricky part of our hack for large border/no shift on left off...
   int pixels_in0=pixels_in;
-#if defined(SSE_VID_BORDERS)
+#if defined(SSE_VID_BORDERS) //394, we reuse later
+  bool BigBorders=(SideBorderSize==VERY_LARGE_BORDER_SIDE  && border);
   if(SideBorderSize==VERY_LARGE_BORDER_SIDE && border && pixels_in>0)
     pixels_in+=4;
+#else
+  bool BigBorders=false;
 #endif
   if(pixels_in>=0) // time to render?
   {
@@ -397,12 +400,7 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
 
     if(draw_buffer_complex_scanlines && draw_lock)
     {
-      if(scan_y>=draw_first_scanline_for_border  
-#if defined(SSE_VID_BORDERS_BIGTOP) && !defined(SSE_VID_BORDERS_BIGTOP_381)
-        // avoid horrible crash //381:?? 
-          && (DISPLAY_SIZE<BIGGEST_DISPLAY || scan_y>=draw_first_scanline_for_border+ 
-               (BIG_BORDER_TOP-ORIGINAL_BORDER_TOP))
-#endif
+      if(scan_y>=draw_first_scanline_for_border
         && scan_y<draw_last_scanline_for_border)
       {
         if(draw_store_dest_ad==NULL && pixels_in0<=BORDER_SIDE+320+BORDER_SIDE)
@@ -460,7 +458,12 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
       border2=pixels_in-scanline_drawn_so_far-border1-picture;
       if(border2<0) 
         border2=0;
-
+#ifdef SSE_BUGFIX_394 
+      // We Were distorter: must do this check later than at "left off"
+      if(!left_border&&HSCROLL0&&!BigBorders&&!screen_res
+        &&!scanline_drawn_so_far&&shifter_pixel>15)
+        MMU.ShiftSDP(8), shifter_pixel-=16;
+#endif
       int old_shifter_pixel=shifter_pixel;
       shifter_pixel+=picture;
       MEM_ADDRESS nsdp=shifter_draw_pointer;

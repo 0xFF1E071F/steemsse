@@ -1119,7 +1119,11 @@ bool SteemDisplay::Blit()
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
           M68000.ProcessingState=TM68000::BLIT_ERROR;
 #endif
+#ifdef SSE_BUGFIX_394
+          runstate=RUNSTATE_STOPPED;
+#else
           runstate=RUNSTATE_STOPPING;
+#endif
         }
 #endif
       }else{ //not running right now
@@ -2942,7 +2946,13 @@ bool SteemDisplay::D3DBlit() {
     M68000.ProcessingState=TM68000::BLIT_ERROR;
     GUIRefreshStatusBar(true); // make sure player sees it
 #endif
+#ifdef SSE_BUGFIX_394 // still trying...
+    draw_lock=false;
+    runstate=RUNSTATE_STOPPED;
+    D3DCreateSurfaces();
+#else
     runstate=RUNSTATE_STOPPING; // player can save & quit
+#endif
   }
 
 
