@@ -578,8 +578,10 @@ bool Initialise()
     //strncpy(str,CSF.GetStr("Update","CurrentVersion",Str((char*)stem_version_text)).Text,19);
     strncpy(str,CSF.GetStr("Update","LatestVersion","1.0.0").Text,19);
     if(strncmp(str,(char*)stem_version_text,19)<0) // < as strings...
+    {//394 in scope, or previous version writes its number anyway... 
       NoINI=true;  // if ini version < Steem current version
-    CSF.SetStr("Update","LatestVersion",Str((char*)stem_version_text)); // only once
+      CSF.SetStr("Update","LatestVersion",Str((char*)stem_version_text)); // only once
+    }
   }
 #endif
 

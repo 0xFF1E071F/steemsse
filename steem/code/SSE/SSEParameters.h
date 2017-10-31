@@ -309,7 +309,7 @@ enum {
 #endif
 
 #if defined(SSE_INT_MFP_394B)
-#define MFP_TIMER_SET_DELAY (6)
+#define MFP_TIMER_SET_DELAY (6+1) // STE: DSoTS vs LoSTE Screens
 #elif defined(SSE_INT_MFP_PRESCALE)
 // compensates the non-substraction in mfp_set_timer_reg()
 // seems likelier this way

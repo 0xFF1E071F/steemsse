@@ -95,7 +95,7 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
       } 
     }
 
-#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY) //&& !defined(SSE_GLUE_HIRES_394)
+#if defined(SSE_SHIFTER_HIRES_COLOUR_DISPLAY)
     // we can't say =80 or =160 because of various tricks changing those numbers
     // a bit tricky, saves a variable + rewriting
     if(
@@ -133,7 +133,6 @@ void TGlue::AdaptScanlineValues(int CyclesIn) {
       [(m_ShiftMode&2)&&((CyclesIn==-1)||PreviousScanline.Cycles!=224)
         ? 2 : 
 #ifdef SSE_GLUE_HIRES_394 //was always 224 with monochrome screen
-    //(m_ShiftMode&1) //duh! shift? 
     ( (m_SyncMode&2)!=2  ) 
 #else
     shifter_freq_idx
@@ -319,8 +318,8 @@ void TGlue::CheckSideOverscan() {
         }
 
         TrickExecuted|=TRICK_LINE_PLUS_20;
-        // correct alignemnt, eg Riverside leave
 
+        // correct alignemnt, eg Riverside leave
 #if defined(SSE_VID_BORDERS)
         if(!BigBorders) // 16 + 4 = 20, 4 bytes = 8 pixels in lores
 #endif
@@ -415,8 +414,10 @@ void TGlue::CheckSideOverscan() {
 #if !defined(SSE_VID_DISABLE_AUTOBORDER)
       overscan=OVERSCAN_MAX_COUNTDOWN;
 #endif
+#ifndef SSE_BUGFIX_394 //must do it later
       if(!BigBorders&&HSCROLL0&&shifter_pixel>15)
         MMU.ShiftSDP(8);
+#endif
     }
 #undef lim_r2
 #undef lim_r0
@@ -826,7 +827,9 @@ void TGlue::CheckSideOverscan() {
     It also fixes nordlicht_stniccc2015_partyversion.
     update: on real STE, flicker depends on some unidentified WS
  */
-#if defined(SSE_SHIFTER_UNSTABLE_392) // we add (spurious) conditions
+#if defined(SSE_BUGFIX_394)
+    if(OPTION_WS && ST_TYPE==STE && MMU.WU[OPTION_WS]==1) // 2 for demos on STE...
+#elif defined(SSE_SHIFTER_UNSTABLE_392) // we add (spurious) conditions
     if(ST_TYPE!=STE&&MMU.WS[OPTION_WS]==1||ST_TYPE==STE&&MMU.WS[OPTION_WS]!=1)
 #endif
     if(!(PreviousScanline.Tricks&TRICK_LINE_MINUS_2)) // BIG demo #1 STE
@@ -1477,7 +1480,8 @@ void TGlue::IncScanline() {
     ; // don't change #bytes
   else if(de_v_on)
 #ifdef SSE_GLUE_HIRES_394 
-    CurrentScanline.Bytes=160; //Start with 160, it's adapted in AdaptScanlineValues
+    //Start with 160, it's adapted in AdaptScanlineValues if necessary
+    CurrentScanline.Bytes=160; 
 #else
     CurrentScanline.Bytes=(screen_res==2)?80:160;
 #endif
@@ -1834,10 +1838,6 @@ void TGlue::GetNextScreenEvent() {
   else
   {
     screen_event_vector=event_scanline;
-//    ASSERT(m_ShiftMode);
-#ifdef SSE_GLUE_HIRES_394
-    ASSERT(CurrentScanline.Cycles);
-#endif
     screen_event.time=CurrentScanline.Cycles;
   }
 

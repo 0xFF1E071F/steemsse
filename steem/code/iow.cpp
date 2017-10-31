@@ -1793,6 +1793,11 @@ rasterline to allow horizontal fine-scrolling.
               ") to "+(shifter_hscroll)+" at "+scanline_cycle_log());
             if (addr==0xff8265) 
               shifter_hscroll_extra_fetch=(HSCROLL!=0);
+#ifdef SSE_BUGFIX_394
+            BYTE former_hscroll=Shifter.hscroll0;
+            if(HSCROLL && !former_hscroll)
+              Shifter.Preload=0; // just another trick
+#endif
 
 #if defined(SSE_SHIFTER_HSCROLL)
 /*  Better test, should new HSCROLL apply on current line
@@ -1813,7 +1818,12 @@ rasterline to allow horizontal fine-scrolling.
                     left_border-=16;
                 }
                 // update shifter_pixel for new HSCROLL
+#ifdef SSE_BUGFIX_394 // because of shifter_pixel+x mess with normal border
+                shifter_pixel-=former_hscroll;
+                shifter_pixel+=HSCROLL;
+#else
                 shifter_pixel=HSCROLL; //fixes We Were STE distorter (party version)
+#endif
               }
             }
 #else

@@ -179,4 +179,5 @@ if it's a French layout. Works with French TOS.
 
 -Warp STX may fail after 1st logo
 
+-Alt YM emu: sound can get trashy, weak, noisy, etc. 
 

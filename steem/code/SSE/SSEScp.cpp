@@ -235,7 +235,11 @@ void TImageSCP::IncPosition() {
   ASSERT( Position>=0 );
   ASSERT( Position<nBits );
   Position++;
+#if defined(SSE_DISK_SCP_394) //safer
+  if(Position>=nBits)
+#else
   if(Position==nBits)
+#endif
   {
     Position=0;
     TRACE_FDC("\nSCP triggers IP side %d track %d rev %d/%d\n",
@@ -345,7 +349,6 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
   if(N_SIDES==2) // general case
     trackn=track*2+side; 
 
-  // if on 2nd rev we reload 1st rev during "idle"
   if(!rev &&! reload && track_header.TDH_TRACKNUM==trackn) //already loaded
     return true;
 
@@ -408,7 +411,9 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
         if(flux_to_flux_units_table_16bit[i])
           TimeFromIndexPulse[nBits++]=units_from_ip;
       }
+#if !defined(SSE_DISK_SCP_394) // we don't always load at IP
       Position=0;
+#endif
       free(flux_to_flux_units_table_16bit);
       ok=true;
     }

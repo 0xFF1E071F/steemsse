@@ -2410,9 +2410,9 @@ ADVANCED_END
 ADVANCED_BEGIN
   y-=LineHeight;
   Offset+=Wid+HorizontalSeparation*2;
-  Wid=GetCheckBoxSize(Font,T("Low-level YM2149")).Width;
+  Wid=GetCheckBoxSize(Font,T("Alt YM2149 emu")).Width;
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
-  Win=CreateWindow("Button",T("Low-level YM2149"),mask,
+  Win=CreateWindow("Button",T("Alt YM2149 emu"),mask,
     page_l+Offset,y,Wid,25,Handle,(HMENU)7312,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,OPTION_MAME_YM,0);
   ToolAddWindow(ToolTip,Win,T("Inspired by MAME, thx Couriersud!"));

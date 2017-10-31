@@ -751,6 +751,8 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
           if (runstate == RUNSTATE_RUNNING) return 0;
           break;
         case SC_SCREENSAVE:
+          //SS this prevents screensaver from activating but only if Steem has 
+          // focus, else we don't get this message
           if (runstate == RUNSTATE_RUNNING || FullScreen) return 0;
           break;
         case SC_TASKLIST:case SC_PREVWINDOW:case SC_NEXTWINDOW:

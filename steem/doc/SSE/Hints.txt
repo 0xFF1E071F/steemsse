@@ -1,7 +1,7 @@
 Steem SSE Hints
 ===================
 
-v3.9.3
+v3.9.4
 
 
 General Hints
@@ -13,17 +13,16 @@ General Hints
 In some cases, it can get corrupted, and setting everything up again is 
 a pain.
 
-- Try realistic combinations of ST model/TOS.
+- Try realistic combinations of ST model/TOS (not STE + TOS 1.02).
 
 - Most programs target the colour monitor.
 
 - If a program doesn't work, the first things to check are drive speed and
 ST model. After that, you may change memory size (especially 4MB is trouble
-with some programs).
+with some programs), TOS.
 
 - Option C1 is highly recommended for better emulation but it does change
   the mouse feel.
-  Option C2 should deliver better YM sound (check Sound/Sampled YM-2149 too).
 
 
 Emulation Hints
@@ -31,6 +30,7 @@ Emulation Hints
 
 If a program doesn't work in Steem SSE, please check the lists below,
 maybe the solution is there. 
+
 
 Explanation of symbols
 =========================
@@ -68,6 +68,7 @@ Apps
 =========
 
 - Aladin: no WP, HI
+- Audio Sculpture: C1
 - Copy and Utility Disk Volume 1: STF
 - EmuTOS hard disk emulation: ACSI for versions prior to 0.9.5
 - Megamax C (ReDMCSB building): T104
@@ -75,6 +76,7 @@ Apps
 - Notator and other MIDI programs: C1
 - Spectrum 512: use correct TOS for 50/60hz
 - Synergy Chipmon II: STF
+
 
 Games
 =========
@@ -90,7 +92,6 @@ Games
 - Billiards Simulator: <4MB
 - Bubble Dizzy original: No B
 - Cricket Captain dongle: C1
-- Chessmaster 2000: STF
 - Crash Garret: STF
 - Crazy Cars 2: F7 for joystick control
 - Darius auto166: DI
@@ -150,12 +151,16 @@ Games
 Dongle games: choose the appropriate adapter in the 'Ports' option page.
 Don't forget to remove it when you don't need it anymore!
 
+
 Demos
 =========
 
+For edgy demos on the STE: generally select one of the WU2 Wakeup options,
+else you're likely to get little dots.
+
 - 0913: STE French TOS
 - 36.15 Gen4 by Cakeman: STF
-- 36.15 HMD: STF WU1, STW or not ADAT
+- 36.15 HMD: STF WS1, STW or not ADAT
 - 36.15 OVR: STF, CPU speed
 - Audio Artistic Demo: C2
 - Awakening of the Gods: press space twice for menu; not T102
@@ -165,7 +170,7 @@ Demos
 - The Black Demo by The Black Cats: <4MB; Spritedemo and Circle: not T162
 - Cernit Trandafir: STE, 4MB
 - Choice of Gods/Attack of the Indigestion: STF WU1
-- Circus back²STage: STE, 4MB
+- Circus back²STage: STE WU2, 4MB
 - Closure: ADAT, choose a WS
 - Corporation Megademo: STE, C1
 - Cuddly Demos: DI, WS1 if STE
@@ -188,7 +193,7 @@ Demos
 - It makes me shake: STE
 - Japtro: DI, STF (depends on Steem version)
 - Knocking at Krystals Doors: press return
-- Kryos: STE, WS1
+- Kryos: STE
 - Megablast demo by Fashion: <4MB
 - More or less Zero: STE, 2MB
 - Musical Wonder 1990: WU1 or STE
@@ -199,7 +204,7 @@ Demos
 - Ooh Crikey Hidden screen: STF
 - Omega Full Overscan Screen: STF, WS2
 - Overdrive: C1
-- Overdrive/Dragon: STF WU2
+- Overdrive/Dragon: STF WU2, #
 - Overscan Demos STE: C2
 - Pacemaker: STE; Space: credits at once
 - Panic v1: STF, C2
@@ -215,7 +220,7 @@ Demos
 - Riverside: STE
 - Ronnie 2 demo by OUCH: <4MB
 - The Sierpinski Overdose: STE, medium res
-- Sadeness: STE
+- Sadeness: STE or STF WU1
 - Sinfull Sinuses: STE T162 French 
 - Snork: DI
 - Sound Demo 3 by Pure Energy: STF
@@ -240,8 +245,7 @@ Demos
 - The World is my Oyster screen #2: STF
 - World of Music -NPG: WS1 if STE
 - Ventura: mouse to rotate menu
-- Ventura/Board and Spheres: STF, WU2
-- XMas 2004: STE
+- Ventura/Board and Spheres: STF, WU2, #
 - Yanartas: STE
 
 
