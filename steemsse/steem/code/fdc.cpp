@@ -246,6 +246,9 @@ bool floppy_track_index_pulse_active()
   else 
 #endif
   if (floppy_type1_command_active){
+#if defined(SSE_FDC_394)
+    if (SF314[DRIVE].State.motor)
+#endif
 #if defined(SSE_VS2008_WARNING_382) 
     return ((hbl_count) % FDC_HBLS_PER_ROTATION)
       >=(DWORD)(FDC_HBLS_PER_ROTATION-FDC_HBLS_OF_INDEX_PULSE);
@@ -387,7 +390,7 @@ void floppy_fdc_command(BYTE cm)
   agenda_delete(agenda_fdc_finished);
 
   floppy_irq_flag=0;
-#if !defined(SSE_BUGFIX_394) // fixes slow boot to GEM + Audio Sculpture STF stuck
+#if !defined(SSE_FDC_394) // fixes slow boot to GEM + Audio Sculpture STF stuck
   if (floppy_current_drive()==1 && num_connected_floppies<2){ // Drive B disconnected?
     return;
   }
@@ -416,6 +419,12 @@ void floppy_fdc_command(BYTE cm)
   // there is a bit in type 1, 2 and 3 commands that will make them execute
   // while the motor is in the middle of spinning up (BIT_3).
   bool delay_exec=0;
+
+#if defined(SSE_FDC_394)
+  if (!(floppy_current_drive()==1 && num_connected_floppies<2))
+  {
+#endif
+
   if ((fdc_str & FDC_STR_MOTOR_ON)==0){
     if ((cm & (BIT_7+BIT_6+BIT_5+BIT_4))!=0xd0){ // Not force interrupt
       if ((cm & BIT_3)==0){
@@ -450,6 +459,11 @@ void floppy_fdc_command(BYTE cm)
   else
     SF314[DRIVE].State.motor=true;
 #endif
+
+#if defined(SSE_FDC_394)
+  }//if (!(floppy_current_drive()==1 && num_connected_floppies<2))
+#endif
+
   if (delay_exec==0) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -620,7 +634,11 @@ and ends the command.
         if (FDC_VERIFY && floppy->Empty()){ //no disk
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
-          if (floppy_head_track[floppyno]==0){
+          if (floppy_head_track[floppyno]==0
+#if defined(SSE_FDC_394)
+            || !SF314[DRIVE].State.motor
+#endif
+            ){
 #if defined(SSE_FDC_ACCURATE_TIMING)
             hbls_to_interrupt=(ADAT)?1:2;
 #else
@@ -653,7 +671,11 @@ and ends the command.
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
 #if defined(SSE_BUGFIX_394)
-            if(floppy_head_track[floppyno]==0)
+            if(floppy_head_track[floppyno]==0
+#if defined(SSE_FDC_394)
+              || !(SF314[DRIVE].State.motor)
+#endif
+              )
               fdc_tr=0; // Overdrive fast
 #endif
             agenda_add(agenda_floppy_seek,1,0); //1 scanline
@@ -729,7 +751,11 @@ cycles before the first stepping pulse.
           if (fdc_cr & BIT_4){ //U flag, update track register
             fdc_tr+=d;
           }
+#if defined(SSE_FDC_394)
+          if (d==-1 && (floppy_head_track[floppyno]==0 || !(SF314[DRIVE].State.motor))) {
+#else
           if (d==-1 && floppy_head_track[floppyno]==0){   //trying to step out from track 0
+#endif
             fdc_tr=0; //here we set the track register
           }else{ //can step
             floppy_head_track[floppyno]+=d;
@@ -836,7 +862,11 @@ CRC.
         ASSERT(WD1772.CommandType(fdc_cr)==2);
 #endif
 
-        if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM){
+        if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM
+#if defined(SSE_FDC_394)
+          || !(SF314[DRIVE].State.motor)
+#endif          
+          ){
           TRACE_LOG("Drive empty or track %d overshoot\n",floppy_head_track[floppyno]);
 #if defined(SSE_FDC_393B)
           fdc_str=FDC_STR_MOTOR_ON | FDC_STR_BUSY;
