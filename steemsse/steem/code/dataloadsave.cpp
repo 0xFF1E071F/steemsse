@@ -294,6 +294,9 @@ bool TDiskManager::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDi
       QuickFol[n]=pCSF->GetStr("Disks",EasyStr("QuickFol")+n,QuickFol[n]);
     }
     for (int d=0;d<2;d++){
+#if defined(SSE_FDC_394)
+      SF314[d].ImageType.Manager=(pasti_active)?MNGR_PASTI:MNGR_STEEM;
+#endif
       for (int n=0;n<10;n++){
         InsertHist[d][n].Name=pCSF->GetStr("Disks",EasyStr("InsertHistoryName")+d+n,InsertHist[d][n].Name);
         InsertHist[d][n].Path=pCSF->GetStr("Disks",EasyStr("InsertHistoryPath")+d+n,InsertHist[d][n].Path);
