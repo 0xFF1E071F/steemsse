@@ -216,7 +216,7 @@ bool TWD1772::CheckGhostDisk(BYTE drive, BYTE io_src_b) {
   if(Lines.CommandWasIntercepted && hPasti
     && SF314[drive].ImageType.Manager==MNGR_PASTI)
   {
-    ASSERT(!OPTION_PASTI_JUST_STX||SF314[drive].ImageType.Extension==EXT_STX);
+    //ASSERT(!OPTION_PASTI_JUST_STX||SF314[drive].ImageType.Extension==EXT_STX);
     pasti_update_reg(0xff8609,(Dma.BaseAddress&0xff0000)>>16);
     pasti_update_reg(0xff860b,(Dma.BaseAddress&0xff00)>>8);
     pasti_update_reg(0xff860d,(Dma.BaseAddress&0xff));
@@ -285,7 +285,11 @@ BYTE TWD1772::IORead(BYTE Line) {
           STR|=FDC_STR_T1_SPINUP_COMPLETE;
 #if defined(SSE_WD1772_393) //notice it impacts native fdc no adat too
         // TR0: compute (again) now TODO
-        Lines.track0=(floppy_head_track[drive]==0); //update line...
+        Lines.track0=(floppy_head_track[drive]==0
+#if defined(SSE_FDC_394)          
+          && (num_connected_floppies!=DRIVE)
+#endif          
+          ); //update line...
         if(Lines.track0)
           STR|=STR_T00;
         else
@@ -330,7 +334,7 @@ WD doc:
       Lines.irq=0;
       ior_byte=STR;
     }
-#if defined(SSE_BOILER_TRACE_CONTROL)
+#if defined(SSE_BOILER_TRACE_CONTROL) //TODO wrong for pasti
     if(TRACE_MASK3 & TRACE_CONTROL_FDCSTR)
       TRACE_FDC("FDC STR %X PC %X\n",ior_byte,old_pc);
 #endif
@@ -434,7 +438,12 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
 #endif
 
       // Steem's native and WD1772 managers
-    if(SF314[drive].ImageType.Manager==MNGR_STEEM)
+    //ASSERT(!drive);
+    if(SF314[drive].ImageType.Manager==MNGR_STEEM
+#if defined(SSE_FDC_394)
+      && ! pasti_active
+#endif
+      )
       floppy_fdc_command(io_src_b); // in fdc.cpp for ST, MSA, DIM, STT
 #if defined(SSE_DISK_STW)
     else if(SF314[drive].ImageType.Manager==MNGR_WD1772)

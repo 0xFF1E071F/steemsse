@@ -1400,7 +1400,11 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
 #endif
 
 #if defined(SSE_DISK) 
+#if defined(SSE_FDC_394)
+  SF314[drive].ImageType.Manager=(pasti_active)? MNGR_PASTI : MNGR_STEEM;
+#else
   SF314[drive].ImageType.Manager=MNGR_STEEM; //default
+#endif
   SF314[drive].ImageType.Extension=0;
 #if !defined(SSE_FLOPPY_ALWAYS_ADAT)
   SF314[drive].UpdateAdat();

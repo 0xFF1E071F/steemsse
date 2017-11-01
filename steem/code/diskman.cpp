@@ -2161,6 +2161,9 @@ That will toggle bit x.
                 This->EjectDisk(i);
                 This->InsertDisk(i,name,path,0,0,"",true);
               }
+#if defined(SSE_FDC_394)
+              SF314[i].ImageType.Manager=(pasti_active)?MNGR_PASTI:MNGR_STEEM;
+#endif
             }
             This->RefreshDiskView();
 #else

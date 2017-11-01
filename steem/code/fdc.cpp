@@ -247,7 +247,7 @@ bool floppy_track_index_pulse_active()
 #endif
   if (floppy_type1_command_active){
 #if defined(SSE_FDC_394)
-    if (SF314[DRIVE].State.motor)
+    if(num_connected_floppies!=DRIVE)
 #endif
 #if defined(SSE_VS2008_WARNING_382) 
     return ((hbl_count) % FDC_HBLS_PER_ROTATION)
@@ -390,7 +390,7 @@ void floppy_fdc_command(BYTE cm)
   agenda_delete(agenda_fdc_finished);
 
   floppy_irq_flag=0;
-#if !defined(SSE_FDC_394) // fixes slow boot to GEM + Audio Sculpture STF stuck
+#if !defined(SSE_FDC_394) // WD1772 will still start the commands (Audio Sculpture STF)
   if (floppy_current_drive()==1 && num_connected_floppies<2){ // Drive B disconnected?
     return;
   }
@@ -421,7 +421,7 @@ void floppy_fdc_command(BYTE cm)
   bool delay_exec=0;
 
 #if defined(SSE_FDC_394)
-  if (!(floppy_current_drive()==1 && num_connected_floppies<2))
+  if(num_connected_floppies!=DRIVE) // no motor if no drive
   {
 #endif
 
@@ -461,7 +461,7 @@ void floppy_fdc_command(BYTE cm)
 #endif
 
 #if defined(SSE_FDC_394)
-  }//if (!(floppy_current_drive()==1 && num_connected_floppies<2))
+  }//if(num_connected_floppies!=DRIVE)
 #endif
 
   if (delay_exec==0) fdc_execute();
@@ -485,7 +485,7 @@ On the WD1772 all commands, except the Force Interrupt Command,
   if(ADAT)
   {
     ASSERT(WD1772.IndexCounter<6);
-    ASSERT(fdc_spinning_up);
+    //ASSERT(fdc_spinning_up);
     if(YM2149.Drive()!=TYM2149::NO_VALID_DRIVE&&SF314[DRIVE].State.motor) //TODO wd's line
       WD1772.IndexCounter++;
     if(WD1772.IndexCounter<6) // not finished
@@ -496,7 +496,7 @@ On the WD1772 all commands, except the Force Interrupt Command,
   }
 #endif
   fdc_spinning_up=0;
-  TRACE_LOG("FDC Drive spun\n");
+  TRACE_LOG("FDC Drive spun exec %d\n",do_exec);
   if (do_exec) fdc_execute();
 }
 //---------------------------------------------------------------------------
@@ -506,6 +506,7 @@ void fdc_execute()
   // if the disk spinning up (fdc_spinning_up).
 
   int floppyno=floppy_current_drive();
+//  ASSERT(!floppyno);
   TFloppyImage *floppy=&FloppyDrive[floppyno];
 //  ASSERT(!(floppy->Empty() && floppy_head_track[floppyno]!=0));
   floppy_irq_flag=FLOPPY_IRQ_YES;
@@ -634,18 +635,16 @@ and ends the command.
         if (FDC_VERIFY && floppy->Empty()){ //no disk
           fdc_str=FDC_STR_SEEK_ERROR | FDC_STR_MOTOR_ON | FDC_STR_BUSY;
         }else{
-          if (floppy_head_track[floppyno]==0
-#if defined(SSE_FDC_394)
-            || !SF314[DRIVE].State.motor
-#endif
-            ){
+#if !defined(SSE_FDC_394) // unused var
+          if (floppy_head_track[floppyno]==0){
 #if defined(SSE_FDC_ACCURATE_TIMING)
             hbls_to_interrupt=(ADAT)?1:2;
 #else
             hbls_to_interrupt=2;
 #endif
           }else{
-            if (floppy_instant_sector_access==0) hbls_to_interrupt*=floppy_head_track[floppyno];
+            if (floppy_instant_sector_access==0) 
+              hbls_to_interrupt*=floppy_head_track[floppyno];
 #if !defined(SSE_FDC_ACCURATE_BEHAVIOUR_FAST)
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
             if(!ADAT)
@@ -653,6 +652,7 @@ and ends the command.
             floppy_head_track[floppyno]=0;
 #endif
           }
+#endif//#if !defined(SSE_FDC_394)
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
 If the head is not at track zero, the FDDC steps the head carriage
@@ -671,11 +671,7 @@ and ends the command.
             fdc_tr=255,fdc_dr=0; // like in CAPSimg
             floppy_irq_flag=0;
 #if defined(SSE_BUGFIX_394)
-            if(floppy_head_track[floppyno]==0
-#if defined(SSE_FDC_394)
-              || !(SF314[DRIVE].State.motor)
-#endif
-              )
+            if(floppy_head_track[floppyno]==0 && DRIVE!=num_connected_floppies)
               fdc_tr=0; // Overdrive fast
 #endif
             agenda_add(agenda_floppy_seek,1,0); //1 scanline
@@ -751,11 +747,7 @@ cycles before the first stepping pulse.
           if (fdc_cr & BIT_4){ //U flag, update track register
             fdc_tr+=d;
           }
-#if defined(SSE_FDC_394)
-          if (d==-1 && (floppy_head_track[floppyno]==0 || !(SF314[DRIVE].State.motor))) {
-#else
           if (d==-1 && floppy_head_track[floppyno]==0){   //trying to step out from track 0
-#endif
             fdc_tr=0; //here we set the track register
           }else{ //can step
             floppy_head_track[floppyno]+=d;
@@ -864,7 +856,7 @@ CRC.
 
         if (floppy->Empty() || floppy_head_track[floppyno]>FLOPPY_MAX_TRACK_NUM
 #if defined(SSE_FDC_394)
-          || !(SF314[DRIVE].State.motor)
+          || (floppyno==num_connected_floppies) //no drive
 #endif          
           ){
           TRACE_LOG("Drive empty or track %d overshoot\n",floppy_head_track[floppyno]);
@@ -1408,10 +1400,9 @@ void agenda_fdc_verify(int) {
 //---------------------------------------------------------------------------
 void agenda_fdc_finished(int)
 {
-  
 #if defined(SSE_DMA) && defined(SSE_DEBUG)
   if(TRACE_ENABLED(LOGSECTION_FDC)) 
-    Dma.UpdateRegs(true); // -> "IRQ" trace
+    Dma.UpdateRegs(true); // -> "IRQ" trace (including 'busy')
 #endif
 
 #if defined(SSE_DRIVE_SOUND) 
@@ -1478,6 +1469,7 @@ void agenda_fdc_finished(int)
 void agenda_floppy_seek(int)
 {
   int floppyno=floppy_current_drive();
+  //ASSERT(!floppyno);
 #if defined(SSE_FDC_ACCURATE_BEHAVIOUR)
 /*
 "SEEK
@@ -1518,14 +1510,36 @@ issued."
       if(fdc_tr>fdc_dr)
       {
         fdc_tr--;
+
         if(floppy_head_track[floppyno])
           floppy_head_track[floppyno]--;    
-        if(!floppy_head_track[floppyno])
+        if(!floppy_head_track[floppyno]
+#if defined(SSE_FDC_394)
+          && floppyno!=num_connected_floppies
+#endif
+        )
         {
           if(!(fdc_cr&0xF0)) // condition?
             fdc_tr=0; // this is  how RESTORE works
           fdc_str|=FDC_STR_T1_TRACK_0;
         }
+#if defined(SSE_FDC_394)
+/*  
+If the TR00* input does not go active low after 255 stepping pulses,
+the WD1772 terminates operation, interrupts, and sets the Seek Error
+status bit, providing the v flag is set.
+->
+If RESTORE fails to set TR00 in the status byte, TOS knows there's no
+2nd drive.
+*/
+        else if(!(fdc_cr&0xF0) && !fdc_tr)
+        {
+          ASSERT(floppyno==num_connected_floppies); //1
+          if(FDC_VERIFY)
+            fdc_str|=FDC_STR_SEEK_ERROR;
+          agenda_fdc_finished(0); //IRQ
+        }
+#endif
       }
       else
       {

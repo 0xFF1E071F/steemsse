@@ -197,7 +197,11 @@ void TSF314::IndexPulse(bool image_triggered) {
 #if defined(SSE_WD1772_393C)
 /*  timeout is normally 1.5s
 */
-  if(fdc_spinning_up && FloppyDrive[Id].Empty())
+  if(fdc_spinning_up && FloppyDrive[Id].Empty()
+#if defined(SSE_FDC_394)
+    || (!State.motor)
+#endif
+    )
     WD1772.TimeOut++;
 #endif
   if(ImageType.Manager!=MNGR_WD1772||FloppyDrive[Id].Empty()||!State.motor)
@@ -263,6 +267,11 @@ void TSF314::Motor(bool state) {
 /*  If we're starting the motor, we must program time of next IP.
     We start from last position or from a new random one.
 */
+
+#if defined(SSE_FDC_394)
+  if(num_connected_floppies==Id)
+    state=false; // no drive
+#endif
  
 #ifdef SSE_DEBUG
   if(state!=(bool)State.motor && FloppyDrive[Id].NotEmpty() )   //State.empty is never updated...
@@ -496,7 +505,11 @@ void TSF314::Sound_CheckCommand(BYTE cr) {
 */
 
 #if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
-  if(MuteWhenInactive&&bAppActive==false) //annoying that we check at different places
+  if(MuteWhenInactive&&bAppActive==false
+#if defined(SSE_FDC_394)          
+    || Id==num_connected_floppies
+#endif          
+    ) //annoying that we check at different places
     return;
 #endif
 
@@ -531,6 +544,9 @@ void TSF314::Sound_CheckIrq() {
 #if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
       && !(MuteWhenInactive&&bAppActive==false) 
 #endif
+#if defined(SSE_FDC_394)          
+      && Id!=num_connected_floppies
+#endif          
       )
     {
       DWORD dwStatus ;
@@ -564,6 +580,9 @@ void TSF314::Sound_CheckMotor() {
 #if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
     && !(MuteWhenInactive&&bAppActive==false) 
 #endif
+#if defined(SSE_FDC_394)          
+    && Id!=num_connected_floppies
+#endif          
     );
   if(OPTION_DRIVE_SOUND && motor_on && !(dwStatus&DSBSTATUS_PLAYING))
     Sound_Buffer[MOTOR]->Play(0,0,DSBPLAY_LOOPING); // start motor loop
@@ -651,6 +670,9 @@ void TSF314::Sound_Step() {
 #if defined(SSE_SOUND_MUTE_WHEN_INACTIVE)
     || (MuteWhenInactive&&bAppActive==false) 
 #endif
+#if defined(SSE_FDC_394)          
+    || Id==num_connected_floppies
+#endif          
   )
     return;
   Sound_Buffer[STEP]->SetCurrentPosition(0);
