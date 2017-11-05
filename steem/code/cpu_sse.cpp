@@ -826,6 +826,7 @@ void m68kProcess() {
   old_pc=pc;  
 //  ASSERT(old_pc!=0xc374);
 //  ASSERT(pc!=0x78892);
+//  ASSERT(pc!=0x40400);
 
 #if defined(SSE_OSD_CONTROL)
   if(OSD_MASK_CPU & OSD_CONTROL_CPUIO) 
@@ -1270,6 +1271,9 @@ void                              m68k_ori_b(){
     pc+=2; 
   }else{
     m68k_GET_IMMEDIATE_B;
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A; // EA
     PREFETCH_IRC; // np
     if(!DEST_IS_DATA_REGISTER)
@@ -1305,6 +1309,9 @@ void                              m68k_ori_w(){
   }else{
     CPU_ABUS_ACCESS_READ_FETCH; //np
     m68k_GET_IMMEDIATE_W;
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A; // EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
@@ -1336,6 +1343,9 @@ void                              m68k_ori_w(){
 void                              m68k_ori_l(){
   CPU_ABUS_ACCESS_READ_FETCH_L; // np np
   m68k_GET_IMMEDIATE_L;
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
+#endif
   m68k_GET_DEST_L_NOT_A; // EA
   PREFETCH_IRC; // np
   if(DEST_IS_DATA_REGISTER)
@@ -1367,6 +1377,9 @@ void                              m68k_andi_b(){
     m68k_GET_IMMEDIATE_B;
 #if defined(SSE_CPU_DATABUS)
     dbus|=m68k_src_b;//?
+#endif
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
 #endif
     m68k_GET_DEST_B_NOT_A; //EA
     PREFETCH_IRC;//np
@@ -1405,6 +1418,9 @@ void                              m68k_andi_w(){
   }else{
     CPU_ABUS_ACCESS_READ_FETCH; //np
     m68k_GET_IMMEDIATE_W; 
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A;//EA
 #if defined(SSE_CPU_DATABUS)
     dbus=m68k_src_w;
@@ -1430,6 +1446,9 @@ void                              m68k_andi_l(){
   m68k_GET_IMMEDIATE_L;
 #if defined(SSE_CPU_DATABUS)
   dbus=m68k_src_l&0xFFFF;
+#endif
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
 #endif
   m68k_GET_DEST_L_NOT_A; //EA
   PREFETCH_IRC; //np
@@ -1511,6 +1530,9 @@ void                              m68k_subi_l(){
 void                              m68k_addi_b(){
   CPU_ABUS_ACCESS_READ_FETCH; //np
   m68k_GET_IMMEDIATE_B;
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
+#endif
   m68k_GET_DEST_B_NOT_A; // EA
   PREFETCH_IRC;//np
   if(!DEST_IS_DATA_REGISTER)
@@ -1530,6 +1552,9 @@ void                              m68k_addi_b(){
 void                              m68k_addi_w(){
   CPU_ABUS_ACCESS_READ_FETCH; //np
   m68k_GET_IMMEDIATE_W;
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
+#endif
   m68k_GET_DEST_W_NOT_A; //EA
   PREFETCH_IRC; // np
   if(!DEST_IS_DATA_REGISTER)
@@ -1559,6 +1584,9 @@ void                              m68k_addi_l(){
     (xxx).L       | 20(3/2) 16(4/0) |       np np |   np np nR nr | np nw nW   
 */
   CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
+#endif
   m68k_GET_IMMEDIATE_L;
   m68k_GET_DEST_L_NOT_A; //EA
   PREFETCH_IRC; //np
@@ -1881,6 +1909,9 @@ void                              m68k_eori_b(){
     (xxx).L       | 12(2/1) 12(3/0) |          np |   np np    nr | np nw	      
 */
     m68k_GET_IMMEDIATE_B;
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
+#endif
     m68k_GET_DEST_B_NOT_A; //EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
@@ -1938,6 +1969,9 @@ void                              m68k_eori_w(){
 */
     CPU_ABUS_ACCESS_READ_FETCH; //np
     m68k_GET_IMMEDIATE_W;
+#if defined(SSE_CPU_394E)
+    CHECK_READ=true;
+#endif
     m68k_GET_DEST_W_NOT_A; //EA
     PREFETCH_IRC; //np
     if(!DEST_IS_DATA_REGISTER)
@@ -1969,6 +2003,9 @@ void                              m68k_eori_l(){
 */
   CPU_ABUS_ACCESS_READ_FETCH_L; //np np
   m68k_GET_IMMEDIATE_L;
+#if defined(SSE_CPU_394E)
+  CHECK_READ=true;
+#endif
   m68k_GET_DEST_L_NOT_A; //EA
   PREFETCH_IRC; //np
   if(DEST_IS_DATA_REGISTER)

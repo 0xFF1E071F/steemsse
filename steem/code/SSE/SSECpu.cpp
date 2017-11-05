@@ -38,6 +38,9 @@ void TM68000::Reset(bool Cold) {
   if(Cold)
     cycles_for_eclock=cycles0=0;
 #endif
+#if defined(SSE_CPU_IPL_DELAY)
+  LastIplChange=0;
+#endif
 }
 
 
@@ -113,7 +116,8 @@ int TM68000::SyncEClock(int dispatcher) {
   char* sdispatcher[]={"VBL","HBL","ACIA"};
 #endif
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
-  if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+  if( (FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
+    && (TRACE_MASK2&TRACE_CONTROL_ECLOCK)) // sick of those E everywhere 
 #if defined(SSE_BOILER_FRAME_REPORT_392) //even if it's generally obvious
   {
     char string[3];
@@ -155,6 +159,24 @@ void TM68000::UpdateCyclesForEClock() {
 #undef LOGSECTION
 
 #endif//E-clock
+
+#if defined(SSE_CPU_IPL_DELAY)
+
+void TM68000::UpdateIrq() {
+  if(MC68901.Irq)
+    Irq=SR_IPL_6; // 110
+/* 
+  else if(vbl_pending)
+    Irq=SR_IPL_4; // 100
+  else if(hbl_pending)
+    Irq=SR_IPL_2; // 010
+*/
+  else
+    Irq=0;        // 000
+}
+
+#endif
+
 
 TM68000 M68000; // singleton
 

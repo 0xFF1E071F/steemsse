@@ -1862,7 +1862,9 @@ is asserted.
 #endif
     if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
     ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
+    {
       vbl_pending=true;
+    }
 
   Glue.Status.vbi_done=true;
 
@@ -2016,7 +2018,11 @@ void event_mfp_write() {
     MC68901.LastRegisterFormerValue=mfp_reg[MC68901.LastRegisterWritten];
 #endif
     mfp_reg[MC68901.LastRegisterWritten]=MC68901.LastRegisterWrittenValue;
+#if defined(SSE_INT_MFP_394C)
+    MC68901.UpdateNextIrq(time_of_event_mfp_write);
+#else
     MC68901.UpdateNextIrq(); // for example to clear IRQ
+#endif
     MC68901.WritePending=false;
   }
   time_of_event_mfp_write=time_of_next_event+n_cpu_cycles_per_second;
