@@ -53,11 +53,17 @@ so refactoring due!
   int cycles_for_eclock; // because of integer overflow problems
   COUNTER_VAR cycles0; // to record ACT
 #endif
+#if defined(SSE_CPU_IPL_DELAY)
+  COUNTER_VAR LastIplChange;
+#endif
 #if defined(SSE_CPU_TRUE_PC)
   MEM_ADDRESS Pc;
 #endif
 #if defined(SSE_CPU_392C)
   int ThinkingCycles; // :) not Idle for 'cycles with no bus access'
+#endif
+#if defined(SSE_CPU_IPL_DELAY)
+  WORD Irq; // = IPL level on the input pins (shifted as in SR)
 #endif
 #if defined(SSE_DEBUG)
   int IrAddress; // pc at start
@@ -80,12 +86,16 @@ so refactoring due!
 #endif
   BYTE ProcessingState;
   bool tpend; // actual internal latch set when CPU should trace current instruction
+
   // FUNCTIONS
   TM68000();
   void Reset(bool Cold);
 #if defined(SSE_CPU_E_CLOCK)
   int SyncEClock(int dispatcher);
   void UpdateCyclesForEClock();
+#endif
+#if defined(SSE_CPU_IPL_DELAY)
+  void UpdateIrq();
 #endif
 };
 

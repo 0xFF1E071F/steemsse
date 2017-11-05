@@ -68,6 +68,24 @@ void ASMCALL check_for_interrupts_pending() {
     HBI and VBI as well as MFP interrupts.
 */
 
+#if defined(SSE_CPU_IPL_DELAY)
+/*  The CPU checks its IPL lines before the end of the instruction.
+    From figure 5-11 in M68000 User Manual, the IPL lines seem to be
+    sampled about 2 cycles before the end of the instruction, but it may vary
+    with instructions.
+    If an interrupt happens after that, it won't be taken until the
+    next instruction.
+    Problem: the delay should be far longer?
+*/
+  if(OPTION_C2)
+  {
+    if(ACT-M68000.LastIplChange>=CPU_IPL_CHECK_TIME) 
+      M68000.UpdateIrq();
+    else  // come back after next instruction
+      ioaccess|=IOACCESS_FLAG_FOR_CHECK_INTRS; 
+  }
+#endif
+
 #if defined(SSE_INT_MFP)
 /*  For MFP interrupts, there are all sorts of tests before triggering the
     interrupt, the problem was that some of those tests were in mfp_interrupt().
@@ -77,6 +95,9 @@ void ASMCALL check_for_interrupts_pending() {
   if(!STOP_INTS_BECAUSE_INTERCEPT_OS) //internal Steem flags
   {
     if (!(ioaccess & IOACCESS_FLAG_DELAY_MFP) //internal Steem flag
+#if defined(SSE_CPU_IPL_DELAY)
+      && (M68000.Irq==SR_IPL_6 || !OPTION_C2)
+#endif
       && ((sr & SR_IPL)<SR_IPL_6)) //MFP can interrupt to begin with
     {
       BYTE iack_latency=MFP_IACK_LATENCY; //28
@@ -281,9 +302,9 @@ void ASMCALL check_for_interrupts_pending() {
 
     if (hbl_pending
 #if defined(SSE_GLUE)
-      && !Glue.Status.hbi_done
-#endif      
-      ){ 
+      && !Glue.Status.hbi_done //?
+#endif   
+      ){
       if ((sr & SR_IPL)<SR_IPL_2){ //SS rare
         // Make sure this HBL can't occur when another HBL has already happened
         // but the event hasn't fired yet.
@@ -375,9 +396,11 @@ void HBLInterrupt() {
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
 #endif
+
   m68k_interrupt(LPEEK(0x0068));       
   // set CPU registers
   sr=(sr & (WORD)(~SR_IPL)) | (WORD)(SR_IPL_2);
+
   debug_check_break_on_irq(BREAK_IRQ_HBL_IDX); 
 
 #if defined(SSE_CPU_392B)
@@ -454,6 +477,7 @@ void VBLInterrupt() {
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
 #endif
+
   m68k_interrupt(LPEEK(0x0070));
 
   sr=(sr& (WORD)(~SR_IPL))|(WORD)(SR_IPL_4);

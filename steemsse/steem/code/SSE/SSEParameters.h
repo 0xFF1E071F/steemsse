@@ -57,6 +57,12 @@
 
 #endif
 
+#if defined(SSE_CPU_IPL_DELAY)
+
+#define CPU_IPL_CHECK_TIME 2 // cycles before end of instruction when IPL is scanned
+
+#endif
+
 #if defined(SSE_CPU_HISPEED_392) //GHz!=1024MHz
 #if defined(SSE_CPU_4GHZ)
 #define CPU_MAX_HERTZ (4000000000)
@@ -193,6 +199,7 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_GLUE)
 // extremely important parameters, modified according to ST model and wakestate
+
 enum {
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
   GLU_DE_OFF_72=166,
@@ -300,25 +307,26 @@ enum {
 #define MFP_CLOCK 2457600
 #define MFP_IACK_LATENCY (28) 
 
-#if defined(SSE_INT_MFP_PRESCALE)
+#if defined(SSE_INT_MFP_READ_DELAY_392)
 /*  Explanation for the negative value:
     Time necessary to copy the register value to the IO lines. But then it
     is general, not just for data timers...
+    (smells like a hack...)
 */
 #define MFP_READ_REGISTER_DELAY (-2)
 #endif
 
-#if defined(SSE_INT_MFP_394B)
-#define MFP_TIMER_SET_DELAY (6+1) // STE: DSoTS vs LoSTE Screens
+#if defined(SSE_CPU_IPL_DELAY)
+#define MFP_TIMER_SET_DELAY (7-CPU_IPL_CHECK_TIME) // make up for IRQ delay
+#elif defined(SSE_INT_MFP_394B)
+#define MFP_TIMER_SET_DELAY (7)
 #elif defined(SSE_INT_MFP_PRESCALE)
-// compensates the non-substraction in mfp_set_timer_reg()
-// seems likelier this way
 #define MFP_TIMER_SET_DELAY (4) 
 #else
-#define MFP_TIMER_SET_DELAY (8) // see DSOTS
+#define MFP_TIMER_SET_DELAY (8)
 #endif
 
-#if defined(SSE_INT_MFP_394B)
+#if defined(SSE_INT_MFP_394B) // no wobble
 #elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
@@ -327,7 +335,9 @@ enum {
 #define MFP_TIMERS_WOBBLE (4) // &
 #endif
 
-#if defined(SSE_INT_MFP_PRESCALE)
+#if defined(SSE_INT_MFP_394C) // wobble is here
+#define MFP_WRITE_LATENCY (4+rand()%2) // tuned with SPURIOUS.TOS
+#elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_WRITE_LATENCY (2)
 #else
 #define MFP_WRITE_LATENCY (4)//(8) 

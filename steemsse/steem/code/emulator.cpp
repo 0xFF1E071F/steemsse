@@ -204,7 +204,9 @@ void init_timings()
   shifter_freq_at_start_of_vbl=shifter_freq;
   scanline_time_in_cpu_cycles_at_start_of_vbl=scanline_time_in_cpu_cycles[shifter_freq_idx];
   hbl_pending=true;
-
+#if defined(SSE_CPU_IPL_DELAY)
+  M68000.LastIplChange=0;
+#endif
   cpu_time_of_start_of_event_plan=0; //0x7f000000; // test overflow
 
 #if !defined(SSE_GLUE)

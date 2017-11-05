@@ -1781,14 +1781,16 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_SET_RUNDIR_AS_DEFAULT
 #define SSE_YM2149_MAMELIKE_394 // move option
 #define SSE_IKBD_6301_ROM_KEYTABLE //?
+#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
 
-#endif//beta
+#endif//394
 
 #if SSE_VERSION>=394 && 1 //bugfixes for next version
 
 #define SSE_BUGFIX_394
 #define SSE_CPU_394C // check PC in RTE
 #define SSE_CPU_394D // action read in exception
+#define SSE_CPU_394E // missing "check reads"
 #define SSE_DISK_SCP_394 // Turrican 2 revs
 #define SSE_FDC_394 
 #define SSE_GLUE_HIRES_394 // low res in monochrome
@@ -1796,12 +1798,13 @@ Beta: not SSE_PRIVATE_BUILD
 #undef SSE_IKBD_6301_PASTE
 #define SSE_INT_MFP_394
 #define SSE_INT_MFP_394B
+#define SSE_INT_MFP_394C
 #undef SSE_INT_MFP_TIMERS_WOBBLE
 #undef SSE_INT_MFP_TIMERS_WOBBLE_390
 #undef SSE_SOUND_DYNAMICBUFFERS3 //?
 #define SSE_TOS_GEMDOS_394 //serious bugfix?
 
-#endif//bugfix
+#endif//394 bugfix
 
 
 ///////////////
@@ -1837,6 +1840,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #ifdef SSE_BETA // long term, tests
+#define SSE_CPU_IPL_DELAY // IPL scan isn't instant (only for MFP in this emu)
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
@@ -1844,8 +1848,8 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
-#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
 //#define TEST_STEEM_INTRO
+///#undef SSE_INT_MFP_JAM_AFTER_READ
 #endif
 
 

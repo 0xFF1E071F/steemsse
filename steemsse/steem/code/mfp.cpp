@@ -906,6 +906,9 @@ int TMC68901::UpdateNextIrq(COUNTER_VAR at_time) {
     In v3.8 it has become vital for precise MFP emu.
 */
   ASSERT(OPTION_C2);
+#if defined(SSE_CPU_IPL_DELAY)
+  bool old_irq=Irq;
+#endif
   NextIrq=-1; //default: none in sight
   Irq=false;
   if(at_time==-1)//default
@@ -929,6 +932,10 @@ int TMC68901::UpdateNextIrq(COUNTER_VAR at_time) {
         break; // no IRQ possible then (was bug)
     }//nxt irq
   }
+#if defined(SSE_CPU_IPL_DELAY)
+  if(Irq && !old_irq)
+    M68000.LastIplChange=at_time;
+#endif
   return NextIrq;
 }
 
@@ -981,8 +988,11 @@ void TMC68901::ComputeNextTimerB(int info) {
     else
     {
       // add MFP delays (read + irq) (TIMERB07.TOS)
+#if defined(SSE_CPU_IPL_DELAY)
+      cpu_cycles_from_hbl_to_timer_b+=28-CPU_IPL_CHECK_TIME; 
+#else
       cpu_cycles_from_hbl_to_timer_b+=28;
-
+#endif
       // absolute
       tontb=cpu_timer_at_start_of_hbl+cpu_cycles_from_hbl_to_timer_b;
       // add jitter
