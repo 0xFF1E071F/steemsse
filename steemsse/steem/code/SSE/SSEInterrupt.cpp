@@ -212,6 +212,20 @@ void ASMCALL check_for_interrupts_pending() {
                   if((OSD_MASK1 & OSD_CONTROL_IACK) && detect_iack_subst)
                     TRACE_OSD("IACK %d %d -> %d",iack_latency,detect_iack_subst,irq);
 #endif
+
+#if defined(SSE_CPU_394A1)
+/*  The CPU needs time to check IPL (Audio Sculpture).
+    When it's a MFP interrupt, we must do that in a hacky way or the timing
+    will be negated. It's purely an implementation issue.
+*/
+                  if(cpu_stopped==2)
+                  {
+                    //TRACE_MFP("unSTOPping delay %d at %d\n",CPU_STOP_DELAY,ACT);
+                    INSTRUCTION_TIME(CPU_STOP_DELAY);
+                    MC68901.IackTiming+=CPU_STOP_DELAY; // hack
+                  }
+#endif
+
                   mfp_interrupt(irq); //then cause interrupt
                   break;        //lower priority interrupts not allowed now.
                 }//enabled
@@ -353,8 +367,13 @@ void HBLInterrupt() {
     pc_history_idx=0;
 #endif
 
-
 #endif//dbg
+
+#if defined(SSE_CPU_394A1)
+  // The CPU needs time to check IPL
+  if(cpu_stopped==2)
+    INSTRUCTION_TIME(CPU_STOP_DELAY); 
+#endif
 
   if (cpu_stopped)
     M68K_UNSTOP;
@@ -441,6 +460,12 @@ void VBLInterrupt() {
 #endif
 
 #endif//dbg
+
+#if defined(SSE_CPU_394A1)
+  // The CPU needs time to check IPL
+  if(cpu_stopped==2)
+    INSTRUCTION_TIME(CPU_STOP_DELAY);
+#endif
 
   if (cpu_stopped)
     M68K_UNSTOP;

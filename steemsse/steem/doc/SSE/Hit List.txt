@@ -156,6 +156,7 @@ Some intros also benefit from larger display.
 - Aladin (3.5.0; broken 3.5.1, fixed 3.5.2, broken 3.6.0, fixed 3.6.1,
   legit 3.7.1!)
 - Atari Diagnostic Cartridge (3.5.2)
+- Audio Sculpture (3.9.4) - mostly using findings by others
 - Megamax C (scripts on HD) (3.6.1)
 - Music Master (3.9.0)
 - NEOchrome: mouse speed? (3.4)

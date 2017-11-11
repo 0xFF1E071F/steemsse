@@ -762,7 +762,7 @@ void mfp_interrupt(int irq) {
   if(FRAME_REPORT_MASK2 & FRAME_REPORT_MASK_INT)
     FrameEvents.Add(scan_y,LINECYCLES,'I',0x60+irq);
 #endif
-  TRACE_INT("%d PC %X IRQ %d VEC %X ",ACT,old_pc,irq,LPEEK(vector));
+  TRACE_INT("%d %d %d %d PC %X IRQ %d VEC %X ",ACT,TIMING_INFO,old_pc,irq,LPEEK(vector));
   switch(irq)
   {
   case 0:TRACE_INT("Centronics busy\n");          break;

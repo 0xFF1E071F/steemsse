@@ -3081,7 +3081,7 @@ HRESULT SteemDisplay::D3DCreateSurfaces() {
       Width=640;
       Height=480;
     }
-#if defined(SSE_VID_ADJUST_DRAWING_ZONE2)
+#if defined(SSE_VID_ADJUST_DRAWING_ZONE2) && !defined(SSE_BUGFIX_394)
     draw_blit_source_rect.right=int(Width);
     draw_blit_source_rect.bottom=int(Height);
 #else
