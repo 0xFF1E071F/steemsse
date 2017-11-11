@@ -51,16 +51,15 @@
 // CPU //
 /////////
 
-#if defined(SSE_CPU) && !defined(SSE_CPU_394A)
 
+#ifdef SSE_CPU_394A1
+#define CPU_STOP_DELAY 4 //?
+#else 
 #define CPU_STOP_DELAY 8
-
 #endif
 
 #if defined(SSE_CPU_IPL_DELAY)
-
 #define CPU_IPL_CHECK_TIME 2 // cycles before end of instruction when IPL is scanned
-
 #endif
 
 #if defined(SSE_CPU_HISPEED_392) //GHz!=1024MHz
@@ -200,7 +199,7 @@ Some STFs                32.02480    8.0071
 #if defined(SSE_GLUE)
 // extremely important parameters, modified according to ST model and wakestate
 
-enum {
+enum EGlueTimings {
   GLU_DE_ON_72=6, //+ WU_res_modifier; STE-4
   GLU_DE_OFF_72=166,
   GLU_DE_ON_60=52, //+ WU_sync_modifier; STE -16
@@ -250,10 +249,8 @@ enum {
 
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c for mouse speed
-#ifdef SSE_BUGFIX_394
-#define IKBD_6301_MOUSE_VBL_MAX_TICKS (30)
-#else
-#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40)
+#ifndef SSE_BUGFIX_394
+#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40) //argh!
 #endif
 #ifdef SSE_DEBUG
 #define HD6301_MAX_DIS_INSTR 2000 
@@ -316,17 +313,17 @@ enum {
 #define MFP_READ_REGISTER_DELAY (-2)
 #endif
 
-#if defined(SSE_CPU_IPL_DELAY)
-#define MFP_TIMER_SET_DELAY (7-CPU_IPL_CHECK_TIME) // make up for IRQ delay
-#elif defined(SSE_INT_MFP_394B)
-#define MFP_TIMER_SET_DELAY (7)
+#if defined(SSE_INT_MFP_394B)
+#define MFP_TIMER_SET_DELAY 5
 #elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_TIMER_SET_DELAY (4) 
 #else
 #define MFP_TIMER_SET_DELAY (8)
 #endif
 
-#if defined(SSE_INT_MFP_394B) // no wobble
+#if defined(SSE_INT_MFP_TIMERS_WOBBLE)
+#if defined(SSE_INT_MFP_394B)
+#define MFP_TIMERS_WOBBLE (2) 
 #elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
 #elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
@@ -334,13 +331,14 @@ enum {
 #else
 #define MFP_TIMERS_WOBBLE (4) // &
 #endif
+#endif // wobble
 
-#if defined(SSE_INT_MFP_394C) // wobble is here
-#define MFP_WRITE_LATENCY (4+rand()%2) // tuned with SPURIOUS.TOS
+#if defined(SSE_INT_MFP_394C)
+#define MFP_WRITE_LATENCY (4)
 #elif defined(SSE_INT_MFP_PRESCALE)
 #define MFP_WRITE_LATENCY (2)
 #else
-#define MFP_WRITE_LATENCY (4)//(8) 
+#define MFP_WRITE_LATENCY (4)
 #endif
 
 #endif//mfp

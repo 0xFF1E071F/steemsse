@@ -311,10 +311,20 @@ void THD6301::Vbl() { // this is called in run.cpp right after IKBD_VBL()
   // the following avoids the mouse going backward at high speed
 
 #ifdef SSE_BUGFIX_394 //previous system was better
-  const int basis=IKBD_6301_MOUSE_VBL_MAX_TICKS;
-  const BYTE res_corr=11;
-  const BYTE max_pix_h=(shifter_freq_at_start_of_vbl>50)?(basis-res_corr):basis;
-  const BYTE max_pix_v=(shifter_freq_at_start_of_vbl==72)?(basis-res_corr):basis;
+  BYTE max_pix_h=30; //strange, it seems horizontal movement is different
+  BYTE max_pix_v=30;
+  switch(screen_res){
+    case 0:
+      break;
+    case 1:
+      max_pix_h=35;
+      max_pix_v=12;
+      break;
+    default:
+      max_pix_h=20;
+      max_pix_v=20;
+      break;
+  }
 #else
   const int basis=IKBD_6301_MOUSE_VBL_MAX_TICKS; // 30 for all res //bug: it was 40
   const int max_pix_h=basis;
@@ -333,6 +343,11 @@ void THD6301::Vbl() { // this is called in run.cpp right after IKBD_VBL()
       TRACE_LOG("F%d 6301 mouse move %d,%d\n",FRAME,MouseVblDeltaX,MouseVblDeltaY);
 #endif
   // do some computing only once per frame
+#ifdef SSE_BUGFIX_394 
+  ASSERT(shifter_freq_at_start_of_vbl);
+  if(!shifter_freq_at_start_of_vbl)
+    return;
+#endif
   COUNTER_VAR cycles_per_frame=HD6301_CLOCK/shifter_freq_at_start_of_vbl; //TODO
   MouseCyclesPerTickX=(MouseVblDeltaX)?(cycles_per_frame/abs(MouseVblDeltaX)):0;
   MouseCyclesPerTickY=(MouseVblDeltaY)?(cycles_per_frame/abs(MouseVblDeltaY)):0;

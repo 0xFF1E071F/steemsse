@@ -207,7 +207,6 @@ void TGlue::CheckSideOverscan() {
     if(!freq_change_this_scanline)
       return;
     int fetched_bytes_mod=0;
-
     if(!(CurrentScanline.Tricks&TRICK_0BYTE_LINE)
       && CyclesIn>=ScanlineTiming[LINE_START][FREQ_72]
       && !(ShiftModeAtCycle(ScanlineTiming[LINE_START][FREQ_72])&2))
@@ -802,6 +801,7 @@ void TGlue::CheckSideOverscan() {
 #if defined(SSE_GLUE_LINE_PLUS_2)
 
   ASSERT(screen_res<2);
+  //if(scan_y!=-29)
   if(!(CurrentScanline.Tricks&
     (TRICK_0BYTE_LINE|TRICK_LINE_PLUS_2|TRICK_LINE_PLUS_4|TRICK_LINE_PLUS_6
       |TRICK_LINE_PLUS_20|TRICK_LINE_PLUS_26)))
@@ -828,7 +828,8 @@ void TGlue::CheckSideOverscan() {
     update: on real STE, flicker depends on some unidentified WS
  */
 #if defined(SSE_BUGFIX_394)
-    if(OPTION_WS && ST_TYPE==STE && MMU.WU[OPTION_WS]==1) // 2 for demos on STE...
+    if(OPTION_WS && ST_TYPE==STE && MMU.WU[OPTION_WS]==1 //WU 2 for demos on STE...
+      && CurrentScanline.Cycles==512) // DSOTS
 #elif defined(SSE_SHIFTER_UNSTABLE_392) // we add (spurious) conditions
     if(ST_TYPE!=STE&&MMU.WS[OPTION_WS]==1||ST_TYPE==STE&&MMU.WS[OPTION_WS]!=1)
 #endif

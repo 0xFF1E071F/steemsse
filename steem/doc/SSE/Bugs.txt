@@ -79,13 +79,8 @@ patched version jumping woman trash on bottom
 
 -Keyboard: sometimes won't take input anymore - quit Steem and start again
 
--Lethal Xcess: possible to lose overscan at start on STE - reboot
-
--Lose picture at stop with 400x278 display size
-Due to DirectDraw hacks
-
 -LoSTE screens
-STE sometimes lower border scanlines are shifted
+STE on some boots, screen is shifted
 
 -lowlife 60
 
@@ -115,6 +110,8 @@ no lower oversan, glitches on the right (correct)
 -phaleon
 HMD plasma wrong left border (correct)
 
+-Phantom scroller flickers
+
 -Random crashes and failures... (rare!)
 
 -Realm of the Trolls STX bad init disc (STW/HFE)
@@ -135,14 +132,10 @@ Is it Steem or TOS bug?
 -Sea of Colour hangs on ACSI disk (depends on driver?)
 
 -Sinfull Sinuses: bad 4bit rasters display on TOS 1.62UK (correct)
-Try with French TOS
 
 -Snapshot: can't save when HD files open (big problem!)
 
 -Snapshot: poor STW and SCP resuming (improved in v3.7.2)
-
--Star Trek 
-samples too noisy (improved in v3.9.2 with higher SR)
 
 -Starting emulation too fast after loading a snapshot can hang Steem
 
@@ -154,7 +147,7 @@ samples too noisy (improved in v3.9.2 with higher SR)
 
 -Steem is unable to take advantage of multiple cores in 'fast forward' mode.
 
--STE microwire; treble control doesn't work
+-STE microwire sound is not accurate
 
 -Super Hang-On sound not clean (correct)
 
@@ -168,16 +161,10 @@ samples too noisy (improved in v3.9.2 with higher SR)
 
 -Ultimate 3D dots STE can fail to load
 
--Union demo: sound dirty
- The sound on the text boot screens uses very high frequency.
- With option C2, it will sound better with a very high sampling rate.
-
 -Trauma STX: claims there's a KEYBOARD PROOBLEM. Apparently, it checks
 if it's a French layout. Works with French TOS.
 
 -Tyranny STE: dot clouds between 3D shapes (correct)
-
--Warp STX may fail after 1st logo
 
 -Alt YM emu: sound can get trashy, weak, noisy, etc. 
 

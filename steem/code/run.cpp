@@ -2012,8 +2012,7 @@ void event_mfp_write() {
   if(OPTION_C2 && MC68901.WritePending)
   {
     ASSERT(time_of_event_mfp_write!=MC68901.WriteTiming);
-//    TRACE_MFP("%d execute event_mfp_write(): mfp_reg[%d]=%X\n",ACT,MC68901.LastRegisterWritten,MC68901.LastRegisterWrittenValue);
-    TRACE_MFP("%d %s=%X\n",ACT,mfp_reg_name[MC68901.LastRegisterWritten],MC68901.LastRegisterWrittenValue);
+    TRACE_MFP("%d %d %d %d %s=%X\n",ACT,TIMING_INFO,mfp_reg_name[MC68901.LastRegisterWritten],MC68901.LastRegisterWrittenValue);
 #if defined(SSE_DEBUG) //for trace
     MC68901.LastRegisterFormerValue=mfp_reg[MC68901.LastRegisterWritten];
 #endif

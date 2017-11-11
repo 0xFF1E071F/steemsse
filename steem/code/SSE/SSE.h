@@ -71,12 +71,11 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-#if SSE_VERSION>=394
-#define SSE_BETA_BUGFIX // beta for just bugfixes
-#endif
+//#define SSE_RELEASE
 
-#if SSE_VERSION>=394
+#if !defined(SSE_RELEASE)
 #define SSE_BETA //title, OSD, plus some testing - new features
+#define SSE_BETA_BUGFIX // beta for just bugfixes
 #endif
 
 #if defined(SSE_BETA) || defined(SSE_BETA_BUGFIX)
@@ -1775,6 +1774,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_IRQ_IN_HISTORY
 #endif
 #define SSE_CPU_394A // STOP behaviour + timing
+#define SSE_CPU_394A1
 //#define SSE_CPU_394B // trace timings extended (?)
 #define SSE_CPU_394E // reset
 #define SSE_GUI_WS_394 // save in ini, not sts
@@ -1799,8 +1799,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_394
 #define SSE_INT_MFP_394B
 #define SSE_INT_MFP_394C
-#undef SSE_INT_MFP_TIMERS_WOBBLE
-#undef SSE_INT_MFP_TIMERS_WOBBLE_390
 #undef SSE_SOUND_DYNAMICBUFFERS3 //?
 #define SSE_TOS_GEMDOS_394 //serious bugfix?
 
@@ -1840,7 +1838,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #ifdef SSE_BETA // long term, tests
-#define SSE_CPU_IPL_DELAY // IPL scan isn't instant (only for MFP in this emu)
+//#define SSE_CPU_IPL_DELAY // IPL scan isn't instant (only for MFP in this emu)
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
@@ -1849,7 +1847,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 //#define TEST_STEEM_INTRO
-///#undef SSE_INT_MFP_JAM_AFTER_READ
 #endif
 
 
