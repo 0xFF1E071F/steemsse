@@ -140,6 +140,7 @@ bool TDma::Drq() {
     sector count has been set.
     This could be important in theory, but know no case, to simplify
     we only request byte when drive is ready.
+    TODO
 */
 
 BYTE TDma::GetFifoByte() {

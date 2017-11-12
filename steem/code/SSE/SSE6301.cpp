@@ -280,8 +280,10 @@ void THD6301::ResetChip(int Cold) {
   if(HD6301_OK && OPTION_C1)
   {
 #if defined(SSE_IKBD_6301_JOYSTICK_CRASH)
+#if !defined(SSE_BUGFIX_394) // in run.cpp
     if(HD6301.Crashed)
       mousek=0; // :)
+#endif
     HD6301.Crashed=(BYTE)mousek; // for fun, but our emu is limited to monochip
 #else    
     HD6301.Crashed=false;

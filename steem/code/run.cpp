@@ -159,12 +159,12 @@ void run()
   //TODO don't restart if blit error, init DX should change state
 #if defined(SSE_CPU_HALT)
   if(M68000.ProcessingState==TM68000::HALTED
-#if defined(SSE_IKBD_6301) //TODO
+#if defined(SSE_IKBD_6301) && !defined(SSE_BUGFIX_394)
     || HD6301.Crashed
 #endif
     )
     return; // cancel "run" until reset
-#if defined(SSE_GUI_STATUS_BAR_ALERT)
+#if defined(SSE_GUI_STATUS_BAR_ALERT) && !defined(SSE_BUGFIX_394)
   else if(M68000.ProcessingState==TM68000::BLIT_ERROR
 #ifdef SSE_BOILER
     ||M68000.ProcessingState==TM68000::BOILER_MESSAGE
@@ -176,6 +176,14 @@ void run()
     InvalidateRect(status_bar_win,NULL,false);
   }
 #endif
+#endif
+
+#if defined(SSE_IKBD_6301) && defined(SSE_BUGFIX_394)
+  HD6301.Crashed=mousek=0;
+  //after BLIT or HD6301 or whatever state/message
+  M68000.ProcessingState=TM68000::NORMAL;
+  HWND status_bar_win=GetDlgItem(StemWin,120); // get handle
+  InvalidateRect(status_bar_win,NULL,false);
 #endif
 
   bool ExcepHappened;

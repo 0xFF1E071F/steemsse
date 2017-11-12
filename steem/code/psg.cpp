@@ -856,7 +856,11 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
       if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
 #if defined(SSE_CARTRIDGE_BAT)
-        val+=(SSEConfig.mv16 || SSEConfig.mr16)
+        val+=(SSEConfig.mv16 || SSEConfig.mr16
+#if defined(SSE_DONGLE_PROSOUND) && defined(SSE_BUGFIX_394)
+          ||(DONGLE_ID==TDongle::PROSOUND)
+#endif
+        )
         ? (**lp_dma_sound_channel)
         : (dma_sample*DMA_SOUND_MULTIPLIER);
 #else
@@ -919,7 +923,11 @@ inline void WriteSoundLoop(int Alter_V, int* Out_P,int Size,int& c,int &val,
         if(! (d2_dpeek(FAKE_IO_START+20)>>15) )
 #endif
 #if defined(SSE_CARTRIDGE_BAT)
-        val+=(SSEConfig.mv16 || SSEConfig.mr16)
+        val+=(SSEConfig.mv16 || SSEConfig.mr16
+#if defined(SSE_DONGLE_PROSOUND) && defined(SSE_BUGFIX_394)
+          ||(DONGLE_ID==TDongle::PROSOUND)
+#endif
+        )
         ? (*(*lp_dma_sound_channel+1))
         : (dma_sample*DMA_SOUND_MULTIPLIER);
 #else

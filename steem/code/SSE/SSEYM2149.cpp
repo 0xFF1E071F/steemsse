@@ -166,11 +166,11 @@ void TYM2149::Reset() {
   m_cycles=0; 
   // 32 steps for envelope in YM - we do it at reset for old snapshots
   m_env_step_mask=ENVELOPE_MASK; 
-#ifdef SSE_BUGFIX_394 //oops wrong variable
-  m_holding=true; // Captain Blood: no envelope if no write to reg 13
-#else
-  m_hold=1; // Captain Blood
+#ifdef SSE_BUGFIX_394  // Captain Blood...
+  m_holding=0;
+  m_attack=15; //grr! is it for real now?
 #endif
+  m_hold=1; // Captain Blood
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
   time_at_vbl_start=0;
   time_of_last_sample=0;
