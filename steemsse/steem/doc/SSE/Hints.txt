@@ -241,7 +241,7 @@ else you're likely to get little dots.
 - Ultimate Demo by dynamic duo: <4MB
 - Ultimate GFA Demo boot screen: STF
 - UMD8730 STF: #
-- Union Demo: STF 1MB
+- Union Demo: STF 1MB, ADAT
 - The World is my Oyster screen #2: STF
 - World of Music -NPG: WS1 if STE
 - Ventura: mouse to rotate menu

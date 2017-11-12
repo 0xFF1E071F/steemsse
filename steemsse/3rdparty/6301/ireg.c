@@ -332,6 +332,9 @@ static dr4_getb (offs)
     && (HD6301.MouseVblDeltaX || HD6301.MouseVblDeltaY) )
   {
     // need to update mouse at each read, because the ROM checks for stability
+#ifdef SSE_BUGFIX_394
+    if(HD6301.MouseVblDeltaX)
+#endif
     while(HD6301.MouseCyclesPerTickX && cpu.ncycles>=HD6301.MouseNextTickX
       &&HD6301.click_x<abs(HD6301.MouseVblDeltaX))
     {
@@ -343,6 +346,9 @@ static dr4_getb (offs)
       HD6301.MouseNextTickX+=HD6301.MouseCyclesPerTickX;
       //TRACE("mouse tick x %d on %d, next on %d\n",HD6301.click_x,cpu.ncycles,HD6301.MouseNextTickX);
     }
+#ifdef SSE_BUGFIX_394
+    if(HD6301.MouseVblDeltaY)
+#endif
     while(HD6301.MouseCyclesPerTickY && cpu.ncycles>=HD6301.MouseNextTickY
       &&HD6301.click_y<abs(HD6301.MouseVblDeltaY))
     {

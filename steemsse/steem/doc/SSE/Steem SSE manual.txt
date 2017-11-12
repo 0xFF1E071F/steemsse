@@ -75,11 +75,6 @@ http://www.kryoflux.com/
 -D3DX9_43.dll (D3D)
 http://www.microsoft.com/en-us/download/details.aspx?id=8109
 
-About D3D9, it's normal that you must complete your installation, it's
-due to some strange Micro$oft policy. Please try to fix it on your own
-before asking for help, not that we don't want to help you, but google
-(or bing) will offer you better advice.
-
 -Drive image
 http://atari.8bitchip.info/drimus.php 
 
@@ -353,16 +348,14 @@ Steem we crash joyously: you mustn't wait).
 
  BLIT ERROR
 
-Serious problem with video rendering. Better leave at once if possible! you
-may need to use the task manager to end the process. Sorry about that, but
-when Direct3D crashes it's hard to recover.
-Maybe check your display options. As a recourse if it persists, you could
-try the DirectDraw build.
+Serious problem with video rendering.
+In some cases Steem can recover, in others you have to leave or even use the
+task manager to kill Steem.
 
  HD6301 CRASHED
 
-There was some serious problem with the keyboard controller emulation.
-Resetting the ST is necessary.
+There was some serious problem with the keyboard controller (6301). It will do
+that for example if a mouse or joystick button is pressed during a reset.
 
 
 Options

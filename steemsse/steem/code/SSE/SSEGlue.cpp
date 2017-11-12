@@ -926,7 +926,12 @@ detect unstable: switch MED/LOW - Beeshift
 */
   if(OPTION_WS && !(CurrentScanline.Tricks&(TRICK_UNSTABLE|TRICK_0BYTE_LINE
     |TRICK_LINE_PLUS_26|TRICK_LINE_MINUS_106|TRICK_LINE_MINUS_2
-    |TRICK_4BIT_SCROLL)) && FetchingLine()) 
+    |TRICK_4BIT_SCROLL)) && FetchingLine()
+#ifdef SSE_BUGFIX_394 // European Demos OVR II - a late stabilizer?
+    && ((PreviousScanline.Tricks&(TRICK_LINE_PLUS_26|TRICK_STABILISER
+    |TRICK_LINE_MINUS_106))!=TRICK_LINE_PLUS_26)
+#endif
+    ) 
   {
 
     // detect switch to medium or high during DE (more compact code)
