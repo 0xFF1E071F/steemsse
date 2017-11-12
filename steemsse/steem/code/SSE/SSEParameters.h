@@ -42,7 +42,7 @@
 #if defined(SSE_CPU_MFP_RATIO)
 #define SSE_DISK_CAPS_FREQU CpuNormalHz
 #else
-#define SSE_DISK_CAPS_FREQU 8000000//? CPU speed? - even for that I wasn't helped!
+#define SSE_DISK_CAPS_FREQU 8000000
 #endif
 #endif
 
@@ -50,7 +50,6 @@
 /////////
 // CPU //
 /////////
-
 
 #ifdef SSE_CPU_394A1
 #define CPU_STOP_DELAY 4 //?
@@ -80,7 +79,6 @@
 #endif
 #endif
 
-
 #if defined(SSE_CPU_MFP_RATIO) 
 /*
 The master clock crystal and derived CPU clock table is:
@@ -92,9 +90,9 @@ Peritel (STE) (as PAL)   32.084988   8.021247
 Some STFs                32.02480    8.0071
 */
 
-#define  CPU_STF_PAL 8021247
-#define  CPU_STF_MEGA (8010613) //rounded
-#define  CPU_STE_PAL (CPU_STF_PAL) 
+#define  CPU_CLOCK_STF_PAL 8021247
+#define  CPU_CLOCK_STF_MEGA (8010613) //rounded
+#define  CPU_CLOCK_STE_PAL (CPU_CLOCK_STF_PAL) 
 
 #endif
 
@@ -103,7 +101,6 @@ Some STFs                32.02480    8.0071
 // DEBUG //
 ///////////
 
-//#if defined(SSE_DEBUG) 
 #if defined(SSE_DEBUG_TRACE_FILE)//3.8.2
 #if defined(SSE_UNIX)
 #define SSE_TRACE_FILE_NAME "./TRACE.txt"
@@ -134,21 +131,19 @@ Some STFs                32.02480    8.0071
 #endif
 
 
-
-#if defined(SSE_DISK_GHOST)
-#define AVG_HBLS_SECTOR (200)
-#endif
-
 //////////
 // DISK //
 //////////
 
+#define DISK_BYTES_PER_TRACK (6256)
 /*  #bytes/track
     The value generally seen is 6250.
     The value for 11 sectors is 6256. It's possible if the clock is higher than
     8mhz, which is the case on the ST.
 */
-#define DISK_BYTES_PER_TRACK (6256)
+
+#define DISK_11SEC_INTERLEAVE 6
+
 
 ///////////
 // DRIVE //
@@ -156,7 +151,6 @@ Some STFs                32.02480    8.0071
 
 #if defined(SSE_DRIVE)
 
-#define DRIVE_11SEC_INTERLEAVE 6
 #define DRIVE_RPM 300
 #define DRIVE_MAX_CYL 83
 
@@ -195,7 +189,6 @@ Some STFs                32.02480    8.0071
 // GLU //
 /////////
 
-
 #if defined(SSE_GLUE)
 // extremely important parameters, modified according to ST model and wakestate
 
@@ -224,11 +217,8 @@ enum EGlueTimings {
 ////////
 
 #define WINDOW_TITLE_MAX_CHARS 20+5 //argh, 20 wasn't enough
-
 #define README_FONT_NAME "Courier New"
 #define README_FONT_HEIGHT 16
-
-
 #define EXT_TXT ".txt" //save bytes?
 #define CONFIG_FILE_EXT "ini" // ini, cfg?
 
@@ -241,19 +231,10 @@ enum EGlueTimings {
 #define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
 
-// Parameters used in true and fake 6301 emu
-
-#ifndef SSE_SHIFTER
-#define HD6301_CYCLES_PER_SCANLINE 64 // used if SSE_SHIFTER not defined
-#endif
-
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c for mouse speed
 #ifndef SSE_BUGFIX_394
 #define IKBD_6301_MOUSE_VBL_MAX_TICKS (40) //argh!
-#endif
-#ifdef SSE_DEBUG
-#define HD6301_MAX_DIS_INSTR 2000 
 #endif
 
 
@@ -274,7 +255,6 @@ enum EGlueTimings {
 #if defined(SSE_CPU_E_CLOCK)
 #define ECLOCK_AUTOVECTOR_CYCLE 10 // IACK starts at cycle 10 (?)
 #endif
-
 
 #endif//int
 
@@ -314,31 +294,23 @@ enum EGlueTimings {
 #endif
 
 #if defined(SSE_INT_MFP_394B)
-#define MFP_TIMER_SET_DELAY 5
-#elif defined(SSE_INT_MFP_PRESCALE)
-#define MFP_TIMER_SET_DELAY (4) 
+#define MFP_TIMER_SET_DELAY (5)
 #else
-#define MFP_TIMER_SET_DELAY (8)
+#define MFP_TIMER_SET_DELAY (4) 
 #endif
 
 #if defined(SSE_INT_MFP_TIMERS_WOBBLE)
 #if defined(SSE_INT_MFP_394B)
 #define MFP_TIMERS_WOBBLE (2) 
-#elif defined(SSE_INT_MFP_PRESCALE)
-#define MFP_TIMERS_WOBBLE (4) //<, with STE CPU ~ STF CPU, see DSOTS
-#elif defined(SSE_INT_MFP_TIMERS_WOBBLE_390)
-#define MFP_TIMERS_WOBBLE (4+1) //<
 #else
-#define MFP_TIMERS_WOBBLE (4) // &
+#define MFP_TIMERS_WOBBLE (4)
 #endif
 #endif // wobble
 
 #if defined(SSE_INT_MFP_394C)
 #define MFP_WRITE_LATENCY (4)
-#elif defined(SSE_INT_MFP_PRESCALE)
-#define MFP_WRITE_LATENCY (2)
 #else
-#define MFP_WRITE_LATENCY (4)
+#define MFP_WRITE_LATENCY (2)
 #endif
 
 #endif//mfp
@@ -349,10 +321,8 @@ enum EGlueTimings {
 /////////
 
 #if defined(SSE_OSD)
-#define RED_LED_DELAY 1500 // Red floppy led for writing, in ms
 #define HD_TIMER 100 // Yellow hard disk led (imperfect timing)
 #endif
-
 
 
 ///////////
@@ -376,6 +346,7 @@ enum EGlueTimings {
 #if defined(SSE_YM2149_MAMELIKE_ANTIALIAS)
 #define YM_LOW_PASS_FREQ (10.5) //in khz
 #endif
+
 
 /////////////
 // TIMINGS //
@@ -409,11 +380,7 @@ enum EGlueTimings {
 #endif
 
 #if defined(SSE_STF_MATCH_TOS)
-#if defined(SSE_STF_MATCH_TOS_390)
 #define DEFAULT_TOS_STF (HardDiskMan.DisableHardDrives?0x102:0x104) // how caring!
-#else
-#define DEFAULT_TOS_STF 0x102
-#endif
 #define DEFAULT_TOS_STE 0x162
 #endif
 
@@ -427,60 +394,14 @@ enum EGlueTimings {
 #if defined(SSE_VID_BORDERS)
 
 #define ORIGINAL_BORDER_SIDE 32
-
-#if defined(SSE_VID_BORDERS_GUI_392)
-//#define LARGE_BORDER_SIDE 48
-//#define LARGE_BORDER_SIDE_WIN 46 //?
 #define VERY_LARGE_BORDER_SIDE 48
 #define VERY_LARGE_BORDER_SIDE_WIN 46 //?
 #define ORIGINAL_BORDER_BOTTOM 40
 #define LARGE_BORDER_BOTTOM 45
 #define VERY_LARGE_BORDER_BOTTOM 45
-#else
-#define LARGE_BORDER_SIDE 40 // making many hacks necessary 
-#define LARGE_BORDER_SIDE_WIN 40 // max for 800x600 display (fullscreen)
-
-#define VERY_LARGE_BORDER_SIDE 48 // 416 pixels wide for emulation
-#define VERY_LARGE_BORDER_SIDE_WIN 46 // trick, 412 pixels wide for rendering
-#define ORIGINAL_BORDER_BOTTOM 40 
-
-#if defined(SSE_VID_BORDERS_LIMIT_TO_245)
-/*  v3.8.0
-    As seen on Overscan demos on real STE + CRT: there's no trash in the lower
-    border because VBLANK is already on.
-    This is also in agreement with Atari Monitor Summary Specifications.
-    Menu Zuul 86 is buggy: no monitor will display the bottom of the letters.
-*/
-#define LARGE_BORDER_BOTTOM 45
-#define VERY_LARGE_BORDER_BOTTOM 45
-#else
-#define LARGE_BORDER_BOTTOM 48
-#define VERY_LARGE_BORDER_BOTTOM 50  // counts for raster fx
-#endif
-
-#endif//#if defined(SSE_VID_BORDERS_GUI_392)
-
 #define ORIGINAL_BORDER_TOP 30
-
-#if defined(SSE_STF_LACESCAN)
 #define BIG_BORDER_TOP 38 // 50hz
-#else
-#define BIG_BORDER_TOP 36 // for The Musical Wonder 1990
-#endif
-
-#if defined(SSE_VID_BORDERS_GUI_392) // 0:no border
-#if defined(SSE_VID_D3D)
 #define BIGGEST_DISPLAY 3 //416
-#else
-#define BIGGEST_DISPLAY 4 //416
-#endif
-#elif defined(SSE_VID_D3D)
-#define BIGGEST_DISPLAY 2 //no more 400
-#elif defined(SSE_VID_BORDERS_416) && defined(SSE_VID_BORDERS_412)
-#define BIGGEST_DISPLAY 3
-#else
-#define BIGGEST_DISPLAY 2
-#endif
 
 #endif
 
@@ -488,12 +409,11 @@ enum EGlueTimings {
 #define ST_ASPECT_RATIO_DISTORTION 1.10f // multiplier for Y axis
 #endif
 
-#if defined(SSE_VID_RECORD_AVI)//no, Fraps or other 3rd party programs will do a fantastic job
+#if defined(SSE_VID_RECORD_AVI) //DD-only, poor result
 #define SSE_VID_RECORD_AVI_CODEC "MPG4"
 #endif
 
 #endif//vid
-
 
 
 #endif//sse

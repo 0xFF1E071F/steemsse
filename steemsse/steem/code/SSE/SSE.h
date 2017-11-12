@@ -57,8 +57,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define NO_RAR_SUPPORT // don't use rarlib (SSE build supports unrar.dll)
 
 
-
-
 ////////////////
 // SSE BUILDS //
 ////////////////
@@ -1776,7 +1774,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_394A // STOP behaviour + timing
 #define SSE_CPU_394A1
 //#define SSE_CPU_394B // trace timings extended (?)
-#define SSE_CPU_394E // reset
+#define SSE_CPU_394E // more 'check read'
 #define SSE_GUI_WS_394 // save in ini, not sts
 #define SSE_VAR_SET_RUNDIR_AS_DEFAULT
 #define SSE_YM2149_MAMELIKE_394 // move option
@@ -1791,7 +1789,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_394C // check PC in RTE
 #define SSE_CPU_394D // action read in exception
 #define SSE_CPU_394E // missing "check reads"
-#define SSE_DISK_SCP_394 // Turrican 2 revs
+#define SSE_DISK_SCP_394
 #define SSE_FDC_394 
 #define SSE_GLUE_HIRES_394 // low res in monochrome
 #define SSE_IKBD_6301_394

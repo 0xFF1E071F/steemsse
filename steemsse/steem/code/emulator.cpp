@@ -36,7 +36,7 @@ EXT int extended_monitor INIT(0);
 #endif
 
 #if defined(SSE_GUI_NO_CPU_SPEED)
-EXT DWORD n_cpu_cycles_per_second INIT(CPU_STE_PAL),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
+EXT DWORD n_cpu_cycles_per_second INIT(CPU_CLOCK_STE_PAL),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 #else
 EXT DWORD n_cpu_cycles_per_second INIT(8000000),new_n_cpu_cycles_per_second INIT(0),n_millions_cycles_per_sec INIT(8);
 #endif
@@ -1266,5 +1266,5 @@ void ASMCALL emudetect_falcon_draw_scanline(int border1,int picture,int border2,
   }
 }
 
-//#endif//SS
+
 

@@ -204,7 +204,6 @@ WORD TImageSCP::GetMfmData(WORD position) {
   ASSERT(delay_in_cycles>0);
   TRACE_MFM(" %d cycles\n",delay_in_cycles);
 #endif
-//#endif
 
   WD1772.update_time=time_of_next_event+delay_in_cycles; 
 
@@ -348,10 +347,14 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
   BYTE trackn=track;
   if(N_SIDES==2) // general case
     trackn=track*2+side; 
-
+#if defined(SSE_DISK_SCP_394) // don't reload if only 1 (perfect) rev
+  if(track_header.TDH_TRACKNUM==trackn //already loaded
+    && !rev && (!reload||file_header.IFF_NUMREVS==1))
+    return true;
+#else
   if(!rev &&! reload && track_header.TDH_TRACKNUM==trackn) //already loaded
     return true;
-
+#endif
   if(TimeFromIndexPulse) 
     free(TimeFromIndexPulse);
   TimeFromIndexPulse=NULL;
@@ -367,8 +370,6 @@ bool TImageSCP::LoadTrack(BYTE side,BYTE track,bool reload) {
 /*  Determine which track rev to load.
     Turrican SCP will fail if we don't start on rev1 so that it reads
     sector data of rev2 over IP (index pulse).
-    So we make it a generality (the way it is coded, normally it will
-    also do it with rev 3, 4... in the unlikely case that it's needed).
     This is because IP is by nature imprecise, and it won't fall on the same
     bitcell each time (unless you have mastering hardware, not mama's drive).
     One rev from IP to IP, unless "doctored", may have one or two bits too

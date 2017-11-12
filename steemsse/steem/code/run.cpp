@@ -795,21 +795,20 @@ void event_scanline()
 #define LOGSECTION LOGSECTION_AGENDA
   CHECK_AGENDA;
 #undef LOGSECTION
+
 #if defined(SSE_IKBD_6301)
-  // we run some 6301 cycles at the end of each scanline (x312)
-  if(OPTION_C1 && !HD6301.Crashed)
+  if(OPTION_C1)
   {
     ASSERT(HD6301_OK);
-    int n6301cycles;
-    n6301cycles=(screen_res==2) ? 20 : HD6301_CYCLES_PER_SCANLINE; //64
-    ASSERT(n6301cycles);
-#error TODO 
-    if(hd6301_run_cycles(n6301cycles)==-1)
+
+    hd6301_run_cycles(ACT);
+    if(HD6301.Crashed)
     {
-#define LOGSECTION LOGSECTION_IKBD
-      TRACE_LOG("6301 emu is hopelessly crashed!\n");
-#undef LOGSECTION
-      HD6301.Crashed=1; 
+      TRACE("6301 CRASH\n");
+#if defined(SSE_GUI_STATUS_BAR_392)
+      GUIRefreshStatusBar();
+#endif
+      runstate=RUNSTATE_STOPPING;
     }
   }
 #endif

@@ -1,14 +1,13 @@
 // note: this is part of emu.cpp module
 #if defined(SSE_INTERRUPT)
   
-#if defined(SSE_CPU_MFP_RATIO) // need no SSE_STF
-DWORD CpuNormalHz=CPU_STF_PAL;
+#if defined(SSE_CPU_MFP_RATIO)
+DWORD CpuNormalHz=CPU_CLOCK_STF_PAL;
 #if defined(SSE_CPU_MFP_RATIO_OPTION)
-DWORD CpuCustomHz=CPU_STF_PAL;
+DWORD CpuCustomHz=CPU_CLOCK_STF_PAL;
 #endif
 double CpuMfpRatio=(double)CpuNormalHz/(double)MFP_CLOCK;
 #endif
-
 
 #undef LOGSECTION
 #define LOGSECTION LOGSECTION_INTERRUPTS
@@ -68,7 +67,7 @@ void ASMCALL check_for_interrupts_pending() {
     HBI and VBI as well as MFP interrupts.
 */
 
-#if defined(SSE_CPU_IPL_DELAY)
+#if defined(SSE_CPU_IPL_DELAY) //no, is beta code
 /*  The CPU checks its IPL lines before the end of the instruction.
     From figure 5-11 in M68000 User Manual, the IPL lines seem to be
     sampled about 2 cycles before the end of the instruction, but it may vary
@@ -215,12 +214,13 @@ void ASMCALL check_for_interrupts_pending() {
 
 #if defined(SSE_CPU_394A1)
 /*  The CPU needs time to check IPL (Audio Sculpture).
-    When it's a MFP interrupt, we must do that in a hacky way or the timing
+    When it's an MFP interrupt, we must do that in a hacky way or the timing
     will be negated. It's purely an implementation issue.
+    For HBI/VBI, we don't because the timings were tuned with STOP. TODO
 */
                   if(cpu_stopped==2)
                   {
-                    //TRACE_MFP("unSTOPping delay %d at %d\n",CPU_STOP_DELAY,ACT);
+                    TRACE_MFP("unSTOPping delay %d at %d\n",CPU_STOP_DELAY,ACT);
                     INSTRUCTION_TIME(CPU_STOP_DELAY);
                     MC68901.IackTiming+=CPU_STOP_DELAY; // hack
                   }
@@ -232,7 +232,7 @@ void ASMCALL check_for_interrupts_pending() {
               }//mask OK
             }//pending
           }//nxt irq
-          //ASSERT(irq>-1);
+
 #if defined(SSE_INT_MFP_SPURIOUS)          
 /*  The dangerous spurious test.
     It triggers automatically at the end of IACK if we couldn't find an irq.
@@ -244,7 +244,6 @@ void ASMCALL check_for_interrupts_pending() {
           if(irq==-1 && !no_real_irq) // couldn't find one and there was no break
           {
             TRACE_OSD("Spurious! %d",iack_latency);
-            //TRACE_OSD2("Spurious"); // but maybe it annoys player
             TRACE2("Spurious\n");
             TRACE_MFP("%d PC %X Spurious! %d\n",ACT,old_pc,iack_latency);
             TRACE_MFP("IRQ %d (%d) IERA %X IPRA %X IMRA %X ISRA %X IERB %X IPRB %X IMRB %X ISRB %X\n",MC68901.Irq,MC68901.NextIrq,mfp_reg[MFPR_IERA],mfp_reg[MFPR_IPRA],mfp_reg[MFPR_IMRA],mfp_reg[MFPR_ISRA],mfp_reg[MFPR_IERB],mfp_reg[MFPR_IPRB],mfp_reg[MFPR_IMRB],mfp_reg[MFPR_ISRB]);
@@ -255,7 +254,6 @@ void ASMCALL check_for_interrupts_pending() {
 #endif
             M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
-            //INSTRUCTION_TIME(50-iack_cycles); //?
             m68kInterruptTiming();
             m68k_interrupt(LPEEK(0x60)); // vector for Spurious, NOT Bus Error
             sr=WORD((sr & (~SR_IPL)) | SR_IPL_6); // the CPU does that anyway
@@ -369,12 +367,6 @@ void HBLInterrupt() {
 
 #endif//dbg
 
-#if defined(SSE_CPU_394A1)
-  // The CPU needs time to check IPL
-  if(cpu_stopped==2)
-    INSTRUCTION_TIME(CPU_STOP_DELAY); 
-#endif
-
   if (cpu_stopped)
     M68K_UNSTOP;
 
@@ -461,12 +453,6 @@ void VBLInterrupt() {
 
 #endif//dbg
 
-#if defined(SSE_CPU_394A1)
-  // The CPU needs time to check IPL
-  if(cpu_stopped==2)
-    INSTRUCTION_TIME(CPU_STOP_DELAY);
-#endif
-
   if (cpu_stopped)
     M68K_UNSTOP;
 
@@ -513,7 +499,6 @@ void VBLInterrupt() {
 #if defined(SSE_CPU_392B)
   M68000.ProcessingState=TM68000::NORMAL;
 #endif
-
 
 }
 
