@@ -217,7 +217,7 @@ void log_history(int bombs,MEM_ADDRESS crash_address)
 
 
 void m68k_exception::crash() {
-  DWORD bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
+  int bytes_to_stack=int((bombs==BOMBS_BUS_ERROR || bombs==BOMBS_ADDRESS_ERROR)
     ? (4+2+2+4+2):(4+2));
   MEM_ADDRESS sp=(MEM_ADDRESS)(SUPERFLAG 
     ? (areg[7] & 0xffffff):(other_sp & 0xffffff));

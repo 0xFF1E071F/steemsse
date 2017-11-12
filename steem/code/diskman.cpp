@@ -1918,7 +1918,7 @@ That will toggle bit x.
                     {
                       //  We must use interleave 6 for 11 sectors, eg Pang -EMP
                       sector= ( FloppyDrive[0].SectorsPerTrack==11 
-                        ? ((((sector2-1)*DRIVE_11SEC_INTERLEAVE)%11)+1) 
+                        ? ((((sector2-1)*DISK_11SEC_INTERLEAVE)%11)+1) 
                         : sector2 );
                       if(FloppyDrive[0].SeekSector(side,track,sector,false))
                         break; // not in source, write nothing more

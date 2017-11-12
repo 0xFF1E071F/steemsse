@@ -1028,7 +1028,7 @@ int TFloppyImage::GetIDFields(int Side,int Track,FDC_IDField IDList[30])
     Note that on the image, there's no interleave.
 */
       if(ADAT&&SectorsPerTrack==11) // not >= (superdisks)
-        IDList[n].SectorNum=1+(n*DRIVE_11SEC_INTERLEAVE)%SectorsPerTrack;
+        IDList[n].SectorNum=1+(n*DISK_11SEC_INTERLEAVE)%SectorsPerTrack;
       else
 #endif
         IDList[n].SectorNum=BYTE(1+n);
