@@ -99,6 +99,12 @@ void ASMCALL check_for_interrupts_pending() {
 #endif
       && ((sr & SR_IPL)<SR_IPL_6)) //MFP can interrupt to begin with
     {
+
+#if defined(SSE_DONGLE_JEANNEDARC) // nice load in this often called function!
+      if(DONGLE_ID==TDongle::JEANNEDARC && (Dongle.Value&0x8000))
+        mfp_gpip_set_bit(1,0);
+#endif
+
       BYTE iack_latency=MFP_IACK_LATENCY; //28
       MC68901.IackTiming=ACT; // record start of IACK cycle
 #if defined(SSE_OSD_CONTROL) && !defined(SSE_DEBUG_MFP_DEACTIVATE_IACK_SUBSTITUTION)
@@ -217,8 +223,10 @@ void ASMCALL check_for_interrupts_pending() {
     When it's an MFP interrupt, we must do that in a hacky way or the timing
     will be negated. It's purely an implementation issue.
     For HBI/VBI, we don't because the timings were tuned with STOP. TODO
+    Also not timer B (Stickmygg Och Motmedel end screen)...
 */
-                  if(cpu_stopped==2)
+                  if(cpu_stopped==2 
+                    && (irq!=8|| mfp_get_timer_control_register(1)!=8))
                   {
                     TRACE_MFP("unSTOPping delay %d at %d\n",CPU_STOP_DELAY,ACT);
                     INSTRUCTION_TIME(CPU_STOP_DELAY);
@@ -311,7 +319,6 @@ void ASMCALL check_for_interrupts_pending() {
 #endif
       }
     }
-
     if (hbl_pending
 #if defined(SSE_GLUE)
       && !Glue.Status.hbi_done //?

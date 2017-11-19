@@ -674,6 +674,9 @@ ADVANCED_BEGIN
 #if defined(SSE_DONGLE_LEADERBOARD)
       CBAddString(Win,T("Leader Board dongle"),TDongle::LEADERBOARD);
 #endif
+#if defined(SSE_DONGLE_JEANNEDARC)
+      CBAddString(Win,T("Jeanne d'Arc dongle"),TDongle::JEANNEDARC);
+#endif
 #if defined(SSE_DONGLE_CRICKET)
       CBAddString(Win,T("Rugby Coach dongle"),TDongle::RUGBY);
 #endif
@@ -684,8 +687,8 @@ ADVANCED_BEGIN
       CBAddString(Win,T("Music Master dongle"),TDongle::MUSIC_MASTER);
 #endif
 #if defined(SSE_DONGLE_PROSOUND)
-      //CBAddString(Win,T("Pro Sound card (WOD/LXS)"),TDongle::PROSOUND);
-      CBAddString(Win,T("Pro Sound Designer"),TDongle::PROSOUND);
+      CBAddString(Win,T("Centronics Soundcard (WOD/LXS)"),TDongle::PROSOUND);
+      //CBAddString(Win,T("Pro Sound Designer"),TDongle::PROSOUND);
 #endif
 #if defined(SSE_DONGLE_MULTIFACE)
       CBAddString(Win,T("Multiface Cartridge switch"),TDongle::MULTIFACE);
@@ -693,6 +696,7 @@ ADVANCED_BEGIN
 #if defined(SSE_DONGLE_URC)
       CBAddString(Win,T("Ultimate Ripper Cartridge switch"),TDongle::URC);
 #endif
+
 ADVANCED_END
     }
     else

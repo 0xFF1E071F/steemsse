@@ -1,14 +1,12 @@
 Steem SSE Bugs
 ===================
 
-v3.9.2
+v3.9.4
 
 Notes
 1) "Correct" means the bug may happen on a real STE
 2) Please don't report bugs that are already known, think of my reputation!
 
-
--20year / pdx bad sound (correct)
 
 -36.15 HMD giga: 
 cracks in sound
@@ -41,6 +39,8 @@ Dots in WU2 (correct)
 
 -Civilization STX HD install fails at disk A (correct)
 
+-Closure won't work as STF WS1
+
 -Crash possible when Windows automatically blocks the session
 
 -Dizzy Panic 1 player/start switching (correct)
@@ -62,9 +62,7 @@ Mouse move can be erratic with option C1
 Some MIDI keyboards send $FE all the time as  'Active Sensing'.
 It will mess other programs.
 
--GEMDOS harddisk sometimes seems to be on while option is off.
-
--Hades Nebula sometimes fails to start
+-Hades Nebula sometimes fails to start (correct)
 
 -hi-fi dreams should sound better on STE
 
@@ -99,8 +97,6 @@ STE on some boots, screen is shifted
 
 -Panic v1
 display totally wrong on STE (correct)
-
--Paste text into ST incompatible with option C1 (no surprise)
 
 -Pasti: failure on resume snapshot
 

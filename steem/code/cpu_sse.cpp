@@ -2225,17 +2225,20 @@ Dn,Dm :           |                 |             |               |
       }
     }else{ // btst memory
 /*
-#<data>,<ea> :    |                 |             |               |             
+Dn,<ea> :         |                 |             |               |
   .B :            |                 |             |               |
-    (An)          |  8(2/0)  4(1/0) |          np |            nr | np          
-    (An)+         |  8(2/0)  4(1/0) |          np |            nr | np          
-    -(An)         |  8(2/0)  6(1/0) |          np | n          nr | np          
-    (d16,An)      |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (d8,An,Xn)    |  8(2/0) 10(2/0) |          np | n    np    nr | np          
-    (xxx).W       |  8(2/0)  8(2/0) |          np |      np    nr | np          
-    (xxx).L       |  8(2/0) 12(3/0) |          np |   np np    nr | np     
+    (An)          |  4(1/0)  4(1/0) |             |            nr | np          
+    (An)+         |  4(1/0)  4(1/0) |             |            nr | np          
+    -(An)         |  4(1/0)  6(1/0) |             | n          nr | np          
+    (d16,An)      |  4(1/0)  8(2/0) |             |      np    nr | np          
+    (d8,An,Xn)    |  4(1/0) 10(2/0) |             | n    np    nr | np          
+    (xxx).W       |  4(1/0)  8(2/0) |             |      np    nr | np          
+    (xxx).L       |  4(1/0) 12(3/0) |             |   np np    nr | np   
 */
-      CPU_ABUS_ACCESS_READ_FETCH; //np //390
+#ifndef SSE_BUGFIX_394 //copied wrong timing doc part above: 
+                      // Phaleon/Chaotic Motion (Interferer)
+      CPU_ABUS_ACCESS_READ_FETCH; //np //390 
+#endif
       m68k_GET_SOURCE_B_NOT_A; //EA  //even immediate mode is allowed!!!!
       PREFETCH_IRC; //np
       if( (m68k_src_b >> (7 & r[PARAM_N])) & 1){

@@ -47,18 +47,22 @@ ________
 The main build is the 'Win32.D3D' one. It should run in all versions of
 Windows from XP on.
 
-Your computer must have an up-to-date DirectX 9 installation. Unfortunately,
-Microsoft makes a point of not distributing full installations with Windows,
-so you may have to update your installation. 
+Steem SSE requires an SSE-enabled processor and the Visual C++ 2008 
+Redistributable, which is already installed on most computers.
+
+For the D3D build, your computer must have and an up-to-date DirectX 9 
+installation. Unfortunately, Microsoft makes a point of not distributing full
+D3D installations with Windows, so you may have to update it. 
 
 Other builds are available.
 
 Unsurprisingly, 'Win64' means a Windows 64bit build.
 
-DD means that DirectDraw is used instead of Direct3D (D3D).
+DD means that DirectDraw is used instead of Direct3D (D3D), which could be
+more compatible with old systems. 
 
 The 'Debug' build features the "Boiler", a very powerful debugger included
-with the emulator.
+with the emulator. There's no manual for the Boiler but some useful notes.
 
 
 3rd party

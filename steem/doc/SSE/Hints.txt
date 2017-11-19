@@ -155,10 +155,8 @@ Don't forget to remove it when you don't need it anymore!
 Demos
 =========
 
-For edgy demos on the STE: generally select one of the WU2 Wakeup options,
-else you're likely to get little dots.
-
 - 0913: STE French TOS
+- 20 Years: STE, T206 (thx amilo3438)
 - 36.15 Gen4 by Cakeman: STF
 - 36.15 HMD: STF WS1, STW or not ADAT
 - 36.15 OVR: STF, CPU speed
@@ -183,6 +181,7 @@ else you're likely to get little dots.
 - Drone: STE, 4MB
 - E605: STE
 - European Demos: No B or insert both disks before starting
+- Extra Volume 7: STF for some demos
 - Extreme Rage: STE
 - Fantasia: STE T106 or DI
 - Froggies Over The Fence: C1

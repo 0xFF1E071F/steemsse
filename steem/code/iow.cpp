@@ -1256,6 +1256,27 @@ http://www.atari-forum.com/viewtopic.php?f=16&t=30575
 #endif
           SerialPort.SetDTR(io_src_b & BIT_4);
           SerialPort.SetRTS(io_src_b & BIT_3);
+
+#if defined(SSE_DONGLE_JEANNEDARC) //v3.9.4
+/*  This dongle is more annoying than the others, it seems to constantly trigger
+    interrupts under some conditions (not sure I got them right).
+    The program changes the RTS and DTR lines, then expects the DCD line
+    to trigger an interrupt right after the TOS resets this interrupt.
+    Don't think there's' a timer.
+    Emulating this is heavier than changing some port bit.
+*/
+          if(DONGLE_ID==TDongle::JEANNEDARC)
+          {
+            BYTE Old=Dongle.Value&0xFF;
+            BYTE New=io_src_b & (BIT_4|BIT_3);
+            Dongle.Value=New;
+            if(New && New<Old)
+              Dongle.Value|=0x8000; 
+            else 
+              mfp_reg[MFPR_GPIP]|=BIT_1; // or constantly set
+          }
+#endif
+
 #if defined(SSE_YM2149_DRIVE)
           YM2149.SelectedSide=((io_src_b&BIT_0)==0); //0:side 1, 1:side 0
           ASSERT(YM2149.SelectedSide==0||YM2149.SelectedSide==1);

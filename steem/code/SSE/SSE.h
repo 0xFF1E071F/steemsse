@@ -1775,7 +1775,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_394A1
 //#define SSE_CPU_394B // trace timings extended (?)
 #define SSE_CPU_394E // more 'check read'
+#define SSE_DONGLE_JEANNEDARC
 #define SSE_GUI_WS_394 // save in ini, not sts
+#define SSE_SHIFTER_394
 #define SSE_VAR_SET_RUNDIR_AS_DEFAULT
 #define SSE_YM2149_MAMELIKE_394 // move option
 #define SSE_IKBD_6301_ROM_KEYTABLE //?
@@ -1791,6 +1793,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_394E // missing "check reads"
 #define SSE_DISK_SCP_394
 #define SSE_FDC_394 
+#define SSE_GLUE_394
 #define SSE_GLUE_HIRES_394 // low res in monochrome
 #define SSE_IKBD_6301_394
 #undef SSE_IKBD_6301_PASTE
