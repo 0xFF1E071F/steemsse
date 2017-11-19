@@ -353,7 +353,9 @@ void TShifter::Render(int cycles_since_hbl,int dispatcher) {
     break;
   case DISPATCHER_SET_PAL:
 #if defined(SSE_SHIFTER_PALETTE_TIMING)
-#if defined(SSE_MMU_WU_PALETTE_STE)
+#if defined(SSE_SHIFTER_394) // wonder which STF WU has dots?
+    if((/*ST_TYPE==STF || */MMU.WU[OPTION_WS]!=2)) // default to 'pro-demo'
+#elif defined(SSE_MMU_WU_PALETTE_STE)
     if((ST_TYPE==STF || MMU.WU[OPTION_WS]==2)) // dots in Overscan demos frequent on STE
 #endif
       cycles_since_hbl++;

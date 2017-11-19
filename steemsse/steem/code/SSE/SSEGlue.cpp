@@ -279,7 +279,11 @@ void TGlue::CheckSideOverscan() {
     Observed on E605 planet, Sommarhack 2010 credits, Circus, no explanation
     yet: When HSCROLL is on, the switch to low-res may happen 4 cycles later.
 */
+#ifdef SSE_GLUE_394 // only if prefetch: Hard as Ice
+          if(ST_TYPE==STE && (r0cycle==4 || shifter_hscroll_extra_fetch&&r0cycle==8))
+#else
           if(ST_TYPE==STE && (r0cycle==4 || HSCROLL&&r0cycle==8))
+#endif
             CurrentScanline.Tricks|=TRICK_LINE_PLUS_20;
           else
 #endif
@@ -365,6 +369,11 @@ void TGlue::CheckSideOverscan() {
         CurrentScanline.StartCycle=GLU_DE_ON_72;
         if(shifter_hscroll_extra_fetch)
           CurrentScanline.StartCycle-=4;
+
+#ifdef SSE_GLUE_394 // Hard as Ice
+        if(HSCROLL && !shifter_hscroll_extra_fetch)
+          shifter_draw_pointer-=8;
+#endif
 
         // additional shifts for left off
         // explained by the late timing of R0
@@ -1427,8 +1436,12 @@ void TGlue::EndHBL() {
 #if defined(SSE_SHIFTER_UNSTABLE_393)
   if(OPTION_WS && OPTION_HACKS && ST_TYPE==STF)
   {
+#ifdef SSE_BUGFIX_394
+    if( (LPEEK(8)==0x118E || LPEEK(0x24)==0xF194)
+#else
     MEM_ADDRESS x=LPEEK(8);
     if( (x==0x118E || x==0x08720061) //Ventura/Naos ($118E) and Overdrive/Dragon ($8720061)
+#endif
       && (CurrentScanline.Tricks&TRICK_LINE_PLUS_26)
       &&!(CurrentScanline.Tricks&(TRICK_STABILISER|TRICK_LINE_MINUS_2|TRICK_LINE_MINUS_106)))
       Shifter.Preload=1;
@@ -2151,7 +2164,8 @@ void TGlue::Update() {
   // but: TEST16.TOS
   ScanlineTiming[ENABLE_VBI][FREQ_50]=GLU_TRIGGER_VBI_50;
   if(ST_TYPE==STE) 
-    ScanlineTiming[ENABLE_VBI][FREQ_50]+=4;
+    ScanlineTiming[ENABLE_VBI][FREQ_50]+=4; // eg Hard as Ice!
+
 
 /*  A strange aspect of the GLU is that it decides around cycle 54 how
     many cycles the scanline will be, like it had an internal variable for
