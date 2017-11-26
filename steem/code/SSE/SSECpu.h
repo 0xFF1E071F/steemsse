@@ -77,10 +77,13 @@ so refactoring due!
   WORD PreviousIr;
 #endif
   BYTE PrefetchClass; // see ijor's article
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+  BYTE eclock_sync_cycle; //0-9
+#endif
 #if defined(SSE_CPU_TRUE_PC)
   bool CheckRead; // most 'write' instructions read before, crash at read...
 #endif
-#if defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_CPU_E_CLOCK) && !defined(SSE_CPU_ECLOCK_SIMPLIFY)
   bool EClock_synced;
   BYTE LastEClockCycles[3];
 #endif
@@ -91,7 +94,11 @@ so refactoring due!
   TM68000();
   void Reset(bool Cold);
 #if defined(SSE_CPU_E_CLOCK)
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+  int SyncEClock();
+#else
   int SyncEClock(int dispatcher);
+#endif
   void UpdateCyclesForEClock();
 #endif
 #if defined(SSE_CPU_IPL_DELAY)

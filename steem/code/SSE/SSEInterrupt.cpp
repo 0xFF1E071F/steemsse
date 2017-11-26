@@ -381,6 +381,37 @@ void HBLInterrupt() {
   M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
 
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+/*
+Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n np
+*/
+
+  INSTRUCTION_TIME(6); //  n nn
+  CPU_ABUS_ACCESS_WRITE_PUSH; // ns 
+  if(OPTION_C1)
+  {
+    BYTE e_clock_wait_states=M68000.SyncEClock();
+    INSTRUCTION_TIME(e_clock_wait_states);
+  }
+  else
+  {
+    INTERRUPT_START_TIME_WOBBLE; //Steem 3.2
+  }
+#if defined(SSE_INT_HBL_IACK2)
+  time_of_last_hbl_interrupt=ABSOLUTE_CPU_TIME; //after wobble or e-clock cycles
+#endif
+  INSTRUCTION_TIME(16); // ni ni ni ni
+  CPU_ABUS_ACCESS_WRITE_PUSH_L; // nS ns 
+  abus=0x100; //391
+  CPU_ABUS_ACCESS_READ_L; // nV nv 
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+  INSTRUCTION_TIME(2); // n  // on ST it will provoke alignment of last fetch
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+#if defined(SSE_GLUE)
+  Glue.Status.hbi_done=true;
+#endif
+
+#else
 
   // wobble?
 #if defined(SSE_INT_E_CLOCK)
@@ -414,6 +445,8 @@ void HBLInterrupt() {
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
 #endif
+
+#endif//#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
 
   m68k_interrupt(LPEEK(0x0068));       
   // set CPU registers
@@ -467,6 +500,35 @@ void VBLInterrupt() {
   M68000.ProcessingState=TM68000::EXCEPTION;
 #endif
 
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+/*
+Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n np
+*/
+
+  INSTRUCTION_TIME(6); //  n nn
+  CPU_ABUS_ACCESS_WRITE_PUSH; // ns 
+  if(OPTION_C1)
+  {
+    BYTE e_clock_wait_states=M68000.SyncEClock();
+    INSTRUCTION_TIME(e_clock_wait_states);
+  }
+  else
+  {
+    INTERRUPT_START_TIME_WOBBLE; //Steem 3.2
+  }
+#if defined(SSE_INT_VBL_IACK2)
+  time_of_last_vbl_interrupt=ABSOLUTE_CPU_TIME; //after wobble or e-clock cycles
+#endif
+  INSTRUCTION_TIME(16); // ni ni ni ni
+  CPU_ABUS_ACCESS_WRITE_PUSH_L; // nS ns 
+  abus=0x100; //391
+  CPU_ABUS_ACCESS_READ_L; // nV nv 
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+  INSTRUCTION_TIME(2); // n  // on ST it will provoke alignment of last fetch
+  CPU_ABUS_ACCESS_READ_FETCH; //np 
+
+#else
+
   // wobble?
 #if defined(SSE_INT_E_CLOCK)
   if(!OPTION_C1) // no jitter no wobble if "E-clock"
@@ -495,6 +557,8 @@ void VBLInterrupt() {
 #else
   INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
 #endif
+
+#endif//#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
 
   m68k_interrupt(LPEEK(0x0070));
 

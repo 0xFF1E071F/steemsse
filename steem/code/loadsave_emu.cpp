@@ -1280,6 +1280,14 @@ Steem SSE will reset auto.sts and quit\nSorry!",
   }
 #endif
 
+#if SSE_VERSION>=394
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+  if(Version>=58)
+    ReadWrite(M68000.eclock_sync_cycle);
+  else
+    M68000.eclock_sync_cycle=0;
+#endif
+#endif
 
 #endif//sse_build
 

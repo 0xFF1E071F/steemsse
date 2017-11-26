@@ -858,8 +858,8 @@ already fetched. One word will be in IRD and another one in IRC.
   M68000.CheckRead=0;
 #endif
 
-#if defined(SSE_CPU_E_CLOCK)
-  M68000.EClock_synced=false; // one more bool in Process()!
+#if defined(SSE_CPU_E_CLOCK) && !defined(SSE_CPU_ECLOCK_SIMPLIFY)
+  M68000.EClock_synced=false; // one more bool in Process()! //removed!
 #endif
 
   /////////// CALL CPU EMU FUNCTION ///////////////
@@ -1646,7 +1646,7 @@ void                              m68k_btst(){
     if((ir&(BIT_5+BIT_4+BIT_3+BIT_2+BIT_1+BIT_0))==B6_111100){  //immediate mode is the only one not allowed -
       m68k_unrecognised();
     }else{
-      m68k_GET_SOURCE_B_NOT_A; //EA
+      m68k_GET_SOURCE_B_NOT_A; //EA //why not get dest?
       PREFETCH_IRC; //np
       if((m68k_src_b>>m68k_ap)&1){
 #if defined(SSE_VC_INTRINSICS_390E)
@@ -1934,7 +1934,7 @@ void                              m68k_eori_w(){
     if(SUPERFLAG){
       DEBUG_ONLY( int debug_old_sr=sr; )
       CPU_ABUS_ACCESS_READ_FETCH; // np
-      WORD immediate=m68k_IMMEDIATE_W; //timing counted there
+      WORD immediate=m68k_IMMEDIATE_W;
       INSTRUCTION_TIME(8); // nn nn
       sr^=immediate;
       REFETCH_IR; // np
@@ -2122,7 +2122,9 @@ void                              m68k_cmpi_b(){
   m68k_dest=&compare_buffer;
   m68k_DEST_B-=m68k_src_b;
   SR_SUB_B(0);
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_B;
+#endif
 }
 
 
@@ -2135,7 +2137,9 @@ void                              m68k_cmpi_w(){
   m68k_dest=&compare_buffer;
   m68k_DEST_W-=m68k_src_w;
   SR_SUB_W(0);
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_W;
+#endif
 }
 
 
@@ -2161,7 +2165,9 @@ void                              m68k_cmpi_l(){
   m68k_dest=&compare_buffer;
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_L;
+#endif
 }
 
 #endif//#if defined(SSE_CPU_SIMPLIFY_READ_DEST_CMPI)
@@ -2403,7 +2409,7 @@ Dn,Dm :           |                 |             |               |
       if (m68k_src_w>=16)
         INSTRUCTION_TIME(6); //nn n
       else
-        INSTRUCTION_TIME(4); //n
+        INSTRUCTION_TIME(4); //nn
       if((r[PARAM_M]>>(m68k_src_w))&1){
 #if defined(SSE_VC_INTRINSICS_390E)
         BITRESET(sr,SR_Z_BIT);
@@ -3248,9 +3254,9 @@ void                             m68k_tst_l(){
 
 #endif//#if defined(SSE_CPU_SIMPLIFY_READ_DEST_TST)
 
-void                              m68k_tas(){
-  if((ir&B6_111111)==B6_111100){
-    ASSERT(ir==0x4afc); // it is tas_or_illegal()
+void                              m68k_tas(){ // or ILLEGAL
+  if((ir&B6_111111)==B6_111100){ // ILLEGAL
+    ASSERT(ir==0x4afc);
     ILLEGAL;
   }else{
 /*
@@ -3574,8 +3580,7 @@ Dn :              |                 |
 }
 
 void                              m68k_movem_w_from_regs_or_ext_w(){
-  if((ir&BITS_543)==BITS_543_000){ 
-    // EXT.W
+  if((ir&BITS_543)==BITS_543_000){ // EXT.W
 /*
 -------------------------------------------------------------------------------
                   |    Exec Time    |               Data Bus Usage
@@ -3784,7 +3789,7 @@ Dn :              |                 |               |
     SR_CHECK_Z_AND_N_L;
     PREFETCH_IRC; // np
   }
-  else if((ir&BITS_543)==BITS_543_100) // MOVEM -(An)
+  else if((ir&BITS_543)==BITS_543_100) // MOVEM.L -(An)
   {
     //SS this is used to save registers on the stack
 /*
@@ -3833,8 +3838,8 @@ R --> M           |                 |
     // predecrement afterwards.
     areg[PARAM_M]=abus | areg_hi;
     PREFETCH_IRC;//np
-  }// movem .l -(an)
-  else{ //SS MOVEM other cases
+  }
+  else{ //SS MOVEM.L to memory other cases
 /*
 R --> M           |                 | 
   .L              |                 |                             
@@ -3864,6 +3869,7 @@ R --> M           |                 |
       m68k_unrecognised();
     }
     //note because of (d8,An,Xn) we can't count prefetch timing here
+    //TODO
     m68k_src_w=m68k_fetchW();pc+=2; // register mask
 
     switch(ir&BITS_543){
@@ -3875,7 +3881,8 @@ R --> M           |                 |
 
     case BITS_543_101: 
       // (d16,An)      | 12+8m(3/2m)     |             np np (nW nw)*    np     
-      CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+      CPU_ABUS_ACCESS_READ_FETCH; // np //394
+      CPU_ABUS_ACCESS_READ_FETCH; // np
       abus=areg[PARAM_M]+(signed short)m68k_fetchW();
       pc+=2; 
       break;
@@ -3883,7 +3890,8 @@ R --> M           |                 |
     case BITS_543_110: 
       // (d8,An,Xn)    | 14+8m(3/2m)     |        n    np np (nW nw)*    np 
       INSTRUCTION_TIME(2); // n 
-      CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+      CPU_ABUS_ACCESS_READ_FETCH; // np //394
+      CPU_ABUS_ACCESS_READ_FETCH; // np
       m68k_ap=m68k_fetchW();pc+=2; 
       if(m68k_ap&BIT_b){  //.l
         abus=areg[PARAM_M]+(signed char)LOBYTE(m68k_ap)+(int)r[m68k_ap>>12];
@@ -3897,7 +3905,8 @@ R --> M           |                 |
 
       case 0:
         //(xxx).W       | 12+8m(3/2m)     |             np np (nW nw)*    np
-        CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+        CPU_ABUS_ACCESS_READ_FETCH; // np //394
+        CPU_ABUS_ACCESS_READ_FETCH; // np
         abus=0xffffff&(unsigned long)((signed long)((signed short)m68k_fetchW()));
         pc+=2; 
         break;
@@ -4159,7 +4168,7 @@ void                              m68k_movem_w_to_regs(){
       pc+=4;  
       break;
 
-    case 2:////(d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np
+    case 2://(d16,An)      | 16+4m(4+m/0)    |             np np (nr)*    nr np
       CPU_ABUS_ACCESS_READ_FETCH; //np
       abus=pc+(signed short)m68k_fetchW();
       pc+=2; 
@@ -4319,9 +4328,14 @@ void                              m68k_jsr()
 #else
   m68k_READ_W(effective_address);
 #endif
+#ifdef SSE_CPU_394F // should be split anyway
+  CPU_ABUS_ACCESS_WRITE_PUSH_L; //nS ns
+  m68k_PUSH_L(PC32);
+#else
   m68k_PUSH_L(PC32);
   // 8 cycles more than JMP because we push PC
   CPU_ABUS_ACCESS_WRITE_PUSH_L; //nS ns
+#endif
 #if defined(SSE_BOILER_PSEUDO_STACK)
   Debug.PseudoStackPush(PC32);
 #endif
@@ -5034,7 +5048,7 @@ void                              m68k_rts(){
                   | 16(4/0)         |                   nU nu    np np          
 */
   CPU_ABUS_ACCESS_READ_POP_L; //nU nu
-  CPU_ABUS_ACCESS_READ_FETCH_L; // np np
+  //CPU_ABUS_ACCESS_READ_FETCH_L; // np np
   effective_address=m68k_lpeek(r[15]);
 #if defined(SSE_BOILER_PSEUDO_STACK)
   Debug.PseudoStackPop();
@@ -5047,8 +5061,9 @@ void                              m68k_rts(){
   m68k_READ_W(effective_address); // Check for bus/address errors
 #endif
   SET_PC(effective_address);
+  CPU_ABUS_ACCESS_READ_FETCH_L; // np np //394
   intercept_os();
-#if defined(SSE_BOILER_RUN_TO_RTS) //rather useless?
+#if defined(SSE_BOILER_RUN_TO_RTS)
   if(on_rte==ON_RTS_STOP)
   {
     if (runstate==RUNSTATE_RUNNING){
@@ -5551,7 +5566,9 @@ void                              m68k_or_b_to_dN(){
   m68k_DEST_B|=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_B;
+#endif
 }
 
 
@@ -6164,7 +6181,7 @@ void                             m68k_suba_w(){
 }
 
 
-void                              m68k_sub_b_from_dN(){
+void                              m68k_sub_b_from_dN(){ //+ SUBX.B
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -6248,7 +6265,7 @@ Dn,<ea> :         |                 |              /              |
 }
 
 
-void                              m68k_sub_w_from_dN(){
+void                              m68k_sub_w_from_dN(){ //+ SUBX.W
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -6324,7 +6341,7 @@ Dn,<ea> :         |                 |              /              |
 }
 
 
-void                              m68k_sub_l_from_dN(){
+void                              m68k_sub_l_from_dN(){ //+ SUBX.L
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -6550,7 +6567,7 @@ void                             m68k_cmpa_w(){
 
 
 void                              m68k_eor_b(){ //or CMPM.B
-  if((ir&BITS_543)==BITS_543_001){  //cmpm
+  if((ir&BITS_543)==BITS_543_001){  //cmpm.b
 /*
 ------------------------------------------------------------------------------- 
                   |    Exec Time    |               Data Bus Usage              
@@ -6576,7 +6593,9 @@ void                              m68k_eor_b(){ //or CMPM.B
     PREFETCH_IRC; //np
     m68k_DEST_B-=m68k_src_b;
     SR_SUB_B(0);
+#if !defined(SSE_CPU_394F)
     CHECK_IOW_B;
+#endif
   }else{
 /*
 -------------------------------------------------------------------------------
@@ -6613,7 +6632,7 @@ Dn,<ea> :         |                 |               |
 
 
 void                             m68k_eor_w(){ //or CMPM.W
-  if((ir&BITS_543)==BITS_543_001){  //cmpm
+  if((ir&BITS_543)==BITS_543_001){  //cmpm.w
 /*
 ------------------------------------------------------------------------------- 
                   |    Exec Time    |               Data Bus Usage              
@@ -6635,7 +6654,9 @@ void                             m68k_eor_w(){ //or CMPM.W
     PREFETCH_IRC; //np
     m68k_DEST_W-=m68k_src_w;
     SR_SUB_W(0);
+#if !defined(SSE_CPU_394F)
     CHECK_IOW_W;
+#endif
   }else{
 /*
 Dn,<ea> :         |                 |               |
@@ -6668,7 +6689,7 @@ Dn,<ea> :         |                 |               |
 
 
 void                             m68k_eor_l(){ //or CMPM.L
-  if((ir&BITS_543)==BITS_543_001){  //cmpm
+  if((ir&BITS_543)==BITS_543_001){  //cmpm.l
 //   .L :            | 20(5/0)         |                   nR nr nR nr np   
     abus=areg[PARAM_M];
     CPU_ABUS_ACCESS_READ_L; //nR nr
@@ -6744,10 +6765,12 @@ void                             m68k_cmpa_l(){
   INSTRUCTION_TIME(2);//n
   m68k_old_dest=areg[PARAM_N];
   compare_buffer=m68k_old_dest;
-  m68k_dest=&compare_buffer;
+  m68k_dest=&compare_buffer; //=trick?
   m68k_DEST_L-=m68k_src_l;
   SR_SUB_L(0);
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_L;
+#endif
 }
 
 
@@ -6786,7 +6809,9 @@ void                              m68k_and_b_to_dN(){
   m68k_DEST_B&=m68k_src_b;
   SR_CLEAR(SR_Z+SR_N+SR_V+SR_C);
   SR_CHECK_Z_AND_N_B;
+#if !defined(SSE_CPU_394F)
   CHECK_IOW_B;
+#endif
 }
 
 
@@ -7263,7 +7288,7 @@ void                             m68k_adda_w(){
 }
 
 
-void                              m68k_add_b_from_dN(){
+void                              m68k_add_b_from_dN(){ //+ ADDX.B
   switch(ir&BITS_543){
   case BITS_543_000:
   case BITS_543_001:
@@ -7344,7 +7369,7 @@ Dn,<ea> :         |                 |              /              |
 }
 
 
-void                              m68k_add_w_from_dN(){
+void                              m68k_add_w_from_dN(){ //+ ADDX.W
   switch(ir&BITS_543){
 //  ADDX.W
   case BITS_543_000:
@@ -7415,7 +7440,7 @@ Dn,<ea> :         |                 |              /              |
 }
 
 
-void                              m68k_add_l_from_dN(){ //SS +ADDX
+void                              m68k_add_l_from_dN(){ //+ ADDX.L
   switch (ir&BITS_543){ //ADDX.L
   case BITS_543_000: 
   case BITS_543_001: 

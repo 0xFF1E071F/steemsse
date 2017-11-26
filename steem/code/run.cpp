@@ -1072,7 +1072,11 @@ void event_scanline()
 
 #if defined(SSE_INT_HBL_IACK2)
   BYTE iack_latency=(OPTION_C1)
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+    ? 14 //see BBC 52
+#else
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_HBL]
+#endif
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
 #endif
 
@@ -1864,11 +1868,20 @@ is asserted.
 
 #if defined(SSE_INT_VBL_IACK2)
   BYTE iack_latency=(OPTION_C1)
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+    ? 14 //see hbl
+#else
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
-    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED;
 #endif
+    : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED; //but that was never in Steem?
+#endif
+#if defined(SSE_BUGFIX_394) //big bug, but this never happens anyway
+    if(time_of_next_event-time_of_last_vbl_interrupt>iack_latency)
+#else
     if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
-    ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
+      ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
+#endif
+      
     {
       vbl_pending=true;
     }
