@@ -1791,6 +1791,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_394C // check PC in RTE
 #define SSE_CPU_394D // action read in exception
 #define SSE_CPU_394E // missing "check reads"
+#define SSE_CPU_394F // misc
 #define SSE_DISK_SCP_394
 #define SSE_FDC_394 
 #define SSE_GLUE_394
@@ -1840,6 +1841,9 @@ Beta: not SSE_PRIVATE_BUILD
 
 #ifdef SSE_BETA // long term, tests
 //#define SSE_CPU_IPL_DELAY // IPL scan isn't instant (only for MFP in this emu)
+#define SSE_CPU_ECLOCK_SIMPLIFY 
+#define SSE_CPU_ECLOCK_SIMPLIFYB // even cycles only (temp compromise)
+//#define SSE_CPU_ECLOCK_SIMPLIFYC // tests
 //#define SSE_CPU_RESTORE_ABUS
 //#define SSE_CPU_RESTORE_ABUS1
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?

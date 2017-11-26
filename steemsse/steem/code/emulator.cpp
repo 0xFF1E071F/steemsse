@@ -586,12 +586,16 @@ void ACIA_STRUCT::BusJam(MEM_ADDRESS addr) {
 #endif
     (!io_word_access||!(addr & 1)) ) //Only cause bus jam once per word
   {
-    BYTE wait_states=6;
+    BYTE wait_states=6; // see M68000 UM
 #if defined(SSE_CPU_E_CLOCK)
     if(OPTION_C1)
     {
       INSTRUCTION_TIME(wait_states); // 6
+#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
+      wait_states=M68000.SyncEClock();
+#else
       wait_states=M68000.SyncEClock(TM68000::ECLOCK_ACIA);
+#endif
       INSTRUCTION_TIME(wait_states); // +...
     }
     else
