@@ -295,6 +295,9 @@ void THD6301::ResetChip(int Cold) {
   if(Cold)  // real cold
     ZeroMemory(ST_Key_Down,sizeof(ST_Key_Down));
 #endif
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+  st_code=0;
+#endif
 }
 
 #if defined(SSE_IKBD_6301_IKBDI) 
@@ -358,7 +361,9 @@ void THD6301::Vbl() { // this is called in run.cpp right after IKBD_VBL()
   if(MouseVblDeltaX||MouseVblDeltaX)
     TRACE_LOG("ticks x %d y %d\n", MouseCyclesPerTickX,MouseCyclesPerTickY);
 #endif
-
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+  cycle_keyboard_change=rand() % (cycles_per_frame-2000);
+#endif
 }
 
 #undef LOGSECTION

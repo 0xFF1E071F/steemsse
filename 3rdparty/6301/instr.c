@@ -70,6 +70,14 @@ instr_exec ()
     ASSERT(ACIA_IKBD.LineRxBusy==1);
   }
 
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+  if(hd6301_vbl_cycles>=HD6301.cycle_keyboard_change && HD6301.st_code)
+  {
+    ST_Key_Down[HD6301.st_code]=HD6301.key_is_down;
+    HD6301.st_code=0;
+  }
+#endif
+
 #endif
 
   if (!reg_getiflag ()) 

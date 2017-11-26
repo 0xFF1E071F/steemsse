@@ -1845,6 +1845,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
 //#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
+#define SSE_IKBD_6301_DELAY_KEYSTROKE // randomize key stroke timing in frame
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 //#define TEST_STEEM_INTRO

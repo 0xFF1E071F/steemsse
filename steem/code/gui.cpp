@@ -2056,12 +2056,25 @@ void HandleKeyPress(UINT VKCode,bool Up,int Extended)
   }
   
   if (STCode==0) STCode=key_table[BYTE(VKCode)]; //SS: +- ASCII -> ST scancode
+
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+  if(OPTION_C1 && !DidShiftSwitching)
+  {
+    if(HD6301.st_code) // oops, wasn't read yet
+      ST_Key_Down[HD6301.st_code]=HD6301.key_is_down;
+    HD6301.st_code=STCode; // 0 means no change
+    HD6301.key_is_down=!Up;
+  }
+#endif
+
   if (STCode
 #if defined(SSE_GUI_F12)
     && VKCode!=VK_F12
 #endif
     ){
-#if defined(SSE_IKBD_6301_394)
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+    if(!OPTION_C1)
+#elif defined(SSE_IKBD_6301_394)
     // If we're sending key combinations, we don't want 6301 to see the key
     if(!DidShiftSwitching||!OPTION_C1)
 #endif
