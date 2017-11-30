@@ -133,6 +133,8 @@ Is it Steem or TOS bug?
 
 -Snapshot: poor STW and SCP resuming (improved in v3.7.2)
 
+-Sound Demo 3 by Pure Energy hangs on STE (correct)
+
 -Starting emulation too fast after loading a snapshot can hang Steem
 
 -Status info may disappear when you play around with windows
@@ -156,9 +158,6 @@ Is it Steem or TOS bug?
 -TNT halts on STE (correct)
 
 -Ultimate 3D dots STE can fail to load
-
--Trauma STX: claims there's a KEYBOARD PROOBLEM. Apparently, it checks
-if it's a French layout. Works with French TOS.
 
 -Tyranny STE: dot clouds between 3D shapes (correct)
 

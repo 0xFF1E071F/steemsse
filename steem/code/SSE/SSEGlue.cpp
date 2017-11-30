@@ -2155,9 +2155,17 @@ void TGlue::Update() {
 
   // Reload video counter
   // Cases: DSOTS, Forest
-  ScanlineTiming[RELOAD_SDP][FREQ_50]=GLU_RELOAD_VIDEO_COUNTER_50+WU_sync_modifier;
+  ScanlineTiming[RELOAD_SDP][FREQ_50]=GLU_RELOAD_VIDEO_COUNTER_50
+#ifndef SSE_GLUE_394
+    +WU_sync_modifier
+#endif
+    ;
   ScanlineTiming[RELOAD_SDP][FREQ_60]=ScanlineTiming[RELOAD_SDP][FREQ_50];//?
-  ScanlineTiming[RELOAD_SDP][FREQ_72]=GLU_RELOAD_VIDEO_COUNTER_72+WU_sync_modifier;
+  ScanlineTiming[RELOAD_SDP][FREQ_72]=GLU_RELOAD_VIDEO_COUNTER_72
+#ifndef SSE_GLUE_394
+    +WU_sync_modifier
+#endif
+    ;
 
   // Enable VBI
   // Cases: Forest, 3615GEN4-CKM, Dragonnels/Happy Islands, Auto 168, TCB...
