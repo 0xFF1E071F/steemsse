@@ -27,6 +27,11 @@ struct THD6301 {
   //DATA 
 
   COUNTER_VAR ChipCycles,MouseNextTickX,MouseNextTickY;
+#if defined(SSE_IKBD_6301_DELAY_KEYSTROKE)
+  COUNTER_VAR cycle_keyboard_change; 
+  BYTE st_code;
+  BYTE key_is_down;
+#endif
   int MouseCyclesPerTickX, MouseCyclesPerTickY;
   short MouseVblDeltaX; // must keep separate for true emu
   short MouseVblDeltaY;

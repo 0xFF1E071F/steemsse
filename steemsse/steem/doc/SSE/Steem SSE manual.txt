@@ -1626,6 +1626,9 @@ down the CONTROL key when you run after performing a cold reset of the ST.
 
 Right-clicking on this icon will toggle GEMDOS hard drives on/off.
 
+Notice: this emulation based on interception will only work with TOS and 
+compatible OS as EmuTOS, not MagiC for instance. 
+
 
 -ACSI Hard Drives
 
@@ -1668,6 +1671,9 @@ http://atari.8bitchip.info/drimus.php
 
 Note that some programs will work with a GEMDOS hard drive but not with an
 ACSI one, sometimes depending on the driver. AFAIK it's correct emulation.
+
+In turn, ACSI emulation being lower level, it should be compatible with any
+alternative OS.
 
 
 -Home Folder

@@ -75,9 +75,11 @@ EXT int cpu_timer_at_start_of_hbl;
 #endif
 
 //#ifdef IN_EMU
-
+#if defined(SSE_BUGFIX_394)
+#define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED (28-10)
+#else
 #define CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED 28
-
+#endif
 //          INSTRUCTION_TIME(8-((ABSOLUTE_CPU_TIME-shifter_cycle_base) % 12));
 
 

@@ -69,7 +69,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-//#define SSE_RELEASE
+#define SSE_RELEASE
 
 #if !defined(SSE_RELEASE)
 #define SSE_BETA //title, OSD, plus some testing - new features

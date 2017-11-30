@@ -41,7 +41,7 @@ and LOAD signal (=DL latency), one of four, in CPU cycles.
 
 'Cycle adjustment' is applied to apparent GLU timings.
 
-On the STE, DL=3, WS=1.
+On the STE, DL=6, WS=1.
 
 */
 

@@ -1793,6 +1793,20 @@ rasterline to allow horizontal fine-scrolling.
           // sets hscroll but doesn't do that, instead the left border is increased by
           // 16 pixels. If you have got hscroll extra fetch turned on then setting this
           // to 0 confuses the Shifter and causes it to shrink the left border by 16 pixels.
+/*  SS
+When writing on address $FF8264, the HSCROLL register in the Shifter is modified.
+When writing on address $FF8265, the HSCROLL register in the Shifter is modified,
+and the "prefetch" flag in the Glue is changed (set if value<>0, cleared otherwise).
+Timing doesn't matter, there are two registers.
+The net effect of writing <>0 on $FF8265 then 0 on $FF8264 is that only the 
+"prefetch" flag in the Glue stays set, so the line (DE) starts 16 pixels before. 
+The Shifter does its job without any scrolling, STF-like, and we gain 16 pixels. 
+This is a Glue effect.
+When the HSCROLL register in the Shifter is <>0, it will do some preshift on the 
+prefetched words, and start outputting 16 pixels later. 
+So if you have "prefetch" = 0 in the Glue, and HSCROLL<>0 in the Shifter, you will
+have a larger left border. This is a Shifter effect.
+*/
         case 0xff8265:  // Hscroll
 #if defined(SSE_BOILER_FRAME_REPORT) && defined(SSE_BOILER_FRAME_REPORT_MASK)
           if(FRAME_REPORT_MASK1 & FRAME_REPORT_MASK_HSCROLL)

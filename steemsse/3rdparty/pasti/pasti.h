@@ -7,7 +7,6 @@
 
 #ifdef SSE_X64
 //note by Steven Seagal: long replaced with LONG_PTR where appropriate
-//#pragma message("OK x64 pasti") 
 #endif
 
 
