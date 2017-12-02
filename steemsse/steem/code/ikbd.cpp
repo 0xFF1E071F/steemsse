@@ -1412,18 +1412,10 @@ or FIRE BUTTON MONITORING mode.
 void agenda_keyboard_replace(int) {
 
 #if defined(SSE_IKBD_6301)
-#if defined(SSE_IKBD_6301_PASTE)
-  if(OPTION_C1 && !bPastingText)
-#else
   if(OPTION_C1) 
-#endif
   {
     if (keyboard_buffer_length){ 
       keyboard_buffer_length--;
-#if !defined(SSE_IKBD_6301_394)
-      ASSERT( keyboard_buffer_length>=0 );
-      ASSERT( keyboard_buffer_length<2 );
-#endif
       hd6301_run_cycles(ACT); // run up to IO time
       ACIA_IKBD.RDRS=HD6301.tdrs;
 
@@ -1527,18 +1519,11 @@ void keyboard_buffer_write_n_record(BYTE src)
 void keyboard_buffer_write(BYTE src) {
 
 #if defined(SSE_IKBD_6301)
-#if defined(SSE_IKBD_6301_PASTE)
-  if(OPTION_C1 && !bPastingText)
-#else
   if(OPTION_C1)
-#endif
   {
     if(!ACIA_IKBD.LineRxBusy)
     {
 #if defined(SSE_IKBD_6301_MACRO)
-#if !defined(SSE_IKBD_6301_394)
-      ASSERT(HD6301.tdrs==src||macro_play_has_keys);
-#endif
       HD6301.tdrs=src;
 #else
       ASSERT(HD6301.tdrs==src);

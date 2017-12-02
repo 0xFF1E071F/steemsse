@@ -746,11 +746,6 @@ void mfp_interrupt(int irq) {
   }
 #endif
 
-#if defined(SSE_BLT_BLIT_MODE_INTERRUPT) // MFD
-  ASSERT(!Blit.HasBus); 
-  Blit.HasBus=false; 
-#endif
-
   MEM_ADDRESS vector;
   vector=    (mfp_reg[MFPR_VR] & 0xf0)  +(irq);
   vector*=4;

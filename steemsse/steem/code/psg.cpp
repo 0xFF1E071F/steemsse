@@ -1918,7 +1918,6 @@ void dma_sound_fetch()
     dma_sound_fetch_address+=2;
     if (dma_sound_internal_buf_len>=4) break;
   }//nxt
-  ////TRACE_LOG("Y%d DMA frame counter %X\n",scan_y,dma_sound_fetch_address);
 }
 //---------------------------------------------------------------------------
 #if defined(SSE_CARTRIDGE_BAT)

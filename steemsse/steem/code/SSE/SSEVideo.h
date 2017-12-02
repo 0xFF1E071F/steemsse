@@ -40,7 +40,9 @@ enum EOverscanMask {
  TRICK_NEO=0x80000//tests
 };
 
+#if !defined(SSE_VID_DISABLE_AUTOBORDER)
 enum EBorders {BORDERS_NONE, BORDERS_ON, BORDERS_AUTO_OFF, BORDERS_AUTO_ON};
+#endif
 
 extern TGlue Glue;
 extern TMMU MMU;

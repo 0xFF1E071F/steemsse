@@ -1014,12 +1014,11 @@ void TOptionBox::SetBorder(int newborder)
 #endif
     draw(false);
     InvalidateRect(StemWin,NULL,0);
-#if !(defined(SSE_VID_D3D) && defined(SSE_BUGFIX_392))
-    if (Handle) if (GetDlgItem(Handle,210)) EnableWindow(GetDlgItem(Handle,210),border==0 
 #if !defined(SSE_VID_D3D)
-      && draw_fs_blit_mode!=DFSM_LAPTOP
-#endif
-      );
+    if (Handle) 
+      if (GetDlgItem(Handle,210)) 
+        EnableWindow(GetDlgItem(Handle,210),
+          border==0 && draw_fs_blit_mode!=DFSM_LAPTOP);
 #endif
   }else{
     if (Handle) if (GetDlgItem(Handle,207)) SendDlgItemMessage(Handle,207,CB_SETCURSEL,oldborder,0);
@@ -1593,7 +1592,7 @@ ADVANCED_END
           break;
 #endif
 
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
         case 1034: // Option Triple Buffer Win
           if(HIWORD(wPar)==BN_CLICKED)
           {
@@ -2898,7 +2897,7 @@ ADVANCED_END
             osd_show_disk_light=!osd_show_disk_light;
             SendMessage(HWND(lPar),BM_SETCHECK,osd_show_disk_light,0);
           }
-#if defined(SSE_GUI_OPTIONS_DRIVE_INFO)
+#if defined(SSE_OSD_DRIVE_INFO_GUI)
         }else if(i==1) {
           if (HIWORD(wPar)==BN_CLICKED){
             OPTION_DRIVE_INFO=!OPTION_DRIVE_INFO;

@@ -578,16 +578,6 @@ void draw_set_jumps_and_source()
       draw_scanline_lowres=jump_draw_scanline[2][BytesPerPixel-1][0]; //draw double
       if (screen_res==0) draw_scanline=draw_scanline_lowres;
     }
-#elif defined(SSE_VID_SCANLINES_INTERPOLATED_392B)
-    if (mixed_output && (SCANLINES_INTERPOLATED
-#if defined(SSE_VID_D3D)
-      ||FullScreen&&screen_res<2&&draw_win_mode[screen_res]==DWM_GRILLE
-#endif
-      ))
-    {
-      draw_scanline_lowres=jump_draw_scanline[2][BytesPerPixel-1][0]; //draw double
-      if (screen_res==0) draw_scanline=draw_scanline_lowres;
-    }
 #endif
 
   }else{

@@ -173,11 +173,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
       case 0xfffc04: // MIDI ACIA Control
         acia_num=(addr&0xf)>>2;
         ASSERT(acia_num==0 || acia_num==1);
-#if defined(SSE_IKBD_6301_PASTE)
-        if(OPTION_C1 && !bPastingText)
-#else
         if(OPTION_C1)
-#endif
         {
           ior_byte=acia[acia_num].SR;
           break;
@@ -200,11 +196,7 @@ $FFFC06|byte |MIDI ACIA data                                       |R/W
           break;
         }
 #endif
-#if defined(SSE_IKBD_6301_PASTE)
-        if(OPTION_C1 && !bPastingText)
-#else
         if(OPTION_C1)
-#endif
         {
           // Update status BIT 5 (overrun)
           if(acia[acia_num].overrun==ACIA_OVERRUN_COMING) // keep this, it's right
@@ -261,10 +253,6 @@ Receiver Data Register is retained.
           }
           mfp_gpip_set_bit(MFP_GPIP_ACIA_BIT,!(ACIA_IKBD.irq || ACIA_MIDI.irq));
           ior_byte=acia[acia_num].data;
-#if defined(SSE_IKBD_6301_PASTE)
-          if(!keyboard_buffer_length && PasteText.Empty())
-            bPastingText=false; // pasting finished
-#endif
           break;
         }
         break;//390 in extremis though it should be one of the four

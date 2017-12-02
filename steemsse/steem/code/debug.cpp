@@ -3,7 +3,7 @@
 #endif
 
 //SS this isn't used at all
-
+#if !defined(SSE_VAR_DEAD_CODE)
 #ifdef DEBUG_FUNCTIONS
 
 #include <malloc.h>
@@ -79,9 +79,4 @@ void SaveHeapLog()
 #else
 #define SaveHeapLog()
 #endif
-
-
-
-
-
-
+#endif//#if !defined(SSE_VAR_DEAD_CODE)

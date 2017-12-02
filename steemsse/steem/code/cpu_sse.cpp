@@ -104,9 +104,6 @@ bool (*m68k_jump_condition_test[16])();
 // big functions not much used, not inlined
 #define m68k_READ_B_FROM_ADDR m68kReadBFromAddr();
 #define m68k_READ_W_FROM_ADDR m68kReadWFromAddr();
-#if !defined(SSE_CPU_SPLIT_RL)
-#define m68k_READ_L_FROM_ADDR m68kReadLFromAddr();
-#endif
 //---------------------------------------------------------------------------
 void m68k_interrupt(MEM_ADDRESS ad) {
 
@@ -4737,7 +4734,6 @@ void                              m68k_unlk(){
 ------------------+-----------------+------------------------------------------
 An :              | 12(3/0)         |                         nU nu np          
 */
-#if defined(SSE_CPU_SPLIT_RL)
   abus=r[15]=areg[PARAM_M];
   CPU_ABUS_ACCESS_READ; //nR
   m68k_READ_W(abus)
@@ -4746,11 +4742,6 @@ An :              | 12(3/0)         |                         nU nu np
   CPU_ABUS_ACCESS_READ; //nr
   m68k_READ_W(abus)
   m68k_src_l|=(WORD)m68k_src_w; //nice crash if no WORD cast... sign extension?  
-#else
-  CPU_ABUS_ACCESS_READ_POP_L; // nU nu
-  r[15]=areg[PARAM_M];
-  abus=r[15];m68k_READ_L_FROM_ADDR;
-#endif
   PREFETCH_IRC; //np
   r[15]+=4;    //This is contrary to the Programmer's reference manual which says
   areg[PARAM_M]=m68k_src_l; //it does move (a7),An then adds 4 to a7, but it fixed Wrath of Demon

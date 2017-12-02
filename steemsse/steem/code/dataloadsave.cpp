@@ -973,7 +973,7 @@ bool TOptionBox::LoadData(bool FirstLoad,GoodConfigStoreFile *pCSF,bool *SecDisa
 #if defined(SSE_VID_3BUFFER_FS)
     OPTION_3BUFFER_FS=pCSF->GetInt("Display","TripleBufferFS",OPTION_3BUFFER_FS);
 #endif
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
     OPTION_3BUFFER_WIN=pCSF->GetInt("Display","TripleBufferWin",OPTION_3BUFFER_WIN);
 #endif
 #if defined(SSE_VID_ST_ASPECT_RATIO)
@@ -1528,7 +1528,7 @@ bool TOptionBox::SaveData(bool FinalSave,ConfigStoreFile *pCSF)
 #if defined(SSE_VID_3BUFFER_FS)
   pCSF->SetStr("Display","TripleBufferFS",EasyStr(OPTION_3BUFFER_FS));
 #endif
-#if defined(SSE_VID_3BUFFER_WIN)
+#if defined(SSE_VID_DD_3BUFFER_WIN)
   pCSF->SetStr("Display","TripleBufferWin",EasyStr(OPTION_3BUFFER_WIN));
 #endif
 #if defined(SSE_VID_D3D) // for older versions

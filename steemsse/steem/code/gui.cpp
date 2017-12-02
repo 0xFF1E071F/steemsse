@@ -39,9 +39,6 @@ bool RunMessagePosted=0;
 
 BYTE KeyDownModifierState[256];
 int PasteVBLCount=0,PasteSpeed=2;
-#if defined(SSE_IKBD_6301_PASTE)
-bool bPastingText=false;
-#endif
 Str PasteText;
 bool StartEmuOnClick=0;
 
@@ -2496,9 +2493,6 @@ void PasteIntoSTAction(int Action)
   if (hGbl){
     PasteText=(char*)GlobalLock(hGbl);
     PasteVBLCount=PasteSpeed;
-#if defined(SSE_IKBD_6301_PASTE)
-    bPastingText=true;
-#endif
     SendDlgItemMessage(StemWin,114,BM_SETCHECK,1,0);
     GlobalUnlock(hGbl);
   }

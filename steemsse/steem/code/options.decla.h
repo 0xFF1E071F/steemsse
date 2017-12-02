@@ -262,10 +262,6 @@ public:
   hxc_button keyboard_click_but; 
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES) 
-  hxc_button psg_fixtables_but;
-#endif
-
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
   hxc_button psg_samples_but;
 #endif
@@ -526,10 +522,6 @@ public:
 
 #if defined(SSE_TOS_KEYBOARD_CLICK)
   hxc_button keyboard_click_but; 
-#endif
-
-#if defined(SSE_YM2149_FIX_TABLES) 
-  hxc_button psg_fixtables_but;
 #endif
 
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)

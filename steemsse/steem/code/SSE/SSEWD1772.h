@@ -44,9 +44,7 @@ struct TWD1772IDField {
   inline WORD nBytes(){
     return (1<<( (len&3) +7)); // other way: harder
   }
-//#ifdef SSE_DEBUG
   void Trace(); // empty body if not debug
-//#endif  
 };
 
 #endif
@@ -69,6 +67,7 @@ struct TWD1772MFM {
 struct TWD1772Crc {
   DWORD crccnt;
   WORD crc;
+  inline void Reset() {
 /*  Contrary to what the doc states, the CRC Register isn't preset to ones 
     ($FFFF) prior to data being shifted through the circuit, but to $CDB4.
     This happens for each $A1 address mark (read or written), so the register
@@ -76,7 +75,6 @@ struct TWD1772Crc {
     When formatting the backup disk, Dragonflight writes a single $F5 (->$A1)
     in its custom track headers and expects to read value $CDB4.
 */
-  inline void Reset() {
     crc=0xCDB4;
   }
   inline void Add(BYTE data) {

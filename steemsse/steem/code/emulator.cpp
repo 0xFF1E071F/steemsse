@@ -499,11 +499,6 @@ int ACIAClockToHBLS(int ClockDivide,bool MIDI_In)
       HBLs=(int)(HBLS_PER_SECOND_AVE/(500000.0/64.0/9.0) + 1);
     }
   }
-
-#if defined(SSE_ACIA_MIDI_TIMING1)
-    HBLs--;
-#endif
-
   if (MIDI_In && MIDI_in_speed!=100){
     HBLs*=100;
     HBLs/=MIDI_in_speed;

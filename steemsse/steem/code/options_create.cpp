@@ -189,19 +189,6 @@ ADVANCED_BEGIN
 #if defined(SSE_CPU_4GHZ) //no!
   CBAddString(Win,EasyStr("4 Ghz"),4000000000);
 #endif
-#else
-#if defined(SSE_CPU_1GHZ)
-  CBAddString(Win,EasyStr("1 Ghz"),1024000000);
-#endif
-#if defined(SSE_CPU_2GHZ)
-  CBAddString(Win,EasyStr("2 Ghz"),2048000000);
-#endif
-#if defined(SSE_CPU_3GHZ) //no!
-  CBAddString(Win,EasyStr("3 Ghz"),3072000000);
-#endif
-#if defined(SSE_CPU_4GHZ) //no!
-  CBAddString(Win,EasyStr("4 Ghz"),4096000000);
-#endif
 #endif
   if (CBSelectItemWithData(Win,n_cpu_cycles_per_second)<0){
     EasyStr Cycles=n_cpu_cycles_per_second;
@@ -1274,7 +1261,7 @@ ADVANCED_END
   y+=LineHeight;
 #endif
 
-#if defined(SSE_VID_3BUFFER_WIN) // DirectDraw-only
+#if defined(SSE_VID_DD_3BUFFER_WIN) // DirectDraw-only
   y-=LineHeight;
 ADVANCED_BEGIN
   Wid=GetCheckBoxSize(Font,T("Triple Buffering")).Width;
@@ -1289,7 +1276,7 @@ ADVANCED_END
 #endif
 
 #if defined(SSE_VID_ST_MONITOR_393)
-#if (defined(SSE_VID_VSYNC_WINDOW) && defined(SSE_VID_GUI_392)) || defined(SSE_VID_3BUFFER_WIN)
+#if (defined(SSE_VID_VSYNC_WINDOW) && defined(SSE_VID_GUI_392)) || defined(SSE_VID_DD_3BUFFER_WIN)
   y-=LineHeight;
 #endif
   mask=WS_CHILD | WS_TABSTOP | BS_CHECKBOX;
@@ -1407,10 +1394,7 @@ ADVANCED_END
   CBAddString(Win,T("Double Size")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Size")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
 
-#if defined(SSE_VID_ST_MONITOR_393)
-#elif defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
-  CBAddString(Win,T("Double Size")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
-#else
+#if !defined(SSE_VID_ST_MONITOR_393)
   CBAddString(Win,T("Double Size")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
 #endif
 
@@ -1427,10 +1411,7 @@ ADVANCED_END
   CBAddString(Win,T("Normal Size"),0);
   CBAddString(Win,T("Double Height")+" - "+T("Stretch"),1);
   CBAddString(Win,T("Double Height")+" - "+T("No Stretch"),MAKELONG(1,DWM_NOSTRETCH));
-#if defined(SSE_VID_ST_MONITOR_393)
-#elif defined(SSE_GUI_OPTION_DISPLAY_CHANGE_TEXT)
-  CBAddString(Win,T("Double Height")+" - "+T("Scanlines"),MAKELONG(1,DWM_GRILLE));
-#else
+#if !defined(SSE_VID_ST_MONITOR_393)
   CBAddString(Win,T("Double Height")+" - "+T("Grille"),MAKELONG(1,DWM_GRILLE));
 #endif
 
@@ -1587,7 +1568,7 @@ void TOptionBox::CreateOSDPage()
 
   SendMessage(Win,BM_SETCHECK,osd_show_disk_light,0);
 
-#if defined(SSE_GUI_OPTIONS_DRIVE_INFO)
+#if defined(SSE_OSD_DRIVE_INFO_GUI)
   const int HorizontalSeparation=10;
   long Wid2=Wid+HorizontalSeparation;
   Wid=GetCheckBoxSize(Font,T("Disk drive track info")).Width;
@@ -1645,7 +1626,7 @@ void TOptionBox::CreateOSDPage()
                           page_l,y,Wid,23,Handle,(HMENU)12020,HInstance,NULL);
   SendMessage(Win,BM_SETCHECK,osd_show_scrollers,0);
 #if defined(SSE_OSD_SCROLLER_DISK_IMAGE)
-#if !defined(SSE_GUI_OPTIONS_DRIVE_INFO)  
+#if !defined(SSE_OSD_DRIVE_INFO_GUI)  
   const int HorizontalSeparation=10;
   long 
 #endif

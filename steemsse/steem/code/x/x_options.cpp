@@ -633,18 +633,6 @@ int TOptionBox::button_notify_proc(hxc_button*b,int mess,int* ip)
         PEEK(0x484)&=0xFFFE;
     }
 #endif         
-#if defined(SSE_YM2149_FIX_TABLES) 
-    else if(b->id==4012)
-    {
-      OPTION_SAMPLED_YM=b->checked;
-#if defined(SSE_YM2149_DYNAMIC_TABLE)//v3.7.0
-      if(OPTION_SAMPLED_YM)
-        YM2149.LoadFixedVolTable();
-      else
-        YM2149.FreeFixedVolTable();
-#endif
-    }
-#endif
 #if defined(SSE_YM2149_FIXED_VOL_TABLE)
     else if(b->id==4013)
     {

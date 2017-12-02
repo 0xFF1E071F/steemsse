@@ -12,7 +12,6 @@
 #include <draw.decla.h>
 #endif
 
-
 #if defined(STRUCTURE_ALIGNMENT)
 #error STRUCTURE_ALIGNMENT defined!
 #endif
@@ -61,7 +60,7 @@
 #define CPU_IPL_CHECK_TIME 2 // cycles before end of instruction when IPL is scanned
 #endif
 
-#if defined(SSE_CPU_HISPEED_392) //GHz!=1024MHz
+#if defined(SSE_CPU_HISPEED_392)
 #if defined(SSE_CPU_4GHZ)
 #define CPU_MAX_HERTZ (4000000000)
 #elif defined(SSE_CPU_3GHZ)
@@ -228,13 +227,9 @@ enum EGlueTimings {
 //////////
 
 #if defined(SSE_IKBD_6301)
-#define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
-#endif
-
 #define HD6301_CYCLE_DIVISOR 8 // the 6301 runs at 1MHz (verified by Stefan jL)
 #define HD6301_CLOCK (1000000) //used in 6301/ireg.c for mouse speed
-#ifndef SSE_BUGFIX_394
-#define IKBD_6301_MOUSE_VBL_MAX_TICKS (40) //argh!
+#define HD6301_ROM_CHECKSUM 451175 // BTW this rom sends $F1 after reset (80,1)
 #endif
 
 

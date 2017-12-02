@@ -707,17 +707,6 @@ void TOptionBox::CreateSoundPage()
   y+=180;
 #endif
 
-#if defined(SSE_YM2149_FIX_TABLES) && defined(SSE_GUI_OPTIONS_SOUND)
-  y+=LineHeight;
-  psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("Sampled YM-2149"),4012,BkCol);
-  psg_fixtables_but.set_check(OPTION_SAMPLED_YM);
-  hints.add(psg_fixtables_but.handle,
-    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
-    page_p);
-////  y+=LineHeight;
-#endif
-
 #if defined(SSE_SOUND_MICROWIRE) && defined(SSE_GUI_OPTIONS_SOUND)
 ///  y+=LineHeight;
   ste_microwire_but.create(XD,page_p,page_l+148,y,0,25,
@@ -1376,16 +1365,6 @@ void TOptionBox::CreateSSEPage() {
   keyboard_click_but.set_check(keyboard_click);
   hints.add(keyboard_click_but.handle,
   T("This gives you direct access to bit1 of address $484, which enables or disables the annoying keyboard click (in TOS/GEM programs only)."),
-    page_p);
-  y+=LineHeight;
-#endif
-
-#if defined(SSE_YM2149_FIX_TABLES) && !defined(SSE_GUI_OPTIONS_SOUND)
-  psg_fixtables_but.create(XD,page_p,page_l,y,0,25,
-    button_notify_proc,this,BT_CHECKBOX,T("P.S.G."),4012,BkCol);
-  psg_fixtables_but.set_check(OPTION_SAMPLED_YM);
-  hints.add(psg_fixtables_but.handle,
-    T("Punchier P.S.G. (YM-2149) sound using a table by ljbk, thx dude!"),
     page_p);
   y+=LineHeight;
 #endif

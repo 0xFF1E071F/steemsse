@@ -1,4 +1,4 @@
-// for v3.9.4
+// for v4.0.0
 #pragma once // VC guard
 #ifndef SSE_H // BCC guard
 #define SSE_H
@@ -63,13 +63,12 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(STEVEN_SEAGAL) 
 
-#define SSE_VERSION 394 // bugfix release
-//#define SSE_VERSION 400
+#define SSE_VERSION 400 // hopefully no more bugfix releases before v4
 
 #define SSE_BUILD
 #define SSE_COMPILER  //  warnings, errors... 
 
-#define SSE_RELEASE
+//#define SSE_RELEASE
 
 #if !defined(SSE_RELEASE)
 #define SSE_BETA //title, OSD, plus some testing - new features
@@ -233,7 +232,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_ACIA)
 
-#define SSE_ACIA_MIDI_TIMING1 //MFD
 #define SSE_ACIA_NO_RESET_PIN // don't reset on warm reset
 
 #endif//acia
@@ -241,7 +239,6 @@ Beta: not SSE_PRIVATE_BUILD
 
 #if defined(SSE_BLITTER)
 
-#define SSE_BLT_BLIT_MODE_INTERRUPT //MFD
 #define SSE_BLT_BUS_ARBITRATION //still compiles & runs without this
 #define SSE_BLT_COPY_LOOP
 #define SSE_BLT_CPU_RUNNING //ambitious + overhead: CPU can work when blitter has bus
@@ -286,7 +283,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_HISPEED_392
 #define SSE_CPU_LINE_F // for interrupt depth counter
 #define SSE_CPU_MFP_RATIO // change the values of CPU & MFP freq!
-#define SSE_CPU_SPLIT_RL
 #define SSE_CPU_TRACE_LINE_A_F
 #define SSE_CPU_TRACE_REFACTOR
 #define SSE_CPU_TRUE_PC
@@ -294,6 +290,14 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_CPU_392B // add exception states
 #define SSE_CPU_392B2// no blit if exception state
 #define SSE_CPU_392C // "thinking" cycles...
+#define SSE_CPU_394A // STOP behaviour + timing
+#define SSE_CPU_394A1
+//#define SSE_CPU_394B // trace timings extended (?)
+#define SSE_CPU_394E // more 'check read'
+#define SSE_CPU_394C // check PC in RTE
+#define SSE_CPU_394D // action read in exception
+#define SSE_CPU_394E // missing "check reads"
+#define SSE_CPU_394F // misc
 
 #endif//cpu
 
@@ -353,6 +357,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_DONGLE_PORT // all dongles grouped in "virtual" port
 #define SSE_DONGLE_BAT2
 #define SSE_DONGLE_CRICKET
+#define SSE_DONGLE_JEANNEDARC //394
 #define SSE_DONGLE_PROSOUND // Wings of Death, Lethal Xcess  STF
 #define SSE_DONGLE_LEADERBOARD
 #if !defined(SSE_NO_CARTRIDGE)
@@ -425,6 +430,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GLUE_393C // not necessary, to test! 
 #define SSE_GLUE_393D // state of VSync line
 #define SSE_GLUE_393E // closure ws3 etc.
+#define SSE_GLUE_394
+#define SSE_GLUE_HIRES_394 // low res in monochrome
 
 #endif//glue
 
@@ -464,6 +471,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_392
 #define SSE_GUI_393
 #define SSE_GUI_COLOUR_CTRL_RESET
+#define SSE_GUI_WS_394 // save in ini, not sts
 
 #endif//gui
 
@@ -563,12 +571,12 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_IKBD_6301_CHECK_IREG_WO // some registers are write-only
 #define SSE_IKBD_6301_DISABLE_BREAKS // to save 64k RAM (we still consume 64k)
 #define SSE_IKBD_6301_DISABLE_CALLSTACK // to save 3k on the PC stack
-//#define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
+#define SSE_IKBD_6301_ROM_KEYTABLE //spare an array
 #define SSE_IKBD_6301_MINIRAM // save close to 60k, at last
 #define SSE_IKBD_6301_390
 #define SSE_IKBD_6301_JOYSTICK_CRASH //fun
 #define SSE_IKBD_6301_MACRO // no reason it shouldn't work with C1
-#define SSE_IKBD_6301_PASTE // more like switching C1 off for a while ;)
+#define SSE_IKBD_6301_394
 
 #endif//6301
 
@@ -591,6 +599,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_INT_MFP_PRESCALE
 #define SSE_INT_MFP_SPURIOUS
 #define SSE_INT_MFP_TIMER_CHECK
+#define SSE_INT_MFP_394
+#define SSE_INT_MFP_394B
+#define SSE_INT_MFP_394C
 
 #endif
 
@@ -675,7 +686,7 @@ Beta: not SSE_PRIVATE_BUILD
 #if defined(SSE_FLOPPY)
 #define SSE_OSD_DRIVE_LED
 #define SSE_OSD_DRIVE_INFO // cool!
-#define SSE_GUI_OPTIONS_DRIVE_INFO // ...here
+#define SSE_OSD_DRIVE_INFO_GUI
 #endif
 #define SSE_OSD_LOGO // "Steem SSE" instead of "Steem 3.2"
 #define SSE_OSD_SCROLLER_CONTROL
@@ -701,6 +712,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SHIFTER_PALETTE_TIMING //Overscan Demos #6
 #define SSE_SHIFTER_STE_MED_HSCROLL // Cool STE
 #define SSE_SHIFTER_HSCROLL
+#define SSE_SHIFTER_394
 
 #endif//shifter
 
@@ -761,7 +773,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_SOUND_DYNAMICBUFFERS //psg
 #define SSE_SOUND_DYNAMICBUFFERS2 //dma
 #if ! defined(SSE_LEAN_AND_MEAN)
-#define SSE_SOUND_DYNAMICBUFFERS3  //use factor, maybe? (larger, safer)
+//#define SSE_SOUND_DYNAMICBUFFERS3  //use factor, maybe? (larger, safer)
 #endif
 #define SSE_SOUND_MORE_SAMPLE_RATES
 #define SSE_SOUND_16BIT_CENTRED
@@ -883,6 +895,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_AVTANDIL_FIX_002 // we have new TOS flags
 #define SSE_TOS_CHECKSUM
 #define SSE_TOS_GEMDOS_EM_390 
+#define SSE_TOS_GEMDOS_394 //serious bugfix?
 
 #endif
 
@@ -935,6 +948,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BUGFIX_393B //forgotten check io macro OR.W
 #define SSE_BUGFIX_393C //badly placed check io macros bitshift
 #define SSE_BUGFIX_393D //profiles (long-standing)
+#define SSE_BUGFIX_394 // various
 #define SSE_VAR_OPT_380 //switch created in v3.9.0
 #define SSE_VAR_OPT_382
 #define SSE_VAR_OPT_390
@@ -991,6 +1005,8 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_VAR_393
 #define SSE_VAR_SNAPSHOT_ADAPT_ST_TYPE //was 'long term beta', why?
 #define SSE_VAR_UPDATE_LINK 
+#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
+#define SSE_VAR_SET_RUNDIR_AS_DEFAULT
 
 #endif//various
 
@@ -1107,7 +1123,7 @@ Beta: not SSE_PRIVATE_BUILD
 #ifdef SSE_VID_DD // DirectDraw
 
 #if defined(SSE_VID_3BUFFER)
-#define SSE_VID_3BUFFER_WIN // window Triple Buffering (DD)
+#define SSE_VID_DD_3BUFFER_WIN // window Triple Buffering (DD)
 #define SSE_VID_DD_3BUFFER_WIN
 #endif
 #define SSE_VID_DD_BLIT_TRY_BLOCK //useless?
@@ -1184,7 +1200,6 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_YM2149_BUS_JAM_390 // 1 cycle each access
 #define SSE_YM2149_BUS_JAM_390B // not more (word access)
 #define SSE_YM2149_BUS_NO_JAM_IF_NOT_RW
-#define SSE_YM2149_FIX_TABLES //MFD
 #define SSE_YM2149_FIXED_VOL_TABLE 
 #define SSE_YM2149_RECORD_YM // record to YM file
 #define SSE_YM2149_DISABLE_CAPTURE_FILE
@@ -1210,6 +1225,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 #define SSE_YM2149_MAMELIKE_ANTIALIAS
 #define SSE_YM2149_MAMELIKE_ANTIALIAS2 // try to optimize... 
+#define SSE_YM2149_MAMELIKE_394 // move option
 
 #endif
 
@@ -1408,6 +1424,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_DISK_SCP_TO_MFM_PREVIEW // keep it, could be useful
 #define SSE_DISK_SCP_DRIVE_WOBBLE // for weak bits
 #define SSE_DISK_SCP_RANDOMISE // War Heli
+#define SSE_DISK_SCP_394
 
 #endif
 
@@ -1432,6 +1449,7 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_FDC_393A // execute fdc commands if no drive
 #define SSE_FDC_393B // RNF on IRQ, not before //correct?
 #define SSE_FDC_393C //! a consequence of SSE_WD1772_393 fix, impacts fdc no ADAT
+#define SSE_FDC_394 
 
 #endif
 
@@ -1713,7 +1731,7 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_BOILER
 #define SSE_DEBUG_START_STOP_INFO3
 
-//390-393
+//390-394
 #ifdef SSE_BOILER
 #define SSE_BOILER_390
 #define SSE_BOILER_390B
@@ -1721,9 +1739,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_BOILER_390_IRQ_BREAK //request
 #define SSE_BOILER_FRAME_REPORT_392
 #define SSE_BOILER_393
+#define SSE_BOILER_394
+#define SSE_BOILER_IRQ_IN_HISTORY
 #endif
-
-
 
 #else//SSE_DEBUG
 
@@ -1761,52 +1779,6 @@ Beta: not SSE_PRIVATE_BUILD
 #endif//SSE_DEBUG
 
 
-////////////
-// v3.9.4 //
-////////////
-
-#if SSE_VERSION>=394 && 1 //features for next version
-
-#ifdef SSE_BOILER
-#define SSE_BOILER_394
-#define SSE_BOILER_IRQ_IN_HISTORY
-#endif
-#define SSE_CPU_394A // STOP behaviour + timing
-#define SSE_CPU_394A1
-//#define SSE_CPU_394B // trace timings extended (?)
-#define SSE_CPU_394E // more 'check read'
-#define SSE_DONGLE_JEANNEDARC
-#define SSE_GUI_WS_394 // save in ini, not sts
-#define SSE_SHIFTER_394
-#define SSE_VAR_SET_RUNDIR_AS_DEFAULT
-#define SSE_YM2149_MAMELIKE_394 // move option
-#define SSE_IKBD_6301_ROM_KEYTABLE //?
-#define SSE_VAR_ARG_SNAPSHOT_PLUS_DISK
-
-#endif//394
-
-#if SSE_VERSION>=394 && 1 //bugfixes for next version
-
-#define SSE_BUGFIX_394
-#define SSE_CPU_394C // check PC in RTE
-#define SSE_CPU_394D // action read in exception
-#define SSE_CPU_394E // missing "check reads"
-#define SSE_CPU_394F // misc
-#define SSE_DISK_SCP_394
-#define SSE_FDC_394 
-#define SSE_GLUE_394
-#define SSE_GLUE_HIRES_394 // low res in monochrome
-#define SSE_IKBD_6301_394
-#undef SSE_IKBD_6301_PASTE
-#define SSE_INT_MFP_394
-#define SSE_INT_MFP_394B
-#define SSE_INT_MFP_394C
-#undef SSE_SOUND_DYNAMICBUFFERS3 //?
-#define SSE_TOS_GEMDOS_394 //serious bugfix?
-
-#endif//394 bugfix
-
-
 ///////////////
 // DEV BUILD //
 ///////////////
@@ -1830,12 +1802,10 @@ Beta: not SSE_PRIVATE_BUILD
 #endif
 
 
-#if SSE_VERSION>394 && defined(SSE_BETA) //features for next version
+#if SSE_VERSION>=400 && defined(SSE_BETA)
 
-#endif//beta
+#define SSE_IKBD_6301_DELAY_KEYSTROKE // randomize key stroke timing in frame
 
-
-#if SSE_VERSION>=400 && defined(SSE_BETA) //features for a later version
 #endif
 
 
@@ -1849,7 +1819,6 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
 //#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
-#define SSE_IKBD_6301_DELAY_KEYSTROKE // randomize key stroke timing in frame
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 //#define TEST_STEEM_INTRO
