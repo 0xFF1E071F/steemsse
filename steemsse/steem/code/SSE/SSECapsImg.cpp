@@ -3,6 +3,7 @@
 #if defined(SSE_DISK_CAPS) // Implementation of CAPS support in Steem SSE
 
 #include "../pch.h"
+#include <conditions.h>
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>

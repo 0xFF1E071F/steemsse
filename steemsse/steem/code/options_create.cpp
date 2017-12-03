@@ -2364,6 +2364,7 @@ void TOptionBox::CreateSoundPage()
 #if defined(SSE_SOUND_FILTER_HATARI)
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Filter 'Hatari'"));
 #endif
+  y+=LineHeight;
 #else // Steem 3.2
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("None (Mute)"));
   SendMessage(Win,CB_ADDSTRING,0,(LPARAM)CStrT("Simulated ST Speaker"));
@@ -2372,7 +2373,6 @@ void TOptionBox::CreateSoundPage()
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
 #endif
   SendMessage(Win,CB_SETCURSEL,sound_mode,0);
-  y+=LineHeight;
 
 #if defined(SSE_GUI_OPTIONS_SAMPLED_YM) && !defined(SSE_YM2149_TABLE_NOT_OPTIONAL)
 ADVANCED_BEGIN

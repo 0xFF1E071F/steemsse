@@ -803,15 +803,11 @@ void mfp_interrupt(int irq) {
   }
   int iack_cycles=ACT-MC68901.IackTiming;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS)
+
 #if defined(SSE_INT_MFP_IRQ_TIMING) 
   INSTRUCTION_TIME(-iack_cycles);//temp
 #endif
   m68kInterruptTiming();
-#else
-  INSTRUCTION_TIME_ROUND(SSE_INT_MFP_TIMING-iack_cycles);
-#endif
-
 
   m68k_interrupt(LPEEK(vector));
   sr=WORD((sr & (~SR_IPL)) | SR_IPL_6);

@@ -467,10 +467,14 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       ||ADAT
 #endif
       ){
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC track register to "+io_src_b);
+#endif
       TR=io_src_b;
     }else{
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC track register to "+io_src_b+", FDC is busy");
+#endif
     }
     break;
 
@@ -484,19 +488,25 @@ void TWD1772::IOWrite(BYTE Line,BYTE io_src_b) {
       ||ADAT // fixes Delirious 4 loader without Pasti
 #endif
       ){
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC sector register to "+io_src_b);
+#endif
       SR=io_src_b;
     }else{
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Can't set FDC sector register to "+io_src_b+", FDC is busy");
+#endif
     }
     break;
 
   case 3: // Write DR
+#ifdef DEBUG_BUILD
 #if defined(SSE_BOILER_TRACE_CONTROL)
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
       TRACE_FDC("FDC DR W %d PC %X\n",io_src_b,old_pc);
 #endif
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Setting FDC data register to "+io_src_b);
+#endif
     DR=io_src_b;
     break;
 #if defined(SSE_VS2008_WARNING_390)

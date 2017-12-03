@@ -13,6 +13,11 @@ SS: The Mega ST also has a blitter. We emulate this.
 TBlitter Blit;
 #endif
 
+#ifndef SSE_CPU
+#define BLT_ABUS_ACCESS_READ INSTRUCTION_TIME_ROUND(4)
+#define BLT_ABUS_ACCESS_WRITE INSTRUCTION_TIME_ROUND(4)
+#endif
+
 #if defined(SSE_BLT_BUS_ARBITRATION)
 #define BLITTER_START_WAIT (4)
 #define BLITTER_END_WAIT (4)

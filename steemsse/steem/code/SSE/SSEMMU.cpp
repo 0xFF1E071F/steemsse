@@ -3,6 +3,9 @@
 #if defined(SSE_MMU)
 
 #include "../pch.h"
+#include <conditions.h>
+#include <steemh.decla.h>
+#include <emulator.decla.h>
 #include <cpu.decla.h>
 
 #include "SSEVideo.h"

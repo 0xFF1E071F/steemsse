@@ -1373,7 +1373,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
   if(CAPSIMG_OK && drive!=-1 && SF314[drive].ImageType.Manager==MNGR_CAPS)
     Caps.RemoveDisk(drive);
 #endif
-
+#if defined(SSE_DRIVE)
   // use polymorphism for closing (for opening it wouldn't make it simpler)
   if(SF314[drive].ImageType.Manager==MNGR_WD1772 && SF314[drive].MfmManager)
   {
@@ -1381,7 +1381,7 @@ void TFloppyImage::RemoveDisk(bool LoseChanges)
     SF314[drive].MfmManager->Close();
   }
   SF314[drive].State.reading=SF314[drive].State.writing=0; //? TODO
-
+#endif
   if (f) fclose(f);
   f=NULL;
   if (Format_f) fclose(Format_f);

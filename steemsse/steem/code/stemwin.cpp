@@ -1294,7 +1294,11 @@ LRESULT PASCAL WndProc(HWND Win,UINT Mess,WPARAM wPar,LPARAM lPar)
         // Text
         TextOut(myHdc,left,3,ansi_string,nchars);
         // Icons
-        if(OPTION_STATUS_BAR && M68000.ProcessingState==TM68000::NORMAL) 
+        if(OPTION_STATUS_BAR 
+#if defined(SSE_GUI_STATUS_BAR_ALERT)
+          && M68000.ProcessingState==TM68000::NORMAL
+#endif
+          ) 
         {
           HDC TempDC=CreateCompatibleDC(myHdc);
           ASSERT(TempDC);

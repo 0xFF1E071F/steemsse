@@ -160,7 +160,7 @@ void m68k_poke(MEM_ADDRESS ad,BYTE x);
 }*/
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-#if defined(SSE_VC_INTRINSICS_390B)
+#if defined(SSE_CPU) && defined(SSE_VC_INTRINSICS_390B)
 int count_bits_set_in_word1(unsigned short w)
 #else
 int count_bits_set_in_word(unsigned short w) // now a pointer to function

@@ -68,6 +68,8 @@ extern bool prefetched_2;///////=false;
 extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define INC_PC
 #include <SSE/SSECpu.h>
+#elif defined(SSE_BUILD)
+#include <cpu.h>
 #endif
 
 #if defined(SSE_SHIFTER_UNSTABLE)

@@ -287,11 +287,9 @@ void TStemDialog::SaveVisible(ConfigStoreFile *pCSF)
 void TStemDialog::CheckFSPosition(HWND Par)
 {
   RECT rc;
-  ASSERT(Par==StemWin);
   GetClientRect(Par,&rc);
   FSLeft=max(min(FSLeft,(int)rc.right-100),-100);
   FSTop=max(min(FSTop,(int)rc.bottom-70),-70);
-  //TRACE("check FSLeft %d FSTop %d\n",FSLeft,FSTop);
 }
 //---------------------------------------------------------------------------
 void TStemDialog::UpdateDirectoryTreeIcons(DirectoryTree *pTree)

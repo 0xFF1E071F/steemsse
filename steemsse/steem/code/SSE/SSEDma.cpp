@@ -11,10 +11,16 @@
 #if defined(SSE_DMA)
 
 #include "../pch.h"
+#include <conditions.h>
+#ifdef SSE_CPU
 #include <cpu.decla.h>
+#else
+#include <cpu.h>
+#endif
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>
 #include <run.decla.h> // for ACT
+#include <iorw.decla.h>
 #include "SSECpu.h"
 #if defined(WIN32)
 #include <pasti/pasti.h>
@@ -513,13 +519,17 @@ void TDma::IOWrite(MEM_ADDRESS addr,BYTE io_src_b) {
       //ASSERT(!io_src_b); // it's an 8bit reg  //int. tennis
       //Counter&=0xff;
       //Counter|=int(io_src_b) << 8;
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
+#endif
       break;
     }
     // HD access
     if(MCR&CR_HDC_OR_FDC)
     { 
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $"+HEXSl(io_src_b,2)+"xx to HDC register #"+((dma_mode & BIT_1) ? 1:0));
+#endif
       break;
     }
 /*
@@ -549,12 +559,16 @@ is ignored and when reading the 8 upper bits consistently reads 1."
  -> to simplify emulation, we fill FIFO only at first DRQ (and each time
     it's empty)
 */
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Set DMA sector count to "+dma_sector_count);
+#endif
       break;
     }
     // HD access
     if (MCR&CR_HDC_OR_FDC){ 
+#ifdef DEBUG_BUILD
       log_to(LOGSECTION_FDC,Str("FDC: ")+HEXSl(old_pc,6)+" - Writing $xx"+HEXSl(io_src_b,2)+" to HDC register #"+((dma_mode & BIT_1) ? 1:0));
+#endif
 #if defined(SSE_ACSI)
 /*  According to defines, send byte to unique or "correct" ACSI device
     A1 in ACSI doc is A0 in DMA doc
@@ -693,13 +707,13 @@ What was in the buffers will go nowhere, the internal counter is reset.
 #endif
       BaseAddress&=0x3FFFFF;
 #endif
-
+#ifdef DEBUG_BUILD
     log_to(LOGSECTION_FDC,EasyStr("FDC: ")+HEXSl(old_pc,6)+" - Set DMA address to "+HEXSl(BaseAddress,6)); 
 #if defined(SSE_BOILER_TRACE_CONTROL) && defined(SSE_DRIVE) 
     if(TRACE_MASK3 & TRACE_CONTROL_FDCREGS)
       TRACE_LOG("DMA base address: %X\n",BaseAddress);
 #endif
-
+#endif
     break;
     
   case 0xff860b:  // DMA Base and Counter Mid

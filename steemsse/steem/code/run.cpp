@@ -178,7 +178,7 @@ void run()
 #endif
 #endif
 
-#if defined(SSE_IKBD_6301) && defined(SSE_BUGFIX_394)
+#if defined(SSE_GUI_STATUS_BAR_ALERT)
   HD6301.Crashed=mousek=0;
   //after BLIT or HD6301 or whatever state/message
   M68000.ProcessingState=TM68000::NORMAL;
@@ -1874,14 +1874,14 @@ is asserted.
     ? HBL_IACK_LATENCY + M68000.LastEClockCycles[TM68000::ECLOCK_VBL]
 #endif
     : CYCLES_FROM_START_OF_HBL_IRQ_TO_WHEN_PEND_IS_CLEARED; //but that was never in Steem?
-#endif
+//#endif
 #if defined(SSE_BUGFIX_394) //big bug, but this never happens anyway
     if(time_of_next_event-time_of_last_vbl_interrupt>iack_latency)
 #else
     if(cpu_timer_at_start_of_hbl-time_of_last_vbl_interrupt>iack_latency
       ||!cpu_timer_at_start_of_hbl&&!time_of_last_vbl_interrupt)
 #endif
-      
+#endif      
     {
       vbl_pending=true;
     }

@@ -440,12 +440,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
 #if defined(SSE_GLUE)
   Glue.Status.hbi_done=true;
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS)
   m68kInterruptTiming();
-#else
-  INSTRUCTION_TIME_ROUND(SSE_INT_HBL_TIMING); 
-#endif
-
 #endif//#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
 
   m68k_interrupt(LPEEK(0x0068));       
@@ -552,12 +547,7 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
     INSTRUCTION_TIME(e_clock_wait_states);
   }
 #endif
-#if defined(SSE_MMU_ROUNDING_BUS)
   m68kInterruptTiming();
-#else
-  INSTRUCTION_TIME_ROUND(SSE_INT_VBL_TIMING);
-#endif
-
 #endif//#if defined(SSE_CPU_ECLOCK_SIMPLIFY)
 
   m68k_interrupt(LPEEK(0x0070));

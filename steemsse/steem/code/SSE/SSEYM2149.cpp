@@ -7,6 +7,8 @@
 */
 
 #include "../pch.h"
+#include <conditions.h>
+#include <steemh.decla.h>
 #include <cpu.decla.h>
 #include <iorw.decla.h>
 #include <psg.decla.h>
@@ -18,6 +20,7 @@
 #include "SSEInterrupt.h"
 
 #include <pasti/pasti.h> //SSE_DRIVE_FREEBOOT_PASTI
+#include "SSEDebug.h"
 #include "SSEFloppy.h" //SSE_DRIVE_FREEBOOT_PASTI
 
 

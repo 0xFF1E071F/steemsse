@@ -2,6 +2,9 @@
 
 #if defined(SSE_DRIVE)
 #include "../pch.h"
+#include <conditions.h>
+#include <steemh.decla.h>
+#include <emulator.decla.h>
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>

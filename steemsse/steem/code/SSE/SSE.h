@@ -549,11 +549,9 @@ Beta: not SSE_PRIVATE_BUILD
 #define SSE_GUI_STATUS_BAR_DISK_TYPE // A:MSA B:STW
 #define SSE_GUI_STATUS_BAR_HISPEED
 #define SSE_GUI_STATUS_BAR_SINGLE_SIDE
-#ifdef SSE_CPU//unfortunate dependency
-//win32
 #define SSE_GUI_STATUS_BAR_ICONS
-#endif
 #define SSE_GUI_STATUS_BAR_392
+
 #endif//status bar
 
 
@@ -1810,6 +1808,7 @@ Beta: not SSE_PRIVATE_BUILD
 
 
 #ifdef SSE_BETA // long term, tests
+#ifdef SSE_CPU
 //#define SSE_CPU_IPL_DELAY // IPL scan isn't instant (only for MFP in this emu)
 #define SSE_CPU_ECLOCK_SIMPLIFY 
 #define SSE_CPU_ECLOCK_SIMPLIFYB // even cycles only (temp compromise)
@@ -1819,6 +1818,7 @@ Beta: not SSE_PRIVATE_BUILD
 //#define SSE_CPU_SIMPLIFY_READ_DEST //no good, TODO?
 //#define SSE_CPU_SIMPLIFY_READ_DEST_CMPI
 //#define SSE_CPU_SIMPLIFY_READ_DEST_TST
+#endif
 //#define SSE_INT_MFP_TIMER_B_PULSE //TODO
 //#define SSE_MMU_LOW_LEVEL //?
 //#define TEST_STEEM_INTRO

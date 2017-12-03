@@ -11,53 +11,6 @@ SS: this is compiled only if STEVEN_SEAGAL or SSE_CPU isn't defined.
 
 #if !defined(SSE_CPU)
 
-#if defined(SSE_BUILD)
-
-#define EXT
-#define INIT(s) =s
-
-extern const char*exception_action_name[4];//390
-
-m68k_exception ExceptionObject;
-jmp_buf *pJmpBuf=NULL;
-EXT BYTE  m68k_peek(MEM_ADDRESS ad);
-EXT WORD  m68k_dpeek(MEM_ADDRESS ad);
-EXT LONG  m68k_lpeek(MEM_ADDRESS ad);
-EXT int m68k_divu_cycles INIT(124),m68k_divs_cycles INIT(140); // +4 for overall time
-#ifdef DEBUG_BUILD
-#ifndef RELEASE_BUILD
-EXT MEM_ADDRESS pc_rel_stop_on_ref;
-#endif
-#endif
-
-#undef EXT
-#undef INIT
-
-#ifdef SSE_UNIX //TODO
-#if !defined(min)
-#define min(a,b) (a>b ? b:a)
-#define max(a,b) (a>b ? a:b)
-#endif
-#endif
-
-WORD *lpfetch,*lpfetch_bound;
-bool prefetched_2=false;
-WORD prefetch_buf[2]; // SS the 2 words prefetch queue
-
-#ifdef ENABLE_LOGFILE
-MEM_ADDRESS debug_mem_write_log_address;
-int debug_mem_write_log_bytes;
-#endif
-
-bool cpu_stopped=0;
-bool m68k_do_trace_exception;
-signed int compare_buffer;
-
-
-
-#endif
-
-
 void (*m68k_high_nibble_jump_table[16])();
 void (*m68k_jump_line_0[64])();
 void (*m68k_jump_line_4[64])();

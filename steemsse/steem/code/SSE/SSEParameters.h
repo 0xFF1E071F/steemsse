@@ -239,11 +239,6 @@ enum EGlueTimings {
 
 #if defined(SSE_INTERRUPT)
 
-#if !defined(SSE_MMU_ROUNDING_BUS)
-#define SSE_INT_MFP_TIMING (54)
-#define SSE_INT_HBL_TIMING (54)
-#define SSE_INT_VBL_TIMING (54)
-#endif
 #define HBL_IACK_LATENCY 28 // 10-28 ?
 #define VBL_IACK_LATENCY 28
 

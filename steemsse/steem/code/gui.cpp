@@ -450,15 +450,11 @@ void GUIRefreshStatusBar() {
 
   // should we show or hide that "status bar"?
   bool should_we_show=(OPTION_STATUS_BAR||OPTION_STATUS_BAR_GAME_NAME); 
-
-#if defined(SSE_GUI_STATUS_BAR_392)
-  if(HD6301.Crashed)
-    M68000.ProcessingState=TM68000::HD6301_CRASH;
-#endif
-
   // build text of "status bar", only if we're to show it
 #if defined(SSE_GUI_STATUS_BAR_ALERT)
   // and it's no special string
+  if(HD6301.Crashed)
+    M68000.ProcessingState=TM68000::HD6301_CRASH;
   if(should_we_show && M68000.ProcessingState!=TM68000::INTEL_CRASH
     && M68000.ProcessingState!=TM68000::HALTED
 #ifdef SSE_BOILER

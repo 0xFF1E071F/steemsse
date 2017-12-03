@@ -108,9 +108,7 @@ typedef unsigned __int64	uint64_t;
 #define ACT ABSOLUTE_CPU_TIME
 
 #if !defined(SSE_CPU)
-#define IRC   prefetch_buf[1] // Instruction Register Capture
-#define IR    prefetch_buf[0] // Instruction Register
-#define IRD   ir              // Instruction Register Decoder
+#define CpuNormalHz (8000000)
 #endif
 
 
@@ -124,6 +122,10 @@ typedef unsigned __int64	uint64_t;
 
 #if !defined(SSE_INTERRUPT) 
 #define INSTRUCTION_TIME_ROUND
+#endif
+
+#ifndef SSE_CPU
+#define m68kInterruptTiming() INSTRUCTION_TIME(54)
 #endif
 
 /////////

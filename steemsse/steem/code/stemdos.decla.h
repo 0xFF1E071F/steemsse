@@ -34,7 +34,7 @@ EXT bool stemdos_intercept_datetime INIT(0);
 
 EXT EasyStr mount_gemdos_path[26];
 
-#if defined(SSE_TOS_GEMDOS_394)
+#if defined(SSE_TOS_GEMDOS_394) && defined(SSE_GUI_STATUS_BAR_ALERT)
   //  original_return_address was mostly wrong at this point, after
   // pushing some more parameters - big bugfix, but don't understand that
   // it wouldn't just crash

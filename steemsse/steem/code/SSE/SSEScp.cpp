@@ -12,6 +12,7 @@
 */
 
 #include "../pch.h"
+#include <conditions.h>
 #include <cpu.decla.h>
 #include <fdc.decla.h>
 #include <floppy_drive.decla.h>

@@ -1509,7 +1509,6 @@ void TGlue::IncScanline() {
 
   MMU.ExtraBytesForHscroll=0;
   AdaptScanlineValues(-1);
-  ASSERT(CurrentScanline.Cycles>=224||n_cpu_cycles_per_second>CpuNormalHz);
   TrickExecuted=0;
 
 #if defined(SSE_STF_HW_OVERSCAN)
@@ -2077,8 +2076,10 @@ void TGlue::SetSyncMode(BYTE NewSync) {
   ASSERT(new_freq==50||new_freq==60||new_freq==72);
   if(shifter_freq!=new_freq)
     freq_change_this_scanline=true;  
+#ifdef DEBUG_BUILD
   log_to(LOGSECTION_VIDEO,EasyStr("VIDEO: ")+HEXSl(old_pc,6)+" - Changed frequency to "+new_freq+
     " at "+scanline_cycle_log());
+#endif
   shifter_freq=new_freq;
 #if defined(SSE_SHIFTER_TRICKS)
   AddFreqChange(new_freq);

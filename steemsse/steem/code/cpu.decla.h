@@ -2,7 +2,8 @@
 #if !defined(CPU_DECLA_H)
 #define CPU_DECLA_H
 
-#if defined(SSE_BUILD)
+#if defined(SSE_CPU)
+
 #include <binary.h>
 #include <setjmp.h>
 #include "conditions.h"
@@ -13,7 +14,6 @@
 #include "SSE/SSEDebug.h"
 #include "SSE/SSEDecla.h" //intrinsics
 #include "SSE/SSECpu.h"
-#endif
 
 //SS It is called jump but they are used as function calls, they return,
 // except if there's a ST crash detected, then they jump!
@@ -43,11 +43,6 @@ extern void (*m68k_jump_get_dest_l_not_a[8])();
 extern void (*m68k_jump_get_dest_b_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_w_not_a_or_d[8])();
 extern void (*m68k_jump_get_dest_l_not_a_or_d[8])();
-#if !defined(SSE_CPU)
-extern void (*m68k_jump_get_dest_b_not_a_faster_for_d[8])();
-extern void (*m68k_jump_get_dest_w_not_a_faster_for_d[8])();
-extern void (*m68k_jump_get_dest_l_not_a_faster_for_d[8])();
-#endif
 extern bool (*m68k_jump_condition_test[16])();
 
 void m68k_get_source_000_b();
@@ -100,33 +95,6 @@ void m68k_get_dest_111_b();
 void m68k_get_dest_111_w();
 void m68k_get_dest_111_l();
 
-#if !defined(SSE_CPU)
-void m68k_get_dest_000_b_faster();
-void m68k_get_dest_000_w_faster();
-void m68k_get_dest_000_l_faster();
-void m68k_get_dest_001_b_faster();
-void m68k_get_dest_001_w_faster();
-void m68k_get_dest_001_l_faster();
-void m68k_get_dest_010_b_faster();
-void m68k_get_dest_010_w_faster();
-void m68k_get_dest_010_l_faster();
-void m68k_get_dest_011_b_faster();
-void m68k_get_dest_011_w_faster();
-void m68k_get_dest_011_l_faster();
-void m68k_get_dest_100_b_faster();
-void m68k_get_dest_100_w_faster();
-void m68k_get_dest_100_l_faster();
-void m68k_get_dest_101_b_faster();
-void m68k_get_dest_101_w_faster();
-void m68k_get_dest_101_l_faster();
-void m68k_get_dest_110_b_faster();
-void m68k_get_dest_110_w_faster();
-void m68k_get_dest_110_l_faster();
-void m68k_get_dest_111_b_faster();
-void m68k_get_dest_111_w_faster();
-void m68k_get_dest_111_l_faster();
-#endif
-
 #if defined(SSE_VC_INTRINSICS_390B)
 extern int (*count_bits_set_in_word)(unsigned short);
 #endif
@@ -139,16 +107,10 @@ void m68k_unrecognised();
 
 void m68kSetPC(MEM_ADDRESS ad);
 
-#if defined(COMPILER_VC6)
 extern "C" void ASMCALL m68k_trace(); //execute instruction with trace bit set
-#else
-extern "C" ASMCALL void m68k_trace(); //execute instruction with trace bit set
-#endif
-
-#if defined(SSE_CPU)
+//see 3rdparty/pasti
 extern "C" unsigned getDivu68kCycles( unsigned long dividend, unsigned short divisor);
 extern "C" unsigned getDivs68kCycles( signed long dividend, signed short divisor);
-#endif
 
 enum nbombs {
   BOMBS_BUS_ERROR =2,
@@ -164,8 +126,6 @@ enum nbombs {
 };
 
 enum exception_action{EA_READ=0,EA_WRITE,EA_FETCH,EA_INST};
-
-#if defined(SSE_COMPILER_STRUCT_391)
 
 #pragma pack(push, STRUCTURE_ALIGNMENT)
 
@@ -187,27 +147,6 @@ public:
 };
 
 #pragma pack(pop, STRUCTURE_ALIGNMENT)
-
-#else
-
-class m68k_exception
-{
-public:
-  int bombs;
-  MEM_ADDRESS _pc;
-  MEM_ADDRESS crash_address;
-  MEM_ADDRESS address;
-  WORD _sr,_ir;
-  exception_action action;
-
-  m68k_exception() {}
-  ~m68k_exception() {}
-
-  void init(int,exception_action,MEM_ADDRESS);
-  void crash();
-};
-
-#endif//#if defined(SSE_COMPILER_STRUCT_391)
 
 extern void exception(int,exception_action,MEM_ADDRESS);
 
@@ -246,10 +185,6 @@ extern LONG  m68k_lpeek(MEM_ADDRESS ad);
 
 extern void cpu_routines_init();
 
-#if !defined(SSE_CPU)
-extern int m68k_divu_cycles,m68k_divs_cycles;
-#endif
-
 #if defined(SSE_VAR_OPT_390A)
 extern COUNTER_VAR act; // to be updated with ABSOLUTE_CPU_TIME and used as appropriate
 #endif
@@ -257,15 +192,16 @@ extern COUNTER_VAR act; // to be updated with ABSOLUTE_CPU_TIME and used as appr
 #if defined(SSE_CPU_DATABUS)
 extern WORD dbus;
 #endif
+
 #if defined(SSE_CPU_RESTORE_ABUS)
 extern MEM_ADDRESS dest_addr;
 #endif
 
 
 #define PC32 ( (pc&0xffffff)|(pc_high_byte) )
+
 #define FOUR_MEGS 0x400000
 #define FOURTEEN_MEGS 0xE00000
-
 #define MEM_FIRST_WRITEABLE 8
 
 #define SR_IPL   (BIT_a+BIT_9+BIT_8 )
@@ -309,10 +245,6 @@ SR_TRACE_BIT=0xf};
 #define IOACCESS_NUMBER_MASK 0x0000003F
 
 #define IOACCESS_FLAG_FOR_CHECK_INTRS BIT_6
-#if !defined(SSE_YM2149_BUS_JAM_390) || !defined(SSE_CPU)
-#define IOACCESS_FLAG_PSG_BUS_JAM_R BIT_7
-#define IOACCESS_FLAG_PSG_BUS_JAM_W BIT_8
-#endif
 #define IOACCESS_FLAG_DO_BLIT BIT_9
 #define IOACCESS_FLAG_FOR_CHECK_INTRS_MFP_CHANGE BIT_10
 #define IOACCESS_FLAG_DELAY_MFP BIT_11
@@ -328,7 +260,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 #define IR    prefetch_buf[0] // Instruction Register
 #define IRD   ir              // Instruction Register Decoder
 
-#ifdef SSE_CPU
 #define m68k_PROCESS m68kProcess();
 
 #define m68k_DEST_B (*((signed char*)m68k_dest))
@@ -340,136 +271,6 @@ extern WORD prefetch_buf[2]; // SS the 2 words prefetch queue
 // Counting cycles //
 /////////////////////
 
-
-#if defined(SSE_BLT_BUS_ARBITRATION)
-/*
-    http://patpend.net/technical/68000/68000faq.txt
-
-Note that bus arbitration is done on a cycle-by-cycle 
-basis, so the bus can be arbitrated away from the MC68000 after the first 
-of the two 16-bit writes, and the processor will complete the long-word 
-write after it retakes the bus.
-*/
-
-inline void InstructionTime(int t) {
-#if defined(SSE_BLT_CPU_RUNNING)
-/*  Only when the CPU doesn't access the main bus, it can run while the blitter
-    is also running.
-    INSTRUCTION_TIME is used to translate the 'n' timings in Yacht.
-    As we can see, this feature costs a lot in overhead, but that's the price
-    of "correct" emulation.
-*/
-  if(Blit.BlitCycles>t && t>0)
-    Blit.BlitCycles-=(t);
-  else
-#endif
-  {
-    cpu_cycles-=(t);
-#if defined(SSE_CPU_392C)
-    M68000.ThinkingCycles+=t;
-#endif
-  }
-  CHECK_BLITTER_START
-}
-
-#define INSTRUCTION_TIME(t)  InstructionTime(t)
-
-
-/*  INSTRUCTION_TIME_BUS is used for np, nr, nw, etc. in Yacht when the 
-    RAM/Shifter bus isn't used (no rounding up to 4, but no running during
-    a blit either).
-*/
-
-// bus access always 4 cycles 
-inline void InstructionTimeCpuBus() {
-  cpu_cycles-=(4);
-  // this counts for both CPU and blitter, see note in blitter.cpp
-  Blit.BusAccessCounter++;
-}
-
-#define INSTRUCTION_TIME_BUS  InstructionTimeCpuBus()
-
-inline void InstructionTimeRamBus() { // RAM + Shifter
-  cpu_cycles-=(4);
-  cpu_cycles&=-4; // MMU adds wait states if necessary
-  Blit.BusAccessCounter++; 
-}
-
-#define INSTRUCTION_TIME_ROUND  InstructionTimeRamBus()
-
-#else
-
-inline void InstructionTime(int t) {
-#if defined(SSE_BLT_CPU_RUNNING)
-  if(Blit.BlitCycles>t && t>0)
-    Blit.BlitCycles-=(t);
-  else
-#endif
-  cpu_cycles-=(t);
-}
-
-#define INSTRUCTION_TIME(t)  InstructionTime(t)
-
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS)
-
-inline void FetchTiming();
-inline void FetchTimingL();
-#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
-#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
-inline void ReadBusTiming();
-inline void ReadBusTimingL();
-#define CPU_ABUS_ACCESS_READ  ReadBusTiming()
-#define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
-#define BLT_ABUS_ACCESS_READ  ReadBusTiming()
-inline void PopTiming();
-inline void PopTimingL();
-inline void PushTiming();
-inline void PushTimingL();
-#if defined(SSE_BLT_BUS_ARBITRATION)
-#define CPU_ABUS_ACCESS_READ_POP PopTiming()
-#define CPU_ABUS_ACCESS_READ_POP_L PopTimingL()
-#define CPU_ABUS_ACCESS_WRITE_PUSH PushTiming()
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L PushTimingL()
-#else
-#define CPU_ABUS_ACCESS_READ_POP StackTiming()
-#define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
-#define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
-#endif
-inline void WriteBusTiming();
-inline void WriteBusTimingL();
-#define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
-#define CPU_ABUS_ACCESS_WRITE_L  WriteBusTimingL()
-#define BLT_ABUS_ACCESS_WRITE  WriteBusTiming()
-
-#else
-
-inline void InstructionTimeRound(int t) {
-  InstructionTime(t);
-  cpu_cycles&=-4;
-}
-
-#define INSTRUCTION_TIME_ROUND(t) InstructionTimeRound(t)
-
-#define CPU_ABUS_ACCESS_READ  INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_READ_L  INSTRUCTION_TIME_ROUND(8) //for performance
-#define CPU_ABUS_ACCESS_READ_FETCH CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ_FETCH_L CPU_ABUS_ACCESS_READ_L
-#define CPU_ABUS_ACCESS_READ_POP CPU_ABUS_ACCESS_READ
-#define CPU_ABUS_ACCESS_READ_POP_L CPU_ABUS_ACCESS_READ_L
-#define CPU_ABUS_ACCESS_WRITE_PUSH CPU_ABUS_ACCESS_WRITE
-#define CPU_ABUS_ACCESS_WRITE_PUSH_L CPU_ABUS_ACCESS_WRITE_L
-#define CPU_ABUS_ACCESS_WRITE  INSTRUCTION_TIME_ROUND(4)
-#define CPU_ABUS_ACCESS_WRITE_L  INSTRUCTION_TIME_ROUND(8) //for performance
-
-#endif //mmu rounding
-
-#endif
-
-
-#if defined(SSE_CPU)
 /*
 Note on rounding
 
@@ -531,7 +332,6 @@ The CPU accesses RAM and the Shifter through the MMU, which forces it to share
 cycles with the video system. All the rest is directly available on the bus.
 Though there may be wait states for 8bit peripherals.
 
-
 ijor:
 The scheme is a bit misleading. 
 MMU doesn't really sit between the CPU and RAM, those buffers are.
@@ -541,6 +341,106 @@ There are two data buses in the ST, the main CPU bus, and the RAM/SHIFTER
 connect or separate both buses. MMU is connected to the main data bus. 
 But it controls the buffers and the RAM address bus.
 */
+
+
+#define INSTRUCTION_TIME(t)  InstructionTime(t)
+
+
+#if defined(SSE_BLT_BUS_ARBITRATION)
+/*
+    http://patpend.net/technical/68000/68000faq.txt
+
+Note that bus arbitration is done on a cycle-by-cycle 
+basis, so the bus can be arbitrated away from the MC68000 after the first 
+of the two 16-bit writes, and the processor will complete the long-word 
+write after it retakes the bus.
+*/
+
+inline void InstructionTime(int t) {
+#if defined(SSE_BLT_CPU_RUNNING)
+/*  Only when the CPU doesn't access the main bus, it can run while the blitter
+    is also running.
+    INSTRUCTION_TIME is used to translate the 'n' timings in Yacht.
+    As we can see, this feature costs a lot in overhead, but that's the price
+    of "correct" emulation.
+*/
+  if(Blit.BlitCycles>t && t>0)
+    Blit.BlitCycles-=(t);
+  else
+#endif
+  {
+    cpu_cycles-=(t);
+#if defined(SSE_CPU_392C)
+    M68000.ThinkingCycles+=t;
+#endif
+  }
+  CHECK_BLITTER_START
+}
+
+
+/*  INSTRUCTION_TIME_BUS is used for np, nr, nw, etc. in Yacht when the 
+    RAM/Shifter bus isn't used (no rounding up to 4, but no running during
+    a blit either).
+*/
+inline void InstructionTimeCpuBus() {
+  cpu_cycles-=(4); // bus access always 4 cycles 
+  Blit.BusAccessCounter++; // this counts for both CPU and blitter, see note in blitter.cpp
+}
+
+#define INSTRUCTION_TIME_BUS  InstructionTimeCpuBus()
+
+inline void InstructionTimeRamBus() { // RAM + Shifter
+  cpu_cycles-=(4);
+  cpu_cycles&=-4; // MMU adds wait states if necessary
+  Blit.BusAccessCounter++; 
+}
+
+#define INSTRUCTION_TIME_ROUND  InstructionTimeRamBus()
+
+#else
+
+inline void InstructionTime(int t) {
+#if defined(SSE_BLT_CPU_RUNNING)
+  if(Blit.BlitCycles>t && t>0)
+    Blit.BlitCycles-=(t);
+  else
+#endif
+  cpu_cycles-=(t);
+}
+
+#endif
+
+inline void FetchTiming();
+inline void FetchTimingL();
+#define CPU_ABUS_ACCESS_READ_FETCH FetchTiming()
+#define CPU_ABUS_ACCESS_READ_FETCH_L FetchTimingL()
+inline void ReadBusTiming();
+inline void ReadBusTimingL();
+#define CPU_ABUS_ACCESS_READ  ReadBusTiming()
+#define CPU_ABUS_ACCESS_READ_L  ReadBusTimingL()
+#define BLT_ABUS_ACCESS_READ  ReadBusTiming()
+inline void PopTiming();
+inline void PopTimingL();
+inline void PushTiming();
+inline void PushTimingL();
+#if defined(SSE_BLT_BUS_ARBITRATION)
+#define CPU_ABUS_ACCESS_READ_POP PopTiming()
+#define CPU_ABUS_ACCESS_READ_POP_L PopTimingL()
+#define CPU_ABUS_ACCESS_WRITE_PUSH PushTiming()
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L PushTimingL()
+#else
+#define CPU_ABUS_ACCESS_READ_POP StackTiming()
+#define CPU_ABUS_ACCESS_READ_POP_L StackTimingL()
+#define CPU_ABUS_ACCESS_WRITE_PUSH StackTiming()
+#define CPU_ABUS_ACCESS_WRITE_PUSH_L StackTimingL()
+#endif
+inline void WriteBusTiming();
+inline void WriteBusTimingL();
+#define CPU_ABUS_ACCESS_WRITE  WriteBusTiming()
+#define CPU_ABUS_ACCESS_WRITE_L  WriteBusTimingL()
+#define BLT_ABUS_ACCESS_WRITE  WriteBusTiming()
+
+
 
 #if defined(SSE_BLT_BUS_ARBITRATION)
 /*  Clear "blit cycles" as soon as there's a bus access.
@@ -647,13 +547,7 @@ inline void PopTimingL() {
   PopTiming();
 }
 
-
-#elif defined(SSE_MMU_ROUNDING_BUS)
-
-
-//pc is of course up-to-date
-//we don't round on palette, but it's done in ior (?)
-
+#else
 
 inline void FetchTiming() {
   cpu_cycles-=4;
@@ -745,23 +639,6 @@ inline void StackTimingL() {
     Blit.BlitCycles=0;
 #endif
   }
-}
-
-#else
-
-inline void FetchTiming() {
-  if(pc>=rom_addr && pc<rom_addr+tos_len)
-    INSTRUCTION_TIME(4);
-  else
-    INSTRUCTION_TIME_ROUND(4);
-}
-
-
-inline void FetchTimingL() {
-  if(pc>=rom_addr && pc<rom_addr+tos_len)
-    INSTRUCTION_TIME(8);
-  else
-    INSTRUCTION_TIME_ROUND(8);
 }
 
 #endif
@@ -954,32 +831,6 @@ inline  void m68k_lpoke(MEM_ADDRESS ad,LONG x){
   m68k_lpoke_abus(x);
 }
 
-#else
-
-#ifdef SSE_BUILD
-void m68k_poke(MEM_ADDRESS ad,BYTE x);
-void m68k_dpoke(MEM_ADDRESS ad,WORD x);
-void m68k_lpoke(MEM_ADDRESS ad,LONG x);
-void m68k_poke_abus(BYTE x);
-void m68k_dpoke_abus(WORD x);
-void m68k_lpoke_abus(LONG x);
-#else
-NOT_DEBUG(inline) void m68k_poke(MEM_ADDRESS ad,BYTE x);
-NOT_DEBUG(inline) void m68k_dpoke(MEM_ADDRESS ad,WORD x);
-NOT_DEBUG(inline) void m68k_lpoke(MEM_ADDRESS ad,LONG x);
-NOT_DEBUG(inline) void m68k_poke_abus(BYTE x);
-NOT_DEBUG(inline) void m68k_dpoke_abus(WORD x);
-NOT_DEBUG(inline) void m68k_lpoke_abus(LONG x);
-#endif
-
-#endif
-
-#if !defined(SSE_CPU)
-
-#define INSTRUCTION_TIME(t) {cpu_cycles-=(t);}
-#define INSTRUCTION_TIME_ROUND(t) {INSTRUCTION_TIME(t); cpu_cycles&=-4;}
-
-#endif
 
 #ifdef DEBUG_BUILD
 #include "debug_emu.decla.h"
@@ -1044,21 +895,8 @@ extern MEM_ADDRESS pc_rel_stop_on_ref;
 #define DEST_IS_MEMORY ((ir&BITS_543)>BITS_543_001)
 #define SOURCE_IS_REGISTER_OR_IMMEDIATE ((ir & BITS_543)<=BITS_543_001 || ((ir&b00111111)==b00111100) )
 
-#if defined(SSE_CPU)
-
 #define DEST_IS_DATA_REGISTER ((ir&BITS_543)==BITS_543_000)
 #define DEST_IS_ADDRESS_REGISTER ((ir&BITS_543)==BITS_543_001)
-
-#endif
-
-
-#if !defined(SSE_CPU)
-
-#define FETCH_TIMING {INSTRUCTION_TIME(4); cpu_cycles&=-4;} 
-
-#endif
-
-#if defined(SSE_CPU)
 
 inline void SetDestBToAddr() {
   abus&=0xffffff;                                   
@@ -1227,127 +1065,10 @@ inline void SetDestLToAddr() {
 #define m68k_SET_DEST_B_TO_ADDR SetDestBToAddr();
 #define m68k_SET_DEST_W_TO_ADDR SetDestWToAddr();
 #define m68k_SET_DEST_L_TO_ADDR SetDestLToAddr();
-
-#else
-
-#define m68k_SET_DEST_B_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=1;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      DWORD_B_0(&iobuffer)=io_read_b(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);             \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(1,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                                            \
-    DEBUG_CHECK_WRITE_B(abus); \
-    if (SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                             \
-      m68k_dest=lpPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_W_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=2;                     \
-      ioad=abus;                        \
-      m68k_dest=&iobuffer;               \
-      *((WORD*)&iobuffer)=io_read_w(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(2,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_W(abus);  \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpDPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpDPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#define m68k_SET_DEST_L_TO_ADDR        \
-  abus&=0xffffff;                                   \
-  if(abus&1){                                      \
-    exception(BOMBS_ADDRESS_ERROR,EA_WRITE,abus);    \
-  }else if(abus>=MEM_IO_BASE){               \
-    if(SUPERFLAG){                        \
-      ioaccess&=IOACCESS_FLAGS_MASK; \
-      ioaccess|=4;                     \
-      ioad=abus;                         \
-      m68k_dest=&iobuffer;               \
-      iobuffer=io_read_l(abus);        \
-    }else exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                                 \
-  }else if(abus>=himem){                               \
-    if(mmu_confused){                               \
-      mmu_confused_set_dest_to_addr(4,true);           \
-    }else if(abus>=FOUR_MEGS){                                                \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);                               \
-    }else{                                                        \
-      m68k_dest=&iobuffer;                             \
-    }                                       \
-  }else{                               \
-    DEBUG_CHECK_WRITE_L(abus);  \
-    if(SUPERFLAG && abus>=MEM_FIRST_WRITEABLE){                       \
-      m68k_dest=lpLPEEK(abus);           \
-    }else if(abus>=MEM_START_OF_USER_AREA){ \
-      m68k_dest=lpLPEEK(abus);           \
-    }else{                                      \
-      exception(BOMBS_BUS_ERROR,EA_WRITE,abus);       \
-    }                                           \
-  }
-
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS) && defined(SSE_MMU_ROUNDING_BUS)
-
 #define m68k_SET_DEST_B(abus) m68k_SET_DEST_B_TO_ADDR;
-
 #define m68k_SET_DEST_W(abus) m68k_SET_DEST_W_TO_ADDR;
-
 #define m68k_SET_DEST_L(abus) m68k_SET_DEST_L_TO_ADDR;
 
-#else
-
-#define m68k_SET_DEST_B(addr)           \
-  abus=addr;                            \
-  m68k_SET_DEST_B_TO_ADDR;
-
-#define m68k_SET_DEST_W(addr)           \
-  abus=addr;                            \
-  m68k_SET_DEST_W_TO_ADDR;
-
-#define m68k_SET_DEST_L(addr)           \
-  abus=addr;                            \
-  m68k_SET_DEST_L_TO_ADDR;
-
-#endif
-
-#if defined(SSE_CPU)
 
 inline void FetchWord(WORD &dest_word) {
   dest_word=IR; //get first word of prefetch queue
@@ -1382,24 +1103,6 @@ inline void FetchWord(WORD &dest_word) {
 
 #define FETCH_W(dest_word) FetchWord(dest_word);
 
-#else
-
-#define FETCH_W(dest_word)              \
-  if(prefetched_2){                     \
-    dest_word=prefetch_buf[0];            \
-    prefetch_buf[0]=prefetch_buf[1];       \
-    prefetched_2=false;                           \
-  }else{ /* if(prefetched==1) */             \
-    dest_word=prefetch_buf[0];                \
-    prefetch_buf[0]=*lpfetch;              \
-  }                                            \
-  lpfetch+=MEM_DIR;                             \
-  if(lpfetch MEM_GE lpfetch_bound)exception(BOMBS_BUS_ERROR,EA_FETCH,pc);
-#endif
-
-
-
-#if defined(SSE_CPU)
 
 inline void PrefetchIrc() {
   ASSERT(!prefetched_2); // strong, only once per instruction 
@@ -1434,15 +1137,6 @@ inline void RefetchIr() {
 
 #define REFETCH_IR  RefetchIr();
 
-#else
-
-#define EXTRA_PREFETCH                    \
-  prefetch_buf[1]=*lpfetch;              \
-  prefetched_2=true;
-
-#endif
-
-
 
 #ifdef ENABLE_LOGFILE
 #define IOACCESS_DEBUG_MEM_WRITE_LOG BIT_14
@@ -1455,20 +1149,18 @@ extern int debug_mem_write_log_bytes;
 
 #define STOP_INTS_BECAUSE_INTERCEPT_OS bool(ioaccess & (IOACCESS_INTERCEPT_OS | IOACCESS_INTERCEPT_OS2))
 
-#if defined(SSE_CPU)
 inline void change_to_user_mode();
 inline void change_to_supervisor_mode();
-#endif
+
 #if defined(SSE_CPU_394A)
 extern BYTE cpu_stopped;
 #else
 extern bool cpu_stopped;
 #endif
+
 extern signed int compare_buffer;
 
 #define PC_RELATIVE_PC pc
-
-#if defined(SSE_CPU)
 
 #define m68k_GET_DEST_B m68kGetDestByte();
 #define m68k_GET_DEST_W m68kGetDestWord();
@@ -1595,33 +1287,6 @@ inline void m68kGetSourceWordNotA() {
 inline void m68kGetSourceLongNotA() {
   m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]();
 }
-
-
-#else
-#define m68k_GET_SOURCE_B m68k_jump_get_source_b[(ir&BITS_543)>>3]()
-#define m68k_GET_SOURCE_W m68k_jump_get_source_w[(ir&BITS_543)>>3]()
-#define m68k_GET_SOURCE_L m68k_jump_get_source_l[(ir&BITS_543)>>3]()
-
-#define m68k_GET_SOURCE_B_NOT_A m68k_jump_get_source_b_not_a[(ir&BITS_543)>>3]()
-#define m68k_GET_SOURCE_W_NOT_A m68k_jump_get_source_w_not_a[(ir&BITS_543)>>3]()
-#define m68k_GET_SOURCE_L_NOT_A m68k_jump_get_source_l_not_a[(ir&BITS_543)>>3]()
-
-#define m68k_GET_DEST_B m68k_jump_get_dest_b[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_W m68k_jump_get_dest_w[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_L m68k_jump_get_dest_l[(ir&BITS_543)>>3]()
-
-#define m68k_GET_DEST_B_NOT_A m68k_jump_get_dest_b_not_a[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_W_NOT_A m68k_jump_get_dest_w_not_a[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_L_NOT_A m68k_jump_get_dest_l_not_a[(ir&BITS_543)>>3]()
-
-#define m68k_GET_DEST_B_NOT_A_OR_D m68k_jump_get_dest_b_not_a_or_d[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_W_NOT_A_OR_D m68k_jump_get_dest_w_not_a_or_d[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_L_NOT_A_OR_D m68k_jump_get_dest_l_not_a_or_d[(ir&BITS_543)>>3]()
-
-#define m68k_GET_DEST_B_NOT_A_FASTER_FOR_D m68k_jump_get_dest_b_not_a_faster_for_d[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_W_NOT_A_FASTER_FOR_D m68k_jump_get_dest_w_not_a_faster_for_d[(ir&BITS_543)>>3]()
-#define m68k_GET_DEST_L_NOT_A_FASTER_FOR_D m68k_jump_get_dest_l_not_a_faster_for_d[(ir&BITS_543)>>3]()
-#endif//!ss-cpu
 
 #define m68k_CONDITION_TEST m68k_jump_condition_test[(ir&0xf00)>>8]()
 
@@ -2138,21 +1803,11 @@ inline void m68kGetSourceLongNotA() {
 #define FC_SUPERVISOR_PROGRAM 6
 #define FC_INTERRUPT_VERIFICATION 7
 
-#if defined(SSE_CPU)
 #define SET_PC(ad) m68kSetPC(ad);
-#else
-extern void set_pc(MEM_ADDRESS);
-#endif
-
-#if !(defined(SSE_CPU))
-extern void perform_rte();
-#endif
 
 extern void sr_check_z_n_l_for_r0();
 extern void m68k_process();
 
-
-#if defined(SSE_CPU)
 
 inline void m68kPerformRte() {
   // replacing macro M68K_PERFORM_RTE(checkints)
@@ -2184,19 +1839,6 @@ inline void m68kPerformRte() {
 
 #define M68K_PERFORM_RTE(checkints) m68kPerformRte();
 
-#else
-// SS I can't find one instance where checkints is passed.
-#define M68K_PERFORM_RTE(checkints)             \
-            SET_PC(m68k_lpeek(r[15]+2));        \
-            sr=m68k_dpeek(r[15]);r[15]+=6;      \
-            sr&=SR_VALID_BITMASK;               \
-            DETECT_CHANGE_TO_USER_MODE;         \
-            DETECT_TRACE_BIT;                   \
-            checkints;                          \
-
-#endif
-
-#if defined(SSE_CPU)
 
 inline void m68kPrefetchSetPC() { 
   // called by SetPC; we don't count timing here
@@ -2224,56 +1866,8 @@ inline void m68kPrefetchSetPC() {
 }
 #define PREFETCH_SET_PC m68kPrefetchSetPC();
 
-#else
-  #define PREFETCH_SET_PC                       \
-  prefetched_2=false; /*will have prefetched 1 word*/ \
-  prefetch_buf[0]=*lpfetch;               \
-  lpfetch+=MEM_DIR;  /*let's not cause exceptions here*/
-
-#endif
-
-#if !defined(SSE_CPU)
-#define SET_PC(ad)        \
-    pc=ad;                               \
-    pc_high_byte=pc & 0xff000000;     \
-    pc&=0xffffff;                    \
-    lpfetch=lpDPEEK(0);          /*Default to instant bus error when fetch*/   \
-    lpfetch_bound=lpDPEEK(0);         \
-                                        \
-    if (pc>=himem){                                                       \
-      if (pc<MEM_IO_BASE){           \
-        if (pc>=MEM_EXPANSION_CARTRIDGE){                                \
-          if (pc>=0xfc0000){                                                   \
-            if (tos_high && pc<(0xfc0000+192*1024)){         \
-              lpfetch=lpROM_DPEEK(pc-0xfc0000); \
-              lpfetch_bound=lpROM_DPEEK(192*1024);         \
-            }                                                                          \
-          }else if (cart){                                                          \
-            lpfetch=lpCART_DPEEK(pc-MEM_EXPANSION_CARTRIDGE); \
-            lpfetch_bound=lpCART_DPEEK(128*1024);         \
-          }                                                                          \
-        }else if(pc>=rom_addr){                                                      \
-          if (pc<(0xe00000 + 256*1024)){         \
-            lpfetch=lpROM_DPEEK(pc-0xe00000); \
-            lpfetch_bound=lpROM_DPEEK(256*1024);         \
-          }                                                                          \
-        }                            \
-      }else{   \
-        if (pc>=0xff8240 && pc<0xff8260){         \
-          lpfetch=lpPAL_DPEEK(pc-0xff8240); \
-          lpfetch_bound=lpPAL_DPEEK(64+PAL_EXTRA_BYTES);         \
-        }                              \
-      }                                                                           \
-    }else{                                                                         \
-      lpfetch=lpDPEEK(pc); \
-      lpfetch_bound=lpDPEEK(mem_len+(MEM_EXTRA_BYTES/2));         \
-    }                                         \
-    PREFETCH_SET_PC
-#endif
-
 //---------------------------------------------------------------------------
-#ifdef SSE_BUILD
-#if defined(SSE_CPU)
+
 inline void change_to_user_mode()
 {
   compare_buffer=r[15];r[15]=other_sp;other_sp=compare_buffer;
@@ -2292,17 +1886,14 @@ inline void change_to_supervisor_mode()
   SR_SET(SR_SUPER);
 #endif
 }
-#endif
+
 inline void sr_check_z_n_l_for_r0()
 {
   m68k_dest=&r[0];
   SR_CHECK_Z_AND_N_L;
 }
-#endif
-//---------------------------------------------------------------------------
-#if defined(SSE_CPU)
 
-#if defined(SSE_MMU_ROUNDING_BUS)
+//---------------------------------------------------------------------------
 
 inline void ReadB() {
   m68k_src_b=m68k_peek(abus);
@@ -2316,35 +1907,12 @@ inline void ReadL() {
   m68k_src_l=m68k_lpeek(abus);
 }
 
-#else
 
-inline void ReadB(MEM_ADDRESS addr) {
-  m68k_src_b=m68k_peek(addr);
-}
-
-inline void ReadW(MEM_ADDRESS addr) {
-  m68k_src_w=m68k_dpeek(addr);
-}
-
-inline void ReadL(MEM_ADDRESS addr) {
-  m68k_src_l=m68k_lpeek(addr);
-}
-
-#endif
-
-#if defined(SSE_MMU_ROUNDING_BUS)
 
 #define m68k_READ_B(abus) ReadB();
 #define m68k_READ_W(abus) ReadW();
 #define m68k_READ_L(abus) ReadL();
 
-#else
-
-#define m68k_READ_B(addr) ReadB(addr);
-#define m68k_READ_W(addr) ReadW(addr);
-#define m68k_READ_L(addr) ReadL(addr);
-
-#endif
 
 void m68k_interrupt(MEM_ADDRESS ad);
 
@@ -2474,7 +2042,6 @@ WinUAE
 #endif
 }
 
-#if defined(SSE_MMU_ROUNDING_BUS)
 
 inline void m68kInterruptTiming() {
 /*  
@@ -2534,10 +2101,6 @@ Interrupt auto (HBI,VBI) | 54-62(5/3) | n nn ns E ni ni ni ni nS ns nV nv np n n
   CPU_ABUS_ACCESS_READ_FETCH; //np 
 }
 
-#endif
 
-#endif//CPU
-
-
-
+#endif//#if defined(SSE_CPU)
 #endif//!defined(CPU_DECLA_H) 
