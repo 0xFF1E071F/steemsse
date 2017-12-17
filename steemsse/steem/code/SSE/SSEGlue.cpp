@@ -340,7 +340,11 @@ void TGlue::CheckSideOverscan() {
           CurrentScanline.Bytes+=MMU.ExtraBytesForHscroll;//+8
         }
         else
+#ifdef SSE_BUGFIX_394 //post 394, this is to be refactored anyway
+          CurrentScanline.StartCycle=14; // non-fetches at 2, 6, 10, 14
+#else
           CurrentScanline.StartCycle=18; // non-fetches at 2, 6, 10, 14
+#endif
       }
       else 
 #endif//#if defined(SSE_GLUE_LINE_PLUS_20)
